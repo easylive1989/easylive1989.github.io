@@ -4,7 +4,8 @@ import { useState } from 'react';
 
 const projectsMap = {
   "NS-SHAFT": "https://playernsshaft.web.app/#/",
-  "breakout": "https://easylive1989.github.io/flutter_breakout"
+  "Breakout": "https://easylive1989.github.io/flutter_breakout",
+  "RayWorldGame": "https://easylive1989.github.io/ray_world_game/"
 }
 
 function App() {
