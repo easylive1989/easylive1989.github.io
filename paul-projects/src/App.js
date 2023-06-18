@@ -7,6 +7,7 @@ const projectsMap = {
   "Breakout": "https://easylive1989.github.io/flutter_breakout",
   "RayWorldGame": "https://easylive1989.github.io/ray_world_game/",
   "Tetris": "https://easylive1989.github.io/flutter_tetris/",
+  "Gomoku": "https://easylive1989.github.io/LittleFlowerApp/",
 }
 
 function App() {
