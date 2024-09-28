@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paul Wu 的遊戲練習作品</title>
+    <title>Paul Wu's Game Portfolio</title>
     <style>
         /* 字體來源: https://www.fontspace.com/category/16-bit */
 
@@ -14,7 +15,17 @@
             font-style: normal;
         }
 
-        body, h1, h2, h3, h4, h5, h6, p, a, span, div {
+        body,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        a,
+        span,
+        div {
             font-family: 'OldSchoolAdventures', Arial, sans-serif;
         }
 
@@ -30,16 +41,19 @@
             flex-direction: column;
             min-height: 100vh;
         }
+
         h1 {
             text-align: center;
             color: #2c3e50;
         }
+
         .portfolio {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             padding: 20px 0;
         }
+
         .work {
             background: white;
             border-radius: 8px;
@@ -47,22 +61,27 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
         }
+
         .work:hover {
             transform: translateY(-5px);
         }
+
         .work img {
             width: 100%;
             height: 200px;
             object-fit: cover;
         }
+
         .work-info {
             padding: 15px;
         }
+
         .work-title {
             margin: 0;
             font-size: 1.2em;
             color: #2c3e50;
         }
+
         .work-link {
             display: inline-block;
             margin-top: 10px;
@@ -70,9 +89,11 @@
             text-decoration: none;
             cursor: pointer;
         }
+
         .work-link:hover {
             text-decoration: underline;
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -82,8 +103,9 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0, 0, 0, 0.4);
         }
+
         .modal-content {
             background-color: #fefefe;
             margin: 5% auto;
@@ -97,6 +119,7 @@
             justify-content: center;
             align-items: center;
         }
+
         .close {
             color: #aaa;
             position: absolute;
@@ -106,12 +129,14 @@
             font-weight: bold;
             cursor: pointer;
         }
+
         .close:hover,
         .close:focus {
             color: #000;
             text-decoration: none;
             cursor: pointer;
         }
+
         #game-frame {
             width: 100%;
             height: 100%;
@@ -120,6 +145,7 @@
             top: 0;
             left: 0;
         }
+
         .loader-container {
             display: flex;
             justify-content: center;
@@ -127,6 +153,7 @@
             width: 100px;
             height: 100px;
         }
+
         .loader {
             border: 5px solid #f3f3f3;
             border-top: 5px solid #3498db;
@@ -135,10 +162,17 @@
             height: 50px;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         footer {
             margin-top: auto;
             text-align: center;
@@ -146,56 +180,67 @@
             background-color: #2c3e50;
             color: white;
         }
+
         footer a {
             color: #3498db;
             text-decoration: none;
         }
+
         footer a:hover {
             text-decoration: underline;
         }
     </style>
 </head>
+
 <body>
-    <header style="display: flex; align-items: center; justify-content: center; padding: 20px; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <img src="/static/images/avatar.jpg" alt="Paul Wu" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 20px;">
-        <h1 style="font-size: 2em; color: #2c3e50;">Paul Wu 的遊戲練習作品</h1>
+    <header
+        style="display: flex; align-items: center; justify-content: center; padding: 20px; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <img src="/static/images/avatar.jpg" alt="Paul Wu"
+            style="width: 100px; height: 100px; border-radius: 50%; margin-right: 20px;">
+        <h1 style="font-size: 2em; color: #2c3e50;">Paul Wu's Game Portfolio</h1>
     </header>
 
     <div class="portfolio">
+
         <div class="work">
-            <img src="/static/images/ns-shaft.png" alt="NS-SHAFT">
-            <div class="work-info">
-                <h3 class="work-title">NS-SHAFT</h3>
-                <a class="work-link" data-link="https://playernsshaft.web.app/#/">查看遊戲</a>
-            </div>
+            <a class="work-link" data-link="https://playernsshaft.web.app/#/">
+                <img src="/static/images/ns-shaft.png" alt="NS-SHAFT">
+                <div class="work-info">
+                    <h3 class="work-title">NS-SHAFT</h3>
+                </div>
+            </a>
         </div>
         <div class="work">
-            <img src="/static/images/breakout.png" alt="Breakout">
-            <div class="work-info">
-                <h3 class="work-title">Breakout</h3>
-                <a class="work-link" data-link="https://easylive1989.github.io/flutter_breakout">查看遊戲</a>
-            </div>
+            <a class="work-link" data-link="https://easylive1989.github.io/flutter_breakout">
+                <img src="/static/images/breakout.png" alt="Breakout">
+                <div class="work-info">
+                    <h3 class="work-title">Breakout</h3>
+                </div>
+            </a>
         </div>
         <div class="work">
-            <img src="/static/images/ray_world_game.png" alt="RayWorldGame">
-            <div class="work-info">
-                <h3 class="work-title">RayWorldGame</h3>
-                <a class="work-link" data-link="https://easylive1989.github.io/ray_world_game/">查看遊戲</a>
-            </div>
+            <a class="work-link" data-link="https://easylive1989.github.io/ray_world_game/">
+                <img src="/static/images/ray_world_game.png" alt="RayWorldGame">
+                <div class="work-info">
+                    <h3 class="work-title">RayWorldGame</h3>
+                </div>
+            </a>
         </div>
         <div class="work">
-            <img src="/static/images/tetris.png" alt="Tetris">
-            <div class="work-info">
-                <h3 class="work-title">Tetris</h3>
-                <a class="work-link" data-link="https://easylive1989.github.io/flutter_tetris/">查看遊戲</a>
-            </div>
+            <a class="work-link" data-link="https://easylive1989.github.io/flutter_tetris/">
+                <img src="/static/images/tetris.png" alt="Tetris">
+                <div class="work-info">
+                    <h3 class="work-title">Tetris</h3>
+                </div>
+            </a>
         </div>
         <div class="work">
-            <img src="/static/images/gomoku.png" alt="Gomoku">
-            <div class="work-info">
-                <h3 class="work-title">Gomoku</h3>
-                <a class="work-link" data-link="https://easylive1989.github.io/LittleFlowerApp/">查看遊戲</a>
-            </div>
+            <a class="work-link" data-link="https://easylive1989.github.io/LittleFlowerApp/">
+                <img src="/static/images/gomoku.png" alt="Gomoku">
+                <div class="work-info">
+                    <h3 class="work-title">Gomoku</h3>
+                </div>
+            </a>
         </div>
     </div>
 
@@ -225,7 +270,7 @@
         const loaderContainer = document.querySelector(".loader-container");
 
         for (let link of links) {
-            link.onclick = function() {
+            link.onclick = function () {
                 modal.style.display = "block";
                 loaderContainer.style.display = "flex";
                 gameFrame.style.display = "none";
@@ -233,18 +278,18 @@
             }
         }
 
-        gameFrame.onload = function() {
+        gameFrame.onload = function () {
             loaderContainer.style.display = "none";
             gameFrame.style.display = "block";
             gameFrame.focus();
         }
 
-        closeBtn.onclick = function() {
+        closeBtn.onclick = function () {
             modal.style.display = "none";
             gameFrame.src = "";
         }
 
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             if (event.target == modal) {
                 modal.style.display = "none";
                 gameFrame.src = "";
@@ -252,4 +297,5 @@
         }
     </script>
 </body>
+
 </html>
