@@ -85,9 +85,93 @@
         .work-link {
             display: inline-block;
             margin-top: 10px;
-            color: #3498db;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: #ffffff;
             text-decoration: none;
             cursor: pointer;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .work-link:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: all 0.4s;
+        }
+
+        .work-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .work-link:hover:before {
+            left: 100%;
+        }
+
+        .work-link:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .source-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #FFA500;
+            color: #ffffff;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .source-link:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: all 0.4s;
+        }
+
+        .source-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .source-link:hover:before {
+            left: 100%;
+        }
+
+        .source-link:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .source-link:hover {
+            background-color: #FF8C00;
+        }
+
+        .work-link:hover {
+            background-color: #2980b9;
         }
 
         .work-link:hover {
@@ -203,44 +287,44 @@
     <div class="portfolio">
 
         <div class="work">
-            <a class="work-link" data-link="https://playernsshaft.web.app/#/">
-                <img src="/static/images/ns-shaft.png" alt="NS-SHAFT">
-                <div class="work-info">
-                    <h3 class="work-title">NS-SHAFT</h3>
-                </div>
-            </a>
+            <img src="/static/images/ns-shaft.png" alt="NS-SHAFT">
+            <div class="work-info">
+                <h3 class="work-title">NS-SHAFT</h3>
+                <a class="work-link" data-link="https://playernsshaft.web.app/#/">遊玩遊戲</a>
+                <a class="source-link" data-link="https://github.com/easylive1989/player_ns_shaft" target="_blank">原始碼</a>
+            </div>
         </div>
         <div class="work">
-            <a class="work-link" data-link="https://easylive1989.github.io/flutter_breakout">
-                <img src="/static/images/breakout.png" alt="Breakout">
-                <div class="work-info">
-                    <h3 class="work-title">Breakout</h3>
-                </div>
-            </a>
+            <img src="/static/images/breakout.png" alt="Breakout">
+            <div class="work-info">
+                <h3 class="work-title">Breakout</h3>
+                <a class="work-link" data-link="https://easylive1989.github.io/flutter_breakout">遊玩遊戲</a>
+                <a class="source-link" data-link="https://github.com/easylive1989/flutter_breakout" target="_blank">原始碼</a>
+            </div>
         </div>
         <div class="work">
-            <a class="work-link" data-link="https://easylive1989.github.io/ray_world_game/">
-                <img src="/static/images/ray_world_game.png" alt="RayWorldGame">
-                <div class="work-info">
-                    <h3 class="work-title">RayWorldGame</h3>
-                </div>
-            </a>
+            <img src="/static/images/ray_world_game.png" alt="RayWorldGame">
+            <div class="work-info">
+                <h3 class="work-title">RayWorldGame</h3>
+                <a class="work-link" data-link="https://easylive1989.github.io/ray_world_game/">遊玩遊戲</a>
+                <a class="source-link" data-link="https://github.com/easylive1989/ray_world_game" target="_blank">原始碼</a>
+            </div>
         </div>
         <div class="work">
-            <a class="work-link" data-link="https://easylive1989.github.io/flutter_tetris/">
-                <img src="/static/images/tetris.png" alt="Tetris">
-                <div class="work-info">
-                    <h3 class="work-title">Tetris</h3>
-                </div>
-            </a>
+            <img src="/static/images/tetris.png" alt="Tetris">
+            <div class="work-info">
+                <h3 class="work-title">Tetris</h3>
+                <a class="work-link" data-link="https://easylive1989.github.io/flutter_tetris/">遊玩遊戲</a>
+                <a class="source-link" data-link="https://github.com/easylive1989/flutter_tetris" target="_blank">原始碼</a>
+            </div>
         </div>
         <div class="work">
-            <a class="work-link" data-link="https://easylive1989.github.io/LittleFlowerApp/">
-                <img src="/static/images/gomoku.png" alt="Gomoku">
-                <div class="work-info">
-                    <h3 class="work-title">Gomoku</h3>
-                </div>
-            </a>
+            <img src="/static/images/gomoku.png" alt="Gomoku">
+            <div class="work-info">
+                <h3 class="work-title">Gomoku</h3>
+                <a class="work-link" data-link="https://easylive1989.github.io/LittleFlowerApp/">遊玩遊戲</a>
+                <a class="source-link" data-link="https://github.com/easylive1989/LittleFlowerApp" target="_blank">原始碼</a>
+            </div>
         </div>
     </div>
 
