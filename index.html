@@ -3,8 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的遊戲作品展示</title>
+    <title>Paul Wu 的遊戲練習作品</title>
     <style>
+        /* 字體來源: https://www.fontspace.com/category/16-bit */
+
+        @font-face {
+            font-family: 'OldSchoolAdventures';
+            src: url('/static/OldSchoolAdventures-42j9.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body, h1, h2, h3, h4, h5, h6, p, a, span, div {
+            font-family: 'OldSchoolAdventures', Arial, sans-serif;
+        }
+
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -13,6 +26,9 @@
             margin: 0 auto;
             padding: 20px;
             background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         h1 {
             text-align: center;
@@ -123,9 +139,28 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: white;
+        }
+        footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
+    <header style="display: flex; align-items: center; justify-content: center; padding: 20px; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <img src="/static/images/avatar.png" alt="Paul Wu" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 20px;">
+        <h1 style="font-size: 2em; color: #2c3e50;">Paul Wu 的遊戲練習作品</h1>
+    </header>
+
     <div class="portfolio">
         <div class="work">
             <img src="/static/images/ns-shaft.png" alt="NS-SHAFT">
@@ -174,6 +209,14 @@
         </div>
     </div>
 
+    <footer>
+        <div style="display: flex; justify-content: space-around;">
+            <p>Email: <a href="mailto:easylive1989@gmail.com">easylive1989@gmail.com</a></p>
+            <p>LinkedIn: <a href="https://www.linkedin.com/in/paul-wu-810280135/" target="_blank">Paul Wu</a></p>
+            <p>Medium: <a href="https://medium.com/@easylive1989" target="_blank">@easylive1989</a></p>
+        </div>
+    </footer>
+
     <script>
         const modal = document.getElementById("gameModal");
         const gameFrame = document.getElementById("game-frame");
@@ -193,7 +236,7 @@
         gameFrame.onload = function() {
             loaderContainer.style.display = "none";
             gameFrame.style.display = "block";
-            gameFrame.focus(); // 自動將焦點設置到 iframe
+            gameFrame.focus();
         }
 
         closeBtn.onclick = function() {
