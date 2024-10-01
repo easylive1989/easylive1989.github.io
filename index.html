@@ -273,147 +273,115 @@
         footer a:hover {
             text-decoration: underline;
         }
-
-        .background-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .background-container svg {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .background-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        body {
-            background-color: transparent;
-        }
     </style>
 </head>
 
 <body>
-    <div class="background-container">
-        <img src="/static/svg/sky-background.svg" alt="Sky Background">
-        <header
-            style="display: flex; align-items: center; justify-content: center; padding: 20px; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <img src="/static/images/avatar.jpg" alt="Paul Wu"
-                style="width: 100px; height: 100px; border-radius: 50%; margin-right: 20px;">
-            <h1 style="font-size: 3em; color: #2c3e50;">Paul Wu's Game Portfolio</h1>
-        </header>
+    <header
+        style="display: flex; align-items: center; justify-content: center; padding: 20px; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <img src="/static/images/avatar.jpg" alt="Paul Wu"
+            style="width: 100px; height: 100px; border-radius: 50%; margin-right: 20px;">
+        <h1 style="font-size: 3em; color: #2c3e50;">Paul Wu's Game Portfolio</h1>
+    </header>
 
-        <div class="portfolio">
+    <div class="portfolio">
 
-            <div class="work">
-                <img src="/static/images/ns-shaft.png" alt="NS-SHAFT">
-                <div class="work-info">
-                    <h3 class="work-title">NS-SHAFT</h3>
-                    <a class="work-link" data-link="https://playernsshaft.web.app/#/">Play</a>
-                    <a class="source-link" href="https://github.com/easylive1989/player_ns_shaft"
-                        target="_blank">Source</a>
-                </div>
-            </div>
-            <div class="work">
-                <img src="/static/images/breakout.png" alt="Breakout">
-                <div class="work-info">
-                    <h3 class="work-title">Breakout</h3>
-                    <a class="work-link" data-link="https://easylive1989.github.io/flutter_breakout">Play</a>
-                    <a class="source-link" href="https://github.com/easylive1989/flutter_breakout"
-                        target="_blank">Source</a>
-                </div>
-            </div>
-            <div class="work">
-                <img src="/static/images/ray_world_game.png" alt="RayWorldGame">
-                <div class="work-info">
-                    <h3 class="work-title">RayWorldGame</h3>
-                    <a class="work-link" data-link="https://easylive1989.github.io/ray_world_game/">Play</a>
-                    <a class="source-link" href="https://github.com/easylive1989/ray_world_game"
-                        target="_blank">Source</a>
-                </div>
-            </div>
-            <div class="work">
-                <img src="/static/images/tetris.png" alt="Tetris">
-                <div class="work-info">
-                    <h3 class="work-title">Tetris</h3>
-                    <a class="work-link" data-link="https://easylive1989.github.io/flutter_tetris/">Play</a>
-                    <a class="source-link" href="https://github.com/easylive1989/flutter_tetris"
-                        target="_blank">Source</a>
-                </div>
-            </div>
-            <div class="work">
-                <img src="/static/images/gomoku.png" alt="Gomoku">
-                <div class="work-info">
-                    <h3 class="work-title">Gomoku</h3>
-                    <a class="work-link" data-link="https://easylive1989.github.io/LittleFlowerApp/">Play</a>
-                    <a class="source-link" href="https://github.com/easylive1989/LittleFlowerApp" target="_blank"
-                        rel="noopener noreferrer">Source</a>
-                </div>
+        <div class="work">
+            <img src="/static/images/ns-shaft.png" alt="NS-SHAFT">
+            <div class="work-info">
+                <h3 class="work-title">NS-SHAFT</h3>
+                <a class="work-link" data-link="https://playernsshaft.web.app/#/">Play</a>
+                <a class="source-link" href="https://github.com/easylive1989/player_ns_shaft" target="_blank">Source</a>
             </div>
         </div>
-
-        <div id="gameModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <div class="loader-container">
-                    <div class="loader"></div>
-                </div>
-                <iframe id="game-frame" title="遊戲預覽"></iframe>
+        <div class="work">
+            <img src="/static/images/breakout.png" alt="Breakout">
+            <div class="work-info">
+                <h3 class="work-title">Breakout</h3>
+                <a class="work-link" data-link="https://easylive1989.github.io/flutter_breakout">Play</a>
+                <a class="source-link" href="https://github.com/easylive1989/flutter_breakout"
+                    target="_blank">Source</a>
             </div>
         </div>
-
-        <footer>
-            <div style="display: flex; justify-content: space-around;">
-                <p>Email: <a href="mailto:easylive1989@gmail.com">easylive1989@gmail.com</a></p>
-                <p>LinkedIn: <a href="https://www.linkedin.com/in/paul-wu-810280135/" target="_blank">Paul Wu</a></p>
-                <p>Medium: <a href="https://medium.com/@easylive1989" target="_blank">@easylive1989</a></p>
+        <div class="work">
+            <img src="/static/images/ray_world_game.png" alt="RayWorldGame">
+            <div class="work-info">
+                <h3 class="work-title">RayWorldGame</h3>
+                <a class="work-link" data-link="https://easylive1989.github.io/ray_world_game/">Play</a>
+                <a class="source-link" href="https://github.com/easylive1989/ray_world_game" target="_blank">Source</a>
             </div>
-        </footer>
+        </div>
+        <div class="work">
+            <img src="/static/images/tetris.png" alt="Tetris">
+            <div class="work-info">
+                <h3 class="work-title">Tetris</h3>
+                <a class="work-link" data-link="https://easylive1989.github.io/flutter_tetris/">Play</a>
+                <a class="source-link" href="https://github.com/easylive1989/flutter_tetris" target="_blank">Source</a>
+            </div>
+        </div>
+        <div class="work">
+            <img src="/static/images/gomoku.png" alt="Gomoku">
+            <div class="work-info">
+                <h3 class="work-title">Gomoku</h3>
+                <a class="work-link" data-link="https://easylive1989.github.io/LittleFlowerApp/">Play</a>
+                <a class="source-link" href="https://github.com/easylive1989/LittleFlowerApp" target="_blank"
+                    rel="noopener noreferrer">Source</a>
+            </div>
+        </div>
+    </div>
 
-        <script>
-            const modal = document.getElementById("gameModal");
-            const gameFrame = document.getElementById("game-frame");
-            const closeBtn = document.getElementsByClassName("close")[0];
-            const links = document.getElementsByClassName("work-link");
-            const loaderContainer = document.querySelector(".loader-container");
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="loader-container">
+                <div class="loader"></div>
+            </div>
+            <iframe id="game-frame" title="遊戲預覽"></iframe>
+        </div>
+    </div>
 
-            for (let link of links) {
-                link.onclick = function () {
-                    modal.style.display = "block";
-                    loaderContainer.style.display = "flex";
-                    gameFrame.style.display = "none";
-                    gameFrame.src = this.getAttribute("data-link");
-                }
+    <footer>
+        <div style="display: flex; justify-content: space-around;">
+            <p>Email: <a href="mailto:easylive1989@gmail.com">easylive1989@gmail.com</a></p>
+            <p>LinkedIn: <a href="https://www.linkedin.com/in/paul-wu-810280135/" target="_blank">Paul Wu</a></p>
+            <p>Medium: <a href="https://medium.com/@easylive1989" target="_blank">@easylive1989</a></p>
+        </div>
+    </footer>
+
+    <script>
+        const modal = document.getElementById("gameModal");
+        const gameFrame = document.getElementById("game-frame");
+        const closeBtn = document.getElementsByClassName("close")[0];
+        const links = document.getElementsByClassName("work-link");
+        const loaderContainer = document.querySelector(".loader-container");
+
+        for (let link of links) {
+            link.onclick = function () {
+                modal.style.display = "block";
+                loaderContainer.style.display = "flex";
+                gameFrame.style.display = "none";
+                gameFrame.src = this.getAttribute("data-link");
             }
+        }
 
-            gameFrame.onload = function () {
-                loaderContainer.style.display = "none";
-                gameFrame.style.display = "block";
-                gameFrame.focus();
-            }
+        gameFrame.onload = function () {
+            loaderContainer.style.display = "none";
+            gameFrame.style.display = "block";
+            gameFrame.focus();
+        }
 
-            closeBtn.onclick = function () {
+        closeBtn.onclick = function () {
+            modal.style.display = "none";
+            gameFrame.src = "";
+        }
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
                 modal.style.display = "none";
                 gameFrame.src = "";
             }
-
-            window.onclick = function (event) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                    gameFrame.src = "";
-                }
-            }
-        </script>
-    </div>
+        }
+    </script>
 </body>
 
 </html>
