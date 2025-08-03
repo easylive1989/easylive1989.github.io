@@ -4,384 +4,513 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paul Wu's Game Portfolio</title>
+    <title>Paul Wu - Software Developer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* 字體來源: https://www.fontspace.com/category/16-bit */
-
-        @font-face {
-            font-family: 'OldSchoolAdventures';
-            src: url('/static/fonts/OldSchoolAdventures-42j9.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
+        :root {
+            --tiffany-green: #0ABAB5;
+            --tiffany-green-dark: #089692;
+            --beige: #F5F5DC;
+            --white: #FFFFFF;
+            --text-dark: #2C3E50;
+            --text-light: #5A6C7D;
+            --shadow: rgba(10, 186, 181, 0.1);
+            --shadow-hover: rgba(10, 186, 181, 0.2);
         }
 
-        body,
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6,
-        p,
-        a,
-        span,
-        div {
-            font-family: 'OldSchoolAdventures', Arial, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
+            color: var(--text-dark);
+            background-color: var(--beige);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
         }
 
-        h1 {
-            text-align: center;
-            color: #2c3e50;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
 
-        .portfolio {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
+        header {
+            background-color: var(--white);
+            box-shadow: 0 2px 10px var(--shadow);
+            padding: 40px 0;
         }
 
-        .work {
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 30px;
         }
 
-        .work:hover {
-            transform: translateY(-5px);
-        }
-
-        .work img {
-            width: 100%;
-            height: 200px;
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--tiffany-green);
             object-fit: cover;
         }
 
-        .work-info {
-            padding: 15px;
+        .header-info h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
         }
 
-        .work-title {
+        .header-info p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+        }
+
+        main {
+            flex: 1;
+            padding: 60px 0;
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .project-card {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px var(--shadow);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px var(--shadow-hover);
+        }
+
+        .project-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background-color: #f0f0f0;
+        }
+
+        .project-content {
+            padding: 25px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .project-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-dark);
             margin: 0;
-            font-size: 1.2em;
-            color: #2c3e50;
         }
 
-        .work-link {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 10px 20px;
-            background-color: #3498db;
-            color: #ffffff;
-            text-decoration: none;
-            cursor: pointer;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
+        .project-date {
+            font-size: 0.9rem;
+            color: var(--text-light);
         }
 
-        .work-link:before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: all 0.4s;
+        .project-description {
+            color: var(--text-light);
+            margin-bottom: 16px;
+            flex: 1;
+            line-height: 1.5;
         }
 
-        .work-link:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .work-link:hover:before {
-            left: 100%;
-        }
-
-        .work-link:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .source-link {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 10px 20px;
-            background-color: #FFA500;
-            color: #ffffff;
-            text-decoration: none;
-            cursor: pointer;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .source-link:before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: all 0.4s;
-        }
-
-        .source-link:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .source-link:hover:before {
-            left: 100%;
-        }
-
-        .source-link:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .source-link:hover {
-            background-color: #FF8C00;
-        }
-
-        .work-link:hover {
-            background-color: #2980b9;
-        }
-
-        .work-link:hover {
-            text-decoration: underline;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
-            min-height: 600px;
-            position: relative;
+        .project-tags {
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
         }
 
-        .close {
-            color: #aaa;
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
+        .tag {
+            background-color: rgba(10, 186, 181, 0.1);
+            color: var(--tiffany-green-dark);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
         }
 
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        #game-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        .loader-container {
+        .project-actions {
             display: flex;
-            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
-            width: 100px;
-            height: 100px;
+            gap: 8px;
+            transition: all 0.2s ease;
         }
 
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
+        .btn-primary {
+            background-color: var(--tiffany-green);
+            color: var(--white);
         }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
+        .btn-primary:hover {
+            background-color: var(--tiffany-green-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(10, 186, 181, 0.3);
+        }
 
-            100% {
-                transform: rotate(360deg);
-            }
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--tiffany-green);
+            border: 2px solid var(--tiffany-green);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--tiffany-green);
+            color: var(--white);
+            transform: translateY(-2px);
         }
 
         footer {
+            background-color: var(--text-dark);
+            color: var(--white);
+            padding: 40px 0;
             margin-top: auto;
-            text-align: center;
-            padding: 20px;
-            background-color: rgba(44, 62, 80, 0.9);
-            color: white;
         }
 
-        footer a {
-            color: #3498db;
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-item a {
+            color: var(--tiffany-green);
             text-decoration: none;
+            transition: color 0.2s ease;
         }
 
-        footer a:hover {
+        .footer-item a:hover {
+            color: var(--white);
             text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header-info h1 {
+                font-size: 2rem;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <header
-        style="display: flex; align-items: center; justify-content: center; padding: 20px; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <img src="/static/images/avatar.jpg" alt="Paul Wu"
-            style="width: 100px; height: 100px; border-radius: 50%; margin-right: 20px;">
-        <h1 style="font-size: 3em; color: #2c3e50;">Paul Wu's Game Portfolio</h1>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <img src="/static/images/avatar.jpg" alt="Paul Wu" class="avatar">
+                <div class="header-info">
+                    <h1>Paul Wu</h1>
+                    <p>Software Developer</p>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <div class="portfolio">
+    <main>
+        <div class="container">
+            <div class="portfolio-grid">
+                <!-- Auto Master -->
+                <div class="project-card">
+                    <img src="/static/images/auto_master.png" alt="Auto Master" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">Auto Master</h3>
+                            <span class="project-date">2025/04</span>
+                        </div>
+                        <p class="project-description">自動化各種常見任務，例如：FB 發文、FB 社團發文 ...等</p>
+                        <div class="project-tags">
+                            <span class="tag">Electron</span>
+                            <span class="tag">React</span>
+                            <span class="tag">Playwright</span>
+                            <span class="tag">AI</span>
+                        </div>
+                        <div class="project-actions">
+                            <!-- 沒有網站連結和原始碼，不顯示按鈕 -->
+                        </div>
+                    </div>
+                </div>
 
-        <div class="work">
-            <img src="/static/images/ns-shaft.png" alt="NS-SHAFT">
-            <div class="work-info">
-                <h3 class="work-title">NS-SHAFT</h3>
-                <a class="work-link" data-link="https://playernsshaft.web.app/#/">Play</a>
-                <a class="source-link" href="https://github.com/easylive1989/player_ns_shaft" target="_blank">Source</a>
-            </div>
-        </div>
-        <div class="work">
-            <img src="/static/images/breakout.png" alt="Breakout">
-            <div class="work-info">
-                <h3 class="work-title">Breakout</h3>
-                <a class="work-link" data-link="https://easylive1989.github.io/flutter_breakout">Play</a>
-                <a class="source-link" href="https://github.com/easylive1989/flutter_breakout"
-                    target="_blank">Source</a>
-            </div>
-        </div>
-        <div class="work">
-            <img src="/static/images/ray_world_game.png" alt="RayWorldGame">
-            <div class="work-info">
-                <h3 class="work-title">RayWorldGame</h3>
-                <a class="work-link" data-link="https://easylive1989.github.io/ray_world_game/">Play</a>
-                <a class="source-link" href="https://github.com/easylive1989/ray_world_game" target="_blank">Source</a>
-            </div>
-        </div>
-        <div class="work">
-            <img src="/static/images/tetris.png" alt="Tetris">
-            <div class="work-info">
-                <h3 class="work-title">Tetris</h3>
-                <a class="work-link" data-link="https://easylive1989.github.io/flutter_tetris/">Play</a>
-                <a class="source-link" href="https://github.com/easylive1989/flutter_tetris" target="_blank">Source</a>
-            </div>
-        </div>
-        <div class="work">
-            <img src="/static/images/gomoku.png" alt="Gomoku">
-            <div class="work-info">
-                <h3 class="work-title">Gomoku</h3>
-                <a class="work-link" data-link="https://easylive1989.github.io/LittleFlowerApp/">Play</a>
-                <a class="source-link" href="https://github.com/easylive1989/LittleFlowerApp" target="_blank"
-                    rel="noopener noreferrer">Source</a>
-            </div>
-        </div>
-    </div>
+                <!-- 今彩 539 開獎資訊 -->
+                <div class="project-card">
+                    <img src="/static/images/ito539_analytics.png" alt="今彩 539 開獎資訊" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">今彩 539 開獎資訊</h3>
+                            <span class="project-date">2025/06</span>
+                        </div>
+                        <p class="project-description">用 Github Action + 爬蟲達成無後端式資訊收集與統計</p>
+                        <div class="project-tags">
+                            <span class="tag">React</span>
+                            <span class="tag">Python</span>
+                            <span class="tag">AI</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://easylive1989.github.io/ito539_analytics/" target="_blank" class="btn btn-primary">查看網站</a>
+                            <a href="https://github.com/easylive1989/ito539_analytics" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
 
-    <div id="gameModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div class="loader-container">
-                <div class="loader"></div>
+                <!-- Tetris -->
+                <div class="project-card">
+                    <img src="/static/images/tetris.png" alt="Tetris" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">Tetris</h3>
+                            <span class="project-date">2023/05</span>
+                        </div>
+                        <p class="project-description">嘗試使用 TDD 開發經典遊戲：俄羅斯方塊</p>
+                        <div class="project-tags">
+                            <span class="tag">Flutter</span>
+                            <span class="tag">Flame</span>
+                            <span class="tag">TDD</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://easylive1989.github.io/flutter_tetris/" target="_blank" class="btn btn-primary">查看網站</a>
+                            <a href="https://github.com/easylive1989/flutter_tetris" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RayWorldGame -->
+                <div class="project-card">
+                    <img src="/static/images/ray_world_game.png" alt="RayWorldGame" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">RayWorldGame</h3>
+                            <span class="project-date">2023/04</span>
+                        </div>
+                        <p class="project-description">按照教程練習 Flame，嘗試模仿吸血鬼倖存者玩法</p>
+                        <div class="project-tags">
+                            <span class="tag">Flutter</span>
+                            <span class="tag">Flame</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://easylive1989.github.io/ray_world_game/" target="_blank" class="btn btn-primary">查看網站</a>
+                            <a href="https://github.com/easylive1989/ray_world_game" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Breakout -->
+                <div class="project-card">
+                    <img src="/static/images/breakout.png" alt="Breakout" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">Breakout</h3>
+                            <span class="project-date">2023/02</span>
+                        </div>
+                        <p class="project-description">按照教程練習 Flame，實作經典遊戲：打磚塊</p>
+                        <div class="project-tags">
+                            <span class="tag">Flutter</span>
+                            <span class="tag">Flame</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://easylive1989.github.io/flutter_breakout" target="_blank" class="btn btn-primary">查看網站</a>
+                            <a href="https://github.com/easylive1989/flutter_breakout" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NS-SHAFT -->
+                <div class="project-card">
+                    <img src="/static/images/ns-shaft.png" alt="NS-SHAFT" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">NS-SHAFT</h3>
+                            <span class="project-date">2022/12</span>
+                        </div>
+                        <p class="project-description">練習 Flame 開發，搭配 Firebase Hosting 部署，實作經典遊戲：小朋友下樓梯</p>
+                        <div class="project-tags">
+                            <span class="tag">Flutter</span>
+                            <span class="tag">Flame</span>
+                            <span class="tag">Firebase Hosting</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://playernsshaft.web.app/#/" target="_blank" class="btn btn-primary">查看網站</a>
+                            <a href="https://github.com/easylive1989/player_ns_shaft" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notion Assistant -->
+                <div class="project-card">
+                    <img src="/static/images/notion_assistant.png" alt="Notion Assistant" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">Notion Assistant</h3>
+                            <span class="project-date">2022/10</span>
+                        </div>
+                        <p class="project-description">用 Flutter 嘗試製作 Chrome Extension 快速存取 Notion 資訊</p>
+                        <div class="project-tags">
+                            <span class="tag">Flutter</span>
+                            <span class="tag">Chrome Extension</span>
+                            <span class="tag">Notion API</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://github.com/easylive1989/notion_assistant" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notion Cron Job -->
+                <div class="project-card">
+                    <img src="/static/images/notion_cron_job.png" alt="Notion Cron Job" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">Notion Cron Job</h3>
+                            <span class="project-date">2021/07</span>
+                        </div>
+                        <p class="project-description">用 Github Action 觸發 Python 腳本使用 Notion API 定期更新 Notion 內容</p>
+                        <div class="project-tags">
+                            <span class="tag">Python</span>
+                            <span class="tag">Notion API</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://github.com/easylive1989/notion_cron_job" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Habit Tracker -->
+                <div class="project-card">
+                    <img src="/static/images/habit_tracker.png" alt="Habit Tracker" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">Habit Tracker</h3>
+                            <span class="project-date">2021/07</span>
+                        </div>
+                        <p class="project-description">練習追蹤習慣 App，回憶一下 Android 開發</p>
+                        <div class="project-tags">
+                            <span class="tag">Android</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://github.com/easylive1989/HabitTracker" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gomoku -->
+                <div class="project-card">
+                    <img src="/static/images/gomoku.png" alt="Gomoku" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">Gomoku</h3>
+                            <span class="project-date">2021/03</span>
+                        </div>
+                        <p class="project-description">嘗試用 Flutter 開發五子棋小遊戲，並且使用 Github Action 自動化部署到 Google Play</p>
+                        <div class="project-tags">
+                            <span class="tag">Flutter</span>
+                            <span class="tag">CI/CD</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://easylive1989.github.io/LittleFlowerApp/" target="_blank" class="btn btn-primary">查看網站</a>
+                            <a href="https://github.com/easylive1989/LittleFlowerApp" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 小遊戲 Line Bot -->
+                <div class="project-card">
+                    <img src="/static/images/game_bot.jpeg" alt="小遊戲 Line Bot" class="project-image">
+                    <div class="project-content">
+                        <div class="project-header">
+                            <h3 class="project-title">小遊戲 Line Bot</h3>
+                            <span class="project-date">2020/05</span>
+                        </div>
+                        <p class="project-description">嘗試用 .Net Core + LINE 讓朋友們可用 Line 玩小遊戲，例如：猜數字、井字遊戲、五子棋</p>
+                        <div class="project-tags">
+                            <span class="tag">.Net Core</span>
+                            <span class="tag">Line Notify</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="https://github.com/easylive1989/LittleFlowerBot" target="_blank" class="btn btn-secondary">查看原始碼</a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <iframe id="game-frame" title="遊戲預覽"></iframe>
         </div>
-    </div>
+    </main>
 
     <footer>
-        <div style="display: flex; justify-content: space-around;">
-            <p>Email: <a href="mailto:easylive1989@gmail.com">easylive1989@gmail.com</a></p>
-            <p>LinkedIn: <a href="https://www.linkedin.com/in/paul-wu-810280135/" target="_blank">Paul Wu</a></p>
-            <p>Medium: <a href="https://medium.com/@easylive1989" target="_blank">@easylive1989</a></p>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-item">
+                    <span>Email:</span>
+                    <a href="mailto:easylive1989@gmail.com">easylive1989@gmail.com</a>
+                </div>
+                <div class="footer-item">
+                    <span>LinkedIn:</span>
+                    <a href="https://www.linkedin.com/in/paul-wu-810280135/" target="_blank">Paul Wu</a>
+                </div>
+                <div class="footer-item">
+                    <span>Medium:</span>
+                    <a href="https://medium.com/%E4%BF%9D%E7%BE%85%E7%9A%84-flutter-%E9%96%8B%E7%99%BC%E6%8A%80%E5%B7%A7" target="_blank">保羅的 Flutter 開發技巧</a>
+                </div>
+            </div>
         </div>
     </footer>
-
-    <script>
-        const modal = document.getElementById("gameModal");
-        const gameFrame = document.getElementById("game-frame");
-        const closeBtn = document.getElementsByClassName("close")[0];
-        const links = document.getElementsByClassName("work-link");
-        const loaderContainer = document.querySelector(".loader-container");
-
-        for (let link of links) {
-            link.onclick = function () {
-                modal.style.display = "block";
-                loaderContainer.style.display = "flex";
-                gameFrame.style.display = "none";
-                gameFrame.src = this.getAttribute("data-link");
-            }
-        }
-
-        gameFrame.onload = function () {
-            loaderContainer.style.display = "none";
-            gameFrame.style.display = "block";
-            gameFrame.focus();
-        }
-
-        closeBtn.onclick = function () {
-            modal.style.display = "none";
-            gameFrame.src = "";
-        }
-
-        window.onclick = function (event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-                gameFrame.src = "";
-            }
-        }
-    </script>
 </body>
 
 </html>
