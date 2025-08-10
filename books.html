@@ -635,14 +635,39 @@
             return Math.max(30, 30 + (pages / 10));
         }
 
+        function calculateBooksPerShelf() {
+            // 獲取書架容器的實際可用寬度
+            const bookshelfContainer = document.querySelector('.bookshelf-container');
+            const shelf = document.querySelector('.shelf');
+            
+            if (!bookshelfContainer || !shelf) return 8; // 默認值
+            
+            // 計算可用寬度：容器寬度 - 左右padding(40px * 2) - 書架左右padding(20px * 2)
+            const containerWidth = bookshelfContainer.offsetWidth;
+            const availableWidth = containerWidth - 80 - 40; // 總共減去120px的padding
+            
+            // 計算平均書本寬度 + 間距
+            const averageBookWidth = 55; // 根據頁數計算函數，大多數書的寬度在40-70px之間
+            const bookGap = 3; // 書本之間的間距
+            const bookWithGap = averageBookWidth + bookGap;
+            
+            // 計算能容納的書本數量
+            let booksPerShelf = Math.floor(availableWidth / bookWithGap);
+            
+            // 設定合理的範圍：最少2本，最多20本
+            booksPerShelf = Math.max(2, Math.min(20, booksPerShelf));
+            
+            return booksPerShelf;
+        }
+
         function displayBooks() {
             const bookshelf = document.getElementById('bookshelf');
             const filteredBooks = currentCategory === 'all' 
                 ? allBooks 
                 : allBooks.filter(book => book.category === currentCategory);
 
-            // 將書籍分組到書架上（每個書架最多放10本書）
-            const booksPerShelf = 10;
+            // 動態計算每排書籍數量
+            const booksPerShelf = calculateBooksPerShelf();
             const shelves = [];
             for (let i = 0; i < filteredBooks.length; i += booksPerShelf) {
                 shelves.push(filteredBooks.slice(i, i + booksPerShelf));
@@ -730,6 +755,13 @@
         document.addEventListener('DOMContentLoaded', loadBooks);
 
         document.querySelector('.filter-btn[data-category="all"]').addEventListener('click', filterBooks);
+
+        // 監聽視窗大小改變，重新計算書架顯示
+        window.addEventListener('resize', function() {
+            if (allBooks.length > 0) {
+                displayBooks();
+            }
+        });
     </script>
 </body>
 
