@@ -2,62 +2,62 @@
   {
     "title": "領域驅動設計",
     "author": "Eric Evans",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/185/736/original/9789865024260.jpg",
-    "pages": 352,
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/130/774/webp/9789864343874_bc.webp?1554177163",
+    "pages": 552,
     "color": "#2E4057",
     "readDate": "2025/04",
-    "category": "軟體設計",
+    "category": "軟體架構",
     "description": "探討如何將規則有效地呈現在程式碼中，讓領域模型可以有效表達行為，是所有軟體開發人員必讀的好書。"
   },
   {
     "title": "軟件開發本質論",
-    "author": "Ivar Jacobson, Pan-Wei Ng, Paul E. McMahon",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/185/736/original/9789865024260.jpg",
-    "pages": 352,
+    "author": "Ron Jeffries",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/104/790/webp/9787115441102.webp?1742434248",
+    "pages": 141,
     "color": "#2E4057",
     "readDate": "2024/01",
     "category": "軟體工程",
-    "description": "探討軟體開發的本質，從理論到實踐的完整指南。"
+    "description": "認識軟體開發，從各種介紹軟體開發的各種面向與考量，一本迷你但是精彩絕倫的書。"
   },
   {
     "title": "Clean Architecture 無瑕的程式碼",
     "author": "Robert C. Martin",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/149/632/original/9789864342945.jpg",
-    "pages": 352,
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/119/194/webp/9789864342945.webp?1525762096",
+    "pages": 336,
     "color": "#1B4F72",
     "readDate": "2024/02",
     "category": "軟體架構",
-    "description": "Uncle Bob 的架構設計經典，教你建構可維護的軟體系統。"
+    "description": "你不一定要使用 Clean Architecture，但你一定要認識 Clean Architecture 中的原則。運用這些原則，能夠有效避免商業邏輯與外部細節耦合。"
   },
   {
     "title": "Specification by Example",
     "author": "Gojko Adzic",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/096/422/original/9789862017050.jpg",
+    "cover": "https://cf-assets1.tenlong.com.tw/images/85254/medium/PG21343.jpg",
     "pages": 296,
     "color": "#8B4513",
     "readDate": "2023/11",
     "category": "軟體工程",
-    "description": "透過實例說明規格的協作開發方法。"
+    "description": "如何確保軟體正確運作，單靠 PO 跟你講規則邏輯肯定會出問題。畢竟語言天生就是充滿的各種模糊地帶，透過實例化需求，讓 PO 與 RD 之前有一種明確的需求溝通方式，能有效釐清需求。"
   },
   {
-    "title": "The Clean Coder 無瑕的程式碼",
+    "title": "The Clean Coder",
     "author": "Robert C. Martin",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/108/792/original/9789862017883.jpg",
-    "pages": 256,
+    "cover": "https://cf-assets1.tenlong.com.tw/images/77600/medium/PG21334.JPG",
+    "pages": 216,
     "color": "#2874A6",
     "readDate": "2024/03",
     "category": "程式設計",
-    "description": "軟體專業人員的行為準則和職業素養指南。"
+    "description": "如果你是開發人員，那一定要看看這本，讓 Uncle Bob 告訴你什麼叫做專業的開發人員。"
   },
   {
     "title": "依賴注入",
     "author": "Mark Seemann",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/103/264/original/9789862017258.jpg",
-    "pages": 584,
-    "color": "#27AE60",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/150/468/webp/MP11901.webp?1594973390",
+    "pages": 680,
+    "color": "#2E4057",
     "readDate": "2023/12",
     "category": "程式設計",
-    "description": "深入探討依賴注入模式的理論與實踐。"
+    "description": "現在軟體開發基本離不開依賴注入，但你真的了解依賴注入嗎？這本書能帶你認識依賴注入是為了解決什麼問題，有什麼不同的方式與技巧。"
   },
   {
     "title": "Working Effectively with Legacy Code",
