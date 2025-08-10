@@ -5,7 +5,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/130/774/webp/9789864343874_bc.webp?1554177163",
     "pages": 552,
     "color": "#2E4057",
-    "readDate": "2025/04",
+    "readDate": "2025",
     "category": "軟體架構",
     "description": "探討如何將規則有效地呈現在程式碼中，讓領域模型可以有效表達行為，是所有軟體開發人員必讀的好書。"
   },
@@ -15,7 +15,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/104/790/webp/9787115441102.webp?1742434248",
     "pages": 141,
     "color": "#2E4057",
-    "readDate": "2024/01",
+    "readDate": "2024",
     "category": "軟體工程",
     "description": "認識軟體開發，從各種介紹軟體開發的各種面向與考量，一本迷你但是精彩絕倫的書。"
   },
@@ -25,7 +25,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/119/194/webp/9789864342945.webp?1525762096",
     "pages": 336,
     "color": "#1B4F72",
-    "readDate": "2024/02",
+    "readDate": "2024",
     "category": "軟體架構",
     "description": "你不一定要使用 Clean Architecture，但你一定要認識 Clean Architecture 中的原則。運用這些原則，能夠有效避免商業邏輯與外部細節耦合。"
   },
@@ -35,7 +35,7 @@
     "cover": "https://cf-assets1.tenlong.com.tw/images/85254/medium/PG21343.jpg",
     "pages": 296,
     "color": "#8B4513",
-    "readDate": "2023/11",
+    "readDate": "2023",
     "category": "軟體工程",
     "description": "如何確保軟體正確運作，單靠 PO 跟你講規則邏輯肯定會出問題。畢竟語言天生就是充滿的各種模糊地帶，透過實例化需求，讓 PO 與 RD 之前有一種明確的需求溝通方式，能有效釐清需求。"
   },
@@ -45,7 +45,7 @@
     "cover": "https://cf-assets1.tenlong.com.tw/images/77600/medium/PG21334.JPG",
     "pages": 216,
     "color": "#2874A6",
-    "readDate": "2024/03",
+    "readDate": "2024",
     "category": "程式設計",
     "description": "如果你是開發人員，那一定要看看這本，讓 Uncle Bob 告訴你什麼叫做專業的開發人員。"
   },
@@ -55,7 +55,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/150/468/webp/MP11901.webp?1594973390",
     "pages": 680,
     "color": "#2E4057",
-    "readDate": "2023/12",
+    "readDate": "2023",
     "category": "程式設計",
     "description": "現在軟體開發基本離不開依賴注入，但你真的了解依賴注入嗎？這本書能帶你認識依賴注入是為了解決什麼問題，有什麼不同的方式與技巧。"
   },
@@ -65,7 +65,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/128/346/original/AC022723.jpg",
     "pages": 456,
     "color": "#D68910",
-    "readDate": "2024/04",
+    "readDate": "2024",
     "category": "程式設計",
     "description": "處理遺留程式碼的實用技巧和策略。"
   },
@@ -75,7 +75,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/062/885/original/9789861547534.jpg",
     "pages": 264,
     "color": "#5DADE2",
-    "readDate": "2023/10",
+    "readDate": "2023",
     "category": "程式設計",
     "description": "Kent Beck 分享的程式設計實作模式與思維。"
   },
@@ -85,7 +85,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/190/689/original/9789864343874.jpg",
     "pages": 464,
     "color": "#148F77",
-    "readDate": "2024/05",
+    "readDate": "2024",
     "category": "程式設計",
     "description": "撰寫乾淨、可讀、可維護程式碼的經典指南。"
   },
@@ -95,7 +95,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/130/473/original/9789863479192.jpg",
     "pages": 656,
     "color": "#C0392B",
-    "readDate": "2024/06",
+    "readDate": "2024",
     "category": "軟體架構",
     "description": "實踐領域驅動設計的完整指南。"
   },
@@ -105,7 +105,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/183/274/original/9789865023867.jpg",
     "pages": 368,
     "color": "#3498DB",
-    "readDate": "2024/07",
+    "readDate": "2024",
     "category": "軟體架構",
     "description": "Clean Architecture 的實際應用與案例分析。"
   },
@@ -115,7 +115,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/183/275/original/9789865023874.jpg",
     "pages": 320,
     "color": "#34495E",
-    "readDate": "2023/09",
+    "readDate": "2023",
     "category": "程式設計",
     "description": "實用程式設計師的修煉之道。"
   },
@@ -125,7 +125,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/original/9786263334144.jpg",
     "pages": 488,
     "color": "#1ABC9C",
-    "readDate": "2024/08",
+    "readDate": "2024",
     "category": "數據處理",
     "description": "現代數據工程的基礎與實踐。"
   },
@@ -135,7 +135,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/058/842/original/9789867794468.jpg",
     "pages": 368,
     "color": "#E74C3C",
-    "readDate": "2023/08",
+    "readDate": "2023",
     "category": "程式設計",
     "description": "透過設計模式進行程式重構的實用指南。"
   },
@@ -145,7 +145,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/224/990/original/9786264090056.jpg",
     "pages": 395,
     "color": "#8E44AD",
-    "readDate": "2024/09",
+    "readDate": "2024",
     "category": "程式設計",
     "description": "經典的 23 種設計模式完整指南。"
   },
@@ -155,7 +155,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/112/345/original/9789573278849.jpg",
     "pages": 288,
     "color": "#F39C12",
-    "readDate": "2023/07",
+    "readDate": "2023",
     "category": "溝通技巧",
     "description": "有效溝通與衝突解決的實用技巧。"
   },
@@ -165,7 +165,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/195/637/original/9789864345632.jpg",
     "pages": 240,
     "color": "#16A085",
-    "readDate": "2024/10",
+    "readDate": "2024",
     "category": "軟體架構",
     "description": "透過故事化方式進行領域建模的協作技巧。"
   },
@@ -175,7 +175,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/114/567/original/9789862018064.jpg",
     "pages": 312,
     "color": "#2ECC71",
-    "readDate": "2023/06",
+    "readDate": "2023",
     "category": "測試",
     "description": "使用 Cucumber 進行行為驅動開發的完整指南。"
   },
@@ -185,7 +185,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/175/363/original/9789865026073.jpg",
     "pages": 344,
     "color": "#229954",
-    "readDate": "2024/11",
+    "readDate": "2024",
     "category": "程式設計",
     "description": "Android 平台上的測試驅動開發實踐。"
   },
@@ -195,7 +195,7 @@
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/201/852/original/9789863126614.jpg",
     "pages": 368,
     "color": "#3F51B5",
-    "readDate": "2024/12",
+    "readDate": "2024",
     "category": "前端開發",
     "description": "前端應用程式的測試策略與最佳實踐。"
   }
