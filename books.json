@@ -120,14 +120,14 @@
     "description": "實用程式設計師的修煉之道。"
   },
   {
-    "title": "數據工程",
-    "author": "Joe Reis, Matt Housley",
+    "title": "易讀程式之美學",
+    "author": "Dustin Boswell, Trevor Foucher",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/6263248742.webp?1594973390",
-    "pages": 512,
+    "pages": 220,
     "color": "#1ABC9C",
     "readDate": "2024",
-    "category": "數據處理",
-    "description": "現代數據工程的基礎與實踐。"
+    "category": "程式設計",
+    "description": "如果你對好的程式碼一點概念都沒有，或許這是一本十分容易入門的好書，作者用很簡單的例子來介紹實用的做法。"
   },
   {
     "title": "設計重構",
