@@ -18,6 +18,8 @@
             --text-light: #5A6C7D;
             --shadow: rgba(10, 186, 181, 0.1);
             --shadow-hover: rgba(10, 186, 181, 0.2);
+            --wood-dark: #654321;
+            --wood-light: #8B4513;
         }
 
         * {
@@ -110,6 +112,36 @@
             padding: 60px 0;
         }
 
+        .stats-section {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px var(--shadow);
+            margin-bottom: 40px;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--tiffany-green);
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
         .filter-section {
             margin-bottom: 40px;
             background: var(--white);
@@ -152,135 +184,239 @@
             color: var(--white);
         }
 
-        .books-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
+        /* 書架樣式 */
+        .bookshelf-container {
+            background: linear-gradient(180deg, #f5f5dc 0%, #e8e8d5 100%);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .book-card {
+        .bookshelf {
+            position: relative;
+            margin-bottom: 60px;
+        }
+
+        .shelf {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            margin-bottom: 20px;
+            background: linear-gradient(180deg, var(--wood-light) 0%, var(--wood-dark) 100%);
+            border-radius: 4px;
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+                inset 0 2px 4px rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: flex-end;
+            padding: 0 20px 10px 20px;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .shelf::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(180deg, var(--wood-dark) 0%, #432818 100%);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .books-row {
+            display: flex;
+            gap: 3px;
+            height: 100%;
+            align-items: flex-end;
+            padding-bottom: 10px;
+        }
+
+        .book-spine {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+            box-shadow: 
+                2px 0 4px rgba(0, 0, 0, 0.2),
+                inset -1px 0 2px rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 5px;
+            min-width: 40px;
+            transform-origin: bottom;
+        }
+
+        .book-spine:hover {
+            transform: translateY(-10px) rotateZ(-2deg);
+            box-shadow: 
+                4px 0 8px rgba(0, 0, 0, 0.3),
+                inset -1px 0 2px rgba(255, 255, 255, 0.3);
+            z-index: 10;
+        }
+
+        .book-spine-title {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+            max-height: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Modal 樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
             background: var(--white);
             border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px var(--shadow);
-            transition: all 0.3s ease;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.2s ease;
+            z-index: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text-dark);
+        }
+
+        .modal-body {
+            padding: 40px;
+        }
+
+        .modal-header {
             display: flex;
-            flex-direction: column;
+            gap: 30px;
+            margin-bottom: 30px;
         }
 
-        .book-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px var(--shadow-hover);
-        }
-
-        .book-cover {
-            width: 100%;
-            height: 250px;
+        .modal-cover {
+            width: 150px;
+            height: 220px;
             object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             background-color: #f0f0f0;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-light);
-            font-size: 0.9rem;
+            flex-shrink: 0;
         }
 
-        .book-content {
-            padding: 25px;
+        .modal-info {
             flex: 1;
-            display: flex;
-            flex-direction: column;
         }
 
-        .book-header {
-            margin-bottom: 12px;
-        }
-
-        .book-title {
-            font-size: 1.4rem;
-            font-weight: 600;
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
             color: var(--text-dark);
-            margin-bottom: 4px;
-        }
-
-        .book-author {
-            font-size: 1rem;
-            color: var(--text-light);
             margin-bottom: 8px;
         }
 
-        .book-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .modal-author {
+            font-size: 1.2rem;
+            color: var(--text-light);
             margin-bottom: 12px;
         }
 
-        .book-category {
+        .modal-meta {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-category {
             background-color: var(--tiffany-green);
             color: var(--white);
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 500;
         }
 
-        .book-date {
-            font-size: 0.9rem;
+        .modal-date {
             color: var(--text-light);
         }
 
-        .book-description {
-            color: var(--text-light);
-            margin-bottom: 16px;
-            flex: 1;
-            line-height: 1.5;
+        .modal-description {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-dark);
+            margin-bottom: 20px;
         }
 
-        .book-tags {
+        .modal-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
         }
 
-        .tag {
+        .modal-tag {
             background-color: rgba(10, 186, 181, 0.1);
             color: var(--tiffany-green-dark);
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 500;
-        }
-
-        .stats-section {
-            background: var(--white);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px var(--shadow);
-            margin-bottom: 40px;
-        }
-
-        .stats-container {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--tiffany-green);
-        }
-
-        .stat-label {
-            font-size: 0.95rem;
-            color: var(--text-light);
         }
 
         footer {
@@ -337,13 +473,20 @@
                 text-align: center;
             }
 
-            .books-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
+            .shelf {
+                height: 250px;
             }
 
-            .stats-container {
+            .book-spine-title {
+                font-size: 0.8rem;
+            }
+
+            .modal-header {
                 flex-direction: column;
+            }
+
+            .modal-body {
+                padding: 20px;
             }
 
             .footer-content {
@@ -400,10 +543,23 @@
                 </div>
             </div>
 
-            <div class="books-grid" id="booksGrid">
+            <div class="bookshelf-container">
+                <div class="bookshelf" id="bookshelf">
+                    <!-- 書架會動態生成 -->
+                </div>
             </div>
         </div>
     </main>
+
+    <!-- Modal -->
+    <div class="modal" id="bookModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal 內容會動態生成 -->
+            </div>
+        </div>
+    </div>
 
     <footer>
         <div class="container">
@@ -432,6 +588,17 @@
         let allBooks = [];
         let currentCategory = 'all';
 
+        // 書脊顏色配置
+        const categoryColors = {
+            '程式設計': ['#2E4057', '#048A81', '#54C6EB', '#8B5A3C'],
+            '軟體工程': ['#6C5B7B', '#C06C84', '#F67280', '#355C7D'],
+            '軟體架構': ['#1B4F72', '#2874A6', '#3498DB', '#5DADE2'],
+            '自我成長': ['#0E6655', '#148F77', '#17A589', '#1ABC9C'],
+            'DevOps': ['#7D3C98', '#A569BD', '#BB8FCE', '#D7BDE2']
+        };
+
+        const defaultColors = ['#34495E', '#5D6D7E', '#85929E', '#AAB7B8'];
+
         async function loadBooks() {
             try {
                 const response = await fetch('books.json');
@@ -442,7 +609,7 @@
                 displayBooks();
             } catch (error) {
                 console.error('Error loading books:', error);
-                document.getElementById('booksGrid').innerHTML = '<p>載入書籍資料時發生錯誤</p>';
+                document.getElementById('bookshelf').innerHTML = '<p>載入書籍資料時發生錯誤</p>';
             }
         }
 
@@ -480,35 +647,113 @@
             displayBooks();
         }
 
+        function getRandomColor(category) {
+            const colors = categoryColors[category] || defaultColors;
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function getRandomHeight() {
+            return Math.floor(Math.random() * 60) + 240; // 240px 到 300px
+        }
+
+        function getRandomWidth() {
+            return Math.floor(Math.random() * 20) + 45; // 45px 到 65px
+        }
+
         function displayBooks() {
-            const booksGrid = document.getElementById('booksGrid');
+            const bookshelf = document.getElementById('bookshelf');
             const filteredBooks = currentCategory === 'all' 
                 ? allBooks 
                 : allBooks.filter(book => book.category === currentCategory);
 
-            booksGrid.innerHTML = filteredBooks.map(book => `
-                <div class="book-card">
-                    ${book.cover 
-                        ? `<img src="${book.cover}" alt="${book.title}" class="book-cover" onerror="this.outerHTML='<div class=\\'book-cover\\'>暫無封面</div>'">`
-                        : '<div class="book-cover">暫無封面</div>'
-                    }
-                    <div class="book-content">
-                        <div class="book-header">
-                            <h3 class="book-title">${book.title}</h3>
-                            <p class="book-author">${book.author}</p>
-                        </div>
-                        <div class="book-meta">
-                            <span class="book-category">${book.category}</span>
-                            <span class="book-date">${book.readDate || '未標記日期'}</span>
-                        </div>
-                        <p class="book-description">${book.description}</p>
-                        <div class="book-tags">
-                            ${book.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                        </div>
+            // 將書籍分組到書架上（每個書架最多放10本書）
+            const booksPerShelf = 10;
+            const shelves = [];
+            for (let i = 0; i < filteredBooks.length; i += booksPerShelf) {
+                shelves.push(filteredBooks.slice(i, i + booksPerShelf));
+            }
+
+            bookshelf.innerHTML = shelves.map((shelfBooks, shelfIndex) => `
+                <div class="shelf">
+                    <div class="books-row">
+                        ${shelfBooks.map((book, index) => {
+                            const color = getRandomColor(book.category);
+                            const height = getRandomHeight();
+                            const width = getRandomWidth();
+                            return `
+                                <div class="book-spine" 
+                                     style="background: linear-gradient(180deg, ${color} 0%, ${adjustBrightness(color, -20)} 100%);
+                                            height: ${height}px;
+                                            width: ${width}px;"
+                                     onclick="showBookDetails(${book.id})"
+                                     data-book-id="${book.id}">
+                                    <div class="book-spine-title">${book.title}</div>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             `).join('');
         }
+
+        function adjustBrightness(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255))
+                .toString(16).slice(1);
+        }
+
+        function showBookDetails(bookId) {
+            const book = allBooks.find(b => b.id === bookId);
+            if (!book) return;
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="modal-header">
+                    ${book.cover 
+                        ? `<img src="${book.cover}" alt="${book.title}" class="modal-cover" onerror="this.outerHTML='<div class=\\'modal-cover\\'>暫無封面</div>'">`
+                        : '<div class="modal-cover">暫無封面</div>'
+                    }
+                    <div class="modal-info">
+                        <h2 class="modal-title">${book.title}</h2>
+                        <p class="modal-author">${book.author}</p>
+                        <div class="modal-meta">
+                            <span class="modal-category">${book.category}</span>
+                            <span class="modal-date">閱讀時間：${book.readDate || '未標記'}</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="modal-description">${book.description}</p>
+                <div class="modal-tags">
+                    ${book.tags.map(tag => `<span class="modal-tag">${tag}</span>`).join('')}
+                </div>
+            `;
+
+            document.getElementById('bookModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('bookModal').classList.remove('active');
+        }
+
+        // 點擊 Modal 外部關閉
+        document.getElementById('bookModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // ESC 鍵關閉 Modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', loadBooks);
 
