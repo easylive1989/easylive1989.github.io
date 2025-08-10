@@ -1,6 +1,5 @@
 [
   {
-    "id": 0,
     "title": "領域驅動設計",
     "author": "Eric Evans",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/185/736/original/9789865024260.jpg",
@@ -8,11 +7,9 @@
     "color": "#2E4057",
     "readDate": "2025/04",
     "category": "軟體設計",
-    "tags": ["軟體設計"],
     "description": "探討如何將規則有效地呈現在程式碼中，讓領域模型可以有效表達行為，是所有軟體開發人員必讀的好書。"
   },
   {
-    "id": 1,
     "title": "軟件開發本質論",
     "author": "Ivar Jacobson, Pan-Wei Ng, Paul E. McMahon",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/185/736/original/9789865024260.jpg",
@@ -20,11 +17,9 @@
     "color": "#2E4057",
     "readDate": "2024/01",
     "category": "軟體工程",
-    "tags": ["軟體工程", "敏捷開發", "團隊協作"],
     "description": "探討軟體開發的本質，從理論到實踐的完整指南。"
   },
   {
-    "id": 2,
     "title": "Clean Architecture 無瑕的程式碼",
     "author": "Robert C. Martin",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/149/632/original/9789864342945.jpg",
@@ -32,11 +27,9 @@
     "color": "#1B4F72",
     "readDate": "2024/02",
     "category": "軟體架構",
-    "tags": ["軟體架構", "設計原則", "Clean Code"],
     "description": "Uncle Bob 的架構設計經典，教你建構可維護的軟體系統。"
   },
   {
-    "id": 3,
     "title": "Specification by Example",
     "author": "Gojko Adzic",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/096/422/original/9789862017050.jpg",
@@ -44,11 +37,9 @@
     "color": "#8B4513",
     "readDate": "2023/11",
     "category": "軟體工程",
-    "tags": ["BDD", "測試", "敏捷開發"],
     "description": "透過實例說明規格的協作開發方法。"
   },
   {
-    "id": 4,
     "title": "The Clean Coder 無瑕的程式碼",
     "author": "Robert C. Martin",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/108/792/original/9789862017883.jpg",
@@ -56,11 +47,9 @@
     "color": "#2874A6",
     "readDate": "2024/03",
     "category": "程式設計",
-    "tags": ["專業素養", "軟體工程", "職業道德"],
     "description": "軟體專業人員的行為準則和職業素養指南。"
   },
   {
-    "id": 5,
     "title": "依賴注入",
     "author": "Mark Seemann",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/103/264/original/9789862017258.jpg",
@@ -68,11 +57,9 @@
     "color": "#27AE60",
     "readDate": "2023/12",
     "category": "程式設計",
-    "tags": ["依賴注入", "設計模式", ".NET"],
     "description": "深入探討依賴注入模式的理論與實踐。"
   },
   {
-    "id": 6,
     "title": "Working Effectively with Legacy Code",
     "author": "Michael Feathers",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/128/346/original/AC022723.jpg",
@@ -80,11 +67,9 @@
     "color": "#D68910",
     "readDate": "2024/04",
     "category": "程式設計",
-    "tags": ["重構", "測試", "遺留系統"],
     "description": "處理遺留程式碼的實用技巧和策略。"
   },
   {
-    "id": 7,
     "title": "Kent Beck 的實作模式",
     "author": "Kent Beck",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/062/885/original/9789861547534.jpg",
@@ -92,11 +77,9 @@
     "color": "#5DADE2",
     "readDate": "2023/10",
     "category": "程式設計",
-    "tags": ["實作模式", "程式設計", "最佳實踐"],
     "description": "Kent Beck 分享的程式設計實作模式與思維。"
   },
   {
-    "id": 8,
     "title": "Clean Code 無瑕的程式碼",
     "author": "Robert C. Martin",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/190/689/original/9789864343874.jpg",
@@ -104,11 +87,9 @@
     "color": "#148F77",
     "readDate": "2024/05",
     "category": "程式設計",
-    "tags": ["Clean Code", "重構", "程式設計"],
     "description": "撰寫乾淨、可讀、可維護程式碼的經典指南。"
   },
   {
-    "id": 9,
     "title": "實戰領域驅動設計",
     "author": "Vaughn Vernon",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/130/473/original/9789863479192.jpg",
@@ -116,11 +97,9 @@
     "color": "#C0392B",
     "readDate": "2024/06",
     "category": "軟體架構",
-    "tags": ["DDD", "領域驅動設計", "架構設計"],
     "description": "實踐領域驅動設計的完整指南。"
   },
   {
-    "id": 10,
     "title": "Clean Architecture 無瑕的程式碼 實作篇",
     "author": "Robert C. Martin",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/183/274/original/9789865023867.jpg",
@@ -128,11 +107,9 @@
     "color": "#3498DB",
     "readDate": "2024/07",
     "category": "軟體架構",
-    "tags": ["軟體架構", "實作", "Clean Architecture"],
     "description": "Clean Architecture 的實際應用與案例分析。"
   },
   {
-    "id": 11,
     "title": "The Pragmatic Programmer",
     "author": "David Thomas, Andrew Hunt",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/183/275/original/9789865023874.jpg",
@@ -140,11 +117,9 @@
     "color": "#34495E",
     "readDate": "2023/09",
     "category": "程式設計",
-    "tags": ["程式設計", "實用技巧", "軟體開發"],
     "description": "實用程式設計師的修煉之道。"
   },
   {
-    "id": 12,
     "title": "數據工程",
     "author": "Joe Reis, Matt Housley",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/original/9786263334144.jpg",
@@ -152,11 +127,9 @@
     "color": "#1ABC9C",
     "readDate": "2024/08",
     "category": "數據處理",
-    "tags": ["數據工程", "大數據", "資料處理"],
     "description": "現代數據工程的基礎與實踐。"
   },
   {
-    "id": 13,
     "title": "設計重構",
     "author": "Joshua Kerievsky",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/058/842/original/9789867794468.jpg",
@@ -164,11 +137,9 @@
     "color": "#E74C3C",
     "readDate": "2023/08",
     "category": "程式設計",
-    "tags": ["重構", "設計模式", "程式設計"],
     "description": "透過設計模式進行程式重構的實用指南。"
   },
   {
-    "id": 14,
     "title": "深入淺出設計模式",
     "author": "Gang of Four",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/224/990/original/9786264090056.jpg",
@@ -176,11 +147,9 @@
     "color": "#8E44AD",
     "readDate": "2024/09",
     "category": "程式設計",
-    "tags": ["設計模式", "物件導向", "軟體設計"],
     "description": "經典的 23 種設計模式完整指南。"
   },
   {
-    "id": 15,
     "title": "先整理一下？",
     "author": "Douglas Stone, Bruce Patton, Sheila Heen",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/112/345/original/9789573278849.jpg",
@@ -188,11 +157,9 @@
     "color": "#F39C12",
     "readDate": "2023/07",
     "category": "溝通技巧",
-    "tags": ["溝通", "協作", "團隊合作"],
     "description": "有效溝通與衝突解決的實用技巧。"
   },
   {
-    "id": 16,
     "title": "領域故事化",
     "author": "Stefan Hofer, Henning Schwentner",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/195/637/original/9789864345632.jpg",
@@ -200,11 +167,9 @@
     "color": "#16A085",
     "readDate": "2024/10",
     "category": "軟體架構",
-    "tags": ["領域建模", "故事化", "協作"],
     "description": "透過故事化方式進行領域建模的協作技巧。"
   },
   {
-    "id": 17,
     "title": "The Cucumber Book",
     "author": "Matt Wynne, Aslak Hellesøy",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/114/567/original/9789862018064.jpg",
@@ -212,11 +177,9 @@
     "color": "#2ECC71",
     "readDate": "2023/06",
     "category": "測試",
-    "tags": ["BDD", "Cucumber", "自動化測試"],
     "description": "使用 Cucumber 進行行為驅動開發的完整指南。"
   },
   {
-    "id": 18,
     "title": "Android TDD 測試驅動開發",
     "author": "Danny Preussler, Rivu Chakraborty",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/175/363/original/9789865026073.jpg",
@@ -224,11 +187,9 @@
     "color": "#229954",
     "readDate": "2024/11",
     "category": "程式設計",
-    "tags": ["Android", "TDD", "測試驅動開發"],
     "description": "Android 平台上的測試驅動開發實踐。"
   },
   {
-    "id": 19,
     "title": "前端測試實踐策略",
     "author": "Gil Tayar",
     "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/201/852/original/9789863126614.jpg",
@@ -236,7 +197,6 @@
     "color": "#3F51B5",
     "readDate": "2024/12",
     "category": "前端開發",
-    "tags": ["前端測試", "JavaScript", "自動化測試"],
     "description": "前端應用程式的測試策略與最佳實踐。"
   }
 ]

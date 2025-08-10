@@ -408,20 +408,7 @@
             margin-bottom: 20px;
         }
 
-        .modal-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
 
-        .modal-tag {
-            background-color: rgba(10, 186, 181, 0.1);
-            color: var(--tiffany-green-dark);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
 
         footer {
             background-color: var(--text-dark);
@@ -672,8 +659,8 @@
                                      style="background: linear-gradient(180deg, ${color} 0%, ${adjustBrightness(color, -20)} 100%);
                                             height: ${BOOK_HEIGHT}px;
                                             width: ${width}px;"
-                                     onclick="showBookDetails(${book.id})"
-                                     data-book-id="${book.id}">
+                                     onclick="showBookDetails('${book.title}')"
+                                     data-book-title="${book.title}">
                                     <div class="book-spine-title">${book.title}</div>
                                 </div>
                             `;
@@ -695,8 +682,8 @@
                 .toString(16).slice(1);
         }
 
-        function showBookDetails(bookId) {
-            const book = allBooks.find(b => b.id === bookId);
+        function showBookDetails(bookTitle) {
+            const book = allBooks.find(b => b.title === bookTitle);
             if (!book) return;
 
             const modalBody = document.getElementById('modalBody');
@@ -717,9 +704,6 @@
                     </div>
                 </div>
                 <p class="modal-description">${book.description}</p>
-                <div class="modal-tags">
-                    ${book.tags.map(tag => `<span class="modal-tag">${tag}</span>`).join('')}
-                </div>
             `;
 
             document.getElementById('bookModal').classList.add('active');
