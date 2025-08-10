@@ -62,17 +62,17 @@
   {
     "title": "Working Effectively with Legacy Code",
     "author": "Michael Feathers",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/129/406/webp/9789864344000.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/138/400/webp/MP11914.webp?1563786524",
     "pages": 464,
     "color": "#D68910",
     "readDate": "2024",
     "category": "程式設計",
-    "description": "處理遺留程式碼的實用技巧和策略。"
+    "description": "大多數人在公司碰到的專案都不是自己從頭開始，而是前人一點一滴完成的，可能會碰到許多恐怖的程式碼。如何避免受到這些 Legacy code 的殘害，那你手上必須得有一些工具，其中之一就是這本書。"
   },
   {
     "title": "Kent Beck 的實作模式",
     "author": "Kent Beck",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/062/885/webp/9789861547534.webp?1594973390",
+    "cover": "https://cf-assets1.tenlong.com.tw/images/78329/medium/PG21338.jpg",
     "pages": 184,
     "color": "#5DADE2",
     "readDate": "2023",
@@ -82,7 +82,7 @@
   {
     "title": "Clean Code 無瑕的程式碼",
     "author": "Robert C. Martin",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/062/885/webp/9862017058.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/068/780/webp/PG21219.webp?1660641717",
     "pages": 480,
     "color": "#148F77",
     "readDate": "2024",
@@ -92,17 +92,17 @@
   {
     "title": "實戰領域驅動設計",
     "author": "Vaughn Vernon",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/6263338156.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/208/403/webp/9786263338159.webp?1715752017",
     "pages": 776,
     "color": "#C0392B",
     "readDate": "2024",
     "category": "軟體架構",
-    "description": "實踐領域驅動設計的完整指南。"
+    "description": "領域驅動設計是一門很進階的學問，有許多原則與理論。但是要想知道如何運用在實際的工作中，那你必須也得看看這本。"
   },
   {
     "title": "Clean Architecture 無瑕的程式碼 實作篇",
     "author": "Tom Hombergs",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/6263336803.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/196/910/webp/MP12308_bc.webp?1703143141",
     "pages": 232,
     "color": "#3498DB",
     "readDate": "2024",
@@ -112,17 +112,17 @@
   {
     "title": "The Pragmatic Programmer",
     "author": "David Thomas, Andrew Hunt",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/9865022753.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/140/201/webp/%E7%B4%A2%E5%BC%95.webp?1567501984",
     "pages": 436,
     "color": "#34495E",
     "readDate": "2023",
     "category": "程式設計",
-    "description": "實用程式設計師的修煉之道。"
+    "description": "想變成一個專業的軟體工程師嗎？這本書中介紹的心態與技巧能陪伴你一輩子。"
   },
   {
     "title": "易讀程式之美學",
     "author": "Dustin Boswell, Trevor Foucher",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/6263248742.webp?1594973390",
+    "cover": "https://cf-assets1.tenlong.com.tw/images/75336/medium/9789862767191.jpg",
     "pages": 220,
     "color": "#1ABC9C",
     "readDate": "2024",
@@ -132,7 +132,7 @@
   {
     "title": "設計重構",
     "author": "Girish Suryanarayana, Ganesh Samarthyam, Tushar Sharma",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/9864345222.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/167/432/webp/9789864345229.webp?1631873400",
     "pages": 272,
     "color": "#E74C3C",
     "readDate": "2023",
@@ -142,7 +142,7 @@
   {
     "title": "深入淺出設計模式",
     "author": "Eric Freeman, Elisabeth Robson",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/9865029367.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/166/110/webp/9789865029364.webp?1630380485",
     "pages": 676,
     "color": "#8E44AD",
     "readDate": "2024",
@@ -152,7 +152,7 @@
   {
     "title": "先整理一下？",
     "author": "Kent Beck",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/6263249617.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/232/230/webp/A786.webp?1733899461",
     "pages": 128,
     "color": "#F39C12",
     "readDate": "2023",
@@ -162,7 +162,7 @@
   {
     "title": "領域故事化",
     "author": "Stefan Hofer, Henning Schwentner",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/6263339330.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/218/188/webp/9786263339330_bc.webp?1723690837",
     "pages": 264,
     "color": "#16A085",
     "readDate": "2024",
@@ -172,7 +172,7 @@
   {
     "title": "The Cucumber Book",
     "author": "Matt Wynne, Aslak Hellesoy, Steve Tooke",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/1680502387.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/062/438/webp/51dKVQPJolL.webp?1525755277",
     "pages": 336,
     "color": "#2ECC71",
     "readDate": "2023",
@@ -182,7 +182,7 @@
   {
     "title": "Android TDD 測試驅動開發",
     "author": "陳瑞忠",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/9864344900.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/148/535/webp/MP22017.webp?1590378445",
     "pages": 352,
     "color": "#229954",
     "readDate": "2024",
@@ -192,7 +192,7 @@
   {
     "title": "前端測試實踐策略",
     "author": "Summer",
-    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/216/234/webp/6263338741.webp?1594973390",
+    "cover": "https://cf-assets2.tenlong.com.tw/products/images/000/208/994/webp/9786263338746.webp?1717570469",
     "pages": 336,
     "color": "#3F51B5",
     "readDate": "2024",
