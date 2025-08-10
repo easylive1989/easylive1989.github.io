@@ -51,7 +51,38 @@
         .header-content {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 30px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-dark);
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            background-color: var(--tiffany-green);
+            color: var(--white);
+        }
+
+        nav a.active {
+            background-color: var(--tiffany-green);
+            color: var(--white);
         }
 
         .avatar {
@@ -236,6 +267,19 @@
                 text-align: center;
             }
 
+            .header-left {
+                flex-direction: column;
+            }
+
+            nav {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            nav a {
+                text-align: center;
+            }
+
             .header-info h1 {
                 font-size: 2rem;
             }
@@ -258,11 +302,17 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <img src="/static/images/avatar.jpg" alt="Paul Wu" class="avatar">
-                <div class="header-info">
-                    <h1>Paul Wu</h1>
-                    <p>Software Developer</p>
+                <div class="header-left">
+                    <img src="/static/images/avatar.jpg" alt="Paul Wu" class="avatar">
+                    <div class="header-info">
+                        <h1>Paul Wu</h1>
+                        <p>Software Developer</p>
+                    </div>
                 </div>
+                <nav>
+                    <a href="index.html" class="active">專案作品</a>
+                    <a href="books.html">閱讀書單</a>
+                </nav>
             </div>
         </div>
     </header>
