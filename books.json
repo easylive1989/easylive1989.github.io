@@ -87,7 +87,7 @@
     "color": "#148F77",
     "readDate": "2024",
     "category": "程式設計",
-    "description": "撰寫乾淨、可讀、可維護程式碼的經典指南。"
+    "description": "Uncle Bob 最為人知的 Clean Code 教戰手冊。"
   },
   {
     "title": "實戰領域驅動設計",
@@ -97,7 +97,7 @@
     "color": "#C0392B",
     "readDate": "2024",
     "category": "軟體架構",
-    "description": "領域驅動設計是一門很進階的學問，有許多原則與理論。但是要想知道如何運用在實際的工作中，那你必須也得看看這本。"
+    "description": "領域驅動設計是一門進階的學問，有許多原則與理論。但是要想知道如何運用在實際的工作中，那你必須也得看看這本。"
   },
   {
     "title": "Clean Architecture 無瑕的程式碼 實作篇",
@@ -107,7 +107,7 @@
     "color": "#3498DB",
     "readDate": "2024",
     "category": "軟體架構",
-    "description": "Clean Architecture 的實際應用與案例分析。"
+    "description": "如果你是後端開發人員，看完了 Clean Architecture 後，也應該看看這本實作篇，能更深入認識 Clean Architecture 實際運用的方式。"
   },
   {
     "title": "The Pragmatic Programmer",
@@ -137,7 +137,7 @@
     "color": "#E74C3C",
     "readDate": "2023",
     "category": "程式設計",
-    "description": "透過設計模式進行程式重構的實用指南。"
+    "description": "書中針對各種不同的壞味道重新整理歸納，讓人對壞味道有更進一步的認識，同時給出相對應的重構建議。"
   },
   {
     "title": "深入淺出設計模式",
@@ -147,7 +147,7 @@
     "color": "#8E44AD",
     "readDate": "2024",
     "category": "程式設計",
-    "description": "經典的 23 種設計模式完整指南。"
+    "description": "用深入淺出系列一貫的經典敘述方式，讓人用更有趣的方式認識設計模式。"
   },
   {
     "title": "先整理一下？",
@@ -156,8 +156,8 @@
     "pages": 128,
     "color": "#F39C12",
     "readDate": "2023",
-    "category": "溝通技巧",
-    "description": "有效溝通與衝突解決的實用技巧。"
+    "category": "程式設計",
+    "description": "Kent Beck 把比重構還小的重構稱之為整理，書中介紹了許多整理技巧，除此之外還更近一步地闡述了軟體工程中常見的問題，讓人可以從更多面向來探討軟體工程。"
   },
   {
     "title": "領域故事化",
@@ -167,7 +167,7 @@
     "color": "#16A085",
     "readDate": "2024",
     "category": "軟體架構",
-    "description": "透過故事化方式進行領域建模的協作技巧。"
+    "description": "領域故事化是一種 Modeling 的方式，比起事件風暴，領域故事話更貼近使用者真實的使用流程。"
   },
   {
     "title": "The Cucumber Book",
@@ -197,6 +197,6 @@
     "color": "#3F51B5",
     "readDate": "2024",
     "category": "前端開發",
-    "description": "前端應用程式的測試策略與最佳實踐。"
+    "description": "書中介紹了各種不同的前端測試方式與工具，用淺顯易懂的方式帶大家認識這些技術"
   }
 ]
