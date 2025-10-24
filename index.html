@@ -83,9 +83,10 @@
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
-        nav a {
+        .nav-button {
             text-decoration: none;
             color: var(--text-dark);
             padding: 8px 16px;
@@ -94,18 +95,72 @@
             transition: all 0.2s ease;
             font-weight: 500;
             font-size: 0.95rem;
+            background-color: transparent;
+            cursor: pointer;
+            font-family: inherit;
         }
 
-        nav a:hover {
+        .nav-button:hover {
             background-color: var(--primary);
             color: var(--white);
             border-color: var(--primary);
         }
 
-        nav a.active {
+        .nav-button.active {
             background-color: var(--primary);
             color: var(--white);
             border-color: var(--primary);
+        }
+
+        /* Dropdown 樣式 */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+            background-color: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            min-width: 200px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 10px 16px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+            border-bottom: 1px solid #E5E5E5;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary);
+            color: var(--white);
         }
 
         /* Main Body 樣式 */
@@ -561,9 +616,16 @@
         <div class="container">
             <div class="header-content">
                 <h1 class="site-title">保羅軟體開發</h1>
-                <nav id="tagNav">
-                    <a href="#" class="tag-filter active" data-tag="all">全部文章</a>
-                    <!-- Tag 會動態載入 -->
+                <nav id="mainNav">
+                    <a href="#" class="nav-button active" id="dailyDevButton">日常開發</a>
+                    <div class="dropdown">
+                        <button class="nav-button dropdown-toggle" id="tutorialsButton">
+                            主題教學 ▼
+                        </button>
+                        <div class="dropdown-menu" id="tutorialsMenu">
+                            <!-- 教學系列會動態載入 -->
+                        </div>
+                    </div>
                 </nav>
             </div>
         </div>
@@ -640,7 +702,10 @@
         let allArticles = [];
         let allTags = [];
         let allSideProjects = [];
-        let currentTag = 'all';
+        let allTutorialSeries = [];
+        let currentView = 'daily'; // 'daily' 或 'tutorial'
+        let currentSeries = null; // 當前選中的教學系列
+        let currentArticles = []; // 當前顯示的文章列表
         let currentPage = 1;
         const articlesPerPage = 10;
 
@@ -652,9 +717,13 @@
                 allArticles = data.articles;
                 allTags = data.tags;
                 allSideProjects = data.sideProjects || [];
+                allTutorialSeries = data.tutorialSeries || [];
 
-                // 初始化 Tag 導航列
-                initTagNav();
+                // 初始化當前文章列表為所有文章
+                currentArticles = allArticles;
+
+                // 初始化導航列
+                initNavigation();
 
                 // 顯示文章列表
                 renderArticles();
@@ -674,44 +743,74 @@
             }
         }
 
-        // 初始化 Tag 導航列
-        function initTagNav() {
-            const tagNav = document.getElementById('tagNav');
-
-            // 保留「全部文章」按鈕
-            const allButton = tagNav.querySelector('[data-tag="all"]');
-
-            // 加入其他 Tag
-            allTags.forEach(tag => {
-                const tagLink = document.createElement('a');
-                tagLink.href = '#';
-                tagLink.className = 'tag-filter';
-                tagLink.textContent = tag;
-                tagLink.dataset.tag = tag;
-                tagLink.addEventListener('click', handleTagClick);
-                tagNav.appendChild(tagLink);
+        // 初始化導航列
+        function initNavigation() {
+            // 日常開發按鈕
+            const dailyDevButton = document.getElementById('dailyDevButton');
+            dailyDevButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                showDailyArticles();
             });
 
-            // 為「全部文章」加上點擊事件
-            allButton.addEventListener('click', handleTagClick);
+            // 主題教學按鈕
+            const tutorialsButton = document.getElementById('tutorialsButton');
+            const tutorialsMenu = document.getElementById('tutorialsMenu');
+
+            tutorialsButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                tutorialsMenu.classList.toggle('show');
+            });
+
+            // 點擊其他地方關閉下拉選單
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.dropdown')) {
+                    tutorialsMenu.classList.remove('show');
+                }
+            });
+
+            // 載入教學系列到下拉選單
+            allTutorialSeries.forEach(series => {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'dropdown-item';
+                item.textContent = series.name;
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showTutorialSeries(series);
+                    tutorialsMenu.classList.remove('show');
+                });
+                tutorialsMenu.appendChild(item);
+            });
         }
 
-        // 處理 Tag 點擊事件
-        function handleTagClick(e) {
-            e.preventDefault();
-            const tag = e.target.dataset.tag;
-
-            // 更新當前 Tag
-            currentTag = tag;
-
-            // 重置到第一頁
+        // 顯示日常開發文章
+        function showDailyArticles() {
+            currentView = 'daily';
+            currentSeries = null;
+            currentArticles = allArticles;
             currentPage = 1;
 
             // 更新 active 狀態
-            document.querySelectorAll('.tag-filter').forEach(link => {
-                link.classList.remove('active');
-            });
-            e.target.classList.add('active');
+            document.getElementById('dailyDevButton').classList.add('active');
+            document.getElementById('tutorialsButton').classList.remove('active');
+
+            // 重新渲染文章列表
+            renderArticles();
+
+            // 確保顯示列表頁面
+            showListView();
+        }
+
+        // 顯示教學系列文章
+        function showTutorialSeries(series) {
+            currentView = 'tutorial';
+            currentSeries = series;
+            currentArticles = series.articles;
+            currentPage = 1;
+
+            // 更新 active 狀態
+            document.getElementById('dailyDevButton').classList.remove('active');
+            document.getElementById('tutorialsButton').classList.add('active');
 
             // 重新渲染文章列表
             renderArticles();
@@ -724,17 +823,11 @@
         function renderArticles() {
             const container = document.getElementById('articlesContainer');
 
-            // 過濾文章
-            let filteredArticles = allArticles;
-            if (currentTag !== 'all') {
-                filteredArticles = allArticles.filter(article => article.tag === currentTag);
-            }
-
             // 計算分頁
-            const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
+            const totalPages = Math.ceil(currentArticles.length / articlesPerPage);
             const startIndex = (currentPage - 1) * articlesPerPage;
             const endIndex = startIndex + articlesPerPage;
-            const articlesToShow = filteredArticles.slice(startIndex, endIndex);
+            const articlesToShow = currentArticles.slice(startIndex, endIndex);
 
             // 如果沒有文章
             if (articlesToShow.length === 0) {
@@ -744,19 +837,25 @@
             }
 
             // 渲染文章卡片
-            container.innerHTML = articlesToShow.map((article, index) => `
-                <div class="article-card" onclick="showArticleDetail(${allArticles.indexOf(article)})">
-                    <div class="article-header">
-                        <h2 class="article-title">${article.title}</h2>
-                        <span class="article-date">${formatDate(article.updatedAt)}</span>
+            container.innerHTML = articlesToShow.map((article, index) => {
+                const actualIndex = startIndex + index;
+                const dateToShow = currentView === 'daily' ? formatDate(article.createdAt) : '';
+                const tagToShow = currentView === 'daily' ? `<span class="article-tag">${article.tag}</span>` : '';
+
+                return `
+                    <div class="article-card" onclick="showArticleDetail(${actualIndex})">
+                        <div class="article-header">
+                            <h2 class="article-title">${article.title}</h2>
+                            ${dateToShow ? `<span class="article-date">${dateToShow}</span>` : ''}
+                        </div>
+                        <p class="article-summary">${article.summary}</p>
+                        ${tagToShow}
                     </div>
-                    <p class="article-summary">${article.summary}</p>
-                    <span class="article-tag">${article.tag}</span>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             // 更新分頁器
-            updatePagination(totalPages, filteredArticles.length);
+            updatePagination(totalPages, currentArticles.length);
         }
 
         // 更新分頁器
@@ -794,13 +893,21 @@
 
         // 顯示文章詳細頁面
         function showArticleDetail(articleIndex) {
-            const article = allArticles[articleIndex];
+            const article = currentArticles[articleIndex];
             if (!article) return;
 
             // 更新文章詳細資訊
             document.getElementById('detailTitle').textContent = article.title;
-            document.getElementById('detailDate').textContent = '更新時間: ' + formatDate(article.updatedAt);
-            document.getElementById('detailTag').innerHTML = `<span class="article-tag">${article.tag}</span>`;
+
+            // 根據當前視圖顯示不同資訊
+            if (currentView === 'daily') {
+                document.getElementById('detailDate').textContent = '新增時間: ' + formatDate(article.createdAt);
+                document.getElementById('detailTag').innerHTML = `<span class="article-tag">${article.tag}</span>`;
+            } else {
+                // 教學系列不顯示日期和標籤
+                document.getElementById('detailDate').textContent = currentSeries ? currentSeries.name : '';
+                document.getElementById('detailTag').innerHTML = '';
+            }
 
             // 渲染 Markdown 內容
             const htmlContent = marked.parse(article.content || '');
