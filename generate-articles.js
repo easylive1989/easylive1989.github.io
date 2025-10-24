@@ -72,32 +72,39 @@ function parseArticleMetadata(content, filename) {
 
   // 提取文章摘要（前 150 字，跳過 metadata 和圖片）
   let summary = '';
+  let fullContent = '';
   let startExtract = false;
   let charCount = 0;
+  let contentStarted = false;
 
-  for (const line of lines) {
-    // 跳過 metadata 區塊和圖片
-    if (line.startsWith('#') ||
-        line.startsWith('新增時間:') ||
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // 跳過 metadata 區塊
+    if (line.startsWith('新增時間:') ||
         line.startsWith('最後編輯時間:') ||
         line.startsWith('id:') ||
         line.startsWith('完成:') ||
         line.startsWith('類型:') ||
-        line.startsWith('🧩 領域:') ||
-        line.startsWith('![') ||
-        line.trim() === '') {
-      if (line.startsWith('#')) {
-        startExtract = true;
-      }
+        line.startsWith('🧩 領域:')) {
       continue;
     }
 
-    if (startExtract && line.trim() !== '') {
+    // 遇到第一個標題後開始提取內容
+    if (line.startsWith('#')) {
+      startExtract = true;
+      contentStarted = true;
+    }
+
+    // 提取完整內容（跳過第一個標題）
+    if (contentStarted && i > 0) {
+      fullContent += line + '\n';
+    }
+
+    // 提取摘要（跳過標題和圖片）
+    if (startExtract && !line.startsWith('#') && !line.startsWith('![') && line.trim() !== '') {
       summary += line + ' ';
       charCount += line.length;
-      if (charCount >= 150) {
-        break;
-      }
     }
   }
 
@@ -109,6 +116,7 @@ function parseArticleMetadata(content, filename) {
   return {
     title,
     summary,
+    content: fullContent.trim(),
     createdAt: metadata.createdAt || '',
     updatedAt: metadata.updatedAt || '',
     id: metadata.id || '',

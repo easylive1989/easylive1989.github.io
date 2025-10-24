@@ -18,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --background: #FDFBEE;
@@ -235,6 +236,153 @@
             color: var(--white);
         }
 
+        /* 文章詳細頁面樣式 */
+        .article-detail {
+            display: none;
+        }
+
+        .article-detail.active {
+            display: block;
+        }
+
+        .article-detail-header {
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--white);
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background-color: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .article-detail-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--tertiary);
+            margin-bottom: 15px;
+        }
+
+        .article-detail-meta {
+            display: flex;
+            gap: 20px;
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        .article-detail-content {
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 40px;
+            line-height: 1.8;
+        }
+
+        /* Markdown 內容樣式 */
+        .article-detail-content h1,
+        .article-detail-content h2,
+        .article-detail-content h3,
+        .article-detail-content h4 {
+            color: var(--tertiary);
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .article-detail-content h1 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .article-detail-content h2 {
+            font-size: 1.5rem;
+        }
+
+        .article-detail-content h3 {
+            font-size: 1.3rem;
+        }
+
+        .article-detail-content p {
+            margin-bottom: 15px;
+        }
+
+        .article-detail-content code {
+            background-color: rgba(87, 180, 186, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-detail-content pre {
+            background-color: #f5f5f5;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+
+        .article-detail-content pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .article-detail-content blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 20px;
+            margin: 20px 0;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        .article-detail-content ul,
+        .article-detail-content ol {
+            margin-bottom: 15px;
+            padding-left: 30px;
+        }
+
+        .article-detail-content li {
+            margin-bottom: 8px;
+        }
+
+        .article-detail-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .article-detail-content a {
+            color: var(--primary);
+            text-decoration: none;
+            border-bottom: 1px solid var(--primary);
+        }
+
+        .article-detail-content a:hover {
+            color: var(--secondary);
+            border-bottom-color: var(--secondary);
+        }
+
         /* 載入中和空狀態 */
         .loading {
             text-align: center;
@@ -246,6 +394,11 @@
             text-align: center;
             padding: 60px 20px;
             color: var(--text-light);
+        }
+
+        /* 文章卡片可點擊樣式 */
+        .article-card {
+            cursor: pointer;
         }
 
         /* 響應式設計 */
@@ -299,7 +452,8 @@
     <!-- Main Body -->
     <main>
         <div class="container">
-            <div class="main-content">
+            <!-- 文章列表頁面 -->
+            <div class="main-content" id="listView">
                 <!-- 左側：文章列表 (3/4) -->
                 <div class="articles-section" id="articlesContainer">
                     <div class="loading">載入中...</div>
@@ -312,6 +466,19 @@
                         <p class="profile-intro">我是保羅，從事軟體開發超過十年，主要從事 Flutter 開發 ，熱愛學習各種軟體工程的知識，不斷優化產品內外品質與工作流程。</p>
                     </div>
                 </aside>
+            </div>
+
+            <!-- 文章詳細頁面 -->
+            <div class="article-detail" id="detailView">
+                <button class="back-button" id="backButton">← 返回文章列表</button>
+                <div class="article-detail-header">
+                    <h1 class="article-detail-title" id="detailTitle"></h1>
+                    <div class="article-detail-meta">
+                        <span id="detailDate"></span>
+                        <span id="detailTag"></span>
+                    </div>
+                </div>
+                <div class="article-detail-content" id="detailContent"></div>
             </div>
         </div>
     </main>
@@ -351,6 +518,9 @@
 
                 // 顯示文章列表
                 renderArticles();
+
+                // 初始化返回按鈕
+                document.getElementById('backButton').addEventListener('click', showListView);
             } catch (error) {
                 console.error('載入文章失敗:', error);
                 document.getElementById('articlesContainer').innerHTML = '<div class="empty-state">載入文章失敗</div>';
@@ -395,6 +565,9 @@
 
             // 重新渲染文章列表
             renderArticles();
+
+            // 確保顯示列表頁面
+            showListView();
         }
 
         // 渲染文章列表
@@ -417,8 +590,8 @@
             }
 
             // 渲染文章卡片
-            container.innerHTML = articlesToShow.map(article => `
-                <div class="article-card">
+            container.innerHTML = articlesToShow.map((article, index) => `
+                <div class="article-card" onclick="showArticleDetail(${allArticles.indexOf(article)})">
                     <div class="article-header">
                         <h2 class="article-title">${article.title}</h2>
                         <span class="article-date">${formatDate(article.updatedAt)}</span>
@@ -427,6 +600,37 @@
                     <span class="article-tag">${article.tag}</span>
                 </div>
             `).join('');
+        }
+
+        // 顯示文章詳細頁面
+        function showArticleDetail(articleIndex) {
+            const article = allArticles[articleIndex];
+            if (!article) return;
+
+            // 更新文章詳細資訊
+            document.getElementById('detailTitle').textContent = article.title;
+            document.getElementById('detailDate').textContent = '更新時間: ' + formatDate(article.updatedAt);
+            document.getElementById('detailTag').innerHTML = `<span class="article-tag">${article.tag}</span>`;
+
+            // 渲染 Markdown 內容
+            const htmlContent = marked.parse(article.content || '');
+            document.getElementById('detailContent').innerHTML = htmlContent;
+
+            // 切換視圖
+            document.getElementById('listView').style.display = 'none';
+            document.getElementById('detailView').classList.add('active');
+
+            // 滾動到頂部
+            window.scrollTo(0, 0);
+        }
+
+        // 顯示文章列表頁面
+        function showListView() {
+            document.getElementById('listView').style.display = 'grid';
+            document.getElementById('detailView').classList.remove('active');
+
+            // 滾動到頂部
+            window.scrollTo(0, 0);
         }
 
         // 格式化日期
