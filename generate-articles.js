@@ -284,8 +284,15 @@ function parseTutorialArticle(content, filename, seriesName) {
     summary += '...';
   }
 
+  // 提取文章 ID 和資料夾名稱
+  // 檔名格式: "標題 [32位ID].md"
+  let id = '';
+  const idMatch = filename.match(/\s+([0-9a-f]{32})\.md$/);
+  if (idMatch) {
+    id = idMatch[1];
+  }
+
   // 提取文章資料夾名稱（去除 .md 副檔名和 ID）
-  // 檔名格式: "標題 [32位ID].md" → 資料夾名稱: "標題"
   let folderName = filename.replace(/\.md$/, ''); // 去除 .md
   folderName = folderName.replace(/\s+[0-9a-f]{32}$/, ''); // 去除結尾的 32 位 ID
 
@@ -293,6 +300,7 @@ function parseTutorialArticle(content, filename, seriesName) {
     title,
     summary,
     content: fullContent.trim(),
+    id,
     filename,
     folderName,
     seriesName

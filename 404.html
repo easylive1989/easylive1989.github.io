@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>重定向中...</title>
+    <script>
+        // GitHub Pages 的 SPA 路由解決方案
+        // 當用戶直接訪問 /article/xxx 時，GitHub Pages 會返回 404
+        // 這個腳本會將路徑信息保存並重定向到 index.html
+
+        // 獲取當前路徑
+        const path = window.location.pathname;
+        const search = window.location.search;
+        const hash = window.location.hash;
+
+        // 如果不是根路徑，則重定向到 index.html 並保留路徑信息
+        if (path !== '/') {
+            // 將路徑信息保存到 sessionStorage
+            sessionStorage.setItem('redirectPath', path + search + hash);
+
+            // 重定向到根路徑
+            window.location.href = '/' + search + hash;
+        }
+    </script>
+</head>
+<body>
+    <p>重定向中，請稍候...</p>
+</body>
+</html>

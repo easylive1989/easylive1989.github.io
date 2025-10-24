@@ -725,18 +725,20 @@
                 // 初始化導航列
                 initNavigation();
 
-                // 顯示文章列表
-                renderArticles();
-
                 // 顯示 Side Projects
                 renderSideProjects();
 
-                // 初始化返回按鈕
-                document.getElementById('backButton').addEventListener('click', showListView);
+                // 初始化返回按鈕（使用瀏覽器的返回）
+                document.getElementById('backButton').addEventListener('click', () => {
+                    history.back();
+                });
 
                 // 初始化分頁按鈕
                 document.getElementById('prevButton').addEventListener('click', () => changePage(-1));
                 document.getElementById('nextButton').addEventListener('click', () => changePage(1));
+
+                // 解析 URL 並顯示對應內容
+                parseUrl();
             } catch (error) {
                 console.error('載入文章失敗:', error);
                 document.getElementById('articlesContainer').innerHTML = '<div class="empty-state">載入文章失敗</div>';
@@ -841,9 +843,11 @@
                 const actualIndex = startIndex + index;
                 const dateToShow = currentView === 'daily' ? formatDate(article.createdAt) : '';
                 const tagToShow = currentView === 'daily' ? `<span class="article-tag">${article.tag}</span>` : '';
+                const articleId = article.id || '';
+                const seriesName = currentView === 'tutorial' ? currentSeries.name : '';
 
                 return `
-                    <div class="article-card" onclick="showArticleDetail(${actualIndex})">
+                    <div class="article-card" onclick="navigateToArticle('${articleId}', '${seriesName}')">
                         <div class="article-header">
                             <h2 class="article-title">${article.title}</h2>
                             ${dateToShow ? `<span class="article-date">${dateToShow}</span>` : ''}
@@ -891,28 +895,65 @@
             document.getElementById('articlesContainer').scrollIntoView({ behavior: 'smooth' });
         }
 
+        // 根據文章 id 找到文章
+        function findArticleById(articleId, seriesName = null) {
+            if (seriesName) {
+                // 在教學系列中找
+                const series = allTutorialSeries.find(s => s.name === seriesName);
+                if (series) {
+                    return series.articles.find(a => a.id === articleId);
+                }
+            } else {
+                // 在日常文章中找
+                return allArticles.find(a => a.id === articleId);
+            }
+            return null;
+        }
+
         // 顯示文章詳細頁面
-        function showArticleDetail(articleIndex) {
-            const article = currentArticles[articleIndex];
-            if (!article) return;
+        function showArticleDetail(articleId, seriesName = null) {
+            const article = findArticleById(articleId, seriesName);
+            if (!article) {
+                console.error('文章未找到:', articleId);
+                return;
+            }
 
             // 更新文章詳細資訊
             document.getElementById('detailTitle').textContent = article.title;
 
-            // 根據當前視圖顯示不同資訊
-            if (currentView === 'daily') {
+            // 根據是否為教學系列顯示不同資訊
+            const isTutorial = seriesName !== null && seriesName !== '';
+            if (isTutorial) {
+                // 教學系列不顯示日期和標籤
+                document.getElementById('detailDate').textContent = seriesName;
+                document.getElementById('detailTag').innerHTML = '';
+            } else {
                 document.getElementById('detailDate').textContent = '新增時間: ' + formatDate(article.createdAt);
                 document.getElementById('detailTag').innerHTML = `<span class="article-tag">${article.tag}</span>`;
-            } else {
-                // 教學系列不顯示日期和標籤
-                document.getElementById('detailDate').textContent = currentSeries ? currentSeries.name : '';
-                document.getElementById('detailTag').innerHTML = '';
             }
 
             // 處理圖片路徑
             let processedContent = article.content || '';
 
-            if (currentView === 'daily') {
+            if (isTutorial) {
+                // 教學系列文章：將相對路徑轉換為 /static/tutorials/[seriesName]/[folderName]/...
+                processedContent = processedContent.replace(
+                    /!\[([^\]]*)\]\(([^)]+)\)/g,
+                    (match, alt, url) => {
+                        // 如果是相對路徑（不是 http 開頭）
+                        if (!url.startsWith('http') && !url.startsWith('/')) {
+                            // 解碼 URL 編碼的路徑
+                            const decodedUrl = decodeURIComponent(url);
+                            // 提取檔名（路徑的最後一部分）
+                            const filename = decodedUrl.split('/').pop();
+                            // 構建新的絕對路徑
+                            const newUrl = `/static/tutorials/${encodeURIComponent(seriesName)}/${encodeURIComponent(article.folderName)}/${encodeURIComponent(filename)}`;
+                            return `![${alt}](${newUrl})`;
+                        }
+                        return match;
+                    }
+                );
+            } else {
                 // 日常開發文章：將相對路徑轉換為 /static/artcles/[folderName]/...
                 processedContent = processedContent.replace(
                     /!\[([^\]]*)\]\(([^)]+)\)/g,
@@ -925,24 +966,6 @@
                             const filename = decodedUrl.split('/').pop();
                             // 構建新的絕對路徑
                             const newUrl = `/static/artcles/${encodeURIComponent(article.folderName)}/${encodeURIComponent(filename)}`;
-                            return `![${alt}](${newUrl})`;
-                        }
-                        return match;
-                    }
-                );
-            } else {
-                // 教學系列文章：將相對路徑轉換為 /static/tutorials/[seriesName]/[folderName]/...
-                processedContent = processedContent.replace(
-                    /!\[([^\]]*)\]\(([^)]+)\)/g,
-                    (match, alt, url) => {
-                        // 如果是相對路徑（不是 http 開頭）
-                        if (!url.startsWith('http') && !url.startsWith('/')) {
-                            // 解碼 URL 編碼的路徑
-                            const decodedUrl = decodeURIComponent(url);
-                            // 提取檔名（路徑的最後一部分）
-                            const filename = decodedUrl.split('/').pop();
-                            // 構建新的絕對路徑
-                            const newUrl = `/static/tutorials/${encodeURIComponent(currentSeries.name)}/${encodeURIComponent(article.folderName)}/${encodeURIComponent(filename)}`;
                             return `![${alt}](${newUrl})`;
                         }
                         return match;
@@ -970,6 +993,89 @@
             // 滾動到頂部
             window.scrollTo(0, 0);
         }
+
+        // 導航到文章（更新 URL 並顯示文章）
+        function navigateToArticle(articleId, seriesName = '') {
+            if (!articleId) {
+                console.error('文章 ID 不能為空');
+                return;
+            }
+
+            // 構建 URL
+            let url;
+            if (seriesName) {
+                url = `/tutorial/${encodeURIComponent(seriesName)}/${articleId}`;
+            } else {
+                url = `/article/${articleId}`;
+            }
+
+            // 更新瀏覽器歷史記錄
+            history.pushState({ articleId, seriesName }, '', url);
+
+            // 顯示文章
+            showArticleDetail(articleId, seriesName);
+        }
+
+        // 返回首頁
+        function navigateToHome() {
+            // 更新瀏覽器歷史記錄
+            history.pushState({}, '', '/');
+
+            // 顯示文章列表
+            showListView();
+        }
+
+        // 解析 URL 並顯示對應內容
+        function parseUrl() {
+            // 檢查是否有從 404.html 重定向過來的路徑
+            const redirectPath = sessionStorage.getItem('redirectPath');
+            if (redirectPath) {
+                sessionStorage.removeItem('redirectPath');
+                // 使用 replaceState 恢復原始路徑（不增加歷史記錄）
+                history.replaceState({}, '', redirectPath);
+            }
+
+            const path = window.location.pathname;
+
+            // 匹配文章路徑: /article/[id]
+            const articleMatch = path.match(/^\/article\/([^\/]+)$/);
+            if (articleMatch) {
+                const articleId = articleMatch[1];
+                showArticleDetail(articleId, null);
+                return;
+            }
+
+            // 匹配教學系列路徑: /tutorial/[seriesName]/[id]
+            const tutorialMatch = path.match(/^\/tutorial\/([^\/]+)\/([^\/]+)$/);
+            if (tutorialMatch) {
+                const seriesName = decodeURIComponent(tutorialMatch[1]);
+                const articleId = tutorialMatch[2];
+
+                // 切換到對應的教學系列視圖
+                const series = allTutorialSeries.find(s => s.name === seriesName);
+                if (series) {
+                    showTutorialSeries(series);
+                }
+
+                showArticleDetail(articleId, seriesName);
+                return;
+            }
+
+            // 默認顯示首頁（文章列表）
+            renderArticles();
+            showListView();
+        }
+
+        // 監聽瀏覽器的前進/後退按鈕
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.articleId) {
+                // 如果有文章狀態，顯示文章
+                showArticleDetail(event.state.articleId, event.state.seriesName || null);
+            } else {
+                // 否則解析 URL
+                parseUrl();
+            }
+        });
 
         // 格式化日期
         function formatDate(dateStr) {
