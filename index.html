@@ -214,6 +214,70 @@
             text-align: left;
         }
 
+        /* Side Projects 樣式 */
+        .side-projects-card {
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 25px;
+        }
+
+        .side-projects-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--tertiary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .side-projects-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .side-project-item {
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .side-project-item:hover {
+            border-color: var(--primary);
+            background-color: rgba(87, 180, 186, 0.05);
+        }
+
+        .side-project-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--tertiary);
+            margin-bottom: 8px;
+        }
+
+        .side-project-description {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .side-project-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .side-project-tag {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            background-color: rgba(87, 180, 186, 0.1);
+            color: var(--primary);
+            border-radius: 3px;
+            border: 1px solid var(--primary);
+        }
+
         /* Footer 樣式 */
         footer {
             background-color: var(--tertiary);
@@ -529,6 +593,14 @@
                         <img src="/static/images/avatar.png" alt="保羅" class="profile-avatar" width="120" height="120" loading="eager">
                         <p class="profile-intro">我是保羅，從事軟體開發超過十年，主要從事 Flutter 開發 ，熱愛學習各種軟體工程的知識，不斷優化產品內外品質與工作流程。</p>
                     </div>
+
+                    <!-- Side Projects -->
+                    <div class="side-projects-card">
+                        <h3 class="side-projects-title">Side Projects</h3>
+                        <div id="sideProjectsContainer" class="side-projects-list">
+                            <div class="loading">載入中...</div>
+                        </div>
+                    </div>
                 </aside>
             </div>
 
@@ -567,6 +639,7 @@
         // 全域變數
         let allArticles = [];
         let allTags = [];
+        let allSideProjects = [];
         let currentTag = 'all';
         let currentPage = 1;
         const articlesPerPage = 10;
@@ -578,12 +651,16 @@
                 const data = await response.json();
                 allArticles = data.articles;
                 allTags = data.tags;
+                allSideProjects = data.sideProjects || [];
 
                 // 初始化 Tag 導航列
                 initTagNav();
 
                 // 顯示文章列表
                 renderArticles();
+
+                // 顯示 Side Projects
+                renderSideProjects();
 
                 // 初始化返回按鈕
                 document.getElementById('backButton').addEventListener('click', showListView);
@@ -757,6 +834,46 @@
                 return `${year}/${month}/${day}`;
             } catch (e) {
                 return dateStr;
+            }
+        }
+
+        // 渲染 Side Projects
+        function renderSideProjects() {
+            const container = document.getElementById('sideProjectsContainer');
+
+            if (!allSideProjects || allSideProjects.length === 0) {
+                container.innerHTML = '<div class="empty-state">沒有 Side Projects</div>';
+                return;
+            }
+
+            // 只顯示前 5 個
+            const projectsToShow = allSideProjects.slice(0, 5);
+
+            container.innerHTML = projectsToShow.map(project => {
+                const tagsHtml = project.tags && project.tags.length > 0
+                    ? `<div class="side-project-tags">
+                        ${project.tags.map(tag => `<span class="side-project-tag">${tag}</span>`).join('')}
+                       </div>`
+                    : '';
+
+                // 根據是否有連結決定點擊行為
+                const hasLinks = project.websiteUrl || project.sourceUrl;
+                const clickHandler = hasLinks ? `onclick="openSideProject('${project.websiteUrl || project.sourceUrl}')"` : '';
+
+                return `
+                    <div class="side-project-item" ${clickHandler}>
+                        <div class="side-project-name">${project.name}</div>
+                        <div class="side-project-description">${project.description}</div>
+                        ${tagsHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 開啟 Side Project 連結
+        function openSideProject(url) {
+            if (url) {
+                window.open(url, '_blank');
             }
         }
 
