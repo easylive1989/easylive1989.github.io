@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <style>
         :root {
             --background: #FDFBEE;
@@ -38,13 +38,19 @@
         }
 
         body {
-            font-family: 'Inter', Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             line-height: 1.6;
             color: var(--text-dark);
             background-color: var(--background);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        /* 確保圖片空間預留，減少 CLS */
+        img {
+            max-width: 100%;
+            height: auto;
         }
 
         .container {
@@ -199,6 +205,7 @@
             border: 3px solid var(--primary);
             object-fit: cover;
             margin: 0 auto 20px;
+            display: block;
         }
 
         .profile-intro {
@@ -519,7 +526,7 @@
                 <!-- 右側：個人資訊 (1/4) -->
                 <aside class="sidebar">
                     <div class="profile-card">
-                        <img src="/static/images/avatar.png" alt="保羅" class="profile-avatar">
+                        <img src="/static/images/avatar.png" alt="保羅" class="profile-avatar" width="120" height="120" loading="eager">
                         <p class="profile-intro">我是保羅，從事軟體開發超過十年，主要從事 Flutter 開發 ，熱愛學習各種軟體工程的知識，不斷優化產品內外品質與工作流程。</p>
                     </div>
                 </aside>
