@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paul Wu - Portfolio</title>
-    <meta property="og:title" content="Paul Wu - Portfolio">
-    <meta property="og:description" content="從概念到完成，把想法化為有形的作品，記錄我的創作歷程">
-    <meta name="description" content="從概念到完成，把想法化為有形的作品，記錄我的創作歷程">
-    <meta name="twitter:description" content="從概念到完成，把想法化為有形的作品，記錄我的創作歷程">
+    <title>保羅軟體開發 - 軟體開發筆記</title>
+    <meta property="og:title" content="保羅軟體開發 - 軟體開發筆記">
+    <meta property="og:description" content="保羅的軟體開發筆記，分享各種與軟體開發相關的知識與技術內容">
+    <meta name="description" content="保羅的軟體開發筆記，分享各種與軟體開發相關的知識與技術內容">
+    <meta name="twitter:description" content="保羅的軟體開發筆記，分享各種與軟體開發相關的知識與技術內容">
     <meta property="og:image" content="/static/images/avatar.png">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
@@ -20,14 +20,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --tiffany-green: #0ABAB5;
-            --tiffany-green-dark: #089692;
-            --beige: #F5F5DC;
+            --background: #FDFBEE;
+            --primary: #57B4BA;
+            --secondary: #FE4F2D;
+            --tertiary: #015551;
             --white: #FFFFFF;
             --text-dark: #2C3E50;
             --text-light: #5A6C7D;
-            --shadow: rgba(10, 186, 181, 0.1);
-            --shadow-hover: rgba(10, 186, 181, 0.2);
+            --border-color: #57B4BA;
         }
 
         * {
@@ -40,7 +40,7 @@
             font-family: 'Inter', Arial, sans-serif;
             line-height: 1.6;
             color: var(--text-dark);
-            background-color: var(--beige);
+            background-color: var(--background);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -52,9 +52,10 @@
             padding: 0 20px;
         }
 
+        /* TopBar 樣式 */
         header {
             background-color: var(--white);
-            box-shadow: 0 2px 10px var(--shadow);
+            border-bottom: 2px solid var(--border-color);
             padding: 20px 0;
         }
 
@@ -62,189 +63,152 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 30px;
+            gap: 20px;
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 30px;
+        .site-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--tertiary);
         }
 
         nav {
             display: flex;
-            gap: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
         nav a {
             text-decoration: none;
             color: var(--text-dark);
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
             transition: all 0.2s ease;
             font-weight: 500;
+            font-size: 0.95rem;
         }
 
         nav a:hover {
-            background-color: var(--tiffany-green);
+            background-color: var(--primary);
             color: var(--white);
+            border-color: var(--primary);
         }
 
         nav a.active {
-            background-color: var(--tiffany-green);
+            background-color: var(--primary);
             color: var(--white);
+            border-color: var(--primary);
         }
 
-        .avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 4px solid var(--tiffany-green);
-            object-fit: cover;
-        }
-
-        .header-info h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 8px;
-        }
-
-        .header-info p {
-            font-size: 1.2rem;
-            color: var(--text-light);
-        }
-
+        /* Main Body 樣式 */
         main {
             flex: 1;
-            padding: 60px 0;
+            padding: 40px 0;
         }
 
-        .portfolio-grid {
+        .main-content {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
+            grid-template-columns: 3fr 1fr;
+            gap: 40px;
+            margin-top: 20px;
         }
 
-        .project-card {
+        /* 文章列表樣式 */
+        .articles-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .article-card {
             background: var(--white);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px var(--shadow);
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .project-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px var(--shadow-hover);
-        }
-
-        .project-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            background-color: #f0f0f0;
-        }
-
-        .project-content {
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
             padding: 25px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+            transition: all 0.2s ease;
         }
 
-        .project-header {
+        .article-card:hover {
+            border-color: var(--secondary);
+        }
+
+        .article-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
             margin-bottom: 12px;
+            gap: 15px;
         }
 
-        .project-title {
+        .article-title {
             font-size: 1.4rem;
             font-weight: 600;
-            color: var(--text-dark);
+            color: var(--tertiary);
             margin: 0;
-        }
-
-        .project-date {
-            font-size: 0.9rem;
-            color: var(--text-light);
-        }
-
-        .project-description {
-            color: var(--text-light);
-            margin-bottom: 16px;
             flex: 1;
-            line-height: 1.5;
         }
 
-        .project-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
+        .article-date {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            white-space: nowrap;
         }
 
-        .tag {
-            background-color: rgba(10, 186, 181, 0.1);
-            color: var(--tiffany-green-dark);
+        .article-summary {
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .article-tag {
+            display: inline-block;
+            background-color: rgba(87, 180, 186, 0.1);
+            color: var(--primary);
             padding: 4px 12px;
-            border-radius: 20px;
+            border-radius: 4px;
             font-size: 0.85rem;
             font-weight: 500;
+            border: 1px solid var(--primary);
         }
 
-        .project-actions {
+        /* 個人資訊區塊樣式 */
+        .sidebar {
             display: flex;
-            gap: 12px;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            font-size: 0.95rem;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
+        .profile-card {
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 25px;
+            text-align: center;
         }
 
-        .btn-primary {
-            background-color: var(--tiffany-green);
-            color: var(--white);
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            object-fit: cover;
+            margin: 0 auto 20px;
         }
 
-        .btn-primary:hover {
-            background-color: var(--tiffany-green-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(10, 186, 181, 0.3);
+        .profile-intro {
+            color: var(--text-dark);
+            line-height: 1.8;
+            text-align: left;
         }
 
-        .btn-secondary {
-            background-color: transparent;
-            color: var(--tiffany-green);
-            border: 2px solid var(--tiffany-green);
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--tiffany-green);
-            color: var(--white);
-            transform: translateY(-2px);
-        }
-
+        /* Footer 樣式 */
         footer {
-            background-color: var(--text-dark);
+            background-color: var(--tertiary);
             color: var(--white);
-            padding: 40px 0;
+            padding: 30px 0;
             margin-top: auto;
+            border-top: 2px solid var(--primary);
         }
 
         .footer-content {
@@ -261,42 +225,52 @@
         }
 
         .footer-item a {
-            color: var(--tiffany-green);
+            color: var(--primary);
             text-decoration: none;
             transition: color 0.2s ease;
+            font-weight: 500;
         }
 
         .footer-item a:hover {
             color: var(--white);
-            text-decoration: underline;
         }
 
+        /* 載入中和空狀態 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        /* 響應式設計 */
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
                 text-align: center;
             }
 
-            .header-left {
-                flex-direction: column;
-            }
-
             nav {
-                flex-direction: column;
-                width: 100%;
+                justify-content: center;
             }
 
-            nav a {
-                text-align: center;
-            }
-
-            .header-info h1 {
-                font-size: 2rem;
-            }
-
-            .portfolio-grid {
+            .main-content {
                 grid-template-columns: 1fr;
-                gap: 20px;
+                gap: 30px;
+            }
+
+            .article-header {
+                flex-direction: column;
+                align-items: start;
+            }
+
+            .article-date {
+                white-space: normal;
             }
 
             .footer-content {
@@ -309,250 +283,169 @@
 </head>
 
 <body>
+    <!-- TopBar -->
     <header>
         <div class="container">
             <div class="header-content">
-                <div class="header-left">
-                    <img src="/static/images/avatar.png" alt="Paul Wu" class="avatar">
-                    <div class="header-info">
-                        <h1>Paul Wu - Portfolio</h1>
-                        <p>從概念到完成，把想法化為有形的作品，記錄我的創作歷程</p>
-                    </div>
-                </div>
-                <nav>
-                    <a href="https://www.notion.so/paulwu/Paul-57b48b03c27b44e58e94e4bed8b93f38" target="_blank" class="btn btn-secondary">View Profile</a>
+                <h1 class="site-title">保羅軟體開發</h1>
+                <nav id="tagNav">
+                    <a href="#" class="tag-filter active" data-tag="all">全部文章</a>
+                    <!-- Tag 會動態載入 -->
                 </nav>
             </div>
         </div>
     </header>
 
+    <!-- Main Body -->
     <main>
         <div class="container">
-            <div class="portfolio-grid">
-
-                <!-- 今彩 539 開獎資訊 -->
-                <div class="project-card">
-                    <img src="/static/images/ito539_analytics.png" alt="今彩 539 開獎資訊" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">今彩 539 開獎資訊</h3>
-                            <span class="project-date">2025/06</span>
-                        </div>
-                        <p class="project-description">用 Github Action + 爬蟲達成無後端式資訊收集與統計</p>
-                        <div class="project-tags">
-                            <span class="tag">React</span>
-                            <span class="tag">Python</span>
-                            <span class="tag">AI</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://easylive1989.github.io/ito539_analytics/" target="_blank" class="btn btn-primary">查看網站</a>
-                            <a href="https://github.com/easylive1989/ito539_analytics" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
+            <div class="main-content">
+                <!-- 左側：文章列表 (3/4) -->
+                <div class="articles-section" id="articlesContainer">
+                    <div class="loading">載入中...</div>
                 </div>
 
-                <!-- Auto Master -->
-                <div class="project-card">
-                    <img src="/static/images/auto_master.png" alt="Auto Master" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">Auto Master</h3>
-                            <span class="project-date">2025/04</span>
-                        </div>
-                        <p class="project-description">自動化各種常見任務，例如：FB 發文、FB 社團發文 ...等</p>
-                        <div class="project-tags">
-                            <span class="tag">Electron</span>
-                            <span class="tag">React</span>
-                            <span class="tag">Playwright</span>
-                            <span class="tag">AI</span>
-                        </div>
-                        <div class="project-actions">
-                            <!-- 沒有網站連結和原始碼，不顯示按鈕 -->
-                        </div>
+                <!-- 右側：個人資訊 (1/4) -->
+                <aside class="sidebar">
+                    <div class="profile-card">
+                        <img src="/static/images/avatar.png" alt="保羅" class="profile-avatar">
+                        <p class="profile-intro">我是保羅，從事軟體開發超過十年，主要從事 Flutter 開發 ，熱愛學習各種軟體工程的知識，不斷優化產品內外品質與工作流程。</p>
                     </div>
-                </div>
-                
-                <!-- Tetris -->
-                <div class="project-card">
-                    <img src="/static/images/tetris.png" alt="Tetris" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">Tetris</h3>
-                            <span class="project-date">2023/05</span>
-                        </div>
-                        <p class="project-description">嘗試使用 TDD 開發經典遊戲：俄羅斯方塊</p>
-                        <div class="project-tags">
-                            <span class="tag">Flutter</span>
-                            <span class="tag">Flame</span>
-                            <span class="tag">TDD</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://easylive1989.github.io/flutter_tetris/" target="_blank" class="btn btn-primary">查看網站</a>
-                            <a href="https://github.com/easylive1989/flutter_tetris" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RayWorldGame -->
-                <div class="project-card">
-                    <img src="/static/images/ray_world_game.png" alt="RayWorldGame" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">RayWorldGame</h3>
-                            <span class="project-date">2023/04</span>
-                        </div>
-                        <p class="project-description">按照教程練習 Flame，嘗試模仿吸血鬼倖存者玩法</p>
-                        <div class="project-tags">
-                            <span class="tag">Flutter</span>
-                            <span class="tag">Flame</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://easylive1989.github.io/ray_world_game/" target="_blank" class="btn btn-primary">查看網站</a>
-                            <a href="https://github.com/easylive1989/ray_world_game" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Breakout -->
-                <div class="project-card">
-                    <img src="/static/images/breakout.png" alt="Breakout" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">Breakout</h3>
-                            <span class="project-date">2023/02</span>
-                        </div>
-                        <p class="project-description">按照教程練習 Flame，實作經典遊戲：打磚塊</p>
-                        <div class="project-tags">
-                            <span class="tag">Flutter</span>
-                            <span class="tag">Flame</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://easylive1989.github.io/flutter_breakout" target="_blank" class="btn btn-primary">查看網站</a>
-                            <a href="https://github.com/easylive1989/flutter_breakout" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- NS-SHAFT -->
-                <div class="project-card">
-                    <img src="/static/images/ns-shaft.png" alt="NS-SHAFT" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">NS-SHAFT</h3>
-                            <span class="project-date">2022/12</span>
-                        </div>
-                        <p class="project-description">練習 Flame 開發，搭配 Firebase Hosting 部署，實作經典遊戲：小朋友下樓梯</p>
-                        <div class="project-tags">
-                            <span class="tag">Flutter</span>
-                            <span class="tag">Flame</span>
-                            <span class="tag">Firebase Hosting</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://playernsshaft.web.app/#/" target="_blank" class="btn btn-primary">查看網站</a>
-                            <a href="https://github.com/easylive1989/player_ns_shaft" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notion Assistant -->
-                <div class="project-card">
-                    <img src="/static/images/notion_assistant.png" alt="Notion Assistant" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">Notion Assistant</h3>
-                            <span class="project-date">2022/10</span>
-                        </div>
-                        <p class="project-description">用 Flutter 嘗試製作 Chrome Extension 快速存取 Notion 資訊</p>
-                        <div class="project-tags">
-                            <span class="tag">Flutter</span>
-                            <span class="tag">Chrome Extension</span>
-                            <span class="tag">Notion API</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://github.com/easylive1989/notion_assistant" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notion Cron Job -->
-                <div class="project-card">
-                    <img src="/static/images/notion_cron_job.png" alt="Notion Cron Job" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">Notion Cron Job</h3>
-                            <span class="project-date">2021/07</span>
-                        </div>
-                        <p class="project-description">用 Github Action 觸發 Python 腳本使用 Notion API 定期更新 Notion 內容</p>
-                        <div class="project-tags">
-                            <span class="tag">Python</span>
-                            <span class="tag">Notion API</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://github.com/easylive1989/notion_cron_job" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Habit Tracker -->
-                <div class="project-card">
-                    <img src="/static/images/habit_tracker.png" alt="Habit Tracker" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">Habit Tracker</h3>
-                            <span class="project-date">2021/07</span>
-                        </div>
-                        <p class="project-description">練習追蹤習慣 App，回憶一下 Android 開發</p>
-                        <div class="project-tags">
-                            <span class="tag">Android</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://github.com/easylive1989/HabitTracker" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Gomoku -->
-                <div class="project-card">
-                    <img src="/static/images/gomoku.png" alt="Gomoku" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">Gomoku</h3>
-                            <span class="project-date">2021/03</span>
-                        </div>
-                        <p class="project-description">嘗試用 Flutter 開發五子棋小遊戲，並且使用 Github Action 自動化部署到 Google Play</p>
-                        <div class="project-tags">
-                            <span class="tag">Flutter</span>
-                            <span class="tag">CI/CD</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://easylive1989.github.io/LittleFlowerApp/" target="_blank" class="btn btn-primary">查看網站</a>
-                            <a href="https://github.com/easylive1989/LittleFlowerApp" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 小遊戲 Line Bot -->
-                <div class="project-card">
-                    <img src="/static/images/game_bot.jpeg" alt="小遊戲 Line Bot" class="project-image">
-                    <div class="project-content">
-                        <div class="project-header">
-                            <h3 class="project-title">小遊戲 Line Bot</h3>
-                            <span class="project-date">2020/05</span>
-                        </div>
-                        <p class="project-description">嘗試用 .Net Core + LINE 讓朋友們可用 Line 玩小遊戲，例如：猜數字、井字遊戲、五子棋</p>
-                        <div class="project-tags">
-                            <span class="tag">.Net Core</span>
-                            <span class="tag">Line Notify</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="https://github.com/easylive1989/LittleFlowerBot" target="_blank" class="btn btn-secondary">查看原始碼</a>
-                        </div>
-                    </div>
-                </div>
+                </aside>
             </div>
         </div>
     </main>
 
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-item">
+                    <span>Github:</span>
+                    <a href="https://github.com/easylive1989" target="_blank">@easylive1989</a>
+                </div>
+                <div class="footer-item">
+                    <span>Threads:</span>
+                    <a href="https://www.threads.com/@paul.ch.wu" target="_blank">@paul.ch.wu</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 全域變數
+        let allArticles = [];
+        let allTags = [];
+        let currentTag = 'all';
+
+        // 載入文章資料
+        async function loadArticles() {
+            try {
+                const response = await fetch('/articles.json');
+                const data = await response.json();
+                allArticles = data.articles;
+                allTags = data.tags;
+
+                // 初始化 Tag 導航列
+                initTagNav();
+
+                // 顯示文章列表
+                renderArticles();
+            } catch (error) {
+                console.error('載入文章失敗:', error);
+                document.getElementById('articlesContainer').innerHTML = '<div class="empty-state">載入文章失敗</div>';
+            }
+        }
+
+        // 初始化 Tag 導航列
+        function initTagNav() {
+            const tagNav = document.getElementById('tagNav');
+
+            // 保留「全部文章」按鈕
+            const allButton = tagNav.querySelector('[data-tag="all"]');
+
+            // 加入其他 Tag
+            allTags.forEach(tag => {
+                const tagLink = document.createElement('a');
+                tagLink.href = '#';
+                tagLink.className = 'tag-filter';
+                tagLink.textContent = tag;
+                tagLink.dataset.tag = tag;
+                tagLink.addEventListener('click', handleTagClick);
+                tagNav.appendChild(tagLink);
+            });
+
+            // 為「全部文章」加上點擊事件
+            allButton.addEventListener('click', handleTagClick);
+        }
+
+        // 處理 Tag 點擊事件
+        function handleTagClick(e) {
+            e.preventDefault();
+            const tag = e.target.dataset.tag;
+
+            // 更新當前 Tag
+            currentTag = tag;
+
+            // 更新 active 狀態
+            document.querySelectorAll('.tag-filter').forEach(link => {
+                link.classList.remove('active');
+            });
+            e.target.classList.add('active');
+
+            // 重新渲染文章列表
+            renderArticles();
+        }
+
+        // 渲染文章列表
+        function renderArticles() {
+            const container = document.getElementById('articlesContainer');
+
+            // 過濾文章
+            let filteredArticles = allArticles;
+            if (currentTag !== 'all') {
+                filteredArticles = allArticles.filter(article => article.tag === currentTag);
+            }
+
+            // 只顯示前 10 篇
+            const articlesToShow = filteredArticles.slice(0, 10);
+
+            // 如果沒有文章
+            if (articlesToShow.length === 0) {
+                container.innerHTML = '<div class="empty-state">沒有找到文章</div>';
+                return;
+            }
+
+            // 渲染文章卡片
+            container.innerHTML = articlesToShow.map(article => `
+                <div class="article-card">
+                    <div class="article-header">
+                        <h2 class="article-title">${article.title}</h2>
+                        <span class="article-date">${formatDate(article.updatedAt)}</span>
+                    </div>
+                    <p class="article-summary">${article.summary}</p>
+                    <span class="article-tag">${article.tag}</span>
+                </div>
+            `).join('');
+        }
+
+        // 格式化日期
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const date = new Date(dateStr);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}/${month}/${day}`;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        // 頁面載入時執行
+        window.addEventListener('DOMContentLoaded', loadArticles);
+    </script>
 </body>
 
 </html>

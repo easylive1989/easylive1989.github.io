@@ -1,0 +1,515 @@
+{
+  "articles": [
+    {
+      "title": "這個 Flutter 小技巧，讓你看懂 Widget Test 到底哪裡壞了",
+      "summary": "在 Flutter 開發中，我們除了寫程式之外，也會需要寫一些測試來確保功能沒有問題。Flutter SDK 內建提供了 Unit Test、Widget Test 與 Integration Test 三種測試工具供開發人員使用。這三種工具分別有些不同特性，Unit Test 無論是執行速度或是錯...",
+      "createdAt": "October 5, 2025 4:39 PM",
+      "updatedAt": "October 5, 2025 8:28 PM",
+      "id": "2838303f78f780a19f9eed48ccc9f2c6",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "這個 Flutter 小技巧，讓你看懂 Widget Test 到底哪裡壞了 2838303f78f780a19f9eed48ccc9f2c6.md"
+    },
+    {
+      "title": "單元測試介紹",
+      "summary": "--- - 每一個單元測試通常會focus在class的method上。若class相依於其他class，測試應該模擬外部class。若你寫的測試不是這樣，很有可能你的測試是整合測試，而非單元測試。 <aside> ❓ 為什麼我們要寫單元測試？試想一個情況，我們在寫好產品代碼後，為什麼要寫測試？我可...",
+      "createdAt": "June 24, 2021 10:04 AM",
+      "updatedAt": "October 3, 2025 4:57 PM",
+      "id": "14c339451eb94a2b883a59127b4f2ae7",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "單元測試介紹 14c339451eb94a2b883a59127b4f2ae7.md"
+    },
+    {
+      "title": "用 Widget Test 測試 Routing",
+      "summary": "在開發 Flutter 時，我們可以寫 Widget Test 確保功能在我們重構之後，還是保持正常運作。我們會針對許多不同的情境進行測試，其中一種情境是當使用者進行某些操作，或者當某些情況發生，把使用者導到其他頁面，今天就來分享如何使用 Widget Test 驗證 Routing。 假設我們有常...",
+      "createdAt": "June 7, 2023 10:30 PM",
+      "updatedAt": "October 3, 2025 4:56 PM",
+      "id": "f610eefa549646aab96181e0d298a492",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "用 Widget Test 測試 Routing f610eefa549646aab96181e0d298a492.md"
+    },
+    {
+      "title": "架設小遊戲機器人（下）",
+      "summary": "延續上一篇，這篇繼續補完實作小遊戲機器人中碰到的各種問題，有些是為了學習，有些是為了繞過限制，有些則是為了自己奇怪的目的？無論如何，隨著機器人的功能越來越多，也陸續在不同的時間點上碰上不同的問題，前前後後為了解決這些問題，花了不少時間，也是一段充滿樂趣的過程，就讓我在這篇文章中把剩下問題在這篇介紹完...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 3, 2025 4:32 PM",
+      "id": "aaa8ecd43cce459ab8fd2adb6f2cd499",
+      "type": "Medium",
+      "tag": "C# / .NET",
+      "filename": "架設小遊戲機器人（下） aaa8ecd43cce459ab8fd2adb6f2cd499.md"
+    },
+    {
+      "title": "掌握知識的過程",
+      "summary": "最近剛寫完[三十天的 IThome 鐵人賽](https://ithelp.ithome.com.tw/users/20129825/ironman/5974)，在寫的過程中，忽然在思考知識學習是什麼，想著想著腦海中突然有一個知識建構的畫面，今天就來寫一篇文章講講我心中的知識學習過程吧。 那什麼是知...",
+      "createdAt": "September 20, 2023 10:13 AM",
+      "updatedAt": "October 3, 2025 4:26 PM",
+      "id": "de8bcb20c8094f03ae4484a9ce9d5349",
+      "type": "Medium",
+      "tag": "思維進化",
+      "filename": "掌握知識的過程 de8bcb20c8094f03ae4484a9ce9d5349.md"
+    },
+    {
+      "title": "架設小遊戲機器人（上）",
+      "summary": "這篇文章主要是紀錄一下自己的 Side Project ：小遊戲機器人的演進過程 這個 Side Project 啟動於三年前，剛好那陣子聽到或學到比較多自己沒用過的技術，LINE BOT、ASP.NET Core、Docker ...等，於是就想練習一下這些新技術，看看能不能用這些技術做出一些好玩...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 3, 2025 3:27 PM",
+      "id": "c983d0576de644aa94599960f24e0ec6",
+      "type": "Medium",
+      "tag": "C# / .NET",
+      "filename": "架設小遊戲機器人（上） c983d0576de644aa94599960f24e0ec6.md"
+    },
+    {
+      "title": "跳過 Widget 直接渲染畫面",
+      "summary": "大家都知道 Flutter 是一套 UI 框架，透過 dart:ui 與底層 API 互動，最終呈現在手機螢幕上或接收點擊事件。使用的時候，都是透過已經定義好的 Widget 決定畫面，並不會直接與 dart:ui 互動。但是實際上，我們也是可以跳過 Widget，直接操作 dart:ui 的 AP...",
+      "createdAt": "September 26, 2021 9:25 AM",
+      "updatedAt": "October 3, 2025 12:59 PM",
+      "id": "3248bae84f984870bdc4d05b3dbc569e",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "跳過 Widget 直接渲染畫面 3248bae84f984870bdc4d05b3dbc569e.md"
+    },
+    {
+      "title": "Widget Test的14種find方法",
+      "summary": "上禮拜介紹了一個Widget Test所包含的流程，過程中用到Finder、Tester、和Matcher的部分方法...等，但是實際上這些元件都還有許多不同的操作，今天先介紹Finder的各種方法。 1. **text：**找到一個顯示特定字串的Text Widget     ```dart   ...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 3, 2025 12:05 AM",
+      "id": "44325fd7e7ab4b4a93c1c06164398150",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Widget Test的14種find方法 44325fd7e7ab4b4a93c1c06164398150.md"
+    },
+    {
+      "title": "使用 bloc_test 進行單元測試",
+      "summary": "Flutter 有需多狀態管理的套件，包括：Providerd、Redux, Bloc...等。如果想針對這些狀態管理套件寫測試，我們可以使用 test 套件。在寫 Bloc 的測試時，除了可以使用 test 套件之外，還可以使用 [bloc_test](https://pub.dev/packag...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 3, 2025 12:05 AM",
+      "id": "e2e1fcbde1974b80ad40fd3674a7341a",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "使用 bloc_test 進行單元測試 e2e1fcbde1974b80ad40fd3674a7341a.md"
+    },
+    {
+      "title": "在 Null safety mockito 使用 any",
+      "summary": "前陣子 Google release了 Dart 2.12，加入 null safety 特性，不可避免地，升級過後的產品代碼需要進行一些調整，除此之外，測試代碼也必須進行相對應的調整。在測試之中，如果有使用 mockito 中的 any 來 mock 物件方法與回傳，可能會碰到像是下面這種 err...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 3, 2025 12:05 AM",
+      "id": "4df501b643a04bb29c701f53db896d45",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "在 Null safety mockito 使用 any 4df501b643a04bb29c701f53db896d45.md"
+    },
+    {
+      "title": "如何用 Github Action 建置 Flutter Android App",
+      "summary": "手動建置與上傳 app 是一件滿麻煩的事情，在最理想的狀況下，我們希望當我們確保程式沒有問題之後，合併回主線就可以開始自動建置並上傳到 google play 上。為了達到這個目的，我使用 Github Action 來幫我建置 flutter app，今天就來分享一下我如何自動化這些麻煩事。 透過...",
+      "createdAt": "August 15, 2021 2:58 PM",
+      "updatedAt": "October 3, 2025 12:05 AM",
+      "id": "b95a311f7549498ca192c4dd9a4538e8",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "如何用 Github Action 建置 Flutter Android App b95a311f7549498ca192c4dd9a4538e8.md"
+    },
+    {
+      "title": "如何自動上傳 apk / aab 到 Google Play Console",
+      "summary": "延續[上一篇](https://easylive1989.medium.com/%E5%A6%82%E4%BD%95%E7%94%A8-github-action-%E5%BB%BA%E7%BD%AE-flutter-android-app-98211d894e07)展示了如何自動建置 app bu...",
+      "createdAt": "August 22, 2021 4:10 PM",
+      "updatedAt": "October 3, 2025 12:05 AM",
+      "id": "7e32ca98f06d463cae2fd83e57178d90",
+      "type": "Medium",
+      "tag": "Android",
+      "filename": "如何自動上傳 apk aab 到 Google Play Console 7e32ca98f06d463cae2fd83e57178d90.md"
+    },
+    {
+      "title": "初探Flutter Widget Test",
+      "summary": "Flutter可以使用 [test](https://pub.dev/packages/test) 來幫助我們寫單元測試，透過單元測試來幫忙檢查我們的核心邏輯是否正確。在我們實作需求或者是重構代碼時，常常會修改到過去已經寫好的代碼，當我們改壞邏輯時時，單元測試也能發出警訊，提醒我們改動可能有問題。 ...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 3, 2025 12:04 AM",
+      "id": "3c907ffe50cd4a81b82b52ffb7d309ec",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "初探Flutter Widget Test 3c907ffe50cd4a81b82b52ffb7d309ec.md"
+    },
+    {
+      "title": "在測試中使用 Fluent Interface",
+      "summary": "寫單元測試的時候，我們常常會需要mock輸入資料，這其中有可能是從參數或者是相依物件傳入。而傳入資料結構也是各式各樣的，例如簡單的int, string到複雜的雙層Dictionary都是有可能的。 假設有一個翻譯機類別，建構子傳入翻譯文字，翻譯機則是負責接受輸入、檢查並輸出相對應的翻譯。 ```c...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 3, 2025 12:04 AM",
+      "id": "3a966bd2ce1c4a4cb50da30e9b69b2b6",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "在測試中使用 Fluent Interface 3a966bd2ce1c4a4cb50da30e9b69b2b6.md"
+    },
+    {
+      "title": "清理 IDE 給的提示",
+      "summary": "現代的 IDE 很方便，當工程師編輯代碼時，IDE 會即時檢查代碼，並根據一些預設的規則，提示哪部分的代碼可能需要調整。不同的語言，不同的 IDE 提示狀況都不太一樣，但是或多或少都會有這個功能，提醒工程師可能要注意某段代碼是否有問題。 如果代碼總是穿插著不同顏色的提示，可能會讓工程師不想去處理這群...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 3, 2025 12:01 AM",
+      "id": "3471f9df45444649a98266ce3842f52e",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "清理 IDE 給的提示 3471f9df45444649a98266ce3842f52e.md"
+    },
+    {
+      "title": "Clean Architecture 讀後感",
+      "summary": "Uncle Bob在2017年寫了Clean Architecture，在2018年博碩也出版了中文翻譯版，自己也趁著公司同事在團購時也一起入手了一本，但是自己卻沒在收到的時候馬上來讀，反而是最近才出來看。書一開始從語言設計的歷史開始講起，講述SOLID和元件，此時還不是很清楚這一切與架構關係，到後...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 2, 2025 11:59 PM",
+      "id": "1566c8d2bd7d4bc1a4a6d73483151ebd",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "Clean Architecture 讀後感 1566c8d2bd7d4bc1a4a6d73483151ebd.md"
+    },
+    {
+      "title": "Rename 也會造成 Issue",
+      "summary": "今天稍微紀錄一下自己重構Side Project踩坑的過程，因為重構導致application系統狀態不正確而一直噴error。 這一段[重構](https://github.com/easylive1989/LittleFlowerBot/commit/fb2a76b6e3b8201ea02a04...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 2, 2025 11:59 PM",
+      "id": "19160f8d93b0475e90a493b6ec76bc78",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "Rename 也會造成 Issue 19160f8d93b0475e90a493b6ec76bc78.md"
+    },
+    {
+      "title": "利用 Notion API 自動更新欄位",
+      "summary": "由於 Notion 有各式各樣的 template，以及十分強大資料庫功能，我自己習慣用它來管理 side project 狀況、筆記和各種事情。再加上最近上了 [Notion 實戰課程：打造專屬數位工作術](https://hahow.in/courses/6059aee039f2512548c1...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 2, 2025 11:59 PM",
+      "id": "c177a2eb6d274aa3a826d105408cc160",
+      "type": "Medium",
+      "tag": "Notion",
+      "filename": "利用 Notion API 自動更新欄位 c177a2eb6d274aa3a826d105408cc160.md"
+    },
+    {
+      "title": "改善迴圈的可讀性（一）",
+      "summary": "不管是練習寫Kata或者是工作中，迴圈都是最常使用的語法之一。而在迴圈中很常出現一種Aggregation Pattern，例如：合計集合中的所有數字。 這種Pattern會大量的存在產品代碼中，雖然這些代碼行數通常不會太多，但是每次閱讀到都需要重新理解的話，就會顯得有點浪費時間。花些時間讓這些代碼...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 2, 2025 11:59 PM",
+      "id": "69b4aa1a13df436794b511e5afe91f43",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "改善迴圈的可讀性（一） 69b4aa1a13df436794b511e5afe91f43.md"
+    },
+    {
+      "title": "改善迴圈的可讀性（二）",
+      "summary": "在一些迴圈使用情境，我們比較難使用Aggregation方法來簡化。有一種使用情境是需要透過暫存變數來保存每一輪的狀態，並帶到下一輪計算，此時就會讓代碼變得複雜。 在下面這段[Josephus Survivor](https://www.codewars.com/kata/555624b601231...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 2, 2025 11:59 PM",
+      "id": "ff23b70b497448d7addaae55200ed3af",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "改善迴圈的可讀性（二） ff23b70b497448d7addaae55200ed3af.md"
+    },
+    {
+      "title": "用 Espresso 測試 Android (一)",
+      "summary": "Add the following dependency to app/build.gradle ``` androidTestCompile 'com.android.support.test.espresso:espresso-core:3.0.1' ``` Espresso提供了十分簡潔的AP...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 2, 2025 11:59 PM",
+      "id": "f7e1882cc73c435da357805b9793fd1e",
+      "type": "Medium",
+      "tag": "Android",
+      "filename": "用 Espresso 測試 Android (一) f7e1882cc73c435da357805b9793fd1e.md"
+    },
+    {
+      "title": "用 Espresso 測試 Android (二)",
+      "summary": "在 Test Android App by Use Espresso (一) 中，提到 Espresso API 的操作的流程 Find View、Perform Action和Check。觀察程式後，可以發現不管是Perform a Action還是Check，都需要先找到View。 ``` on...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 2, 2025 11:59 PM",
+      "id": "ea58cfb881aa40f6b085d73d89c79b0d",
+      "type": "Medium",
+      "tag": "Android",
+      "filename": "用 Espresso 測試 Android (二) ea58cfb881aa40f6b085d73d89c79b0d.md"
+    },
+    {
+      "title": "如何使用 Flame 開發一個小遊戲",
+      "summary": "來到了 2023 年，今年就來學點不同的東西。本身興趣之一就是喜歡打電動，所以打從學寫程式以來，一直都有想自己寫遊戲的想法，但是一直都懶得去實現。自從學了 Flutter 之後，隱隱覺得 [Flutter](https://docs.flame-engine.org/1.4.0/index.html...",
+      "createdAt": "January 1, 2023 11:37 AM",
+      "updatedAt": "October 2, 2025 11:57 PM",
+      "id": "ddaa1e706f2a4949a2bbd7d19e4d7674",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "如何使用 Flame 開發一個小遊戲 ddaa1e706f2a4949a2bbd7d19e4d7674.md"
+    },
+    {
+      "title": "用 Flutter Web 製作 Chrome Extension 待讀文章看板",
+      "summary": "有一陣子沒寫文章了，趁著前陣子剛完成了[鐵人賽](https://ithelp.ithome.com.tw/users/20129825/ironman/4992)，趁著開始比較有空閒，就來更新一下最近學到的新東西XD。 在日常生活和工作中，每當看到一些不錯的文章，想要晚一點再看時，我們可以使用 N...",
+      "createdAt": "November 5, 2022 11:13 PM",
+      "updatedAt": "October 2, 2025 11:57 PM",
+      "id": "1baca95d3dd34180a74bc918af8f500c",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "用 Flutter Web 製作 Chrome Extension 待讀文章看板 1baca95d3dd34180a74bc918af8f500c.md"
+    },
+    {
+      "title": "flutter_bloc 6.1.0 多了什麼",
+      "summary": "把flutter_bloc更新到6.1.0以上時，會發現專案出現很多context.bloc的warning。 提示訊息會指明context.bloc()和context.repository()被已經deprecated，並預計在flutter_bloc 7.0.0時停止支援，建議改成contex...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "October 2, 2025 11:56 PM",
+      "id": "b169dd8feb96405ca5f2e9859a091c43",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "flutter_bloc 6 1 0 多了什麼 b169dd8feb96405ca5f2e9859a091c43.md"
+    },
+    {
+      "title": "使用 Nested Navigation 簡化路由設計",
+      "summary": "Flutter 習慣在最頂層的 MaterialApp 或 CupertinoApp 中統一定義整個 app 的路由管理。當我們把所有頁面的路由管理都放在最頂層時，就會讓它變得很長，不容易維護。或許應該適時思考，是否某些頁面的路由不應該被管理在最頂層。今天就來分享工作上遇到的一個情境，以及它存在什麼...",
+      "createdAt": "April 23, 2022 10:41 AM",
+      "updatedAt": "October 2, 2025 11:53 PM",
+      "id": "b715b9e2fdc541bca3d6d234664eda2d",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "使用 Nested Navigation 簡化路由設計 b715b9e2fdc541bca3d6d234664eda2d.md"
+    },
+    {
+      "title": "回顧三份工作的歷程",
+      "summary": "從開始出社會工作到現在，總共也八年快九年，總共待了三間不同的公司。待過的公司一間比一間小，每一份工作中也都學到不同的東西。從熟悉一個領域，到全端開發整個產品，到熟悉一個領域且維持一定全端開發的能力。三份工作剛好維持了一個循序漸進的結構。 第一份工作選擇了一間軟體大公司，抱著大部分新人都會有的心態，以...",
+      "createdAt": "July 3, 2022 9:17 AM",
+      "updatedAt": "October 2, 2025 11:53 PM",
+      "id": "8e35d3fa024746588e1389c0410f6c46",
+      "type": "Medium",
+      "tag": "思維進化",
+      "filename": "回顧三份工作的歷程 8e35d3fa024746588e1389c0410f6c46.md"
+    },
+    {
+      "title": "畫面莫名其妙地重 build 了",
+      "summary": "Flutter 自帶各式各樣的 Widget，能透過改變 Widget 的參數，讓畫面符合開發者想要的設計。在大部分的時間裏，能有效減低開發者的開發時間。但是如果開發者使用方式不正確的話，往往會造成不預期的結果，今天就來分享一個問題。 假設我們有一個簡單的應用，總共有兩個頁面：第一個頁面會顯示一組隨...",
+      "createdAt": "May 10, 2022 11:33 PM",
+      "updatedAt": "October 2, 2025 11:53 PM",
+      "id": "7073aa4ed07d42d8929752e25fbf71fa",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "畫面莫名其妙地重 build 了 7073aa4ed07d42d8929752e25fbf71fa.md"
+    },
+    {
+      "title": "在 Flutter App 中整合 Google play In-App-Billing",
+      "summary": "想在 App 上賺錢有兩種方式，一種是讓 App 本身是付費下載，另一種則是應用程式內購買。如果選擇應用程式內購買的話，在 iOS 上需要整合 Apple In App Purchase，而在 Google Play 上的話，則是需要整合 Google In App Billing，以下簡稱 Goo...",
+      "createdAt": "November 15, 2021 10:23 AM",
+      "updatedAt": "October 2, 2025 11:51 PM",
+      "id": "74e04f6b90ed4369855df505c99dd0ab",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "在 Flutter App 中整合 Google play In-App-Billing 74e04f6b90ed4369855df505c99dd0ab.md"
+    },
+    {
+      "title": "深入瞭解 GetX 的 Obx 與 Rx",
+      "summary": "最近在做畫面時，滿常使用 GetX 的 Obx + Rx 變數，讓畫面可以根據狀態變化即時更新。過程中有時會碰到一些錯誤，在建置 Widget 的過程中，因為 Obx 找不到可以被監聽的目標，導致 Obx 認為使用者錯誤的使用了 Obx，所以透過 Exception 來提醒使用者。 Obx 的使用方...",
+      "createdAt": "December 12, 2021 9:41 PM",
+      "updatedAt": "October 2, 2025 11:51 PM",
+      "id": "9b167e815ad042cb85b02e7d3639e782",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "深入瞭解 GetX 的 Obx 與 Rx 9b167e815ad042cb85b02e7d3639e782.md"
+    },
+    {
+      "title": "如何在 Flutter 中製作漂浮 Widget",
+      "summary": "今天在工作中碰到一個需求，需要顯示漂浮 Widget，類似於 Dialog 那樣漂浮於畫面之上，但是需要客製自己的 Widget。於是自己做了一些研究，研究如何製作這種漂浮於畫面最上層的 Widget，本篇就來分享一下兩種製作漂浮 Widget 的方式。 自己一開始想到最簡單的辦法是，透過在外層使用...",
+      "createdAt": "October 11, 2021 9:51 PM",
+      "updatedAt": "October 2, 2025 11:50 PM",
+      "id": "16d979fd41d74ed3b30deb840cd3df87",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "如何在 Flutter 中製作漂浮 Widget 16d979fd41d74ed3b30deb840cd3df87.md"
+    },
+    {
+      "title": "Flame 測試驅動開發俄羅斯方塊",
+      "summary": "這邊文章拖了好久，終於有空來完成它了。 去年在練習如何使用 [Flame](https://docs.flame-engine.org/latest/)，這是一個用 Flutter 的遊戲引擎，之前也用 Flame 做了許多小作品，為了練習與了解引擎，在這些過程中都沒有嘗試寫測試。所以又想了一個新的...",
+      "createdAt": "June 23, 2023 4:17 PM",
+      "updatedAt": "October 2, 2025 11:49 PM",
+      "id": "ca6aa2957a3340ed972c7ba8d76e126e",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Flame 測試驅動開發俄羅斯方塊 ca6aa2957a3340ed972c7ba8d76e126e.md"
+    },
+    {
+      "title": "Flutter Theme 切換效果研究",
+      "summary": "許多 App 都會支持 Light 模式與 Dark 模式，增加使用者體驗，為了做到這個功能，我們可以使用內建 Theme 加上 StatefulWidget 或其他狀態管理套件，就可以輕鬆完成 Light 模式與 Dark 模式。讓我們看看一個簡單的例子。 ```dart main() {   r...",
+      "createdAt": "June 23, 2023 11:19 PM",
+      "updatedAt": "October 2, 2025 11:49 PM",
+      "id": "cfabe2e638ef4210bdc9660155dcdfa5",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Flutter Theme 切換效果研究 cfabe2e638ef4210bdc9660155dcdfa5.md"
+    },
+    {
+      "title": "Vibe Coding 回顧",
+      "summary": "今年 AI 能力大躍進，不斷地在社群或網路看到別人說大部分的 Code 都是由 AI 產生，讓我不禁開始懷疑自己的開發方式。去年我還只是拿著 Github Copilot 當作更智能自動補完工具，完全沒有感覺這東西是能有大改變，覺得 AI 終究只是從上下文來預測結果，終究是有其極限。 在三月的時候，...",
+      "createdAt": "August 7, 2025 8:15 PM",
+      "updatedAt": "September 21, 2025 10:09 PM",
+      "id": "2488303f78f7804eb849e2bb796fa8ca",
+      "type": "Medium",
+      "tag": "AI Coding",
+      "filename": "Vibe Coding 回顧 2488303f78f7804eb849e2bb796fa8ca.md"
+    },
+    {
+      "title": "Container - 一個你最熟悉又最陌生的 Widget",
+      "summary": "AI summary: Container 在 Flutter 中的行為複雜，設定大小後會拉大子 Widget，使用 alignment 可以解決此問題。深入了解 Container 的 build 方法和原始碼有助於開發者更有效地處理佈局問題。 每次在開發的時候，碰到不如預期的狀況時，都是一個非常...",
+      "createdAt": "December 24, 2024 12:10 AM",
+      "updatedAt": "September 9, 2025 8:08 AM",
+      "id": "1658303f78f780648388f15ef489fe47",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Container - 一個你最熟悉又最陌生的 Widget 1658303f78f780648388f15ef489fe47.md"
+    },
+    {
+      "title": "不可不知的 Flutter App 自動化測試實戰攻略",
+      "summary": "[2022](https://ithelp.ithome.com.tw/users/20129825/ironman/4992)、[2023](https://ithelp.ithome.com.tw/users/20129825/ironman/5974) 連續參加了兩年鐵人賽，分別談論 Flut...",
+      "createdAt": "December 29, 2024 10:10 PM",
+      "updatedAt": "September 9, 2025 8:08 AM",
+      "id": "16b8303f78f78005aefdf9f0fe3d57cc",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "不可不知的 Flutter App 自動化測試實戰攻略 16b8303f78f78005aefdf9f0fe3d57cc.md"
+    },
+    {
+      "title": "避免隱晦的程式邏輯 - Index",
+      "summary": "在開發過程中，我們會使用各種資料結構來表示不同類型的資料，例如 List、Set、Map 等。List 作為一種有序的元素集合，允許重複元素，並提供基於索引（Index）的存取方式，適用於需要保持元素順序的場景。在程式中，我們經常需要與 List 互動，例如取出所有資料來顯示，或對 List 進行篩...",
+      "createdAt": "March 9, 2025 3:15 PM",
+      "updatedAt": "September 9, 2025 8:08 AM",
+      "id": "1b18303f78f780719e3af619d44bc33f",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "避免隱晦的程式邏輯 - Index 1b18303f78f780719e3af619d44bc33f.md"
+    },
+    {
+      "title": "避免隱晦的程式邏輯 - 避免把細節當狀態",
+      "summary": "最近改開發的時候，碰到一段很難懂的 Code，讓自己看了非常久，明明程式邏輯沒多複雜，但是整體讓我覺得很不舒服，總覺得有太多東西混雜在裡面。 這段程式主要的功能是做電話號碼 OTP 驗證，功能沒有太複雜，也就是拿著使用者輸入的 OTP 驗證碼去打一隻 API 做驗證。 這段 Code 來回看了幾天，...",
+      "createdAt": "July 7, 2025 10:48 PM",
+      "updatedAt": "September 9, 2025 8:08 AM",
+      "id": "2298303f78f7807fb25ff4f4fad22b5b",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "避免隱晦的程式邏輯 - 避免把細節當狀態 2298303f78f7807fb25ff4f4fad22b5b.md"
+    },
+    {
+      "title": "避免隱晦的程式邏輯",
+      "summary": "在開發中，我們為了完成某項功能的細部行為，可能會有很多種做法，如何評估哪種作法更好呢？其中一項準則就是清楚呈現邏輯。當程式碼能夠清楚呈現邏輯時，往後其他人在閱讀程式碼時，就能更快的了解其意圖。 就同如《先整理一下？》所提到的：「作者只有一個，但讀者通常會有很多個」，如果把邏輯用隱晦的方式完成，我們很...",
+      "createdAt": "January 25, 2025 2:35 PM",
+      "updatedAt": "September 9, 2025 8:08 AM",
+      "id": "1868303f78f78085ae92e639d0bdfac2",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "避免隱晦的程式邏輯 1868303f78f78085ae92e639d0bdfac2.md"
+    },
+    {
+      "title": "Widget Test 的 tap 原來這樣運作？一探 Flutter 測試點擊的祕密",
+      "summary": "前陣子有同事問我：「WidgetTester 中的 `tap` 方法，到底是點擊卡片的哪個位置？它是真的模擬使用者的點擊行為，還是單純呼叫底層某個 callback 來觸發事件？」當下我其實不太確定，只好回家趕快研究一下。 雖然這些細節在大部分情境下不影響我們的日常測試，但世事難料，總有可能哪天派得...",
+      "createdAt": "August 23, 2025 9:08 AM",
+      "updatedAt": "August 23, 2025 4:27 PM",
+      "id": "2588303f78f780b3a789ccdae073e04a",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Widget Test 的 tap 原來這樣運作？一探 Flutter 測試點擊的祕密 2588303f78f780b3a789ccdae073e04a.md"
+    },
+    {
+      "title": "BuildContext in Flutter",
+      "summary": "BuildContext在flutter開發中很常出現，是build方法的唯一參數。我們時常需要透過of方法取得某些Widget時，此時就會使用到context，例如： ```dart MediaQuery.of(context).size // 取得畫面寬高 Scaffold.of(context...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "512453b346714c74ac7c102844711624",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "BuildContext in Flutter 512453b346714c74ac7c102844711624.md"
+    },
+    {
+      "title": "Context that does not contains ...",
+      "summary": "在開發Flutter的時候，多多少少都會遇到一些error。在眾多error中，多多少少都會遇到的一種error是context中找不到想要的東西，讓我們舉個例子來看看這個錯誤。 以下面這段代碼為例，當按下FloatingActionButton時，畫面顯示\"Worlds!\"在SnackBar上。當...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "6b3707dc2af34e82a203ba90279b70c2",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Context that does not contains 6b3707dc2af34e82a203ba90279b70c2.md"
+    },
+    {
+      "title": "Dart 非同步介紹(一) - Event Loop",
+      "summary": "寫Flutter的時候，如果我們需要從後端api拿回資料時，我們會使用一些network相關的package來幫忙，例如：[http](https://pub.dev/packages/http)。我們透過await http.get來讓代碼停在這一行，釋放Thread去做其他工作，直到後端resp...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "fad780524ae04e6fbadb7c6c280e0f2b",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Dart 非同步介紹(一) - Event Loop fad780524ae04e6fbadb7c6c280e0f2b.md"
+    },
+    {
+      "title": "Dart 非同步介紹(三) - Stream",
+      "summary": "在 Dart 非同步的使用情境中，除了常用的 Future 以外，還有 Stream 也是常常被用到的一個元件，相對於 Future 來說，Stream 是一個比較難理解的元件，今天就來研究一下 Stream 是什麼，以及如何建立與使用。 根據 [Flutter 官方影片](https://www....",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "dbd16c50a0cc425aa313a3552758683d",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Dart 非同步介紹(三) - Stream dbd16c50a0cc425aa313a3552758683d.md"
+    },
+    {
+      "title": "Dart 非同步介紹(二) - Future",
+      "summary": "在寫 Dart 的過程中，一定會碰到許多需要非同步的情境，例如：打 Web Api 從 Server 端讀寫資料、存取 local storage、sqlite...等等。Future 讓非同步操作用起來很容易，但若不清楚其執行邏輯，有些時候難免會造成一些 bug，而非同步的 bug 又比較難以除錯...",
+      "createdAt": "August 11, 2021 1:07 PM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "106987e499184351b18378ccef8a722b",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Dart 非同步介紹(二) - Future 106987e499184351b18378ccef8a722b.md"
+    },
+    {
+      "title": "Flutter Notification 事件機制研究",
+      "summary": "當 CustomScrollView 或 ListView 開始滑動時，可以使用 NotificationListener 捕捉  ScrollStartNotification 的 Notification 事件。這些 Widget 會在滾動開始、進行中、結束時，發出各式各的 Notificati...",
+      "createdAt": "August 31, 2021 1:46 PM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "349055b3e6dc43c5976af586d01cbe81",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "Flutter Notification 事件機制研究 349055b3e6dc43c5976af586d01cbe81.md"
+    },
+    {
+      "title": "如何在多台電腦間同步開發工具",
+      "summary": "這篇來紀錄一下我如何同步開發工具這件事，我自己有一台 MacBook，公司也提供一台 MacBook 供同仁開發使用。有時候我在公司或家裡進行開發時，會發現某些設定過的熱鍵怎麼失效了，而原因也其實很簡單，由於熱鍵只被設定在公司或家裡的電腦上，所以當今天用到另外一台時，熱鍵就會失效。 為了解決這個問題...",
+      "createdAt": "February 4, 2023 11:37 PM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "11773cd13f2a46f5adfa039331d42af8",
+      "type": "Medium",
+      "tag": "熟練工具",
+      "filename": "如何在多台電腦間同步開發工具 11773cd13f2a46f5adfa039331d42af8.md"
+    },
+    {
+      "title": "如何處理善變的畫面",
+      "summary": "開發客戶端程式時，有些時候後端傳過來的資料根據情況變化，畫面也有所不同。舉例來說，當使用者登入系統時，後端會根據使用者的權限等級傳送不同的資料，使畫面呈現出不同的功能和選項。另一個例子是，在我們的開發的遊戲中，顯示比賽列表的畫面，也會根據不同的場次型態，顯示不同的卡片樣式。 當回傳資料不一致時，會發...",
+      "createdAt": "February 21, 2023 11:40 PM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "c87c61c7fc3541378813919fd3d19efa",
+      "type": "Medium",
+      "tag": "軟體開發",
+      "filename": "如何處理善變的畫面 c87c61c7fc3541378813919fd3d19efa.md"
+    },
+    {
+      "title": "如何讓 ListView 自動對齊",
+      "summary": "在 Flutter 中，ListView 和 PageView 都是用於顯示多個元素的 Widget，使用者可以滑動瀏覽列表中的 Widget。如果單看功能性，ListView 和 PageView 可能沒太大區別。但是實際與其互動之後，就會發現他們在畫面上的表現還是有所不同。 使用 ListVie...",
+      "createdAt": "May 2, 2024 1:08 AM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "c33fa8d2cae0490f8a7761e388b43224",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "如何讓 ListView 自動對齊 c33fa8d2cae0490f8a7761e388b43224.md"
+    },
+    {
+      "title": "減緩 PageView 動畫加上 Table 造成的卡頓",
+      "summary": "最近我們新增了一個顯示球員詳細資訊的頁面，當我們完成第一版程式碼，開始調整細節時，我們發現了畫面滑動似乎不太順暢。 每個球員訊息彈跳視窗是靜態，外層使用了 PageView 加上一些的特效，使得畫面在滑動時會頻繁的 setState，造成了整個彈跳視窗卡頓，使用者體驗不佳，就像遊戲效能不好一樣會掉幀...",
+      "createdAt": "June 24, 2023 11:24 PM",
+      "updatedAt": "January 1, 2025 8:55 AM",
+      "id": "a05dbbc423404d19954fb69ebfee4496",
+      "type": "Medium",
+      "tag": "Flutter",
+      "filename": "減緩 PageView 動畫加上 Table 造成的卡頓 a05dbbc423404d19954fb69ebfee4496.md"
+    }
+  ],
+  "tags": [
+    "AI Coding",
+    "Android",
+    "C# / .NET",
+    "Flutter",
+    "Notion",
+    "思維進化",
+    "熟練工具",
+    "軟體開發"
+  ],
+  "generatedAt": "2025-10-24T03:00:01.255Z"
+}

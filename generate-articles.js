@@ -1,0 +1,166 @@
+const fs = require('fs');
+const path = require('path');
+
+// 讀取所有文章檔案
+function getAllArticles(articlesDir) {
+  const articles = [];
+  const files = fs.readdirSync(articlesDir);
+
+  files.forEach(file => {
+    if (file.endsWith('.md')) {
+      const filePath = path.join(articlesDir, file);
+      const content = fs.readFileSync(filePath, 'utf-8');
+
+      // 解析文章 metadata
+      const article = parseArticleMetadata(content, file);
+      if (article) {
+        articles.push(article);
+      }
+    }
+  });
+
+  return articles;
+}
+
+// 解析文章 metadata
+function parseArticleMetadata(content, filename) {
+  const lines = content.split('\n');
+
+  // 提取標題（第一行的 # 標題）
+  let title = '';
+  for (const line of lines) {
+    if (line.startsWith('# ')) {
+      title = line.substring(2).trim();
+      break;
+    }
+  }
+
+  if (!title) {
+    console.warn(`無法找到標題: ${filename}`);
+    return null;
+  }
+
+  // 提取 metadata
+  const metadata = {};
+  for (const line of lines) {
+    // 提取新增時間
+    if (line.startsWith('新增時間:')) {
+      metadata.createdAt = line.substring('新增時間:'.length).trim();
+    }
+    // 提取最後編輯時間
+    else if (line.startsWith('最後編輯時間:')) {
+      metadata.updatedAt = line.substring('最後編輯時間:'.length).trim();
+    }
+    // 提取 id
+    else if (line.startsWith('id:')) {
+      metadata.id = line.substring('id:'.length).trim();
+    }
+    // 提取類型
+    else if (line.startsWith('類型:')) {
+      metadata.type = line.substring('類型:'.length).trim();
+    }
+    // 提取領域（Tag）
+    else if (line.startsWith('🧩 領域:')) {
+      const domainText = line.substring('🧩 領域:'.length).trim();
+      // 提取括號前的文字作為 tag
+      const match = domainText.match(/^([^\(]+)/);
+      if (match) {
+        metadata.tag = match[1].trim();
+      }
+    }
+  }
+
+  // 提取文章摘要（前 150 字，跳過 metadata 和圖片）
+  let summary = '';
+  let startExtract = false;
+  let charCount = 0;
+
+  for (const line of lines) {
+    // 跳過 metadata 區塊和圖片
+    if (line.startsWith('#') ||
+        line.startsWith('新增時間:') ||
+        line.startsWith('最後編輯時間:') ||
+        line.startsWith('id:') ||
+        line.startsWith('完成:') ||
+        line.startsWith('類型:') ||
+        line.startsWith('🧩 領域:') ||
+        line.startsWith('![') ||
+        line.trim() === '') {
+      if (line.startsWith('#')) {
+        startExtract = true;
+      }
+      continue;
+    }
+
+    if (startExtract && line.trim() !== '') {
+      summary += line + ' ';
+      charCount += line.length;
+      if (charCount >= 150) {
+        break;
+      }
+    }
+  }
+
+  summary = summary.trim().substring(0, 150);
+  if (summary.length === 150) {
+    summary += '...';
+  }
+
+  return {
+    title,
+    summary,
+    createdAt: metadata.createdAt || '',
+    updatedAt: metadata.updatedAt || '',
+    id: metadata.id || '',
+    type: metadata.type || '',
+    tag: metadata.tag || '未分類',
+    filename
+  };
+}
+
+// 解析日期字串為 Date 物件
+function parseDate(dateStr) {
+  // 處理格式: "February 4, 2023 11:37 PM" 或 "January 1, 2025 8:55 AM"
+  try {
+    return new Date(dateStr);
+  } catch (e) {
+    console.warn(`無法解析日期: ${dateStr}`);
+    return new Date(0); // 回傳最早的日期
+  }
+}
+
+// 主程式
+function main() {
+  const articlesDir = path.join(__dirname, 'static', 'artcles');
+  const outputPath = path.join(__dirname, 'articles.json');
+
+  console.log('開始掃描文章...');
+  let articles = getAllArticles(articlesDir);
+
+  console.log(`找到 ${articles.length} 篇文章`);
+
+  // 按最後編輯時間排序（最新的在前）
+  articles.sort((a, b) => {
+    const dateA = parseDate(a.updatedAt);
+    const dateB = parseDate(b.updatedAt);
+    return dateB - dateA;
+  });
+
+  // 提取所有 tag
+  const tags = [...new Set(articles.map(a => a.tag))].sort();
+
+  // 生成最終資料
+  const data = {
+    articles: articles.slice(0, 50), // 只保留前 50 篇，避免檔案過大
+    tags: tags,
+    generatedAt: new Date().toISOString()
+  };
+
+  // 寫入 JSON 檔案
+  fs.writeFileSync(outputPath, JSON.stringify(data, null, 2), 'utf-8');
+  console.log(`文章資料已生成: ${outputPath}`);
+  console.log(`總共 ${data.articles.length} 篇文章`);
+  console.log(`Tag 列表: ${tags.join(', ')}`);
+}
+
+main();
