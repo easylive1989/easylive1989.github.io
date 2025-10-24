@@ -401,6 +401,51 @@
             cursor: pointer;
         }
 
+        /* 分頁器樣式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            padding: 20px 0;
+        }
+
+        .pagination-button {
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--white);
+            color: var(--text-dark);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .pagination-button:hover:not(:disabled) {
+            background-color: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .pagination-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination-button.active {
+            background-color: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .pagination-info {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            padding: 0 10px;
+        }
+
         /* 響應式設計 */
         @media (max-width: 768px) {
             .header-content {
@@ -455,8 +500,16 @@
             <!-- 文章列表頁面 -->
             <div class="main-content" id="listView">
                 <!-- 左側：文章列表 (3/4) -->
-                <div class="articles-section" id="articlesContainer">
-                    <div class="loading">載入中...</div>
+                <div class="articles-section">
+                    <div id="articlesContainer">
+                        <div class="loading">載入中...</div>
+                    </div>
+                    <!-- 分頁器 -->
+                    <div class="pagination" id="pagination" style="display: none;">
+                        <button class="pagination-button" id="prevButton">← 上一頁</button>
+                        <span class="pagination-info" id="paginationInfo"></span>
+                        <button class="pagination-button" id="nextButton">下一頁 →</button>
+                    </div>
                 </div>
 
                 <!-- 右側：個人資訊 (1/4) -->
@@ -504,6 +557,8 @@
         let allArticles = [];
         let allTags = [];
         let currentTag = 'all';
+        let currentPage = 1;
+        const articlesPerPage = 10;
 
         // 載入文章資料
         async function loadArticles() {
@@ -521,6 +576,10 @@
 
                 // 初始化返回按鈕
                 document.getElementById('backButton').addEventListener('click', showListView);
+
+                // 初始化分頁按鈕
+                document.getElementById('prevButton').addEventListener('click', () => changePage(-1));
+                document.getElementById('nextButton').addEventListener('click', () => changePage(1));
             } catch (error) {
                 console.error('載入文章失敗:', error);
                 document.getElementById('articlesContainer').innerHTML = '<div class="empty-state">載入文章失敗</div>';
@@ -557,6 +616,9 @@
             // 更新當前 Tag
             currentTag = tag;
 
+            // 重置到第一頁
+            currentPage = 1;
+
             // 更新 active 狀態
             document.querySelectorAll('.tag-filter').forEach(link => {
                 link.classList.remove('active');
@@ -580,12 +642,16 @@
                 filteredArticles = allArticles.filter(article => article.tag === currentTag);
             }
 
-            // 只顯示前 10 篇
-            const articlesToShow = filteredArticles.slice(0, 10);
+            // 計算分頁
+            const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
+            const startIndex = (currentPage - 1) * articlesPerPage;
+            const endIndex = startIndex + articlesPerPage;
+            const articlesToShow = filteredArticles.slice(startIndex, endIndex);
 
             // 如果沒有文章
             if (articlesToShow.length === 0) {
                 container.innerHTML = '<div class="empty-state">沒有找到文章</div>';
+                document.getElementById('pagination').style.display = 'none';
                 return;
             }
 
@@ -600,6 +666,42 @@
                     <span class="article-tag">${article.tag}</span>
                 </div>
             `).join('');
+
+            // 更新分頁器
+            updatePagination(totalPages, filteredArticles.length);
+        }
+
+        // 更新分頁器
+        function updatePagination(totalPages, totalArticles) {
+            const pagination = document.getElementById('pagination');
+            const prevButton = document.getElementById('prevButton');
+            const nextButton = document.getElementById('nextButton');
+            const paginationInfo = document.getElementById('paginationInfo');
+
+            // 如果只有一頁或沒有文章，隱藏分頁器
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+
+            // 顯示分頁器
+            pagination.style.display = 'flex';
+
+            // 更新按鈕狀態
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === totalPages;
+
+            // 更新分頁資訊
+            paginationInfo.textContent = `第 ${currentPage} 頁 / 共 ${totalPages} 頁`;
+        }
+
+        // 切換頁面
+        function changePage(direction) {
+            currentPage += direction;
+            renderArticles();
+
+            // 滾動到文章列表頂部
+            document.getElementById('articlesContainer').scrollIntoView({ behavior: 'smooth' });
         }
 
         // 顯示文章詳細頁面
