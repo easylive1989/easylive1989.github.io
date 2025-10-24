@@ -162,6 +162,11 @@ function parseArticleMetadata(content, filename) {
     summary += '...';
   }
 
+  // 提取文章資料夾名稱（去除 .md 副檔名和 ID）
+  // 檔名格式: "標題 [32位ID].md" → 資料夾名稱: "標題"
+  let folderName = filename.replace(/\.md$/, ''); // 去除 .md
+  folderName = folderName.replace(/\s+[0-9a-f]{32}$/, ''); // 去除結尾的 32 位 ID
+
   return {
     title,
     summary,
@@ -171,7 +176,8 @@ function parseArticleMetadata(content, filename) {
     id: metadata.id || '',
     type: metadata.type || '',
     tag: metadata.tag || '未分類',
-    filename
+    filename,
+    folderName
   };
 }
 
@@ -278,11 +284,17 @@ function parseTutorialArticle(content, filename, seriesName) {
     summary += '...';
   }
 
+  // 提取文章資料夾名稱（去除 .md 副檔名和 ID）
+  // 檔名格式: "標題 [32位ID].md" → 資料夾名稱: "標題"
+  let folderName = filename.replace(/\.md$/, ''); // 去除 .md
+  folderName = folderName.replace(/\s+[0-9a-f]{32}$/, ''); // 去除結尾的 32 位 ID
+
   return {
     title,
     summary,
     content: fullContent.trim(),
     filename,
+    folderName,
     seriesName
   };
 }
