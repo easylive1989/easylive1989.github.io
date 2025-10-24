@@ -1,11 +1,12 @@
 # Dart 非同步介紹(一) - Event Loop
 
 新增時間: August 11, 2021 1:07 PM
-最後編輯時間: January 1, 2025 8:55 AM
+最後編輯時間: October 24, 2025 5:25 PM
 id: fad780524ae04e6fbadb7c6c280e0f2b
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+
+![image.png](Dart%20%E9%9D%9E%E5%90%8C%E6%AD%A5%E4%BB%8B%E7%B4%B9(%E4%B8%80)%20-%20Event%20Loop/image.png)
 
 寫Flutter的時候，如果我們需要從後端api拿回資料時，我們會使用一些network相關的package來幫忙，例如：[http](https://pub.dev/packages/http)。我們透過await http.get來讓代碼停在這一行，釋放Thread去做其他工作，直到後端response傳回來後，Thread再從之後的代碼繼續執行，這種非同步的操作只是用在存取api，在很多其他場景中也都會用到，今天就來講講Dart的非同步操作是如何運作的。
 

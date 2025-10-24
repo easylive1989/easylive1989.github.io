@@ -1,11 +1,12 @@
 # Context that does not contains ...
 
 新增時間: August 11, 2021 1:07 PM
-最後編輯時間: January 1, 2025 8:55 AM
+最後編輯時間: October 24, 2025 5:26 PM
 id: 6b3707dc2af34e82a203ba90279b70c2
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+
+![image.png](Context%20that%20does%20not%20contains/image.png)
 
 在開發Flutter的時候，多多少少都會遇到一些error。在眾多error中，多多少少都會遇到的一種error是context中找不到想要的東西，讓我們舉個例子來看看這個錯誤。
 

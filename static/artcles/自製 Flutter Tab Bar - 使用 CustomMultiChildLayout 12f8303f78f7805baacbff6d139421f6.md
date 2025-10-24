@@ -1,15 +1,16 @@
 # 自製 Flutter Tab Bar - 使用 CustomMultiChildLayout
 
 新增時間: October 30, 2024 8:20 AM
-最後編輯時間: January 1, 2025 8:55 AM
+最後編輯時間: October 24, 2025 5:20 PM
 id: 12f8303f78f7805baacbff6d139421f6
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+
+![image.png](%E8%87%AA%E8%A3%BD%20Flutter%20Tab%20Bar%20-%20%E4%BD%BF%E7%94%A8%20CustomMultiChildLayout/image.png)
 
 在產品開發上我們常常使用 Tab Bar 來切換不同分類的內容，使用 Tab Bar 可以讓使用者快速找到想要的內容，提升效率。一般來說，我們可以使用 Flutter 內建 TabBar 來完成，即便我們希望的樣式與預設的不同，也能透過參數調整或額外加工來調整成想要的結果。
 
-![image.png](%E8%87%AA%E8%A3%BD%20Flutter%20Tab%20Bar%20-%20%E4%BD%BF%E7%94%A8%20CustomMultiChildLayout/image.png)
+![image.png](%E8%87%AA%E8%A3%BD%20Flutter%20Tab%20Bar%20-%20%E4%BD%BF%E7%94%A8%20CustomMultiChildLayout/image%201.png)
 
 [https://api.flutter.dev/flutter/material/TabBar-class.html](https://api.flutter.dev/flutter/material/TabBar-class.html)
 

@@ -1,11 +1,12 @@
 # Flutter Notification 事件機制研究
 
 新增時間: August 31, 2021 1:46 PM
-最後編輯時間: January 1, 2025 8:55 AM
+最後編輯時間: October 24, 2025 5:22 PM
 id: 349055b3e6dc43c5976af586d01cbe81
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+
+![image.png](Flutter%20Notification%20%E4%BA%8B%E4%BB%B6%E6%A9%9F%E5%88%B6%E7%A0%94%E7%A9%B6/image.png)
 
 ## 什麼是 Notification 事件
 

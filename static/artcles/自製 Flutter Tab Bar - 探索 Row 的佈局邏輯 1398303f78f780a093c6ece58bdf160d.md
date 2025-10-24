@@ -1,11 +1,12 @@
 # 自製 Flutter Tab Bar - 探索  Row 的佈局邏輯
 
 新增時間: November 9, 2024 9:12 AM
-最後編輯時間: January 1, 2025 8:55 AM
+最後編輯時間: October 24, 2025 5:18 PM
 id: 1398303f78f780a093c6ece58bdf160d
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+
+![image.png](%E8%87%AA%E8%A3%BD%20Flutter%20Tab%20Bar%20-%20%E6%8E%A2%E7%B4%A2%20Row%20%E7%9A%84%E4%BD%88%E5%B1%80%E9%82%8F%E8%BC%AF/image.png)
 
 在上一篇文章中，我們製作 Tab Bar 時，曾嘗試使用 Row + Expanded 來完成，但是最終使用 AnimatedSize 套上動畫時，結果卻不如預期，Tab Bar 並沒有在切換 Tab 時顯示動畫，今天我們就來深入暸解到底發生了什麼。文章中，我們會分析 Row 的原始碼，了解 Row 的行為，嘗試理解到底是哪邊有問題。
 

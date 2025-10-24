@@ -197,10 +197,10 @@ function main() {
 
   console.log(`找到 ${articles.length} 篇文章`);
 
-  // 按最後編輯時間排序（最新的在前）
+  // 按新增時間排序（最新的在前）
   articles.sort((a, b) => {
-    const dateA = parseDate(a.updatedAt);
-    const dateB = parseDate(b.updatedAt);
+    const dateA = parseDate(a.createdAt);
+    const dateB = parseDate(b.createdAt);
     return dateB - dateA;
   });
 

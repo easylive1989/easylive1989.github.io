@@ -1,10 +1,9 @@
 # 用 Flutter Web 製作 Chrome Extension 待讀文章看板
 
 新增時間: November 5, 2022 11:13 PM
-最後編輯時間: October 2, 2025 11:57 PM
+最後編輯時間: October 24, 2025 5:20 PM
 id: 1baca95d3dd34180a74bc918af8f500c
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
 
 有一陣子沒寫文章了，趁著前陣子剛完成了[鐵人賽](https://ithelp.ithome.com.tw/users/20129825/ironman/4992)，趁著開始比較有空閒，就來更新一下最近學到的新東西XD。

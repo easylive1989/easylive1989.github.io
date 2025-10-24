@@ -1,10 +1,9 @@
 # 減緩 PageView 動畫加上 Table 造成的卡頓
 
 新增時間: June 24, 2023 11:24 PM
-最後編輯時間: January 1, 2025 8:55 AM
+最後編輯時間: October 24, 2025 5:20 PM
 id: a05dbbc423404d19954fb69ebfee4496
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
 
 ![mateus-campos-felipe-ebRHyE2u3X4-unsplash.jpg](%E6%B8%9B%E7%B7%A9%20PageView%20%E5%8B%95%E7%95%AB%E5%8A%A0%E4%B8%8A%20Table%20%E9%80%A0%E6%88%90%E7%9A%84%E5%8D%A1%E9%A0%93/mateus-campos-felipe-ebRHyE2u3X4-unsplash.jpg)

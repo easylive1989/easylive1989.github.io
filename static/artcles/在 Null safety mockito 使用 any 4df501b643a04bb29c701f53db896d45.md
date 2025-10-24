@@ -1,11 +1,10 @@
 # 在 Null safety mockito 使用 any
 
 新增時間: August 11, 2021 1:07 PM
-最後編輯時間: October 3, 2025 12:05 AM
+最後編輯時間: October 24, 2025 4:57 PM
 id: 4df501b643a04bb29c701f53db896d45
-完成: Yes
-類型: Medium
-🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+類型: 輸出文章
+🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21), 自動化測試 (https://www.notion.so/2968303f78f78006ae84e3befe61029f?pvs=21)
 
 前陣子 Google release了 Dart 2.12，加入 null safety 特性，不可避免地，升級過後的產品代碼需要進行一些調整，除此之外，測試代碼也必須進行相對應的調整。在測試之中，如果有使用 mockito 中的 any 來 mock 物件方法與回傳，可能會碰到像是下面這種 error。
 

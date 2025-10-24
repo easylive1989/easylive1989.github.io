@@ -1,11 +1,12 @@
 # 如何在 Flutter 中製作漂浮 Widget
 
 新增時間: October 11, 2021 9:51 PM
-最後編輯時間: October 2, 2025 11:50 PM
+最後編輯時間: October 24, 2025 5:22 PM
 id: 16d979fd41d74ed3b30deb840cd3df87
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+
+![image.png](%E5%A6%82%E4%BD%95%E5%9C%A8%20Flutter%20%E4%B8%AD%E8%A3%BD%E4%BD%9C%E6%BC%82%E6%B5%AE%20Widget/image.png)
 
 今天在工作中碰到一個需求，需要顯示漂浮 Widget，類似於 Dialog 那樣漂浮於畫面之上，但是需要客製自己的 Widget。於是自己做了一些研究，研究如何製作這種漂浮於畫面最上層的 Widget，本篇就來分享一下兩種製作漂浮 Widget 的方式。
 

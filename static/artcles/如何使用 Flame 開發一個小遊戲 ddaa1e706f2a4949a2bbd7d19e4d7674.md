@@ -1,10 +1,9 @@
 # 如何使用 Flame 開發一個小遊戲
 
 新增時間: January 1, 2023 11:37 AM
-最後編輯時間: October 2, 2025 11:57 PM
+最後編輯時間: October 24, 2025 4:48 PM
 id: ddaa1e706f2a4949a2bbd7d19e4d7674
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
 
 ![carl-raw-m3hn2Kn5Bns-unsplash.jpg](%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%20Flame%20%E9%96%8B%E7%99%BC%E4%B8%80%E5%80%8B%E5%B0%8F%E9%81%8A%E6%88%B2/carl-raw-m3hn2Kn5Bns-unsplash.jpg)

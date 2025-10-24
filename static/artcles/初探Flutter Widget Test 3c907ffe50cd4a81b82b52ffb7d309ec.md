@@ -1,11 +1,12 @@
 # 初探Flutter Widget Test
 
 新增時間: August 11, 2021 1:07 PM
-最後編輯時間: October 3, 2025 12:04 AM
+最後編輯時間: October 24, 2025 5:26 PM
 id: 3c907ffe50cd4a81b82b52ffb7d309ec
-完成: Yes
-類型: Medium
-🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+類型: 輸出文章
+🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21), 自動化測試 (https://www.notion.so/2968303f78f78006ae84e3befe61029f?pvs=21)
+
+![image.png](%E5%88%9D%E6%8E%A2Flutter%20Widget%20Test/image.png)
 
 Flutter可以使用 [test](https://pub.dev/packages/test) 來幫助我們寫單元測試，透過單元測試來幫忙檢查我們的核心邏輯是否正確。在我們實作需求或者是重構代碼時，常常會修改到過去已經寫好的代碼，當我們改壞邏輯時時，單元測試也能發出警訊，提醒我們改動可能有問題。
 

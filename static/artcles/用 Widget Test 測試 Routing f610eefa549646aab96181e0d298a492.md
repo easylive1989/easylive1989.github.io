@@ -1,11 +1,10 @@
 # 用 Widget Test 測試 Routing
 
 新增時間: June 7, 2023 10:30 PM
-最後編輯時間: October 3, 2025 4:56 PM
+最後編輯時間: October 24, 2025 5:20 PM
 id: f610eefa549646aab96181e0d298a492
-完成: Yes
-類型: Medium
-🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+類型: 輸出文章
+🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21), 自動化測試 (https://www.notion.so/2968303f78f78006ae84e3befe61029f?pvs=21)
 
 ![_206dd02c-3b32-4243-95a6-b8a7669e5acc.jpeg](%E7%94%A8%20Widget%20Test%20%E6%B8%AC%E8%A9%A6%20Routing/_206dd02c-3b32-4243-95a6-b8a7669e5acc.jpeg)
 

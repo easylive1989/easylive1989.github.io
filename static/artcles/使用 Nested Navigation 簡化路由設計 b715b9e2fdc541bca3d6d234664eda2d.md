@@ -1,11 +1,10 @@
 # 使用 Nested Navigation 簡化路由設計
 
 新增時間: April 23, 2022 10:41 AM
-最後編輯時間: October 2, 2025 11:53 PM
+最後編輯時間: October 24, 2025 4:50 PM
 id: b715b9e2fdc541bca3d6d234664eda2d
-完成: Yes
-類型: Medium
-🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+類型: 輸出文章
+🧩 領域: 極限編程 (https://www.notion.so/c3e6d79158424a53a67f71b414242926?pvs=21)
 
 Flutter 習慣在最頂層的 MaterialApp 或 CupertinoApp 中統一定義整個 app 的路由管理。當我們把所有頁面的路由管理都放在最頂層時，就會讓它變得很長，不容易維護。或許應該適時思考，是否某些頁面的路由不應該被管理在最頂層。今天就來分享工作上遇到的一個情境，以及它存在什麼問題，而我們又是如何解決的。
 

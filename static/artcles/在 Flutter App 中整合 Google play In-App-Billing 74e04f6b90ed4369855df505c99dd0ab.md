@@ -1,10 +1,9 @@
 # 在 Flutter App 中整合 Google play In-App-Billing
 
 新增時間: November 15, 2021 10:23 AM
-最後編輯時間: October 2, 2025 11:51 PM
+最後編輯時間: October 24, 2025 4:48 PM
 id: 74e04f6b90ed4369855df505c99dd0ab
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
 
 想在 App 上賺錢有兩種方式，一種是讓 App 本身是付費下載，另一種則是應用程式內購買。如果選擇應用程式內購買的話，在 iOS 上需要整合 Apple In App Purchase，而在 Google Play 上的話，則是需要整合 Google In App Billing，以下簡稱 Google IAB，本篇主要紀錄一下整合 Google IAB 的過程。

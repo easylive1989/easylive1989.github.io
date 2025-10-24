@@ -1,10 +1,9 @@
 # Widget Test 的 tap 原來這樣運作？一探 Flutter 測試點擊的祕密
 
 新增時間: August 23, 2025 9:08 AM
-最後編輯時間: August 23, 2025 4:27 PM
+最後編輯時間: October 24, 2025 4:47 PM
 id: 2588303f78f780b3a789ccdae073e04a
-完成: Yes
-類型: Medium
+類型: 輸出文章
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
 
 ![robottesting2.png](Widget%20Test%20%E7%9A%84%20tap%20%E5%8E%9F%E4%BE%86%E9%80%99%E6%A8%A3%E9%81%8B%E4%BD%9C%EF%BC%9F%E4%B8%80%E6%8E%A2%20Flutter%20%E6%B8%AC%E8%A9%A6%E9%BB%9E%E6%93%8A%E7%9A%84%E7%A5%95%E5%AF%86/robottesting2.png)

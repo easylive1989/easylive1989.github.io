@@ -1,11 +1,10 @@
 # 如何用 Github Action 建置 Flutter Android App
 
 新增時間: August 15, 2021 2:58 PM
-最後編輯時間: October 3, 2025 12:05 AM
+最後編輯時間: October 24, 2025 5:24 PM
 id: b95a311f7549498ca192c4dd9a4538e8
-完成: Yes
-類型: Medium
-🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
+類型: 輸出文章
+🧩 領域: 極限編程 (https://www.notion.so/c3e6d79158424a53a67f71b414242926?pvs=21)
 
 手動建置與上傳 app 是一件滿麻煩的事情，在最理想的狀況下，我們希望當我們確保程式沒有問題之後，合併回主線就可以開始自動建置並上傳到 google play 上。為了達到這個目的，我使用 Github Action 來幫我建置 flutter app，今天就來分享一下我如何自動化這些麻煩事。
 
