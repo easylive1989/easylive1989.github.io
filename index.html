@@ -119,7 +119,6 @@
         .articles-section {
             display: flex;
             flex-direction: column;
-            gap: 20px;
         }
 
         .article-card {
@@ -127,7 +126,12 @@
             border: 2px solid var(--border-color);
             border-radius: 4px;
             padding: 25px;
+            margin-bottom: 30px;
             transition: all 0.2s ease;
+        }
+
+        .article-card:last-child {
+            margin-bottom: 0;
         }
 
         .article-card:hover {
