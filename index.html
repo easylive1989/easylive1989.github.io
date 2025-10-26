@@ -513,6 +513,32 @@
             border-bottom-color: var(--secondary);
         }
 
+        /* DartPad iframe 樣式 */
+        .dartpad-container {
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dartpad-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 影片播放器樣式 */
+        .article-detail-content video {
+            width: 100%;
+            height: 500px;
+            margin: 20px 0;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #000;
+        }
+
         /* 載入中和空狀態 */
         .loading {
             text-align: center;
@@ -972,6 +998,40 @@
                     }
                 );
             }
+
+            // 處理 DartPad 連結：將 DartPad URL 轉換為 iframe embed
+            processedContent = processedContent.replace(
+                /\[https:\/\/dartpad\.dev\/\?id=([^\]]+)\]\(https:\/\/dartpad\.dev\/\?id=([^\)]+)\)/g,
+                (match, id1, id2) => {
+                    const dartpadId = id1; // 使用第一個捕獲的 id
+                    return `<div class="dartpad-container"><iframe src="https://dartpad.dev/embed-flutter.html?id=${dartpadId}"></iframe></div>`;
+                }
+            );
+
+            // 處理影片連結：將 .mov 連結轉換為 video 標籤
+            processedContent = processedContent.replace(
+                /\[([^\]]*\.mov)\]\(([^)]+)\)/g,
+                (match, filename, url) => {
+                    // 如果是相對路徑（不是 http 開頭）
+                    if (!url.startsWith('http') && !url.startsWith('/')) {
+                        // 解碼 URL 編碼的路徑
+                        const decodedUrl = decodeURIComponent(url);
+                        // 提取檔名（路徑的最後一部分）
+                        const videoFilename = decodedUrl.split('/').pop();
+
+                        // 根據是否為教學系列構建路徑
+                        let videoUrl;
+                        if (isTutorial) {
+                            videoUrl = `/static/tutorials/${encodeURIComponent(seriesName)}/${encodeURIComponent(article.folderName)}/${encodeURIComponent(videoFilename)}`;
+                        } else {
+                            videoUrl = `/static/artcles/${encodeURIComponent(article.folderName)}/${encodeURIComponent(videoFilename)}`;
+                        }
+
+                        return `<video src="${videoUrl}" controls></video>`;
+                    }
+                    return match;
+                }
+            );
 
             // 渲染 Markdown 內容
             const htmlContent = marked.parse(processedContent);
