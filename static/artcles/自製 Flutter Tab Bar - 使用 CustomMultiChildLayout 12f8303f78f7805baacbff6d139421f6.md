@@ -1,9 +1,9 @@
 # 自製 Flutter Tab Bar - 使用 CustomMultiChildLayout
 
 新增時間: October 30, 2024 8:20 AM
-最後編輯時間: October 24, 2025 5:20 PM
+最後編輯時間: October 26, 2025 9:38 PM
 id: 12f8303f78f7805baacbff6d139421f6
-類型: 輸出文章
+類型: Medium
 🧩 領域: Flutter (https://www.notion.so/Flutter-aec5ea3a198f49e18989ab7f4c851169?pvs=21)
 
 ![image.png](%E8%87%AA%E8%A3%BD%20Flutter%20Tab%20Bar%20-%20%E4%BD%BF%E7%94%A8%20CustomMultiChildLayout/image.png)
@@ -80,7 +80,9 @@ class _MyTabBarState extends State<MyTabBar> {
 }
 ```
 
-這個版本相當簡單，當使用者選到某個 Tab 之後，被選到的 Tab 一瞬間就換了樣式。[[Dartpad的範例](https://dartpad.dev/?id=e2b032cb7cf8392af5a1f0ea4c4a11fb)]
+這個版本相當簡單，當使用者選到某個 Tab 之後，被選到的 Tab 一瞬間就換了樣式。
+
+[https://dartpad.dev/?id=e2b032cb7cf8392af5a1f0ea4c4a11fb](https://dartpad.dev/?id=e2b032cb7cf8392af5a1f0ea4c4a11fb)
 
 [v1.mov](%E8%87%AA%E8%A3%BD%20Flutter%20Tab%20Bar%20-%20%E4%BD%BF%E7%94%A8%20CustomMultiChildLayout/v1.mov)
 
@@ -166,7 +168,7 @@ Row(
 
 [v2.mov](%E8%87%AA%E8%A3%BD%20Flutter%20Tab%20Bar%20-%20%E4%BD%BF%E7%94%A8%20CustomMultiChildLayout/v2.mov)
 
-[[Dartpad範例](https://dartpad.dev/?id=3e6285459821b93834d6bdfbd1308827)]
+[https://dartpad.dev/?id=3e6285459821b93834d6bdfbd1308827](https://dartpad.dev/?id=3e6285459821b93834d6bdfbd1308827)
 
 事情到了這邊，顯然我們無法使用 Row 完成這個 Tab Bar 設計了，那我們還有什麼辦法呢？有的，我們可以用 [CustomMultiChildLayout](https://api.flutter.dev/flutter/widgets/CustomMultiChildLayout-class.html) 自製一個簡單的 Row，一個為這個特殊的 Tab Bar 佈局而生的 Row。
 
@@ -291,11 +293,15 @@ class _MyTabBarLayoutDelegate extends MultiChildLayoutDelegate {
 
 最後我們知道每個子 Widget 大小為多少之後，我們就能準確的設定其座標。透過 positionChild 方法指定每個子 Widget 的位置，我們也就能完成特製的 Row 了。
 
-完成之後，我們測試一個就能看到切換 Tab 時，Tab 有伸縮的動畫了。[[Dartpad範例](https://dartpad.dev/?id=52542730fde0265f1690f3b29f5b12c6)]
+完成之後，我們測試一個就能看到切換 Tab 時，Tab 有伸縮的動畫了。
+
+[https://dartpad.dev/?id=52542730fde0265f1690f3b29f5b12c6](https://dartpad.dev/?id=52542730fde0265f1690f3b29f5b12c6)
 
 [v4.mov](%E8%87%AA%E8%A3%BD%20Flutter%20Tab%20Bar%20-%20%E4%BD%BF%E7%94%A8%20CustomMultiChildLayout/v4.mov)
 
-最後我們還想讓 Tab 的背景顏色也有淡入淡出的動畫效果時，我們只要簡單的把 Container 修改為 AnimatedContainer 就好，我們就能看到變大變小的同時也有淡入淡出的效果了。[[Dartpad範例](https://dartpad.dev/?id=e5d78a92bdf62adc25df2d580348c661)]
+最後我們還想讓 Tab 的背景顏色也有淡入淡出的動畫效果時，我們只要簡單的把 Container 修改為 AnimatedContainer 就好，我們就能看到變大變小的同時也有淡入淡出的效果了。
+
+[https://dartpad.dev/?id=e5d78a92bdf62adc25df2d580348c661](https://dartpad.dev/?id=e5d78a92bdf62adc25df2d580348c661)
 
 [v4.mov](%E8%87%AA%E8%A3%BD%20Flutter%20Tab%20Bar%20-%20%E4%BD%BF%E7%94%A8%20CustomMultiChildLayout/v4%201.mov)
 
