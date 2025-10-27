@@ -16,3 +16,12 @@
 
 # playwright mcp
 .playwright-mcp
+
+# Astro
+dist/
+node_modules/
+.astro/
+
+# Environment variables
+.env
+.env.production

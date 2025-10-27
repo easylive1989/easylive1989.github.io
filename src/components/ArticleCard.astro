@@ -1,0 +1,33 @@
+---
+import type { Article } from '../types';
+
+export interface Props {
+  article: Article;
+  showDate?: boolean;
+  showTag?: boolean;
+}
+
+const { article, showDate = true, showTag = true } = Astro.props;
+
+function formatDate(dateStr: string) {
+    if (!dateStr) return '';
+    try {
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+    } catch (e) {
+        return dateStr;
+    }
+}
+---
+
+<a href={`/article/${article.id}`} class="article-card" style="text-decoration: none; color: inherit;">
+    <div class="article-header">
+        <h2 class="article-title">{article.title}</h2>
+        {showDate && <span class="article-date">{formatDate(article.createdAt)}</span>}
+    </div>
+    <p class="article-summary">{article.summary}</p>
+    {showTag && <span class="article-tag">{article.tag}</span>}
+</a>
