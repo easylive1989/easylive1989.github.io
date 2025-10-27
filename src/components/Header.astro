@@ -1,5 +1,8 @@
 ---
-// Header component
+import articlesData from '../../public/articles.json';
+
+const data = articlesData as any;
+const tutorialSeries = data.tutorialSeries || [];
 ---
 
 <header>
@@ -10,8 +13,39 @@
             </h1>
             <nav id="mainNav">
                 <a href="/" class="nav-button">日常開發</a>
-                <!-- Tutorial dropdown will be added later -->
+                <div class="dropdown">
+                    <button class="nav-button dropdown-toggle" id="tutorialsButton">
+                        主題教學 ▼
+                    </button>
+                    <div class="dropdown-menu" id="tutorialsMenu">
+                        {tutorialSeries.map((series: any) => (
+                            <a href={`/series/${encodeURIComponent(series.name)}`} class="dropdown-item">
+                                {series.name}
+                            </a>
+                        ))}
+                    </div>
+                </div>
             </nav>
         </div>
     </div>
 </header>
+
+<script>
+    // 主題教學下拉選單互動
+    const tutorialsButton = document.getElementById('tutorialsButton');
+    const tutorialsMenu = document.getElementById('tutorialsMenu');
+
+    if (tutorialsButton && tutorialsMenu) {
+        tutorialsButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            tutorialsMenu.classList.toggle('show');
+        });
+
+        // 點擊其他地方關閉下拉選單
+        document.addEventListener('click', (e) => {
+            if (!(e.target as Element).closest('.dropdown')) {
+                tutorialsMenu.classList.remove('show');
+            }
+        });
+    }
+</script>
