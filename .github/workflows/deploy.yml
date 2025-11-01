@@ -25,22 +25,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          node-version: '20'
-          cache: 'npm'
+          channel: 'stable'
+          cache: true
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install Jaspr CLI
+        run: dart pub global activate jaspr_cli
 
-      - name: Build Astro site
-        run: npm run build
+      - name: Get dependencies
+        run: dart pub get
+
+      - name: Build Jaspr site
+        run: dart pub global run jaspr_cli:jaspr build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./build/jaspr
 
   deploy:
     environment:
