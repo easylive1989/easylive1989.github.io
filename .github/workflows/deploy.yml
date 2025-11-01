@@ -42,7 +42,7 @@ jobs:
 
       - name: Copy static assets to build output
         run: |
-          cp -r static/* build/jaspr/ 2>/dev/null || true
+          cp -rn static/* build/jaspr/ 2>/dev/null || true
           ls -la build/jaspr/
 
       - name: List build output for debugging
