@@ -40,6 +40,18 @@ jobs:
       - name: Build Jaspr site
         run: dart pub global run jaspr_cli:jaspr build
 
+      - name: Copy static assets to build output
+        run: |
+          cp -r static/* build/jaspr/ 2>/dev/null || true
+          ls -la build/jaspr/
+
+      - name: List build output for debugging
+        run: |
+          echo "=== Build output structure ==="
+          find build/jaspr -type f | head -20
+          echo "=== Checking images directory ==="
+          ls -la build/jaspr/images/ || echo "No images directory"
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
