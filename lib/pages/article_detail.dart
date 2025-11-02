@@ -33,28 +33,30 @@ class ArticleDetail extends StatelessComponent {
 
   @css
   static List<StyleRule> get styles => [
-        css('.article-detail-page').styles(
-          padding: Padding.symmetric(vertical: AppSpacing.xl3, horizontal: AppSpacing.xl),
-          minHeight: 100.vh,
-        ),
+    css('.article-detail-page').styles(
+      minHeight: 100.vh,
+      padding: Padding.symmetric(vertical: AppSpacing.xl3, horizontal: AppSpacing.xl),
+    ),
 
-        css('.article-header').styles(
-          margin: Margin.only(bottom: AppSpacing.xl2),
-          padding: Padding.only(bottom: AppSpacing.xl),
-          border: Border.only(bottom: BorderSide(color: borderColor, width: Borders.thin)),
-        ),
+    css('.article-header').styles(
+      padding: Padding.only(bottom: AppSpacing.xl),
+      margin: Margin.only(bottom: AppSpacing.xl2),
+      border: Border.only(
+        bottom: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+    ),
 
-        css('.article-title').styles(
-          fontSize: FontSizes.xl5,
-          fontWeight: FontWeights.bold,
-          color: secondaryColor,
-          margin: Margin.only(bottom: AppSpacing.lg),
-        ),
+    css('.article-title').styles(
+      margin: Margin.only(bottom: AppSpacing.lg),
+      color: secondaryColor,
+      fontSize: FontSizes.xl5,
+      fontWeight: FontWeights.bold,
+    ),
 
-        css('.article-meta').styles(
-          display: Display.flex,
-          fontSize: FontSizes.base,
-          color: textSecondaryColor,
-        ),
-      ];
+    css('.article-meta').styles(
+      display: Display.flex,
+      color: textSecondaryColor,
+      fontSize: FontSizes.base,
+    ),
+  ];
 }

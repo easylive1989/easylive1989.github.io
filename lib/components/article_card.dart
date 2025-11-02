@@ -78,83 +78,81 @@ class ArticleCard extends StatelessComponent {
 
   @css
   static List<StyleRule> get styles => [
-        // 卡片容器
-        css('.article-card').styles(
-          display: Display.block,
-          backgroundColor: backgroundColor,
-          border: Border.only(
-            top: BorderSide(color: borderColor, width: Borders.thin),
-            right: BorderSide(color: borderColor, width: Borders.thin),
-            bottom: BorderSide(color: borderColor, width: Borders.thin),
-            left: BorderSide(color: borderColor, width: Borders.thin),
-          ),
-          overflow: Overflow.hidden,
-          cursor: Cursor.pointer,
-        ),
+    // 卡片容器
+    css('.article-card').styles(
+      display: Display.block,
+      border: Border.only(
+        top: BorderSide(color: borderColor, width: Borders.thin),
+        right: BorderSide(color: borderColor, width: Borders.thin),
+        bottom: BorderSide(color: borderColor, width: Borders.thin),
+        left: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+      overflow: Overflow.hidden,
+      cursor: Cursor.pointer,
+      backgroundColor: backgroundColor,
+    ),
 
-        css('.article-card:hover').styles(
-        ),
+    css('.article-card:hover').styles(),
 
-        // 封面圖片
-        css('.article-card-image').styles(
-          width: 100.percent,
-          height: 200.px,
-          overflow: Overflow.hidden,
-          backgroundColor: surfaceColor,
-        ),
+    // 封面圖片
+    css('.article-card-image').styles(
+      width: 100.percent,
+      height: 200.px,
+      overflow: Overflow.hidden,
+      backgroundColor: surfaceColor,
+    ),
 
-        css('.article-card-image img').styles(
-          width: 100.percent,
-          height: 100.percent,
-        ),
+    css('.article-card-image img').styles(
+      width: 100.percent,
+      height: 100.percent,
+    ),
 
+    // 內容區域
+    css('.article-card-content').styles(
+      padding: Padding.all(AppSpacing.lg),
+    ),
 
-        // 內容區域
-        css('.article-card-content').styles(
-          padding: Padding.all(AppSpacing.lg),
-        ),
+    // 標籤
+    css('.article-card-tag').styles(
+      display: Display.inlineBlock,
+      padding: Padding.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      margin: Margin.only(bottom: AppSpacing.sm),
+      color: primaryColor,
+      fontSize: FontSizes.sm,
+      fontWeight: FontWeights.semibold,
+      backgroundColor: Color('#1A57B4BA'),
+    ),
 
-        // 標籤
-        css('.article-card-tag').styles(
-          display: Display.inlineBlock,
-          padding: Padding.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-          backgroundColor: Color('#1A57B4BA'),
-          color: primaryColor,
-          fontSize: FontSizes.sm,
-          fontWeight: FontWeights.semibold,
-          margin: Margin.only(bottom: AppSpacing.sm),
-        ),
+    // 標題
+    css('.article-card-title').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: secondaryColor,
+      fontSize: FontSizes.xl2,
+      fontWeight: FontWeights.bold,
+    ),
 
-        // 標題
-        css('.article-card-title').styles(
-          fontSize: FontSizes.xl2,
-          fontWeight: FontWeights.bold,
-          color: secondaryColor,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.article-card:hover .article-card-title').styles(
+      color: primaryColor,
+    ),
 
-        css('.article-card:hover .article-card-title').styles(
-          color: primaryColor,
-        ),
+    // 摘要
+    css('.article-card-excerpt').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: textSecondaryColor,
+      fontSize: FontSizes.base,
+    ),
 
-        // 摘要
-        css('.article-card-excerpt').styles(
-          fontSize: FontSizes.base,
-          color: textSecondaryColor,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    // Meta 資訊
+    css('.article-card-meta').styles(
+      display: Display.flex,
+      flexWrap: FlexWrap.wrap,
+      color: textSecondaryColor,
+      fontSize: FontSizes.sm,
+    ),
 
-        // Meta 資訊
-        css('.article-card-meta').styles(
-          display: Display.flex,
-          flexWrap: FlexWrap.wrap,
-          fontSize: FontSizes.sm,
-          color: textSecondaryColor,
-        ),
-
-        css('.article-card-meta .meta-item').styles(
-          display: Display.flex,
-          alignItems: AlignItems.center,
-        ),
-      ];
+    css('.article-card-meta .meta-item').styles(
+      display: Display.flex,
+      alignItems: AlignItems.center,
+    ),
+  ];
 }

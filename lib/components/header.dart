@@ -37,49 +37,51 @@ class Header extends StatelessComponent {
 
   @css
   static List<StyleRule> get styles => [
-        css('header').styles(
-          backgroundColor: backgroundColor,
-          border: Border.only(bottom: BorderSide(color: borderColor, width: Borders.thin)),
-          position: Position.sticky(),
-          zIndex: ZIndex(1000),
-        ),
+    css('header').styles(
+      position: Position.sticky(),
+      zIndex: ZIndex(1000),
+      border: Border.only(
+        bottom: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+      backgroundColor: backgroundColor,
+    ),
 
-        css('.header-content').styles(
-          display: Display.flex,
-          alignItems: AlignItems.center,
-          justifyContent: JustifyContent.spaceBetween,
-          maxWidth: ContainerWidths.xl2,
-          margin: Margin.symmetric(horizontal: Unit.auto),
-          padding: Padding.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
-        ),
+    css('.header-content').styles(
+      display: Display.flex,
+      maxWidth: ContainerWidths.xl2,
+      padding: Padding.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+      margin: Margin.symmetric(horizontal: Unit.auto),
+      justifyContent: JustifyContent.spaceBetween,
+      alignItems: AlignItems.center,
+    ),
 
-        css('.header-logo').styles(
-          fontSize: FontSizes.xl2,
-          fontWeight: FontWeights.bold,
-          color: primaryColor,
-          textDecoration: TextDecoration.none,
-        ),
+    css('.header-logo').styles(
+      color: primaryColor,
+      fontSize: FontSizes.xl2,
+      fontWeight: FontWeights.bold,
+      textDecoration: TextDecoration.none,
+    ),
 
-        css('nav').styles(
-          display: Display.flex,
-        ),
+    css('nav').styles(
+      display: Display.flex,
+    ),
 
-        css('nav a').styles(
-          display: Display.block,
-          padding: Padding.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-          color: textPrimaryColor,
-          textDecoration: TextDecoration.none,
-          fontWeight: FontWeights.medium,
-        ),
+    css('nav a').styles(
+      display: Display.block,
+      padding: Padding.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+      color: textPrimaryColor,
+      fontWeight: FontWeights.medium,
+      textDecoration: TextDecoration.none,
+    ),
 
-        css('nav a:hover').styles(
-          backgroundColor: surfaceColor,
-          color: primaryColor,
-        ),
+    css('nav a:hover').styles(
+      color: primaryColor,
+      backgroundColor: surfaceColor,
+    ),
 
-        css('nav div.active a').styles(
-          backgroundColor: primaryColor,
-          color: Color('#FFFFFFFF'),
-        ),
-      ];
+    css('nav div.active a').styles(
+      color: Color('#FFFFFFFF'),
+      backgroundColor: primaryColor,
+    ),
+  ];
 }

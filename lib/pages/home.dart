@@ -72,7 +72,11 @@ class HomeState extends State<Home> {
         // 這裡將顯示最新文章卡片
         // 實際內容將在路由系統完成後動態載入
         div(classes: 'articles-grid', [
-          _buildArticlePlaceholder('自製 Flutter Tab Bar', 'Flutter', '深入探討如何使用 CustomMultiChildLayout 創建客製化的 Tab Bar 元件...'),
+          _buildArticlePlaceholder(
+            '自製 Flutter Tab Bar',
+            'Flutter',
+            '深入探討如何使用 CustomMultiChildLayout 創建客製化的 Tab Bar 元件...',
+          ),
         ]),
       ]),
     ]);
@@ -149,203 +153,203 @@ class HomeState extends State<Home> {
 
   @css
   static List<StyleRule> get styles => [
-        // 首頁容器
-        css('.home-page').styles(
-          width: 100.percent,
-          minHeight: 100.vh,
-        ),
+    // 首頁容器
+    css('.home-page').styles(
+      width: 100.percent,
+      minHeight: 100.vh,
+    ),
 
-        // Hero Section
-        css('.hero-section').styles(
-          color: Color('#FFFFFFFF'),
-          padding: Padding.symmetric(vertical: AppSpacing.xl5, horizontal: AppSpacing.xl),
-          textAlign: TextAlign.center,
-        ),
+    // Hero Section
+    css('.hero-section').styles(
+      padding: Padding.symmetric(vertical: AppSpacing.xl5, horizontal: AppSpacing.xl),
+      color: Color('#FFFFFFFF'),
+      textAlign: TextAlign.center,
+    ),
 
-        css('.hero-content').styles(
-          maxWidth: ContainerWidths.lg,
-          margin: Margin.symmetric(horizontal: Unit.auto),
-        ),
+    css('.hero-content').styles(
+      maxWidth: ContainerWidths.lg,
+      margin: Margin.symmetric(horizontal: Unit.auto),
+    ),
 
-        css('.hero-title').styles(
-          fontSize: FontSizes.xl6,
-          fontWeight: FontWeights.bold,
-          margin: Margin.only(bottom: AppSpacing.lg),
-          color: Color('#FFFFFFFF'),
-        ),
+    css('.hero-title').styles(
+      margin: Margin.only(bottom: AppSpacing.lg),
+      color: Color('#FFFFFFFF'),
+      fontSize: FontSizes.xl6,
+      fontWeight: FontWeights.bold,
+    ),
 
-        css('.hero-subtitle').styles(
-          fontSize: FontSizes.xl2,
-          margin: Margin.only(bottom: AppSpacing.md),
-          fontWeight: FontWeights.medium,
-        ),
+    css('.hero-subtitle').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+      fontSize: FontSizes.xl2,
+      fontWeight: FontWeights.medium,
+    ),
 
-        css('.hero-description').styles(
-          fontSize: FontSizes.xl,
-          margin: Margin.only(bottom: AppSpacing.xl2),
-          opacity: 0.9,
-        ),
+    css('.hero-description').styles(
+      margin: Margin.only(bottom: AppSpacing.xl2),
+      opacity: 0.9,
+      fontSize: FontSizes.xl,
+    ),
 
-        css('.hero-actions').styles(
-          display: Display.flex,
-          justifyContent: JustifyContent.center,
-          flexWrap: FlexWrap.wrap,
-        ),
+    css('.hero-actions').styles(
+      display: Display.flex,
+      flexWrap: FlexWrap.wrap,
+      justifyContent: JustifyContent.center,
+    ),
 
-        // Buttons
-        css('.btn').styles(
-          padding: Padding.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
-          fontSize: FontSizes.lg,
-          fontWeight: FontWeights.semibold,
-          cursor: Cursor.pointer,
-          textDecoration: TextDecoration.none,
-          display: Display.inlineBlock,
-        ),
+    // Buttons
+    css('.btn').styles(
+      display: Display.inlineBlock,
+      padding: Padding.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+      cursor: Cursor.pointer,
+      fontSize: FontSizes.lg,
+      fontWeight: FontWeights.semibold,
+      textDecoration: TextDecoration.none,
+    ),
 
-        css('.btn-primary').styles(
-          backgroundColor: Color('#FFFFFFFF'),
-          color: primaryColor,
-        ),
+    css('.btn-primary').styles(
+      color: primaryColor,
+      backgroundColor: Color('#FFFFFFFF'),
+    ),
 
-        css('.btn-secondary').styles(
-          color: Color('#FFFFFFFF'),
-          border: Border.only(
-            top: BorderSide(color: Color('#FFFFFFFF'), width: Borders.medium),
-            right: BorderSide(color: Color('#FFFFFFFF'), width: Borders.medium),
-            bottom: BorderSide(color: Color('#FFFFFFFF'), width: Borders.medium),
-            left: BorderSide(color: Color('#FFFFFFFF'), width: Borders.medium),
-          ),
-        ),
+    css('.btn-secondary').styles(
+      border: Border.only(
+        top: BorderSide(color: Color('#FFFFFFFF'), width: Borders.medium),
+        right: BorderSide(color: Color('#FFFFFFFF'), width: Borders.medium),
+        bottom: BorderSide(color: Color('#FFFFFFFF'), width: Borders.medium),
+        left: BorderSide(color: Color('#FFFFFFFF'), width: Borders.medium),
+      ),
+      color: Color('#FFFFFFFF'),
+    ),
 
-        css('.btn-secondary:hover').styles(
-          backgroundColor: Color('#1AFFFFFF'),
-        ),
+    css('.btn-secondary:hover').styles(
+      backgroundColor: Color('#1AFFFFFF'),
+    ),
 
-        css('.btn-large').styles(
-          padding: Padding.symmetric(horizontal: AppSpacing.xl2, vertical: AppSpacing.lg),
-          fontSize: FontSizes.xl,
-        ),
+    css('.btn-large').styles(
+      padding: Padding.symmetric(horizontal: AppSpacing.xl2, vertical: AppSpacing.lg),
+      fontSize: FontSizes.xl,
+    ),
 
-        // Section
-        css('.section').styles(
-          padding: Padding.symmetric(vertical: AppSpacing.xl4, horizontal: AppSpacing.xl),
-        ),
+    // Section
+    css('.section').styles(
+      padding: Padding.symmetric(vertical: AppSpacing.xl4, horizontal: AppSpacing.xl),
+    ),
 
-        css('.container').styles(
-          maxWidth: ContainerWidths.xl,
-          margin: Margin.symmetric(horizontal: Unit.auto),
-        ),
+    css('.container').styles(
+      maxWidth: ContainerWidths.xl,
+      margin: Margin.symmetric(horizontal: Unit.auto),
+    ),
 
-        css('.section-header').styles(
-          display: Display.flex,
-          justifyContent: JustifyContent.spaceBetween,
-          alignItems: AlignItems.center,
-          margin: Margin.only(bottom: AppSpacing.xl2),
-        ),
+    css('.section-header').styles(
+      display: Display.flex,
+      margin: Margin.only(bottom: AppSpacing.xl2),
+      justifyContent: JustifyContent.spaceBetween,
+      alignItems: AlignItems.center,
+    ),
 
-        css('.section-title').styles(
-          fontSize: FontSizes.xl4,
-          fontWeight: FontWeights.bold,
-          color: secondaryColor,
-        ),
+    css('.section-title').styles(
+      color: secondaryColor,
+      fontSize: FontSizes.xl4,
+      fontWeight: FontWeights.bold,
+    ),
 
-        css('.section-link').styles(
-          fontSize: FontSizes.lg,
-          color: primaryColor,
-          fontWeight: FontWeights.semibold,
-        ),
+    css('.section-link').styles(
+      color: primaryColor,
+      fontSize: FontSizes.lg,
+      fontWeight: FontWeights.semibold,
+    ),
 
-        css('.section-link:hover').styles(
-          color: secondaryColor,
-        ),
+    css('.section-link:hover').styles(
+      color: secondaryColor,
+    ),
 
-        // Grid
-        css('.articles-grid, .series-grid').styles(
-          display: Display.grid,
-        ),
+    // Grid
+    css('.articles-grid, .series-grid').styles(
+      display: Display.grid,
+    ),
 
-        // Placeholder cards
-        css('.article-placeholder, .series-placeholder').styles(
-          padding: Padding.all(AppSpacing.xl),
-          backgroundColor: backgroundColor,
-          border: Border.only(
-            top: BorderSide(color: borderColor, width: Borders.thin),
-            right: BorderSide(color: borderColor, width: Borders.thin),
-            bottom: BorderSide(color: borderColor, width: Borders.thin),
-            left: BorderSide(color: borderColor, width: Borders.thin),
-          ),
-        ),
+    // Placeholder cards
+    css('.article-placeholder, .series-placeholder').styles(
+      padding: Padding.all(AppSpacing.xl),
+      border: Border.only(
+        top: BorderSide(color: borderColor, width: Borders.thin),
+        right: BorderSide(color: borderColor, width: Borders.thin),
+        bottom: BorderSide(color: borderColor, width: Borders.thin),
+        left: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+      backgroundColor: backgroundColor,
+    ),
 
-        css('.article-tag').styles(
-          display: Display.inlineBlock,
-          padding: Padding.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-          backgroundColor: Color('#1A57B4BA'),
-          color: primaryColor,
-          fontSize: FontSizes.sm,
-          fontWeight: FontWeights.semibold,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.article-tag').styles(
+      display: Display.inlineBlock,
+      padding: Padding.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: primaryColor,
+      fontSize: FontSizes.sm,
+      fontWeight: FontWeights.semibold,
+      backgroundColor: Color('#1A57B4BA'),
+    ),
 
-        css('.article-title, .series-title').styles(
-          fontSize: FontSizes.xl2,
-          fontWeight: FontWeights.bold,
-          color: secondaryColor,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.article-title, .series-title').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: secondaryColor,
+      fontSize: FontSizes.xl2,
+      fontWeight: FontWeights.bold,
+    ),
 
-        css('.article-excerpt, .series-description').styles(
-          fontSize: FontSizes.base,
-          color: textSecondaryColor,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.article-excerpt, .series-description').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: textSecondaryColor,
+      fontSize: FontSizes.base,
+    ),
 
-        css('.article-meta, .series-meta').styles(
-          display: Display.flex,
-          fontSize: FontSizes.sm,
-          color: textSecondaryColor,
-        ),
+    css('.article-meta, .series-meta').styles(
+      display: Display.flex,
+      color: textSecondaryColor,
+      fontSize: FontSizes.sm,
+    ),
 
-        css('.series-badge').styles(
-          display: Display.inlineBlock,
-          padding: Padding.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-          backgroundColor: primaryColor,
-          color: Color('#FFFFFFFF'),
-          fontSize: FontSizes.lg,
-          fontWeight: FontWeights.bold,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.series-badge').styles(
+      display: Display.inlineBlock,
+      padding: Padding.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: Color('#FFFFFFFF'),
+      fontSize: FontSizes.lg,
+      fontWeight: FontWeights.bold,
+      backgroundColor: primaryColor,
+    ),
 
-        css('.difficulty-badge').styles(
-          padding: Padding.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-          backgroundColor: Color('#1A57B4BA'),
-          color: primaryColor,
-          fontSize: FontSizes.sm,
-          fontWeight: FontWeights.semibold,
-        ),
+    css('.difficulty-badge').styles(
+      padding: Padding.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      color: primaryColor,
+      fontSize: FontSizes.sm,
+      fontWeight: FontWeights.semibold,
+      backgroundColor: Color('#1A57B4BA'),
+    ),
 
-        // CTA Section
-        css('.cta-section').styles(
-          color: Color('#FFFFFFFF'),
-          padding: Padding.symmetric(vertical: AppSpacing.xl4, horizontal: AppSpacing.xl),
-          textAlign: TextAlign.center,
-        ),
+    // CTA Section
+    css('.cta-section').styles(
+      padding: Padding.symmetric(vertical: AppSpacing.xl4, horizontal: AppSpacing.xl),
+      color: Color('#FFFFFFFF'),
+      textAlign: TextAlign.center,
+    ),
 
-        css('.cta-content').styles(
-          maxWidth: ContainerWidths.md,
-          margin: Margin.symmetric(horizontal: Unit.auto),
-        ),
+    css('.cta-content').styles(
+      maxWidth: ContainerWidths.md,
+      margin: Margin.symmetric(horizontal: Unit.auto),
+    ),
 
-        css('.cta-title').styles(
-          fontSize: FontSizes.xl4,
-          fontWeight: FontWeights.bold,
-          margin: Margin.only(bottom: AppSpacing.lg),
-          color: Color('#FFFFFFFF'),
-        ),
+    css('.cta-title').styles(
+      margin: Margin.only(bottom: AppSpacing.lg),
+      color: Color('#FFFFFFFF'),
+      fontSize: FontSizes.xl4,
+      fontWeight: FontWeights.bold,
+    ),
 
-        css('.cta-description').styles(
-          fontSize: FontSizes.xl,
-          margin: Margin.only(bottom: AppSpacing.xl2),
-          opacity: 0.9,
-        ),
-      ];
+    css('.cta-description').styles(
+      margin: Margin.only(bottom: AppSpacing.xl2),
+      opacity: 0.9,
+      fontSize: FontSizes.xl,
+    ),
+  ];
 }

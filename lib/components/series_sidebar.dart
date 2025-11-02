@@ -76,121 +76,125 @@ class SeriesSidebar extends StatelessComponent {
 
   @css
   static List<StyleRule> get styles => [
-        // 側邊欄容器
-        css('.series-sidebar').styles(
-          width: 320.px,
-          height: 100.vh,
-          position: Position.sticky(),
-          backgroundColor: surfaceColor,
-          border: Border.only(right: BorderSide(color: borderColor, width: Borders.thin)),
-          overflow: Overflow.auto,
-          display: Display.flex,
-          flexDirection: FlexDirection.column,
-        ),
+    // 側邊欄容器
+    css('.series-sidebar').styles(
+      display: Display.flex,
+      position: Position.sticky(),
+      width: 320.px,
+      height: 100.vh,
+      border: Border.only(
+        right: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+      overflow: Overflow.auto,
+      flexDirection: FlexDirection.column,
+      backgroundColor: surfaceColor,
+    ),
 
-        // Header
-        css('.sidebar-header').styles(
-          padding: Padding.all(AppSpacing.xl),
-          border: Border.only(bottom: BorderSide(color: borderColor, width: Borders.thin)),
-          backgroundColor: backgroundColor,
-        ),
+    // Header
+    css('.sidebar-header').styles(
+      padding: Padding.all(AppSpacing.xl),
+      border: Border.only(
+        bottom: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+      backgroundColor: backgroundColor,
+    ),
 
-        css('.sidebar-title').styles(
-          fontSize: FontSizes.xl,
-          fontWeight: FontWeights.bold,
-          color: secondaryColor,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.sidebar-title').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: secondaryColor,
+      fontSize: FontSizes.xl,
+      fontWeight: FontWeights.bold,
+    ),
 
-        // 進度
-        css('.sidebar-progress').styles(
-          margin: Margin.only(top: AppSpacing.md),
-        ),
+    // 進度
+    css('.sidebar-progress').styles(
+      margin: Margin.only(top: AppSpacing.md),
+    ),
 
-        css('.progress-text').styles(
-          fontSize: FontSizes.sm,
-          color: textSecondaryColor,
-          display: Display.block,
-          margin: Margin.only(bottom: AppSpacing.sm),
-        ),
+    css('.progress-text').styles(
+      display: Display.block,
+      margin: Margin.only(bottom: AppSpacing.sm),
+      color: textSecondaryColor,
+      fontSize: FontSizes.sm,
+    ),
 
-        css('.progress-bar').styles(
-          width: 100.percent,
-          height: 6.px,
-          backgroundColor: Color('#1A57B4BA'),
-          overflow: Overflow.hidden,
-        ),
+    css('.progress-bar').styles(
+      width: 100.percent,
+      height: 6.px,
+      overflow: Overflow.hidden,
+      backgroundColor: Color('#1A57B4BA'),
+    ),
 
-        css('.progress-fill').styles(
-          height: 100.percent,
-          backgroundColor: primaryColor,
-        ),
+    css('.progress-fill').styles(
+      height: 100.percent,
+      backgroundColor: primaryColor,
+    ),
 
-        // 導航區域
-        css('.sidebar-nav').styles(
-          flex: Flex(grow: 1),
-          overflow: Overflow.auto,
-          padding: Padding.all(AppSpacing.md),
-        ),
+    // 導航區域
+    css('.sidebar-nav').styles(
+      padding: Padding.all(AppSpacing.md),
+      overflow: Overflow.auto,
+      flex: Flex(grow: 1),
+    ),
 
-        css('.tutorial-list').styles(
-          padding: Padding.zero,
-          margin: Margin.zero,
-        ),
+    css('.tutorial-list').styles(
+      padding: Padding.zero,
+      margin: Margin.zero,
+    ),
 
-        // 教學項目
-        css('.tutorial-item').styles(
-          margin: Margin.only(bottom: AppSpacing.xs),
-        ),
+    // 教學項目
+    css('.tutorial-item').styles(
+      margin: Margin.only(bottom: AppSpacing.xs),
+    ),
 
-        css('.tutorial-link').styles(
-          display: Display.flex,
-          flexDirection: FlexDirection.column,
-          padding: Padding.all(AppSpacing.md),
-          cursor: Cursor.pointer,
-        ),
+    css('.tutorial-link').styles(
+      display: Display.flex,
+      padding: Padding.all(AppSpacing.md),
+      cursor: Cursor.pointer,
+      flexDirection: FlexDirection.column,
+    ),
 
-        css('.tutorial-item:not(.active) .tutorial-link:hover').styles(
-          backgroundColor: backgroundColor,
-        ),
+    css('.tutorial-item:not(.active) .tutorial-link:hover').styles(
+      backgroundColor: backgroundColor,
+    ),
 
-        // 當前項目
-        css('.tutorial-item.active .tutorial-link').styles(
-          backgroundColor: primaryColor,
-          color: Color('#FFFFFFFF'),
-        ),
+    // 當前項目
+    css('.tutorial-item.active .tutorial-link').styles(
+      color: Color('#FFFFFFFF'),
+      backgroundColor: primaryColor,
+    ),
 
-        // Day 編號
-        css('.tutorial-day').styles(
-          fontSize: FontSizes.xs,
-          fontWeight: FontWeights.bold,
-          color: primaryColor,
-          letterSpacing: 0.5.px,
-        ),
+    // Day 編號
+    css('.tutorial-day').styles(
+      color: primaryColor,
+      fontSize: FontSizes.xs,
+      fontWeight: FontWeights.bold,
+      letterSpacing: 0.5.px,
+    ),
 
-        css('.tutorial-item.active .tutorial-day').styles(
-          color: Color('#FFFFFFFF'),
-        ),
+    css('.tutorial-item.active .tutorial-day').styles(
+      color: Color('#FFFFFFFF'),
+    ),
 
-        // 標題
-        css('.tutorial-title').styles(
-          fontSize: FontSizes.sm,
-          fontWeight: FontWeights.medium,
-          color: textPrimaryColor,
-        ),
+    // 標題
+    css('.tutorial-title').styles(
+      color: textPrimaryColor,
+      fontSize: FontSizes.sm,
+      fontWeight: FontWeights.medium,
+    ),
 
-        css('.tutorial-item.active .tutorial-title').styles(
-          color: Color('#FFFFFFFF'),
-        ),
+    css('.tutorial-item.active .tutorial-title').styles(
+      color: Color('#FFFFFFFF'),
+    ),
 
-        // 時間
-        css('.tutorial-time').styles(
-          fontSize: FontSizes.xs,
-          color: textSecondaryColor,
-        ),
+    // 時間
+    css('.tutorial-time').styles(
+      color: textSecondaryColor,
+      fontSize: FontSizes.xs,
+    ),
 
-        css('.tutorial-item.active .tutorial-time').styles(
-          color: Color('#CCFFFFFF'),
-        ),
-      ];
+    css('.tutorial-item.active .tutorial-time').styles(
+      color: Color('#CCFFFFFF'),
+    ),
+  ];
 }

@@ -55,78 +55,78 @@ class ArticleNavigation extends StatelessComponent {
 
   @css
   static List<StyleRule> get styles => [
-        // 導航容器
-        css('.article-navigation').styles(
-          display: Display.flex,
-          justifyContent: JustifyContent.spaceBetween,
-          margin: Margin.only(top: AppSpacing.xl3, bottom: AppSpacing.xl),
-          padding: Padding.all(AppSpacing.xl),
-          backgroundColor: surfaceColor,
-          border: Border.only(
-            top: BorderSide(color: borderColor, width: Borders.thin),
-            right: BorderSide(color: borderColor, width: Borders.thin),
-            bottom: BorderSide(color: borderColor, width: Borders.thin),
-            left: BorderSide(color: borderColor, width: Borders.thin),
-          ),
-        ),
+    // 導航容器
+    css('.article-navigation').styles(
+      display: Display.flex,
+      padding: Padding.all(AppSpacing.xl),
+      margin: Margin.only(top: AppSpacing.xl3, bottom: AppSpacing.xl),
+      border: Border.only(
+        top: BorderSide(color: borderColor, width: Borders.thin),
+        right: BorderSide(color: borderColor, width: Borders.thin),
+        bottom: BorderSide(color: borderColor, width: Borders.thin),
+        left: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+      justifyContent: JustifyContent.spaceBetween,
+      backgroundColor: surfaceColor,
+    ),
 
-        // 導航項目
-        css('.nav-item').styles(
-          display: Display.flex,
-          flexDirection: FlexDirection.column,
-          padding: Padding.all(AppSpacing.lg),
-          border: Border.only(
-            top: BorderSide(color: borderColor, width: Borders.thin),
-            right: BorderSide(color: borderColor, width: Borders.thin),
-            bottom: BorderSide(color: borderColor, width: Borders.thin),
-            left: BorderSide(color: borderColor, width: Borders.thin),
-          ),
-          backgroundColor: backgroundColor,
-          flex: Flex(grow: 1),
-          maxWidth: 48.percent,
-          cursor: Cursor.pointer,
-        ),
+    // 導航項目
+    css('.nav-item').styles(
+      display: Display.flex,
+      maxWidth: 48.percent,
+      padding: Padding.all(AppSpacing.lg),
+      border: Border.only(
+        top: BorderSide(color: borderColor, width: Borders.thin),
+        right: BorderSide(color: borderColor, width: Borders.thin),
+        bottom: BorderSide(color: borderColor, width: Borders.thin),
+        left: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+      cursor: Cursor.pointer,
+      flexDirection: FlexDirection.column,
+      flex: Flex(grow: 1),
+      backgroundColor: backgroundColor,
+    ),
 
-        // 佔位元素（當沒有上一篇或下一篇時）
-        css('.nav-placeholder').styles(
-          visibility: Visibility.hidden,
-        ),
+    // 佔位元素（當沒有上一篇或下一篇時）
+    css('.nav-placeholder').styles(
+      visibility: Visibility.hidden,
+    ),
 
-        // 上一篇（左對齊）
-        css('.nav-prev').styles(
-          alignItems: AlignItems.start,
-          textAlign: TextAlign.left,
-        ),
+    // 上一篇（左對齊）
+    css('.nav-prev').styles(
+      alignItems: AlignItems.start,
+      textAlign: TextAlign.left,
+    ),
 
-        // 下一篇（右對齊）
-        css('.nav-next').styles(
-          alignItems: AlignItems.end,
-          textAlign: TextAlign.right,
-        ),
+    // 下一篇（右對齊）
+    css('.nav-next').styles(
+      alignItems: AlignItems.end,
+      textAlign: TextAlign.right,
+    ),
 
-        // 標籤（上一篇/下一篇）
-        css('.nav-label').styles(
-          fontSize: FontSizes.sm,
-          fontWeight: FontWeights.semibold,
-          color: primaryColor,
-          letterSpacing: 0.5.px,
-        ),
+    // 標籤（上一篇/下一篇）
+    css('.nav-label').styles(
+      color: primaryColor,
+      fontSize: FontSizes.sm,
+      fontWeight: FontWeights.semibold,
+      letterSpacing: 0.5.px,
+    ),
 
-        // 標題
-        css('.nav-title').styles(
-          fontSize: FontSizes.lg,
-          fontWeight: FontWeights.semibold,
-          color: secondaryColor,
-        ),
+    // 標題
+    css('.nav-title').styles(
+      color: secondaryColor,
+      fontSize: FontSizes.lg,
+      fontWeight: FontWeights.semibold,
+    ),
 
-        css('.nav-item:hover .nav-title').styles(
-          color: primaryColor,
-        ),
+    css('.nav-item:hover .nav-title').styles(
+      color: primaryColor,
+    ),
 
-        // Day 標籤
-        css('.nav-day').styles(
-          fontSize: FontSizes.xs,
-          color: textSecondaryColor,
-        ),
-      ];
+    // Day 標籤
+    css('.nav-day').styles(
+      color: textSecondaryColor,
+      fontSize: FontSizes.xs,
+    ),
+  ];
 }

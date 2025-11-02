@@ -91,140 +91,137 @@ class TutorialCard extends StatelessComponent {
 
   @css
   static List<StyleRule> get styles => [
-        // 卡片容器
-        css('.tutorial-card').styles(
-          display: Display.block,
-          backgroundColor: backgroundColor,
-          border: Border.only(
-            top: BorderSide(color: borderColor, width: Borders.thin),
-            right: BorderSide(color: borderColor, width: Borders.thin),
-            bottom: BorderSide(color: borderColor, width: Borders.thin),
-            left: BorderSide(color: borderColor, width: Borders.thin),
-          ),
-          overflow: Overflow.hidden,
-          cursor: Cursor.pointer,
-        ),
+    // 卡片容器
+    css('.tutorial-card').styles(
+      display: Display.block,
+      border: Border.only(
+        top: BorderSide(color: borderColor, width: Borders.thin),
+        right: BorderSide(color: borderColor, width: Borders.thin),
+        bottom: BorderSide(color: borderColor, width: Borders.thin),
+        left: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+      overflow: Overflow.hidden,
+      cursor: Cursor.pointer,
+      backgroundColor: backgroundColor,
+    ),
 
-        css('.tutorial-card:hover').styles(
-        ),
+    css('.tutorial-card:hover').styles(),
 
-        // 封面圖片/漸層
-        css('.tutorial-card-image').styles(
-          width: 100.percent,
-          height: 200.px,
-          overflow: Overflow.hidden,
-          backgroundColor: surfaceColor,
-          position: Position.relative(),
-        ),
+    // 封面圖片/漸層
+    css('.tutorial-card-image').styles(
+      position: Position.relative(),
+      width: 100.percent,
+      height: 200.px,
+      overflow: Overflow.hidden,
+      backgroundColor: surfaceColor,
+    ),
 
-        css('.tutorial-card-gradient').styles(
-        ),
+    css('.tutorial-card-gradient').styles(),
 
-        css('.tutorial-card-overlay').styles(
-          position: Position.absolute(),
-          display: Display.flex,
-          alignItems: AlignItems.center,
-          justifyContent: JustifyContent.center,
-        ),
+    css('.tutorial-card-overlay').styles(
+      display: Display.flex,
+      position: Position.absolute(),
+      justifyContent: JustifyContent.center,
+      alignItems: AlignItems.center,
+    ),
 
-        css('.tutorial-days-badge').styles(
-          padding: Padding.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-          backgroundColor: Color('#CCFFFFFF'),
-          color: secondaryColor,
-          fontSize: FontSizes.xl3,
-          fontWeight: FontWeights.bold,
-        ),
+    css('.tutorial-days-badge').styles(
+      padding: Padding.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      color: secondaryColor,
+      fontSize: FontSizes.xl3,
+      fontWeight: FontWeights.bold,
+      backgroundColor: Color('#CCFFFFFF'),
+    ),
 
-        css('.tutorial-card-image img').styles(
-          width: 100.percent,
-          height: 100.percent,
-        ),
+    css('.tutorial-card-image img').styles(
+      width: 100.percent,
+      height: 100.percent,
+    ),
 
+    // 內容區域
+    css('.tutorial-card-content').styles(
+      padding: Padding.all(AppSpacing.lg),
+    ),
 
-        // 內容區域
-        css('.tutorial-card-content').styles(
-          padding: Padding.all(AppSpacing.lg),
-        ),
+    // 標籤區域
+    css('.tutorial-card-tags').styles(
+      display: Display.flex,
+      margin: Margin.only(bottom: AppSpacing.md),
+      flexWrap: FlexWrap.wrap,
+    ),
 
-        // 標籤區域
-        css('.tutorial-card-tags').styles(
-          display: Display.flex,
-          flexWrap: FlexWrap.wrap,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.tutorial-card-tags .tag, .tutorial-card-tags .difficulty-tag').styles(
+      display: Display.inlineBlock,
+      padding: Padding.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      fontSize: FontSizes.sm,
+      fontWeight: FontWeights.semibold,
+    ),
 
-        css('.tutorial-card-tags .tag, .tutorial-card-tags .difficulty-tag').styles(
-          display: Display.inlineBlock,
-          padding: Padding.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-          fontSize: FontSizes.sm,
-          fontWeight: FontWeights.semibold,
-        ),
+    // 難度標籤顏色
+    css('.difficulty-beginner').styles(
+      color: Color('#FF4CAF50'),
+      backgroundColor: Color('#1A4CAF50'),
+    ),
 
-        // 難度標籤顏色
-        css('.difficulty-beginner').styles(
-          backgroundColor: Color('#1A4CAF50'),
-          color: Color('#FF4CAF50'),
-        ),
+    css('.difficulty-intermediate').styles(
+      color: primaryColor,
+      backgroundColor: Color('#1A57B4BA'),
+    ),
 
-        css('.difficulty-intermediate').styles(
-          backgroundColor: Color('#1A57B4BA'),
-          color: primaryColor,
-        ),
+    css('.difficulty-advanced').styles(
+      color: tertiaryColor,
+      backgroundColor: Color('#1AFE4F2D'),
+    ),
 
-        css('.difficulty-advanced').styles(
-          backgroundColor: Color('#1AFE4F2D'),
-          color: tertiaryColor,
-        ),
+    css('.tutorial-card-tags .tag').styles(
+      color: textSecondaryColor,
+      backgroundColor: surfaceColor,
+    ),
 
-        css('.tutorial-card-tags .tag').styles(
-          backgroundColor: surfaceColor,
-          color: textSecondaryColor,
-        ),
+    // 標題
+    css('.tutorial-card-title').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: secondaryColor,
+      fontSize: FontSizes.xl2,
+      fontWeight: FontWeights.bold,
+    ),
 
-        // 標題
-        css('.tutorial-card-title').styles(
-          fontSize: FontSizes.xl2,
-          fontWeight: FontWeights.bold,
-          color: secondaryColor,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.tutorial-card:hover .tutorial-card-title').styles(
+      color: primaryColor,
+    ),
 
-        css('.tutorial-card:hover .tutorial-card-title').styles(
-          color: primaryColor,
-        ),
+    // 描述
+    css('.tutorial-card-description').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: textSecondaryColor,
+      fontSize: FontSizes.base,
+    ),
 
-        // 描述
-        css('.tutorial-card-description').styles(
-          fontSize: FontSizes.base,
-          color: textSecondaryColor,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    // Meta 資訊
+    css('.tutorial-card-meta').styles(
+      display: Display.flex,
+      margin: Margin.only(bottom: AppSpacing.md),
+      flexWrap: FlexWrap.wrap,
+      color: textSecondaryColor,
+      fontSize: FontSizes.sm,
+    ),
 
-        // Meta 資訊
-        css('.tutorial-card-meta').styles(
-          display: Display.flex,
-          flexWrap: FlexWrap.wrap,
-          fontSize: FontSizes.sm,
-          color: textSecondaryColor,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.tutorial-card-meta .meta-item').styles(
+      display: Display.flex,
+      alignItems: AlignItems.center,
+    ),
 
-        css('.tutorial-card-meta .meta-item').styles(
-          display: Display.flex,
-          alignItems: AlignItems.center,
-        ),
+    // 進度條
+    css('.tutorial-progress-bar').styles(
+      width: 100.percent,
+      height: 4.px,
+      overflow: Overflow.hidden,
+      backgroundColor: surfaceColor,
+    ),
 
-        // 進度條
-        css('.tutorial-progress-bar').styles(
-          width: 100.percent,
-          height: 4.px,
-          backgroundColor: surfaceColor,
-          overflow: Overflow.hidden,
-        ),
-
-        css('.tutorial-progress-fill').styles(
-          height: 100.percent,
-          backgroundColor: primaryColor,
-        ),
-      ];
+    css('.tutorial-progress-fill').styles(
+      height: 100.percent,
+      backgroundColor: primaryColor,
+    ),
+  ];
 }
