@@ -29,6 +29,17 @@ void main() {
   runApp(
     Document(
       title: 'Learn with Paul - Flutter 技術分享與教學',
+      meta: {
+        'description': '深入淺出的 Flutter 技術文章與完整系列教學，幫助你掌握 Flutter 開發技能。包含實戰經驗分享、設計模式、測試策略等內容。',
+        'keywords': 'Flutter, Dart, 技術分享, 教學, 開發, 程式設計, Mobile App, iOS, Android',
+        'author': 'Paul',
+        'og:title': 'Learn with Paul - Flutter 技術分享與教學',
+        'og:description': '深入淺出的 Flutter 技術文章與完整系列教學，幫助你掌握 Flutter 開發技能',
+        'og:type': 'website',
+        'twitter:card': 'summary_large_image',
+        'twitter:title': 'Learn with Paul - Flutter 技術分享與教學',
+        'twitter:description': '深入淺出的 Flutter 技術文章與完整系列教學',
+      },
       styles: [
         // Import Inter font for modern, clean typography
         css.import(
