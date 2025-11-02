@@ -16,7 +16,15 @@ import 'jaspr_options.dart';
 import 'constants/theme.dart';
 import 'constants/styles.dart';
 
-void main() {
+// Import content loader
+import 'services/content_loader.dart';
+
+void main() async {
+  // Load all content at build time
+  print('Loading content...');
+  final content = await ContentLoader.loadAll();
+  print('Content loaded: ${content.articles.length} articles, ${content.series.length} series');
+
   // Initializes the server environment with the generated default options.
   Jaspr.initializeApp(
     options: defaultJasprOptions,
@@ -184,7 +192,7 @@ void main() {
           fontStyle: FontStyle.italic,
         ),
       ],
-      body: App(),
+      body: App(content: content),
     ),
   );
 }

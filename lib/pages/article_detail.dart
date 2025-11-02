@@ -1,34 +1,55 @@
 import 'package:jaspr/jaspr.dart';
-import '../components/markdown_renderer.dart';
 import '../constants/theme.dart';
 import '../constants/styles.dart';
+import '../models/article.dart';
+import '../components/markdown_renderer.dart';
 
 /// 文章詳細頁
-@client
 class ArticleDetail extends StatelessComponent {
-  final String articleId;
+  final Article article;
 
-  const ArticleDetail({required this.articleId, super.key});
+  const ArticleDetail({required this.article, super.key});
 
   @override
   Component build(BuildContext context) {
-    return article(classes: 'article-detail-page', [
+    // 格式化日期
+    final dateStr = article.updatedAt != null
+        ? _formatDate(article.updatedAt!)
+        : (article.createdAt != null ? _formatDate(article.createdAt!) : '');
+
+    return div(classes: 'article-detail-page', [
       div(classes: 'container', [
         // 文章標題區
         header(classes: 'article-header', [
-          h1(classes: 'article-title', [text('載入中...')]),
+          // 領域標籤
+          if (article.domain != null)
+            div(classes: 'article-domain', [
+              span(classes: 'domain-tag', [text('🧩 ${article.domain}')]),
+            ]),
+
+          // 標題
+          h1(classes: 'article-title', [text(article.title)]),
+
+          // Meta 資訊
           div(classes: 'article-meta', [
-            span([text('📅 載入中...')]),
-            span([text('⏱️ 載入中...')]),
+            if (dateStr.isNotEmpty)
+              span(classes: 'meta-item', [text('📅 $dateStr')]),
+            span(classes: 'meta-item', [text('⏱️ ${article.estimatedReadTime} 分鐘閱讀')]),
+            if (article.type != null)
+              span(classes: 'meta-item', [text('📝 ${article.type}')]),
           ]),
         ]),
 
         // 文章內容
         div(classes: 'article-content', [
-          text('內容載入中...'),
+          MarkdownRenderer(markdown: article.content),
         ]),
       ]),
     ]);
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   @css
@@ -46,6 +67,19 @@ class ArticleDetail extends StatelessComponent {
       ),
     ),
 
+    css('.article-domain').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+    ),
+
+    css('.domain-tag').styles(
+      display: Display.inlineBlock,
+      padding: Padding.symmetric(horizontal: AppSpacing.sm, vertical: 4.px),
+      backgroundColor: Color('#E8F6F7'),
+      color: primaryColor,
+      fontSize: FontSizes.sm,
+      fontWeight: FontWeights.medium,
+    ),
+
     css('.article-title').styles(
       margin: Margin.only(bottom: AppSpacing.lg),
       color: secondaryColor,
@@ -55,8 +89,20 @@ class ArticleDetail extends StatelessComponent {
 
     css('.article-meta').styles(
       display: Display.flex,
+      gap: Gap.all(AppSpacing.md),
       color: textSecondaryColor,
       fontSize: FontSizes.base,
+      flexWrap: FlexWrap.wrap,
+    ),
+
+    css('.meta-item').styles(
+      display: Display.flex,
+      alignItems: AlignItems.center,
+    ),
+
+    css('.article-content').styles(
+      color: textPrimaryColor,
+      fontSize: FontSizes.lg,
     ),
   ];
 }

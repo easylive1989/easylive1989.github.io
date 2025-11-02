@@ -101,7 +101,9 @@ class Article {
         } else if (line.startsWith('類型:')) {
           type = line.split(':')[1].trim();
         } else if (line.contains('領域:')) {
-          domain = line.split(':')[1].trim();
+          final domainPart = line.split(':')[1].trim();
+          // 移除可能的括號內容（如 Notion 連結）
+          domain = domainPart.split('(')[0].trim();
         } else if (line.isNotEmpty && !line.contains(':')) {
           // 開始進入內容區
           pastFrontMatter = true;
@@ -138,12 +140,51 @@ class Article {
   static DateTime? _parseDate(String dateStr) {
     try {
       // 嘗試解析 "October 30, 2024 8:20 AM" 格式
-      // 簡化處理：這裡僅示範，實際可能需要更複雜的解析
-      final parts = dateStr.split(' ');
-      if (parts.length >= 3) {
-        // TODO: 實作完整的日期解析
-        return DateTime.now(); // 暫時返回當前時間
+      final parts = dateStr.trim().split(' ');
+      if (parts.length < 4) return null;
+
+      // 月份映射
+      const monthMap = {
+        'January': 1, 'February': 2, 'March': 3, 'April': 4,
+        'May': 5, 'June': 6, 'July': 7, 'August': 8,
+        'September': 9, 'October': 10, 'November': 11, 'December': 12,
+      };
+
+      // 解析月份
+      final monthStr = parts[0];
+      final month = monthMap[monthStr];
+      if (month == null) return null;
+
+      // 解析日期（移除可能的逗號）
+      final day = int.tryParse(parts[1].replaceAll(',', ''));
+      if (day == null) return null;
+
+      // 解析年份
+      final year = int.tryParse(parts[2]);
+      if (year == null) return null;
+
+      // 解析時間
+      int hour = 0;
+      int minute = 0;
+      if (parts.length >= 5) {
+        final timeParts = parts[3].split(':');
+        if (timeParts.length == 2) {
+          hour = int.tryParse(timeParts[0]) ?? 0;
+          minute = int.tryParse(timeParts[1]) ?? 0;
+
+          // 處理 AM/PM
+          if (parts.length >= 5) {
+            final ampm = parts[4].toUpperCase();
+            if (ampm == 'PM' && hour < 12) {
+              hour += 12;
+            } else if (ampm == 'AM' && hour == 12) {
+              hour = 0;
+            }
+          }
+        }
       }
+
+      return DateTime(year, month, day, hour, minute);
     } catch (e) {
       // 解析失敗
     }
