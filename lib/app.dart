@@ -16,21 +16,23 @@ class App extends StatelessComponent {
   Component build(BuildContext context) {
     return div(classes: 'main', [
       const Header(),
-      Router(routes: [
-        // 首頁
-        Route(
-          path: '/',
-          title: 'Learn with Paul - Flutter 技術分享與教學',
-          builder: (context, state) => const Home(),
-        ),
+      Router(
+        routes: [
+          // 首頁
+          Route(
+            path: '/',
+            title: 'Learn with Paul - Flutter 技術分享與教學',
+            builder: (context, state) => const Home(),
+          ),
 
-        // 關於頁面
-        Route(
-          path: '/about',
-          title: '關於 - Learn with Paul',
-          builder: (context, state) => const About(),
-        ),
-      ]),
+          // 關於頁面
+          Route(
+            path: '/about',
+            title: '關於 - Learn with Paul',
+            builder: (context, state) => const About(),
+          ),
+        ],
+      ),
     ]);
   }
 
@@ -46,14 +48,10 @@ class App extends StatelessComponent {
         display: Display.flex,
         height: 100.vh,
         flexDirection: FlexDirection.column,
-        flexWrap: FlexWrap.wrap,
       ),
       css('section').styles(
         display: Display.flex,
         flexDirection: FlexDirection.column,
-        justifyContent: JustifyContent.center,
-        alignItems: AlignItems.center,
-        flex: Flex(grow: 1),
       ),
     ]),
   ];

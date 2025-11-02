@@ -155,7 +155,7 @@ class HomeState extends State<Home> {
   static List<StyleRule> get styles => [
     // 首頁容器
     css('.home-page').styles(
-      width: 100.percent,
+      width: 100.vw,
       minHeight: 100.vh,
     ),
 
