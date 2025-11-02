@@ -24,6 +24,7 @@ void main() {
   // with the provided parameters and components.
   runApp(
     Document(
+      base: 'blog',
       title: 'my_website',
       styles: [
         // Special import rule to include to another css file.
