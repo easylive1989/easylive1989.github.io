@@ -66,7 +66,9 @@ class App extends StatelessComponent {
 
     return div(classes: 'main', [
       const Header(),
-      Router(routes: routes),
+      div(classes: 'router-container', [
+        Router(routes: routes),
+      ]),
     ]);
   }
 
@@ -88,5 +90,9 @@ class App extends StatelessComponent {
         flexDirection: FlexDirection.column,
       ),
     ]),
+    css('.router-container').styles(
+      flex: Flex(grow: 1, shrink: 1, basis: Unit.zero),
+      overflow: Overflow.auto,
+    ),
   ];
 }

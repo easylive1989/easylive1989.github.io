@@ -55,12 +55,8 @@ class TutorialDetail extends StatelessComponent {
         // 上一篇/下一篇導航
         ArticleNavigation(
           seriesId: series.id,
-          previousTutorial: tutorial.previousId != null
-              ? series.getTutorialById(tutorial.previousId!)
-              : null,
-          nextTutorial: tutorial.nextId != null
-              ? series.getTutorialById(tutorial.nextId!)
-              : null,
+          previousTutorial: tutorial.previousId != null ? series.getTutorialById(tutorial.previousId!) : null,
+          nextTutorial: tutorial.nextId != null ? series.getTutorialById(tutorial.nextId!) : null,
         ),
       ]),
     ]);
@@ -70,16 +66,18 @@ class TutorialDetail extends StatelessComponent {
   static List<StyleRule> get styles => [
     css('.tutorial-detail-page').styles(
       display: Display.flex,
-      minHeight: 100.vh,
     ),
 
     css('.tutorial-main').styles(
-      maxWidth: 900.px,
       padding: Padding.all(AppSpacing.xl3),
       margin: Margin.symmetric(horizontal: Unit.auto),
       flex: Flex(grow: 1),
       height: 100.vh,
       overflow: Overflow.auto,
+    ),
+
+    css('.tutorial-main::-webkit-scrollbar').styles(
+      display: Display.none,
     ),
 
     css('.series-info').styles(
