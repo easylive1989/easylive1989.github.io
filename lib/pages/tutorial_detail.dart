@@ -78,6 +78,8 @@ class TutorialDetail extends StatelessComponent {
       padding: Padding.all(AppSpacing.xl3),
       margin: Margin.symmetric(horizontal: Unit.auto),
       flex: Flex(grow: 1),
+      height: 100.vh,
+      overflow: Overflow.auto,
     ),
 
     css('.series-info').styles(

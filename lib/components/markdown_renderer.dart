@@ -46,6 +46,7 @@ class MarkdownRenderer extends StatelessComponent {
     // Markdown 內容容器
     css('.markdown-content').styles(
       width: 100.percent,
+      height: 100.percent,
       maxWidth: 800.px,
       margin: Margin.symmetric(horizontal: Unit.auto),
     ),

@@ -29,8 +29,7 @@ class TutorialsList extends StatelessComponent {
           ])
         else
           div(classes: 'tutorials-grid', [
-            for (final tutorialSeries in series)
-              TutorialCard(series: tutorialSeries),
+            for (final tutorialSeries in series) TutorialCard(series: tutorialSeries),
           ]),
       ]),
     ]);
@@ -38,34 +37,34 @@ class TutorialsList extends StatelessComponent {
 
   @css
   static List<StyleRule> get styles => [
-        css('.tutorials-list-page').styles(
-          padding: Padding.symmetric(vertical: AppSpacing.xl3, horizontal: AppSpacing.xl),
-          minHeight: 100.vh,
-        ),
+    css('.tutorials-list-page').styles(
+      minHeight: 100.vh,
+      padding: Padding.symmetric(vertical: AppSpacing.xl3, horizontal: AppSpacing.xl),
+    ),
 
-        css('.page-title').styles(
-          fontSize: FontSizes.xl5,
-          fontWeight: FontWeights.bold,
-          color: secondaryColor,
-          margin: Margin.only(bottom: AppSpacing.md),
-        ),
+    css('.page-title').styles(
+      margin: Margin.only(bottom: AppSpacing.md),
+      color: secondaryColor,
+      fontSize: FontSizes.xl5,
+      fontWeight: FontWeights.bold,
+    ),
 
-        css('.page-description').styles(
-          fontSize: FontSizes.xl,
-          color: textSecondaryColor,
-          margin: Margin.only(bottom: AppSpacing.xl2),
-        ),
+    css('.page-description').styles(
+      margin: Margin.only(bottom: AppSpacing.xl2),
+      color: textSecondaryColor,
+      fontSize: FontSizes.xl,
+    ),
 
-        css('.tutorials-grid').styles(
-          display: Display.grid,
-          gap: Gap.all(AppSpacing.xl),
-        ),
+    css('.tutorials-grid').styles(
+      display: Display.grid,
+      gap: Gap.all(AppSpacing.xl),
+    ),
 
-        css('.empty-state').styles(
-          textAlign: TextAlign.center,
-          padding: Padding.all(AppSpacing.xl3),
-          color: textSecondaryColor,
-          fontSize: FontSizes.xl,
-        ),
-      ];
+    css('.empty-state').styles(
+      textAlign: TextAlign.center,
+      padding: Padding.all(AppSpacing.xl3),
+      color: textSecondaryColor,
+      fontSize: FontSizes.xl,
+    ),
+  ];
 }
