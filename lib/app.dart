@@ -3,7 +3,6 @@ import 'package:jaspr_router/jaspr_router.dart';
 
 import 'components/header.dart';
 import 'pages/home.dart';
-import 'pages/about.dart';
 import 'pages/articles_list.dart';
 import 'pages/article_detail.dart';
 import 'pages/tutorials_list.dart';
@@ -28,13 +27,6 @@ class App extends StatelessComponent {
         path: '/',
         title: 'Learn with Paul - Flutter 技術分享與教學',
         builder: (context, state) => const Home(),
-      ),
-
-      // 關於頁面
-      Route(
-        path: '/about',
-        title: '關於 - Learn with Paul',
-        builder: (context, state) => const About(),
       ),
 
       // 文章列表頁
