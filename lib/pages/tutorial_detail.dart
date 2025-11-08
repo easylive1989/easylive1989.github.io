@@ -71,9 +71,8 @@ class TutorialDetail extends StatelessComponent {
     css('.tutorial-main').styles(
       padding: Padding.all(AppSpacing.xl3),
       margin: Margin.symmetric(horizontal: Unit.auto),
-      flex: Flex(grow: 1),
-      height: 100.vh,
       overflow: Overflow.auto,
+      flex: Flex(grow: 1),
     ),
 
     css('.tutorial-main::-webkit-scrollbar').styles(
@@ -82,22 +81,22 @@ class TutorialDetail extends StatelessComponent {
 
     css('.series-info').styles(
       display: Display.flex,
-      justifyContent: JustifyContent.spaceBetween,
-      alignItems: AlignItems.center,
       padding: Padding.all(AppSpacing.md),
       margin: Margin.only(bottom: AppSpacing.xl),
+      justifyContent: JustifyContent.spaceBetween,
+      alignItems: AlignItems.center,
       backgroundColor: Color('#F8FAFB'),
     ),
 
     css('.series-name').styles(
+      color: primaryColor,
       fontSize: FontSizes.base,
       fontWeight: FontWeights.semibold,
-      color: primaryColor,
     ),
 
     css('.series-progress').styles(
-      fontSize: FontSizes.sm,
       color: textSecondaryColor,
+      fontSize: FontSizes.sm,
     ),
 
     css('.tutorial-header').styles(
@@ -128,9 +127,9 @@ class TutorialDetail extends StatelessComponent {
     ),
 
     css('.tutorial-content').styles(
+      margin: Margin.only(bottom: AppSpacing.xl2),
       color: textPrimaryColor,
       fontSize: FontSizes.lg,
-      margin: Margin.only(bottom: AppSpacing.xl2),
     ),
   ];
 }

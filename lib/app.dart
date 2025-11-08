@@ -92,7 +92,6 @@ class App extends StatelessComponent {
     ]),
     css('.router-container').styles(
       flex: Flex(grow: 1, shrink: 1, basis: Unit.zero),
-      overflow: Overflow.auto,
     ),
   ];
 }

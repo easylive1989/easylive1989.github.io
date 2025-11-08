@@ -72,11 +72,11 @@ class SeriesSidebar extends StatelessComponent {
     // 側邊欄容器
     css('.series-sidebar').styles(
       display: Display.flex,
+      position: Position.sticky(top: 12.px),
       width: 320.px,
       height: 80.vh,
       margin: Margin.all(AppSpacing.md),
       border: Border(color: borderColor, width: Borders.thin),
-      overflow: Overflow.auto,
       flexDirection: FlexDirection.column,
       backgroundColor: surfaceColor,
     ),
