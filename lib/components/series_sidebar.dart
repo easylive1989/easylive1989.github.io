@@ -25,7 +25,7 @@ class SeriesSidebar extends StatelessComponent {
       [
         // 系列標題
         div(classes: 'sidebar-header', [
-          h2(classes: 'sidebar-title', [
+          div(classes: 'sidebar-title', [
             text(series.name),
           ]),
 
@@ -42,33 +42,26 @@ class SeriesSidebar extends StatelessComponent {
 
         // 章節列表
         nav(classes: 'sidebar-nav', [
-          ul(classes: 'tutorial-list', [
-            for (final tutorial in series.tutorials)
-              li(
-                classes: tutorial.id == currentTutorial.id ? 'tutorial-item active' : 'tutorial-item',
-                [
-                  Link(
-                    to: '/tutorials/${series.id}/${tutorial.day}',
-                    child: div(classes: 'tutorial-link', [
-                      // Day 編號
-                      span(classes: 'tutorial-day', [
-                        text('Day ${tutorial.day}'),
-                      ]),
-
-                      // 標題
-                      span(classes: 'tutorial-title', [
-                        text(tutorial.title),
-                      ]),
-
-                      // 閱讀時間
-                      span(classes: 'tutorial-time', [
-                        text('${tutorial.estimatedReadTime} 分'),
-                      ]),
+          for (final tutorial in series.tutorials)
+            span(
+              classes: tutorial.id == currentTutorial.id ? 'tutorial-item active' : 'tutorial-item',
+              [
+                Link(
+                  to: '/tutorials/${series.id}/${tutorial.day}',
+                  child: div(classes: 'tutorial-link', [
+                    // Day 編號
+                    span(classes: 'tutorial-day', [
+                      text('Day ${tutorial.day}'),
                     ]),
-                  ),
-                ],
-              ),
-          ]),
+
+                    // 標題
+                    span(classes: 'tutorial-name', [
+                      text(tutorial.title),
+                    ]),
+                  ]),
+                ),
+              ],
+            ),
         ]),
       ],
     );
@@ -79,12 +72,10 @@ class SeriesSidebar extends StatelessComponent {
     // 側邊欄容器
     css('.series-sidebar').styles(
       display: Display.flex,
-      position: Position.sticky(),
       width: 320.px,
-      height: 100.vh,
-      border: Border.only(
-        right: BorderSide(color: borderColor, width: Borders.thin),
-      ),
+      height: 80.vh,
+      margin: Margin.all(AppSpacing.md),
+      border: Border(color: borderColor, width: Borders.thin),
       overflow: Overflow.auto,
       flexDirection: FlexDirection.column,
       backgroundColor: surfaceColor,
@@ -132,14 +123,13 @@ class SeriesSidebar extends StatelessComponent {
 
     // 導航區域
     css('.sidebar-nav').styles(
-      padding: Padding.all(AppSpacing.md),
       overflow: Overflow.auto,
+      flexDirection: FlexDirection.column,
       flex: Flex(grow: 1),
     ),
 
-    css('.tutorial-list').styles(
-      padding: Padding.zero,
-      margin: Margin.zero,
+    css('.sidebar-nav::-webkit-scrollbar').styles(
+      display: Display.none,
     ),
 
     // 教學項目
@@ -177,13 +167,13 @@ class SeriesSidebar extends StatelessComponent {
     ),
 
     // 標題
-    css('.tutorial-title').styles(
+    css('.tutorial-name').styles(
       color: textPrimaryColor,
-      fontSize: FontSizes.sm,
-      fontWeight: FontWeights.medium,
+      fontSize: FontSizes.base,
+      fontWeight: FontWeights.bold,
     ),
 
-    css('.tutorial-item.active .tutorial-title').styles(
+    css('.tutorial-item.active .tutorial-name').styles(
       color: Color('#FFFFFFFF'),
     ),
 
