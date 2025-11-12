@@ -12,11 +12,13 @@ class MarkdownRenderer extends StatelessComponent {
   final String markdown;
   final bool enableDartPad;
   final bool enableCodeHighlight;
+  final String? imageBasePath;
 
   const MarkdownRenderer({
     required this.markdown,
     this.enableDartPad = true,
     this.enableCodeHighlight = true,
+    this.imageBasePath,
     super.key,
   });
 
@@ -27,6 +29,7 @@ class MarkdownRenderer extends StatelessComponent {
       markdown,
       enableDartPad: enableDartPad,
       enableCodeHighlight: enableCodeHighlight,
+      imageBasePath: imageBasePath,
     );
 
     return div(

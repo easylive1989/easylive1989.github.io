@@ -64,4 +64,5 @@ Map<String, dynamic> _prefix3MarkdownRenderer(prefix3.MarkdownRenderer c) => {
   'markdown': c.markdown,
   'enableDartPad': c.enableDartPad,
   'enableCodeHighlight': c.enableCodeHighlight,
+  'imageBasePath': c.imageBasePath,
 };

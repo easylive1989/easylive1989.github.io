@@ -49,7 +49,10 @@ class TutorialDetail extends StatelessComponent {
 
         // 教學內容
         div(classes: 'tutorial-content', [
-          MarkdownRenderer(markdown: tutorial.content),
+          MarkdownRenderer(
+            markdown: tutorial.content,
+            imageBasePath: '/content/tutorials/${series.name}',
+          ),
         ]),
 
         // 上一篇/下一篇導航

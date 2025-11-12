@@ -42,7 +42,10 @@ class ArticleDetail extends StatelessComponent {
 
         // 文章內容
         div(classes: 'article-content', [
-          MarkdownRenderer(markdown: article.content),
+          MarkdownRenderer(
+            markdown: article.content,
+            imageBasePath: '/content/articles',
+          ),
         ]),
       ]),
     ]);
