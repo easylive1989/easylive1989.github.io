@@ -33,7 +33,7 @@ class ArticleDetail extends StatelessComponent {
           // Meta 資訊
           div(classes: 'article-meta', [
             if (dateStr.isNotEmpty)
-              span(classes: 'meta-item', [text('📅 $dateStr')]),
+              span(classes: 'meta-item', [text(dateStr)]),
             if (article.type != null)
               span(classes: 'meta-item', [text('📝 ${article.type}')]),
           ]),

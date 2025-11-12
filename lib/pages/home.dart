@@ -133,8 +133,7 @@ class HomeState extends State<Home> {
       h3(classes: 'article-title', [text(title)]),
       p(classes: 'article-excerpt', [text(excerpt)]),
       div(classes: 'article-meta', [
-        span([text('⏱️ 5 分鐘')]),
-        span([text('📅 2024/10/30')]),
+        span([text('2024/10/30')]),
       ]),
     ]);
   }

@@ -52,7 +52,7 @@ class ArticleCard extends StatelessComponent {
               // 日期
               if (article.updatedAt != null || article.createdAt != null)
                 span(classes: 'meta-item', [
-                  text('📅 ${_formatDate(article.updatedAt ?? article.createdAt!)}'),
+                  text(_formatDate(article.updatedAt ?? article.createdAt!)),
                 ]),
 
               // 類型
