@@ -40,11 +40,6 @@ class TutorialDetail extends StatelessComponent {
         // 教學標題
         header(classes: 'tutorial-header', [
           h1(classes: 'tutorial-title', [text(tutorial.fullTitle)]),
-          div(classes: 'tutorial-meta', [
-            span(classes: 'meta-item', [
-              text('⏱️ ${tutorial.estimatedReadTime} 分鐘閱讀'),
-            ]),
-          ]),
         ]),
 
         // 教學內容

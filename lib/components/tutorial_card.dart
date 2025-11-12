@@ -65,11 +65,6 @@ class TutorialCard extends StatelessComponent {
                 text('📚 ${series.totalDays} 篇'),
               ]),
 
-              // 總閱讀時間
-              span(classes: 'meta-item', [
-                text('⏱️ ${series.totalReadTime} 分鐘'),
-              ]),
-
               // 進度（示例：可以後續加入使用者進度追蹤）
               span(classes: 'meta-item', [
                 text('🎯 開始學習'),

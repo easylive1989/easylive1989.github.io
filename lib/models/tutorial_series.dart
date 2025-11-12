@@ -20,9 +20,6 @@ class TutorialSeries {
   /// 系列總天數
   int get totalDays => tutorials.length;
 
-  /// 系列總閱讀時間（分鐘）
-  int get totalReadTime => tutorials.fold(0, (sum, t) => sum + t.estimatedReadTime);
-
   /// 系列標籤
   final List<String> tags;
 
@@ -88,7 +85,6 @@ class TutorialSeries {
         'coverImage': coverImage,
         'tutorials': tutorials.map((t) => t.toJson()).toList(),
         'totalDays': totalDays,
-        'totalReadTime': totalReadTime,
         'tags': tags,
         'difficulty': difficulty,
       };

@@ -55,11 +55,6 @@ class ArticleCard extends StatelessComponent {
                   text('📅 ${_formatDate(article.updatedAt ?? article.createdAt!)}'),
                 ]),
 
-              // 閱讀時間
-              span(classes: 'meta-item', [
-                text('⏱️ ${article.estimatedReadTime} 分鐘'),
-              ]),
-
               // 類型
               if (article.type != null)
                 span(classes: 'meta-item', [

@@ -27,9 +27,6 @@ class Tutorial {
   /// 相關資源路徑
   final List<String> assets;
 
-  /// 閱讀時間（分鐘）
-  final int estimatedReadTime;
-
   /// 上一篇教學 ID
   String? previousId;
 
@@ -49,11 +46,10 @@ class Tutorial {
     this.excerpt,
     this.coverImage,
     this.assets = const [],
-    int? estimatedReadTime,
     this.previousId,
     this.nextId,
     this.directoryName,
-  }) : estimatedReadTime = estimatedReadTime ?? _calculateReadTime(content);
+  });
 
   /// 從 Markdown 檔案解析教學
   ///
@@ -176,13 +172,6 @@ class Tutorial {
     return '${plainText.substring(0, maxLength)}...';
   }
 
-  /// 計算閱讀時間
-  static int _calculateReadTime(String content) {
-    final wordCount = content.length;
-    final minutes = (wordCount / 200).ceil();
-    return minutes < 1 ? 1 : minutes;
-  }
-
   /// 轉換為 JSON
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -194,7 +183,6 @@ class Tutorial {
         'excerpt': excerpt,
         'coverImage': coverImage,
         'assets': assets,
-        'estimatedReadTime': estimatedReadTime,
         'previousId': previousId,
         'nextId': nextId,
       };

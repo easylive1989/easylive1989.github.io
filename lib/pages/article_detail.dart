@@ -34,7 +34,6 @@ class ArticleDetail extends StatelessComponent {
           div(classes: 'article-meta', [
             if (dateStr.isNotEmpty)
               span(classes: 'meta-item', [text('📅 $dateStr')]),
-            span(classes: 'meta-item', [text('⏱️ ${article.estimatedReadTime} 分鐘閱讀')]),
             if (article.type != null)
               span(classes: 'meta-item', [text('📝 ${article.type}')]),
           ]),
