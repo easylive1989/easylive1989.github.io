@@ -91,12 +91,32 @@ class ContentLoader {
     return seriesList;
   }
 
+  /// 將目錄名稱映射到預定義的英文 ID
+  static String _mapSeriesNameToId(String seriesName) {
+    // 定義目錄名稱與英文 ID 的映射
+    const seriesMapping = {
+      '30 天學會 Flutter 測試': 'flutter-testing',
+      '30 天學會 Flutter 設計': 'flutter-design',
+    };
+
+    // 如果有匹配的映射，使用預定義的 ID
+    if (seriesMapping.containsKey(seriesName)) {
+      return seriesMapping[seriesName]!;
+    }
+
+    // 否則使用預設的生成邏輯（作為後備方案）
+    return seriesName
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), '-')
+        .replaceAll(RegExp(r'[^a-z0-9\-]'), '');
+  }
+
   /// 載入單個教學系列
   static Future<TutorialSeries?> _loadSeries(Directory seriesDir) async {
     final seriesName = seriesDir.uri.pathSegments[seriesDir.uri.pathSegments.length - 2];
 
-    // 生成系列 ID（將空格轉為連字號，轉小寫）
-    final seriesId = seriesName.toLowerCase().replaceAll(RegExp(r'\s+'), '-').replaceAll(RegExp(r'[^a-z0-9\-]'), '');
+    // 根據目錄名稱映射到預定義的英文 ID
+    final seriesId = _mapSeriesNameToId(seriesName);
 
     final tutorials = <Tutorial>[];
 
