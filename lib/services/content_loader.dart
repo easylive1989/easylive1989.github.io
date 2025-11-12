@@ -28,8 +28,8 @@ class ContentLoader {
 
     final articles = <Article>[];
 
-    // 列出所有 .md 檔案
-    await for (final entity in articlesDir.list()) {
+    // 遞迴列出所有 .md 檔案（包含子目錄）
+    await for (final entity in articlesDir.list(recursive: true)) {
       if (entity is File && entity.path.endsWith('.md')) {
         try {
           final content = await entity.readAsString();
@@ -95,8 +95,8 @@ class ContentLoader {
 
     final tutorials = <Tutorial>[];
 
-    // 列出所有 Day X.md 檔案
-    await for (final entity in seriesDir.list()) {
+    // 遞迴列出所有 Day X.md 檔案（包含子目錄）
+    await for (final entity in seriesDir.list(recursive: true)) {
       if (entity is File && entity.path.endsWith('.md')) {
         final filename = entity.uri.pathSegments.last;
 
