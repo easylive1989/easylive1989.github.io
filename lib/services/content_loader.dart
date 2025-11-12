@@ -34,8 +34,13 @@ class ContentLoader {
         try {
           final content = await entity.readAsString();
           final filename = entity.uri.pathSegments.last;
+          // 提取目錄名稱（用於圖片路徑）
+          final pathSegments = entity.uri.pathSegments;
+          final directoryName = pathSegments.length >= 2
+              ? pathSegments[pathSegments.length - 2]
+              : null;
 
-          final article = Article.fromMarkdown(content, filename);
+          final article = Article.fromMarkdown(content, filename, directoryName: directoryName);
           articles.add(article);
 
           print('Loaded article: ${article.title}');
@@ -104,7 +109,12 @@ class ContentLoader {
         if (RegExp(r'Day\s*\d+', caseSensitive: false).hasMatch(filename)) {
           try {
             final content = await entity.readAsString();
-            final tutorial = Tutorial.fromMarkdown(content, seriesId, filename);
+            // 提取目錄名稱（用於圖片路徑）
+            final pathSegments = entity.uri.pathSegments;
+            final directoryName = pathSegments.length >= 2
+                ? pathSegments[pathSegments.length - 2]
+                : null;
+            final tutorial = Tutorial.fromMarkdown(content, seriesId, filename, directoryName: directoryName);
             tutorials.add(tutorial);
           } catch (e) {
             print('Error loading tutorial from ${entity.path}: $e');

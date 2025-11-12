@@ -36,6 +36,9 @@ class Tutorial {
   /// 下一篇教學 ID
   String? nextId;
 
+  /// 目錄名稱（用於建構圖片路徑）
+  final String? directoryName;
+
   Tutorial({
     required this.id,
     required this.seriesId,
@@ -49,6 +52,7 @@ class Tutorial {
     int? estimatedReadTime,
     this.previousId,
     this.nextId,
+    this.directoryName,
   }) : estimatedReadTime = estimatedReadTime ?? _calculateReadTime(content);
 
   /// 從 Markdown 檔案解析教學
@@ -64,8 +68,9 @@ class Tutorial {
   factory Tutorial.fromMarkdown(
     String markdown,
     String seriesId,
-    String filename,
-  ) {
+    String filename, {
+    String? directoryName,
+  }) {
     final lines = markdown.split('\n');
 
     String? fullTitle;
@@ -140,6 +145,7 @@ class Tutorial {
       fullTitle: fullTitle ?? '無標題',
       content: content,
       excerpt: excerpt,
+      directoryName: directoryName,
     );
   }
 

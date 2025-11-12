@@ -1,0 +1,54 @@
+# Day 4 - 把 Widget 作為參數，增加設計彈性
+
+新增時間: August 04, 2022 04:29 PM
+最後編輯時間: November 09, 2025 12:50 PM
+id: 38902aae127440c99abc93e138c729c9
+
+![](2a68303f-78f7-809f-a9a3-c4dafde6c2e3.png)
+
+在前兩天的文章中，我們討論到使用抽取方法，或者抽取 Widget 處理 Large Class 的壞味道。在昨天的 Chat Room 例子中，原本過大的 ChatRoomScreen 經過重構之後，細節被隱藏在抽取的 MyMessage、OtherMessage …等中。假設今天 PO 想要新增一個需求，讓有 VIP 使用者的 Message 的背景顏色有漸層。
+
+![](it_img_3_1.png)
+
+[https://dartpad.dev/?id=f0e1255f304222c707e4f1fd1220266e](https://dartpad.dev/?id=f0e1255f304222c707e4f1fd1220266e)
+
+閱讀這段程式碼，可以發現，我們把新的 isVip 傳入 Widget 中，讓 Message 決定如何渲染畫面。如果大家 Review 這段程式碼時，肯定一些問題。
+
+## 重複的邏輯判斷
+
+如果我們仔細看 Message 的實作，可以發現每個 Message 都需要判斷 isVip，決定使用 VipMessageBubble 或 MessageBubble。
+
+![](it_img_3_3.png)
+
+想解決重複的判斷邏輯，相信大家一定都能想到許多方法解決，例如：抽一個 Helper 類別，或者使用繼承，來放置這些重複的邏輯，讓程式碼符合 DRY 原則。
+
+> DRY：Don't repeat yourself
+
+## 缺乏彈性
+
+使用 Helper 類別或者繼承，雖然能解決邏輯重複的問題，但是確少了一些彈性。想像一下，今天如果我們想新增一個 VVIP 的層級，我們除了需要修改 Helper 的類別，還需要修改 Message Widget 的參數，新增一個 isVVIP 的參數，導致我們修改的範圍並沒有變小。無論我們想改 Message 的排版樣式，或者新增圖片訊息，需要改動這群 Message Widget，這就違反了[單一職責](https://zh.wikipedia.org/zh-tw/%E5%8D%95%E4%B8%80%E5%8A%9F%E8%83%BD%E5%8E%9F%E5%88%99)，因為我們有太多種情況會動到這群 Message 了。
+
+> 單一職責原則：一個類或者模塊應該有且只有一個改變的原因。
+
+## 從參數注入 Widget
+
+為了解決這些問題，我們可以 Message Bubble 抽成獨立的 Widget，把 Message Bubble 傳入 Message  中。
+
+![](it_img_3_2.png)
+
+[https://dartpad.dev/?id=c28419cd611772d207ccfaf3ac4a9458](https://dartpad.dev/?id=c28419cd611772d207ccfaf3ac4a9458)
+
+此時，我們可以發現 Message 負責排版，而 Message Bubble 負責顯示內容，透過任意組合這兩類 Widget，我們就能有職責單一的 Widget。由於 Message 的參數型別是 Widget 介面，而不是特定 Widget，也增加了設計的彈性，未來我們有更多樣化的訊息內容時，只要讓他實作 Widget 介面並傳入 Message 中，完全不需要修改 Message 。本來是包在外層的 Message 相依於 Widget 介面，而不是具體實作，也符合依賴反轉原則。
+
+> 依賴反轉原則：高層次的模組不應該依賴於低層次的模組，兩者都應該依賴於抽象介面
+
+## 結論
+
+當我們直接把 Widget A 傳入 Widget B，藉此替換 Widget B 裡面的內容，能讓邏輯判斷可以集中在使用端，避免重複的判斷邏輯。並且，因為 Widget B 依賴了 Widget 這個介面，就表示任何實作 Widget 介面的類別，都能傳入 Widget B，替換 Widget B 的內容，增加了設計的彈性。
+
+## 參考
+
+- DRY：[https://zh.wikipedia.org/zh-tw/一次且仅一次](https://zh.wikipedia.org/zh-tw/%E4%B8%80%E6%AC%A1%E4%B8%94%E4%BB%85%E4%B8%80%E6%AC%A1)
+- 單一職責原則：[https://zh.wikipedia.org/zh-tw/单一功能原则](https://zh.wikipedia.org/zh-tw/%E5%8D%95%E4%B8%80%E5%8A%9F%E8%83%BD%E5%8E%9F%E5%88%99)
+- 依賴反轉原則：[https://zh.wikipedia.org/zh-tw/依赖反转原则](https://zh.wikipedia.org/zh-tw/%E4%BE%9D%E8%B5%96%E5%8F%8D%E8%BD%AC%E5%8E%9F%E5%88%99)
+

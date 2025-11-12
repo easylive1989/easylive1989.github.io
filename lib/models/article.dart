@@ -33,6 +33,9 @@ class Article {
   /// 閱讀時間（分鐘）
   final int estimatedReadTime;
 
+  /// 目錄名稱（用於建構圖片路徑）
+  final String? directoryName;
+
   Article({
     required this.id,
     required this.title,
@@ -45,6 +48,7 @@ class Article {
     this.coverImage,
     this.assets = const [],
     int? estimatedReadTime,
+    this.directoryName,
   }) : estimatedReadTime = estimatedReadTime ?? _calculateReadTime(content);
 
   /// 從 Markdown 檔案解析文章
@@ -61,7 +65,7 @@ class Article {
   ///
   /// [文章內容...]
   /// ```
-  factory Article.fromMarkdown(String markdown, String filename) {
+  factory Article.fromMarkdown(String markdown, String filename, {String? directoryName}) {
     final lines = markdown.split('\n');
 
     String? title;
@@ -133,6 +137,7 @@ class Article {
       type: type,
       domain: domain,
       excerpt: excerpt,
+      directoryName: directoryName,
     );
   }
 

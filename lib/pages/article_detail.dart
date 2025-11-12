@@ -44,7 +44,9 @@ class ArticleDetail extends StatelessComponent {
         div(classes: 'article-content', [
           MarkdownRenderer(
             markdown: article.content,
-            imageBasePath: '/content/articles',
+            imageBasePath: article.directoryName != null
+                ? '/content/articles/${article.directoryName}'
+                : '/content/articles',
           ),
         ]),
       ]),

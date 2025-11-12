@@ -51,7 +51,9 @@ class TutorialDetail extends StatelessComponent {
         div(classes: 'tutorial-content', [
           MarkdownRenderer(
             markdown: tutorial.content,
-            imageBasePath: '/content/tutorials/${series.name}',
+            imageBasePath: tutorial.directoryName != null
+                ? '/content/tutorials/${series.name}/${tutorial.directoryName}'
+                : '/content/tutorials/${series.name}',
           ),
         ]),
 
