@@ -144,6 +144,20 @@ class MarkdownRenderer extends StatelessComponent {
       margin: Margin.only(top: AppSpacing.md, bottom: AppSpacing.md),
     ),
 
+    // 影片樣式
+    css('.markdown-body video').styles(
+      width: 100.percent,
+      height: Unit.auto,
+      maxWidth: 100.percent,
+      margin: Margin.only(top: AppSpacing.md, bottom: AppSpacing.md),
+      border: Border.only(
+        top: BorderSide(color: borderColor, width: Borders.thin),
+        right: BorderSide(color: borderColor, width: Borders.thin),
+        bottom: BorderSide(color: borderColor, width: Borders.thin),
+        left: BorderSide(color: borderColor, width: Borders.thin),
+      ),
+    ),
+
     // 程式碼區塊樣式增強
     css('.markdown-body pre').styles(
       position: Position.relative(),

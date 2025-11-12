@@ -38,9 +38,9 @@ class MarkdownService {
       html = _addCodeHighlight(html);
     }
 
-    // 修正圖片路徑
+    // 修正圖片和影片路徑
     if (imageBasePath != null) {
-      html = _fixImagePaths(html, basePath: imageBasePath);
+      html = _fixMediaPaths(html, basePath: imageBasePath);
     }
 
     return html;
@@ -202,15 +202,15 @@ class MarkdownService {
     return chineseChars + englishWords;
   }
 
-  /// 修正 Markdown 轉換後的圖片路徑
+  /// 修正 Markdown 轉換後的媒體檔案路徑（圖片和影片）
   ///
-  /// 將相對路徑的圖片轉換為絕對路徑 `{basePath}/{路徑}`
+  /// 將相對路徑的圖片和影片轉換為絕對路徑 `{basePath}/{路徑}`
   /// 遠端 URL（http:// 或 https://）保持不變
   ///
   /// [html]: 待處理的 HTML 字串
-  /// [basePath]: 圖片資源的基礎路徑（如 '/content/articles' 或 '/content/tutorials/系列名稱'）
-  static String _fixImagePaths(String html, {required String basePath}) {
-    // 偵測 <img> 標籤並提取 src 屬性
+  /// [basePath]: 媒體資源的基礎路徑（如 '/content/articles' 或 '/content/tutorials/系列名稱'）
+  static String _fixMediaPaths(String html, {required String basePath}) {
+    // 處理 <img> 標籤
     final imgRegex = RegExp(r'<img([^>]*)src=["\x27]([^"\x27]+)["\x27]([^>]*)>');
 
     html = html.replaceAllMapped(imgRegex, (match) {
@@ -231,6 +231,29 @@ class MarkdownService {
       final absoluteSrc = '$basePath/$decodedSrc';
 
       return '<img${beforeSrc}src="$absoluteSrc"$afterSrc>';
+    });
+
+    // 處理 <video> 標籤
+    final videoRegex = RegExp(r'<video([^>]*)src=["\x27]([^"\x27]+)["\x27]([^>]*)>');
+
+    html = html.replaceAllMapped(videoRegex, (match) {
+      final beforeSrc = match.group(1) ?? '';
+      final src = match.group(2) ?? '';
+      final afterSrc = match.group(3) ?? '';
+
+      // 如果是遠端 URL（http:// 或 https://），不處理
+      if (src.startsWith('http://') || src.startsWith('https://')) {
+        return match.group(0)!;
+      }
+
+      // 相對路徑：需要轉換為絕對路徑
+      // 1. URL 解碼（處理 %E5%9C... 等編碼）
+      final decodedSrc = Uri.decodeFull(src);
+
+      // 2. 轉換為絕對路徑
+      final absoluteSrc = '$basePath/$decodedSrc';
+
+      return '<video${beforeSrc}src="$absoluteSrc"$afterSrc>';
     });
 
     return html;
