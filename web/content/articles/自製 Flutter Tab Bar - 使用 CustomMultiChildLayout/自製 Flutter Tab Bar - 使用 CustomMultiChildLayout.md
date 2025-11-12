@@ -1,10 +1,10 @@
 # 自製 Flutter Tab Bar - 使用 CustomMultiChildLayout
 
 新增時間: November 09, 2025 06:24 AM
-最後編輯時間: November 09, 2025 06:30 AM
+最後編輯時間: November 12, 2025 07:03 AM
 id: 2a68303f78f780daa645f5850cb7c242
 
-![](image.png)
+![](2a98303f-78f7-80e8-ae98-db87071632bd.png)
 
 在產品開發上我們常常使用 Tab Bar 來切換不同分類的內容，使用 Tab Bar 可以讓使用者快速找到想要的內容，提升效率。一般來說，我們可以使用 Flutter 內建 TabBar 來完成，即便我們希望的樣式與預設的不同，也能透過參數調整或額外加工來調整成想要的結果。
 
@@ -27,6 +27,8 @@ id: 2a68303f78f780daa645f5850cb7c242
 1. 被選到 Tab 佔據他所需要的寬度，剩下的寬度由那些未被選到的 Tab 平均分配
 1. 被選到的 Tab 擁有不同的文字
 1. 當使用者點選其他 Tab 時，透過淡入淡與放大縮小來變化 Tab 樣式
+<video src="ori.mov" controls></video>
+
 分析不只讓我們更清楚要完成什麼需求，將需求拆成一個一個的小需求，我們就能解決多個簡單的小問題，最後集合解決原本的大問題。這也能讓我們優先處理最有價值的部分，用最快的時間產出最有價值的部分，這也是開發人員必備的 Divide and Conquer 技巧。
 
 ## 從最重要的功能開始
@@ -84,6 +86,8 @@ class _MyTabBarState extends State<MyTabBar> {
 這個版本相當簡單，當使用者選到某個 Tab 之後，被選到的 Tab 一瞬間就換了樣式。
 
 
+
+<video src="v1.mov" controls></video>
 
 
 
@@ -170,6 +174,8 @@ Row(
   ],
 )
 ```
+
+<video src="v2.mov" controls></video>
 
 事情到了這邊，顯然我們無法使用 Row 完成這個 Tab Bar 設計了，那我們還有什麼辦法呢？有的，我們可以用 [CustomMultiChildLayout](https://api.flutter.dev/flutter/widgets/CustomMultiChildLayout-class.html) 自製一個簡單的 Row，一個為這個特殊的 Tab Bar 佈局而生的 Row。
 
@@ -300,9 +306,13 @@ class _MyTabBarLayoutDelegate extends MultiChildLayoutDelegate {
 
 完成之後，我們測試一個就能看到切換 Tab 時，Tab 有伸縮的動畫了。
 
+<video src="v4.mov" controls></video>
+
 
 
 最後我們還想讓 Tab 的背景顏色也有淡入淡出的動畫效果時，我們只要簡單的把 Container 修改為 AnimatedContainer 就好，我們就能看到變大變小的同時也有淡入淡出的效果了。
+
+<video src="v4.mov" controls></video>
 
 
 

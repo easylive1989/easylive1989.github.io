@@ -165,11 +165,13 @@ class NotionSync:
         blocks = self.get_page_blocks(page_id)
 
         # 轉換為 Markdown
-        content, images = self.blocks_to_markdown(blocks, page_id)
+        content, images, videos = self.blocks_to_markdown(blocks, page_id)
 
-        # 下載圖片
+        # 下載圖片和影片
         if images and not self.dry_run:
-            self.download_images(images, output_dir)
+            self.download_media(images, output_dir, media_type="圖片")
+        if videos and not self.dry_run:
+            self.download_media(videos, output_dir, media_type="影片")
 
         # 生成 Front Matter
         front_matter = self.generate_front_matter(
@@ -274,16 +276,18 @@ class NotionSync:
 
         return blocks
 
-    def blocks_to_markdown(self, blocks: List[Dict], page_id: str) -> tuple[str, List[tuple]]:
+    def blocks_to_markdown(self, blocks: List[Dict], page_id: str) -> tuple[str, List[tuple], List[tuple]]:
         """
         將 Notion blocks 轉換為 Markdown
 
         Returns:
-            (markdown_content, images_list)
+            (markdown_content, images_list, videos_list)
             images_list: [(url, filename), ...]
+            videos_list: [(url, filename), ...]
         """
         markdown_lines = []
         images = []
+        videos = []
 
         for block in blocks:
             block_type = block["type"]
@@ -327,6 +331,13 @@ class NotionSync:
                     markdown_lines.append(f"![]({filename})")
                     markdown_lines.append("")
 
+            elif block_type == "video":
+                video_url, filename = self.process_video_block(block)
+                if video_url:
+                    videos.append((video_url, filename))
+                    markdown_lines.append(f'<video src="{filename}" controls></video>')
+                    markdown_lines.append("")
+
             elif block_type == "divider":
                 markdown_lines.append("---")
                 markdown_lines.append("")
@@ -334,8 +345,9 @@ class NotionSync:
             # 處理有子區塊的情況
             if block.get("has_children"):
                 child_blocks = self.get_page_blocks(block["id"])
-                child_markdown, child_images = self.blocks_to_markdown(child_blocks, page_id)
+                child_markdown, child_images, child_videos = self.blocks_to_markdown(child_blocks, page_id)
                 images.extend(child_images)
+                videos.extend(child_videos)
                 # 為子內容增加縮排
                 for line in child_markdown.split("\n"):
                     if line:
@@ -343,7 +355,7 @@ class NotionSync:
                     else:
                         markdown_lines.append("")
 
-        return "\n".join(markdown_lines), images
+        return "\n".join(markdown_lines), images, videos
 
     def rich_text_to_markdown(self, rich_text: List[Dict]) -> str:
         """將 Notion rich text 轉換為 Markdown"""
@@ -392,9 +404,30 @@ class NotionSync:
 
         return url, filename
 
-    def download_images(self, images: List[tuple], output_dir: Path):
-        """下載圖片到指定目錄"""
-        for url, filename in images:
+    def process_video_block(self, block: Dict) -> tuple[Optional[str], Optional[str]]:
+        """處理影片區塊"""
+        video_data = block["video"]
+        video_type = video_data["type"]
+
+        if video_type == "external":
+            url = video_data["external"]["url"]
+        elif video_type == "file":
+            url = video_data["file"]["url"]
+        else:
+            return None, None
+
+        # 生成檔名
+        filename = os.path.basename(url.split("?")[0])
+        if not filename or "." not in filename:
+            # 使用區塊 ID 作為檔名
+            ext = ".mp4"  # 預設副檔名
+            filename = f"{block['id']}{ext}"
+
+        return url, filename
+
+    def download_media(self, media_files: List[tuple], output_dir: Path, media_type: str = "檔案"):
+        """下載媒體檔案（圖片或影片）到指定目錄"""
+        for url, filename in media_files:
             try:
                 output_path = output_dir / filename
                 if output_path.exists():
@@ -405,9 +438,9 @@ class NotionSync:
 
                 output_dir.mkdir(parents=True, exist_ok=True)
                 output_path.write_bytes(response.content)
-                print(f"      📥 下載圖片: {filename}")
+                print(f"      📥 下載{media_type}: {filename}")
             except Exception as e:
-                print(f"      ⚠️  圖片下載失敗 ({filename}): {e}")
+                print(f"      ⚠️  {media_type}下載失敗 ({filename}): {e}")
 
     def generate_front_matter(
         self,
