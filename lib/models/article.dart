@@ -207,10 +207,11 @@ class Article {
   static String _generateExcerpt(String content, {int maxLength = 200}) {
     // 移除 markdown 語法
     var plainText = content
+        .replaceAll(RegExp(r'!\[.*?\]\(.*?\)'), '') // 移除圖片
         .replaceAll(RegExp(r'#+\s'), '') // 移除標題符號
         .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1') // 移除粗體
         .replaceAll(RegExp(r'\*(.+?)\*'), r'$1') // 移除斜體
-        .replaceAll(RegExp(r'\[(.+?)\]\(.+?\)'), r'$1') // 移除連結
+        .replaceAll(RegExp(r'\[(.+?)\]\(.+?\)'), r'$1') // 移除連結，保留文字
         .replaceAll(RegExp(r'```[\s\S]*?```'), '') // 移除程式碼區塊
         .replaceAll(RegExp(r'`(.+?)`'), r'$1') // 移除行內程式碼
         .trim();
