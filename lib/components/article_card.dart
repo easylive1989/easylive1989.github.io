@@ -14,16 +14,27 @@ class ArticleCard extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
+    // 建構完整的圖片路徑
+    String? coverImagePath;
+    if (article.coverImage != null && article.directoryName != null) {
+      // 如果圖片是相對路徑，加上 basePath
+      if (!article.coverImage!.startsWith('http') && !article.coverImage!.startsWith('/')) {
+        coverImagePath = '/content/articles/${article.directoryName}/${article.coverImage}';
+      } else {
+        coverImagePath = article.coverImage;
+      }
+    }
+
     return Link(
       to: '/articles/${article.id}',
       child: div(
         classes: 'article-card',
         [
           // 封面圖片（如果有）
-          if (article.coverImage != null)
+          if (coverImagePath != null)
             div(classes: 'article-card-image', [
               img(
-                src: article.coverImage!,
+                src: coverImagePath,
                 alt: article.title,
               ),
             ]),

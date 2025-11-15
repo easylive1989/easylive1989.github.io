@@ -124,6 +124,9 @@ class Article {
     // 生成摘要
     final excerpt = _generateExcerpt(content);
 
+    // 提取第一張圖片作為封面
+    final coverImage = _extractFirstImage(content);
+
     return Article(
       id: id,
       title: title ?? '無標題',
@@ -133,6 +136,7 @@ class Article {
       type: type,
       domain: domain,
       excerpt: excerpt,
+      coverImage: coverImage,
       directoryName: directoryName,
     );
   }
@@ -221,6 +225,13 @@ class Article {
     }
 
     return '${plainText.substring(0, maxLength)}...';
+  }
+
+  /// 提取第一張圖片的 URL
+  static String? _extractFirstImage(String content) {
+    // 匹配 Markdown 圖片語法: ![alt](url)
+    final match = RegExp(r'!\[.*?\]\((.*?)\)').firstMatch(content);
+    return match?.group(1);
   }
 
   /// 轉換為 JSON
