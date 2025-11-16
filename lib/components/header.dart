@@ -18,7 +18,7 @@ class Header extends StatelessComponent {
           to: '/',
           child: div(classes: 'header-logo', [
             img(src: '/img/logo.png', alt: 'Logo', classes: 'logo-image'),
-            text('Learn with Paul'),
+            text('Paul\'s Learning'),
           ]),
         ),
 
@@ -75,8 +75,8 @@ class Header extends StatelessComponent {
 
     css('.header-content').styles(
       display: Display.flex,
-      maxWidth: ContainerWidths.xl2,
-      padding: Padding.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+      maxWidth: ContainerWidths.md,
+      padding: Padding.symmetric(vertical: AppSpacing.md),
       margin: Margin.symmetric(horizontal: Unit.auto),
       alignItems: AlignItems.center,
       gap: Gap.all(AppSpacing.xl),
