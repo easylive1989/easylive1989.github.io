@@ -17,6 +17,7 @@ class Header extends StatelessComponent {
         Link(
           to: '/',
           child: div(classes: 'header-logo', [
+            img(src: '/img/logo.png', alt: 'Logo', classes: 'logo-image'),
             text('Learn with Paul'),
           ]),
         ),
@@ -56,10 +57,18 @@ class Header extends StatelessComponent {
     ),
 
     css('.header-logo').styles(
+      display: Display.flex,
+      alignItems: AlignItems.center,
+      gap: Gap.all(AppSpacing.sm),
       color: primaryColor,
       fontSize: FontSizes.xl2,
       fontWeight: FontWeights.bold,
       textDecoration: TextDecoration.none,
+    ),
+
+    css('.header-logo .logo-image').styles(
+      width: 32.px,
+      height: 32.px,
     ),
 
     css('nav').styles(
