@@ -1,4 +1,6 @@
 import 'package:jaspr/jaspr.dart';
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import '../services/markdown_service.dart';
 import '../constants/theme.dart';
 import '../constants/styles.dart';
@@ -8,7 +10,7 @@ import '../constants/styles.dart';
 /// 在客戶端動態解析並渲染 Markdown 內容
 /// 支援 DartPad 嵌入和程式碼語法高亮
 @client
-class MarkdownRenderer extends StatelessComponent {
+class MarkdownRenderer extends StatefulComponent {
   final String markdown;
   final bool enableDartPad;
   final bool enableCodeHighlight;
@@ -23,13 +25,46 @@ class MarkdownRenderer extends StatelessComponent {
   });
 
   @override
+  State<StatefulComponent> createState() => _MarkdownRendererState();
+}
+
+class _MarkdownRendererState extends State<MarkdownRenderer> {
+  @override
+  void initState() {
+    super.initState();
+    // 在下一個 frame 執行 highlight.js，確保 DOM 已經渲染完成
+    Future.microtask(() {
+      if (component.enableCodeHighlight) {
+        _highlightCode();
+      }
+    });
+  }
+
+  @override
+  void didUpdateComponent(MarkdownRenderer oldComponent) {
+    super.didUpdateComponent(oldComponent);
+    // 當 markdown 內容更新時，重新高亮
+    if (component.markdown != oldComponent.markdown && component.enableCodeHighlight) {
+      Future.microtask(() {
+        _highlightCode();
+      });
+    }
+  }
+
+  void _highlightCode() {
+    // 呼叫 highlight.js 的 API
+    // 使用 JavaScript interop
+    globalContext.callMethod('eval'.toJS, 'if (typeof hljs !== "undefined") { hljs.highlightAll(); }'.toJS);
+  }
+
+  @override
   Component build(BuildContext context) {
     // 將 Markdown 轉換為 HTML
     final html = MarkdownService.toHtml(
-      markdown,
-      enableDartPad: enableDartPad,
-      enableCodeHighlight: enableCodeHighlight,
-      imageBasePath: imageBasePath,
+      component.markdown,
+      enableDartPad: component.enableDartPad,
+      enableCodeHighlight: component.enableCodeHighlight,
+      imageBasePath: component.imageBasePath,
     );
 
     return div(

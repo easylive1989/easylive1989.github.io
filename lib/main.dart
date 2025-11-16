@@ -48,6 +48,13 @@ void main() async {
         'twitter:title': 'Learn with Paul - Flutter 技術分享與教學',
         'twitter:description': '深入淺出的 Flutter 技術文章與完整系列教學',
       },
+      head: [
+        // Highlight.js for syntax highlighting
+        // Note: hljs.highlightAll() is called by MarkdownRenderer after rendering
+        raw('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">'),
+        raw('<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>'),
+        raw('<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dart.min.js"></script>'),
+      ],
       styles: [
         // Import Inter font for modern, clean typography
         css.import(
@@ -128,7 +135,8 @@ void main() async {
         ),
 
         // Code & Pre
-        css('code').styles(
+        // Inline code (not inside pre)
+        css('code:not(pre code)').styles(
           padding: Padding.symmetric(horizontal: AppSpacing.xs, vertical: 2.px),
           color: tertiaryColor,
           fontFamily: fontMono,
@@ -148,12 +156,14 @@ void main() async {
           overflow: Overflow.auto,
           fontFamily: fontMono,
           fontSize: FontSizes.sm,
-          backgroundColor: surfaceColor,
+          backgroundColor: Color('#FAFAFA'), // Light background for code blocks
         ),
 
+        // Code inside pre - let highlight.js handle the colors
         css('pre code').styles(
           padding: Padding.zero,
           backgroundColor: Color('#00000000'),
+          fontFamily: fontMono,
         ),
 
         // Lists
