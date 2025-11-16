@@ -100,10 +100,10 @@ class ArticleCard extends StatelessComponent {
 
     css('.article-card:hover').styles(),
 
-    // 封面圖片
+    // 封面圖片 - 2:1 寬高比容器
     css('.article-card-image').styles(
       width: 100.percent,
-      height: 200.px,
+      aspectRatio: const AspectRatio(2),
       overflow: Overflow.hidden,
       backgroundColor: surfaceColor,
     ),

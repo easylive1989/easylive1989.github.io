@@ -41,6 +41,11 @@ class ArticlesList extends StatelessComponent {
       padding: Padding.symmetric(vertical: AppSpacing.xl3, horizontal: AppSpacing.xl),
     ),
 
+    css('.container').styles(
+      maxWidth: ContainerWidths.md,
+      margin: Margin.symmetric(horizontal: Unit.auto),
+    ),
+
     css('.page-title').styles(
       fontSize: FontSizes.xl5,
       fontWeight: FontWeights.bold,
