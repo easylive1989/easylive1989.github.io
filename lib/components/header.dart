@@ -33,6 +33,31 @@ class Header extends StatelessComponent {
               Link(to: route.path, child: text(route.label)),
             ]),
         ]),
+
+        // Social Links
+        div(classes: 'social-links', [
+          a(
+            href: 'https://www.threads.com/@paul.ch.wu',
+            target: Target.blank,
+            [
+              img(src: '/img/threads.svg', alt: 'Threads', classes: 'social-icon'),
+            ],
+          ),
+          a(
+            href: 'https://github.com/easylive1989',
+            target: Target.blank,
+            [
+              img(src: '/img/github.svg', alt: 'GitHub', classes: 'social-icon'),
+            ],
+          ),
+          a(
+            href: 'https://medium.com/@easylive1989',
+            target: Target.blank,
+            [
+              img(src: '/img/medium.svg', alt: 'Medium', classes: 'social-icon'),
+            ],
+          ),
+        ]),
       ]),
     ]);
   }
@@ -53,8 +78,8 @@ class Header extends StatelessComponent {
       maxWidth: ContainerWidths.xl2,
       padding: Padding.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
       margin: Margin.symmetric(horizontal: Unit.auto),
-      justifyContent: JustifyContent.spaceBetween,
       alignItems: AlignItems.center,
+      gap: Gap.all(AppSpacing.xl),
     ),
 
     css('.header-logo').styles(
@@ -74,6 +99,8 @@ class Header extends StatelessComponent {
 
     css('nav').styles(
       display: Display.flex,
+      flex: Flex(grow: 1, shrink: 1, basis: Unit.zero),
+      justifyContent: JustifyContent.end,
     ),
 
     css('nav a').styles(
@@ -92,6 +119,27 @@ class Header extends StatelessComponent {
     css('nav div.active a').styles(
       color: Color('#FFFFFFFF'),
       backgroundColor: primaryColor,
+    ),
+
+    css('.social-links').styles(
+      display: Display.flex,
+      alignItems: AlignItems.center,
+      gap: Gap.all(AppSpacing.md),
+    ),
+
+    css('.social-links a').styles(
+      display: Display.flex,
+      alignItems: AlignItems.center,
+      opacity: 0.7,
+    ),
+
+    css('.social-links a:hover').styles(
+      opacity: 1.0,
+    ),
+
+    css('.social-icon').styles(
+      width: 24.px,
+      height: 24.px,
     ),
   ];
 }
