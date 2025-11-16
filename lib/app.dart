@@ -2,7 +2,6 @@ import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_router/jaspr_router.dart';
 
 import 'components/header.dart';
-import 'pages/home.dart';
 import 'pages/articles_list.dart';
 import 'pages/article_detail.dart';
 import 'pages/tutorials_list.dart';
@@ -22,16 +21,9 @@ class App extends StatelessComponent {
   Component build(BuildContext context) {
     // Generate routes dynamically based on content
     final routes = <Route>[
-      // 首頁
+      // 首頁 - 技術分享列表
       Route(
         path: '/',
-        title: 'Learn with Paul - Flutter 技術分享與教學',
-        builder: (context, state) => const Home(),
-      ),
-
-      // 文章列表頁
-      Route(
-        path: '/articles',
         title: '技術分享 - Learn with Paul',
         builder: (context, state) => ArticlesList(articles: content.articles),
       ),

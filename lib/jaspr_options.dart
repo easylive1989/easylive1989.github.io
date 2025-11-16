@@ -13,10 +13,9 @@ import 'package:my_website/components/series_sidebar.dart' as prefix4;
 import 'package:my_website/components/tutorial_card.dart' as prefix5;
 import 'package:my_website/pages/article_detail.dart' as prefix6;
 import 'package:my_website/pages/articles_list.dart' as prefix7;
-import 'package:my_website/pages/home.dart' as prefix8;
-import 'package:my_website/pages/tutorial_detail.dart' as prefix9;
-import 'package:my_website/pages/tutorials_list.dart' as prefix10;
-import 'package:my_website/app.dart' as prefix11;
+import 'package:my_website/pages/tutorial_detail.dart' as prefix8;
+import 'package:my_website/pages/tutorials_list.dart' as prefix9;
+import 'package:my_website/app.dart' as prefix10;
 
 /// Default [JasprOptions] for use with your jaspr project.
 ///
@@ -40,8 +39,6 @@ JasprOptions get defaultJasprOptions => JasprOptions(
       'components/markdown_renderer',
       params: _prefix3MarkdownRenderer,
     ),
-
-    prefix8.Home: ClientTarget<prefix8.Home>('pages/home'),
   },
   styles: () => [
     ...prefix0.ArticleCard.styles,
@@ -53,10 +50,9 @@ JasprOptions get defaultJasprOptions => JasprOptions(
     ...prefix5.TutorialCard.styles,
     ...prefix6.ArticleDetail.styles,
     ...prefix7.ArticlesList.styles,
-    ...prefix8.HomeState.styles,
-    ...prefix9.TutorialDetail.styles,
-    ...prefix10.TutorialsList.styles,
-    ...prefix11.App.styles,
+    ...prefix8.TutorialDetail.styles,
+    ...prefix9.TutorialsList.styles,
+    ...prefix10.App.styles,
   ],
 );
 
