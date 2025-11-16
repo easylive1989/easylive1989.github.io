@@ -6,6 +6,7 @@ import 'pages/articles_list.dart';
 import 'pages/article_detail.dart';
 import 'pages/tutorials_list.dart';
 import 'pages/tutorial_detail.dart';
+import 'pages/about.dart';
 import 'services/content_loader.dart';
 
 // The main component of your application.
@@ -33,6 +34,13 @@ class App extends StatelessComponent {
         path: '/tutorials',
         title: '教學系列 - Learn with Paul',
         builder: (context, state) => TutorialsList(series: content.series),
+      ),
+
+      // 關於頁面
+      Route(
+        path: '/about',
+        title: '關於我 - Learn with Paul',
+        builder: (context, state) => const About(),
       ),
 
       // 為每篇文章生成路由
