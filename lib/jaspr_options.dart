@@ -46,6 +46,7 @@ JasprOptions get defaultJasprOptions => JasprOptions(
     ...prefix1.ArticleNavigation.styles,
 
     ...prefix2.Header.styles,
+    ...prefix3.MarkdownRenderer.styles,
     ...prefix4.SeriesSidebar.styles,
     ...prefix5.TutorialCard.styles,
     ...prefix6.About.styles,

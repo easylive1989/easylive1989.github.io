@@ -1,9 +1,10 @@
 import 'package:jaspr/jaspr.dart';
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 import '../services/markdown_service.dart';
 import '../constants/theme.dart';
 import '../constants/styles.dart';
+
+// Conditional import for JS interop (only available on web)
+import 'markdown_renderer_web.dart' if (dart.library.io) 'markdown_renderer_stub.dart';
 
 /// Markdown 渲染元件
 ///
@@ -26,58 +27,6 @@ class MarkdownRenderer extends StatefulComponent {
 
   @override
   State<StatefulComponent> createState() => _MarkdownRendererState();
-}
-
-class _MarkdownRendererState extends State<MarkdownRenderer> {
-  @override
-  void initState() {
-    super.initState();
-    // 在下一個 frame 執行 highlight.js，確保 DOM 已經渲染完成
-    Future.microtask(() {
-      if (component.enableCodeHighlight) {
-        _highlightCode();
-      }
-    });
-  }
-
-  @override
-  void didUpdateComponent(MarkdownRenderer oldComponent) {
-    super.didUpdateComponent(oldComponent);
-    // 當 markdown 內容更新時，重新高亮
-    if (component.markdown != oldComponent.markdown && component.enableCodeHighlight) {
-      Future.microtask(() {
-        _highlightCode();
-      });
-    }
-  }
-
-  void _highlightCode() {
-    // 呼叫 highlight.js 的 API
-    // 使用 JavaScript interop
-    globalContext.callMethod('eval'.toJS, 'if (typeof hljs !== "undefined") { hljs.highlightAll(); }'.toJS);
-  }
-
-  @override
-  Component build(BuildContext context) {
-    // 將 Markdown 轉換為 HTML
-    final html = MarkdownService.toHtml(
-      component.markdown,
-      enableDartPad: component.enableDartPad,
-      enableCodeHighlight: component.enableCodeHighlight,
-      imageBasePath: component.imageBasePath,
-    );
-
-    return div(
-      classes: 'markdown-content',
-      [
-        // 使用 raw HTML 渲染
-        div(
-          classes: 'markdown-body',
-          [raw(html)],
-        ),
-      ],
-    );
-  }
 
   @css
   static List<StyleRule> get styles => [
@@ -170,27 +119,7 @@ class _MarkdownRendererState extends State<MarkdownRenderer> {
     css('.markdown-body blockquote').styles(
       padding: Padding.all(AppSpacing.md),
       backgroundColor: Color('#0D57B4BA'),
-    ),
-
-    // 圖片樣式
-    css('.markdown-body img').styles(
-      height: Unit.auto,
-      maxWidth: 100.percent,
       margin: Margin.only(top: AppSpacing.md, bottom: AppSpacing.md),
-    ),
-
-    // 影片樣式
-    css('.markdown-body video').styles(
-      width: 100.percent,
-      height: Unit.auto,
-      maxWidth: 100.percent,
-      margin: Margin.only(top: AppSpacing.md, bottom: AppSpacing.md),
-      border: Border.only(
-        top: BorderSide(color: borderColor, width: Borders.thin),
-        right: BorderSide(color: borderColor, width: Borders.thin),
-        bottom: BorderSide(color: borderColor, width: Borders.thin),
-        left: BorderSide(color: borderColor, width: Borders.thin),
-      ),
     ),
 
     // 程式碼區塊樣式增強
@@ -203,4 +132,50 @@ class _MarkdownRendererState extends State<MarkdownRenderer> {
       fontWeight: FontWeights.medium,
     ),
   ];
+}
+
+class _MarkdownRendererState extends State<MarkdownRenderer> {
+  @override
+  void initState() {
+    super.initState();
+    // 在下一個 frame 執行 highlight.js，確保 DOM 已經渲染完成
+    Future.microtask(() {
+      if (component.enableCodeHighlight) {
+        highlightCode();
+      }
+    });
+  }
+
+  @override
+  void didUpdateComponent(MarkdownRenderer oldComponent) {
+    super.didUpdateComponent(oldComponent);
+    // 當 markdown 內容更新時，重新高亮
+    if (component.markdown != oldComponent.markdown && component.enableCodeHighlight) {
+      Future.microtask(() {
+        highlightCode();
+      });
+    }
+  }
+
+  @override
+  Component build(BuildContext context) {
+    // 將 Markdown 轉換為 HTML
+    final html = MarkdownService.toHtml(
+      component.markdown,
+      enableDartPad: component.enableDartPad,
+      enableCodeHighlight: component.enableCodeHighlight,
+      imageBasePath: component.imageBasePath,
+    );
+
+    return div(
+      classes: 'markdown-content',
+      [
+        // 使用 raw HTML 渲染
+        div(
+          classes: 'markdown-body',
+          [raw(html)],
+        ),
+      ],
+    );
+  }
 }
