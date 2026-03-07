@@ -39,7 +39,7 @@ const canonicalUrl = new URL(Astro.url.pathname, config.site.url);
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalUrl.href} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:image" content={ogImage ?? new URL(`${import.meta.env.BASE_URL}${config.author.avatar}`, config.site.url).href} />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
