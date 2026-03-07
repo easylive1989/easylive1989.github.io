@@ -14,6 +14,8 @@ author:
       url: "https://www.threads.com/@paul.ch.wu"
     - type: email
       url: "mailto:hello@example.com"
+    - type: playbox
+      url: "https://easylive1989.github.io/paul-playbox/"
 
 notion:
   databaseId: "31c8303f78f78086a16fdffcd6dd1777"
