@@ -13,7 +13,7 @@ export function getLocalImagePath(
   const hash = createHash('md5').update(basePath).digest('hex').slice(0, 12);
   const ext = path.extname(urlObj.pathname) || '.png';
 
-  return `/images/notion/${seriesSlug}/${articleSlug}/${hash}${ext}`;
+  return `/assets/notion/${seriesSlug}/${articleSlug}/${hash}${ext}`;
 }
 
 interface ImageMap {
