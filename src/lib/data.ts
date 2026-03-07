@@ -20,11 +20,15 @@ export interface Category {
   slug: string;
 }
 
+let cachedArticles: Article[] | null = null;
+
 export async function getAllArticles(): Promise<Article[]> {
+  if (cachedArticles) return cachedArticles;
   const config = loadConfig();
   const client = getNotionClient();
   if (!client) return [];
-  return fetchDatabase(client, config.notion.databaseId);
+  cachedArticles = await fetchDatabase(client, config.notion.databaseId);
+  return cachedArticles;
 }
 
 export async function getAllCategories(): Promise<Category[]> {
