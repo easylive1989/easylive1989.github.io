@@ -1,25 +1,9 @@
 ---
 import { loadConfig } from '../lib/config';
 const config = loadConfig();
-
-const iconMap: Record<string, { src: string; label: string }> = {
-  github: { src: '/images/github.svg', label: 'GitHub' },
-  threads: { src: '/images/threads.svg', label: 'Threads' },
-  email: { src: '/images/email.svg', label: 'Email' },
-};
 ---
 
 <footer>
-  <div class="footer-links">
-    {config.author.links.map((link) => {
-      const icon = iconMap[link.type];
-      return (
-        <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={icon?.label ?? link.type}>
-          <img src={`${import.meta.env.BASE_URL}${icon?.src}`} alt={icon?.label ?? link.type} width="20" height="20" />
-        </a>
-      );
-    })}
-  </div>
   <p class="copyright">
     &copy; {new Date().getFullYear()} {config.author.name}
   </p>
