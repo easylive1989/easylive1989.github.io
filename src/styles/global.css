@@ -89,6 +89,7 @@ footer {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  margin-top: 2rem;
   margin-bottom: 2rem;
 }
 
