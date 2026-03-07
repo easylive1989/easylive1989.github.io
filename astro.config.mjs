@@ -3,7 +3,6 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://easylive1989.github.io',
-  base: '/learn_with_paul/',
   integrations: [sitemap()],
   output: 'static',
   vite: {

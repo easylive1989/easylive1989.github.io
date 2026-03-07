@@ -4,7 +4,7 @@
 
 ## 網站
 
-https://easylive1989.github.io/learn_with_paul/
+https://easylive1989.github.io/
 
 ## 技術棧
 
