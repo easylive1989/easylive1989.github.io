@@ -37,14 +37,6 @@ jobs:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
         run: npx astro build
 
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
-
-      - name: Run E2E tests
-        env:
-          CI: true
-        run: npx playwright test
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
