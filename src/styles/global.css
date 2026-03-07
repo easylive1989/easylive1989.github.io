@@ -68,10 +68,13 @@ footer {
 .footer-links a {
   color: #666;
   text-decoration: none;
+  display: inline-flex;
+  transition: color 0.2s, transform 0.2s;
 }
 
 .footer-links a:hover {
   color: #111;
+  transform: translateY(-2px);
 }
 
 /* === Author Card === */
@@ -107,11 +110,13 @@ footer {
 .author-links a {
   color: #666;
   text-decoration: none;
-  font-size: 0.875rem;
+  display: inline-flex;
+  transition: color 0.2s, transform 0.2s;
 }
 
 .author-links a:hover {
   color: #111;
+  transform: translateY(-2px);
 }
 
 /* === Series Card === */

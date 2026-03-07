@@ -4,12 +4,14 @@ site:
   url: "https://easylive1989.github.io/learn_with_paul"
 
 author:
-  name: "Paul"
+  name: "Paul Wu"
   avatar: "/images/avatar.jpg"
-  bio: "技術愛好者"
+  bio: "A Full Stack Developer who loves to build end-to-end solutions.\nAlways curious, exploring — from something new to random rabbit holes."
   links:
     - type: github
       url: "https://github.com/easylive1989"
+    - type: threads
+      url: "https://www.threads.com/@paul.ch.wu"
     - type: email
       url: "mailto:hello@example.com"
 
