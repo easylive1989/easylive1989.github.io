@@ -119,40 +119,32 @@ footer {
   transform: translateY(-2px);
 }
 
-/* === Series Card === */
-.series-list h1 {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+/* === Tab Bar === */
+.tab-bar {
+  display: flex;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 2rem;
+  overflow-x: auto;
 }
 
-.series-card {
-  display: block;
-  padding: 1.5rem;
-  border: 1px solid #eee;
+.tab {
+  padding: 0.75rem 1.25rem;
   text-decoration: none;
-  color: inherit;
-  margin-bottom: 1rem;
-  transition: border-color 0.2s;
-}
-
-.series-card:hover {
-  border-color: #111;
-}
-
-.series-name {
-  font-size: 1.125rem;
-  margin-bottom: 0.5rem;
-}
-
-.series-description {
   color: #666;
-  font-size: 0.9375rem;
-  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
 }
 
-.series-count {
-  font-size: 0.875rem;
-  color: #999;
+.tab:hover {
+  color: #111;
+}
+
+.tab.active {
+  color: #111;
+  font-weight: 600;
+  border-bottom-color: #111;
 }
 
 /* === Article Card === */
@@ -476,17 +468,6 @@ th {
 .nav-next {
   margin-left: auto;
   text-align: right;
-}
-
-/* === Series Page === */
-.series-page h1 {
-  font-size: 1.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.series-page > .series-description {
-  color: #666;
-  margin-bottom: 2rem;
 }
 
 /* === Responsive === */

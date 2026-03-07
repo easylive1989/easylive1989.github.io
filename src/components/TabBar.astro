@@ -1,0 +1,21 @@
+---
+import type { Category } from '../lib/data';
+
+interface Props {
+  categories: Category[];
+  activeSlug: string;
+}
+
+const { categories, activeSlug } = Astro.props;
+---
+
+<nav class="tab-bar">
+  {categories.map((cat) => (
+    <a
+      href={`${import.meta.env.BASE_URL}${cat.slug}/`}
+      class:list={['tab', { active: cat.slug === activeSlug }]}
+    >
+      {cat.name}
+    </a>
+  ))}
+</nav>

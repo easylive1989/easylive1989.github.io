@@ -14,13 +14,6 @@ export interface Author {
   links: AuthorLink[];
 }
 
-export interface NotionDatabase {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-}
-
 export interface SiteConfig {
   site: {
     title: string;
@@ -29,7 +22,8 @@ export interface SiteConfig {
   };
   author: Author;
   notion: {
-    databases: NotionDatabase[];
+    databaseId: string;
+    defaultCategory: string;
   };
   build: {
     schedule: string;

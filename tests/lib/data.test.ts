@@ -28,27 +28,28 @@ vi.mock('../../src/lib/config', () => ({
     site: { title: 'Test', description: 'Test', url: 'http://localhost' },
     author: { name: 'Test', avatar: '', bio: '', links: [] },
     notion: {
-      databases: [
-        { id: 'db-1', name: 'Series A', slug: 'series-a', description: 'Desc A' },
-      ],
+      databaseId: 'db-1',
+      defaultCategory: '開發日常',
     },
     build: { schedule: '0 0 * * *' },
   }),
 }));
 
-import { getAllSeries } from '../../src/lib/data';
+import { getAllCategories, getAllArticles, getArticlesByCategory } from '../../src/lib/data';
 import { fetchDatabase } from '../../src/lib/notion';
 
-describe('getAllSeries', () => {
-  it('returns series from config with article counts', async () => {
+describe('getAllCategories', () => {
+  it('returns unique categories from articles', async () => {
     (fetchDatabase as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: 'p1', title: 'Post 1', slug: 'post-1', description: '', tags: [], publishedDate: '2026-01-01', order: null, cover: null },
-      { id: 'p2', title: 'Post 2', slug: 'post-2', description: '', tags: [], publishedDate: '2026-01-02', order: null, cover: null },
+      { id: 'p1', title: 'Post 1', category: 'Cat A', createdTime: '2026-01-01T00:00:00.000Z' },
+      { id: 'p2', title: 'Post 2', category: 'Cat A', createdTime: '2026-01-02T00:00:00.000Z' },
+      { id: 'p3', title: 'Post 3', category: 'Cat B', createdTime: '2026-01-03T00:00:00.000Z' },
     ]);
 
-    const series = await getAllSeries();
-    expect(series).toHaveLength(1);
-    expect(series[0].slug).toBe('series-a');
-    expect(series[0].articleCount).toBe(2);
+    const categories = await getAllCategories();
+    expect(categories).toHaveLength(2);
+    expect(categories[0].name).toBe('Cat A');
+    expect(categories[1].name).toBe('Cat B');
+    expect(categories[0].slug).toHaveLength(8);
   });
 });

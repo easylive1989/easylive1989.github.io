@@ -8,12 +8,7 @@ describe('loadConfig', () => {
     expect(config.site.title).toBe('Learn with Paul');
     expect(config.author.name).toBeDefined();
     expect(config.author.links).toBeInstanceOf(Array);
-    expect(config.notion.databases).toBeInstanceOf(Array);
-    expect(config.notion.databases.length).toBeGreaterThan(0);
-
-    const db = config.notion.databases[0];
-    expect(db.id).toBeDefined();
-    expect(db.slug).toBeDefined();
-    expect(db.name).toBeDefined();
+    expect(config.notion.databaseId).toBeDefined();
+    expect(config.notion.defaultCategory).toBeDefined();
   });
 });

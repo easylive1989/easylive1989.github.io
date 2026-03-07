@@ -3,12 +3,8 @@ import type { Client } from '@notionhq/client';
 export interface Article {
   id: string;
   title: string;
-  slug: string;
-  description: string;
-  tags: string[];
-  publishedDate: string;
-  order: number | null;
-  cover: string | null;
+  category: string;
+  createdTime: string;
 }
 
 export interface NotionBlock {
@@ -19,15 +15,7 @@ export interface NotionBlock {
   [key: string]: unknown;
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\u4e00-\u9fff]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
 function getTitleText(props: any): string {
-  // Try common title property names
   const titleProp = props.Title ?? props.Name ?? props.name;
   return titleProp?.title?.[0]?.plain_text ?? 'Untitled';
 }
@@ -44,30 +32,22 @@ export async function fetchDatabase(
       const response = await client.databases.query({
         database_id: databaseId,
         filter: {
-          property: '狀態',
-          select: { equals: '完成' },
+          property: 'Status',
+          status: { equals: 'Done' },
         },
+        sorts: [{ property: 'Created time', direction: 'descending' }],
         start_cursor: cursor,
       });
 
       for (const page of response.results) {
         const p = page as any;
         const props = p.properties;
-        const title = getTitleText(props);
 
         pages.push({
           id: p.id,
-          title,
-          slug: props.Slug?.rich_text?.[0]?.plain_text ?? (slugify(title) || p.id),
-          description: props.Description?.rich_text?.[0]?.plain_text ?? '',
-          tags: props.Tags?.multi_select?.map((t: any) => t.name) ?? [],
-          publishedDate: props.PublishedDate?.date?.start ?? p.created_time?.slice(0, 10) ?? '',
-          order: props.Order?.number ?? null,
-          cover: props.Cover?.files?.[0]?.file?.url
-            ?? props.Cover?.files?.[0]?.external?.url
-            ?? p.cover?.file?.url
-            ?? p.cover?.external?.url
-            ?? null,
+          title: getTitleText(props),
+          category: props.Category?.select?.name ?? '',
+          createdTime: p.created_time,
         });
       }
 

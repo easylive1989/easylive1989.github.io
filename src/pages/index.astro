@@ -1,25 +1,31 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AuthorCard from '../components/AuthorCard.astro';
-import SeriesCard from '../components/SeriesCard.astro';
-import { getAllSeries } from '../lib/data';
+import TabBar from '../components/TabBar.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { loadConfig } from '../lib/config';
+import { getAllCategories, getArticlesByCategory } from '../lib/data';
+import { categorySlug } from '../lib/category';
 
-const series = await getAllSeries();
+const config = loadConfig();
+const categories = await getAllCategories();
+const defaultSlug = categorySlug(config.notion.defaultCategory);
+const articles = await getArticlesByCategory(defaultSlug);
 ---
 
 <BaseLayout>
   <AuthorCard />
+  <TabBar categories={categories} activeSlug={defaultSlug} />
 
-  <section class="series-list">
-    <h1>文章系列</h1>
-    {series.length === 0 && <p>目前沒有文章系列。</p>}
-    {series.map((s) => (
-      <SeriesCard
-        name={s.name}
-        slug={s.slug}
-        description={s.description}
-        articleCount={s.articleCount}
+  <div class="article-list">
+    {articles.length === 0 && <p>目前沒有文章。</p>}
+    {articles.map((article) => (
+      <ArticleCard
+        title={article.title}
+        articleId={article.id}
+        categorySlug={defaultSlug}
+        createdTime={article.createdTime}
       />
     ))}
-  </section>
+  </div>
 </BaseLayout>

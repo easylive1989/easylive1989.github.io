@@ -2,30 +2,30 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import NotionRenderer from '../../components/notion/NotionRenderer.astro';
 import { loadConfig } from '../../lib/config';
-import { getArticle, getAllArticlesForStaticPaths, getSeriesArticles } from '../../lib/data';
+import { getArticle, getAllArticlesForStaticPaths, getArticlesByCategory } from '../../lib/data';
 
 export async function getStaticPaths() {
   const paths = await getAllArticlesForStaticPaths();
   return paths.map((p) => ({
-    params: { series: p.seriesSlug, slug: p.articleSlug },
+    params: { category: p.categorySlug, slug: p.articleId },
   }));
 }
 
-const { series, slug } = Astro.params;
-const data = await getArticle(series!, slug!);
+const { category, slug } = Astro.params;
+const data = await getArticle(category!, slug!);
 
 if (!data) {
   return Astro.redirect('/404');
 }
 
-const { article, blocks, seriesSlug, seriesName } = data;
+const { article, blocks, categorySlug, categoryName } = data;
 
-const allArticles = await getSeriesArticles(seriesSlug);
-const currentIndex = allArticles.findIndex((a) => a.slug === slug);
+const allArticles = await getArticlesByCategory(categorySlug);
+const currentIndex = allArticles.findIndex((a) => a.id === slug);
 const prevArticle = currentIndex < allArticles.length - 1 ? allArticles[currentIndex + 1] : null;
 const nextArticle = currentIndex > 0 ? allArticles[currentIndex - 1] : null;
 
-const formattedDate = new Date(article.publishedDate).toLocaleDateString('zh-TW', {
+const formattedDate = new Date(article.createdTime).toLocaleDateString('zh-TW', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
@@ -34,19 +34,14 @@ const formattedDate = new Date(article.publishedDate).toLocaleDateString('zh-TW'
 const config = loadConfig();
 ---
 
-<BaseLayout title={article.title} description={article.description}>
+<BaseLayout title={article.title}>
   <article class="article-page">
-    <a href={`${import.meta.env.BASE_URL}${seriesSlug}/`} class="back-link">&larr; {seriesName}</a>
+    <a href={`${import.meta.env.BASE_URL}${categorySlug}/`} class="back-link">&larr; {categoryName}</a>
 
     <header class="article-header">
       <h1>{article.title}</h1>
       <div class="article-meta">
-        <time datetime={article.publishedDate}>{formattedDate}</time>
-        {article.tags.length > 0 && (
-          <div class="article-tags">
-            {article.tags.map((tag) => <span class="tag">{tag}</span>)}
-          </div>
-        )}
+        <time datetime={article.createdTime}>{formattedDate}</time>
       </div>
     </header>
 
@@ -56,12 +51,12 @@ const config = loadConfig();
 
     <nav class="article-nav">
       {prevArticle && (
-        <a href={`${import.meta.env.BASE_URL}${seriesSlug}/${prevArticle.slug}/`} class="nav-prev">
+        <a href={`${import.meta.env.BASE_URL}${categorySlug}/${prevArticle.id}/`} class="nav-prev">
           &larr; {prevArticle.title}
         </a>
       )}
       {nextArticle && (
-        <a href={`${import.meta.env.BASE_URL}${seriesSlug}/${nextArticle.slug}/`} class="nav-next">
+        <a href={`${import.meta.env.BASE_URL}${categorySlug}/${nextArticle.id}/`} class="nav-next">
           {nextArticle.title} &rarr;
         </a>
       )}
@@ -72,8 +67,7 @@ const config = loadConfig();
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "headline": article.title,
-    "description": article.description,
-    "datePublished": article.publishedDate,
+    "datePublished": article.createdTime,
     "author": {
       "@type": "Person",
       "name": config.author.name,

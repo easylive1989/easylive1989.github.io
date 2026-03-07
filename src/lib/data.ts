@@ -3,6 +3,7 @@ import { Client } from '@notionhq/client';
 import { loadConfig } from './config';
 import { fetchDatabase, fetchPageBlocks, type Article, type NotionBlock } from './notion';
 import { replaceImageUrls, downloadImages } from './images';
+import { categorySlug } from './category';
 import path from 'node:path';
 
 function getNotionClient(): Client | null {
@@ -14,75 +15,58 @@ function getNotionClient(): Client | null {
   return new Client({ auth: token });
 }
 
-export interface Series {
-  id: string;
+export interface Category {
   name: string;
   slug: string;
-  description: string;
-  articleCount: number;
 }
 
-export async function getAllSeries(): Promise<Series[]> {
-  const config = loadConfig();
-  const client = getNotionClient();
-  if (!client) {
-    return config.notion.databases.map((db) => ({
-      id: db.id, name: db.name, slug: db.slug, description: db.description, articleCount: 0,
-    }));
-  }
-
-  const series: Series[] = [];
-
-  for (const db of config.notion.databases) {
-    const articles = await fetchDatabase(client, db.id);
-    series.push({
-      id: db.id,
-      name: db.name,
-      slug: db.slug,
-      description: db.description,
-      articleCount: articles.length,
-    });
-  }
-
-  return series;
-}
-
-export async function getSeriesArticles(seriesSlug: string): Promise<Article[]> {
+export async function getAllArticles(): Promise<Article[]> {
   const config = loadConfig();
   const client = getNotionClient();
   if (!client) return [];
-  const db = config.notion.databases.find((d) => d.slug === seriesSlug);
+  return fetchDatabase(client, config.notion.databaseId);
+}
 
-  if (!db) return [];
+export async function getAllCategories(): Promise<Category[]> {
+  const articles = await getAllArticles();
+  const seen = new Set<string>();
+  const categories: Category[] = [];
 
-  return fetchDatabase(client, db.id);
+  for (const article of articles) {
+    if (!article.category || seen.has(article.category)) continue;
+    seen.add(article.category);
+    categories.push({ name: article.category, slug: categorySlug(article.category) });
+  }
+
+  return categories;
+}
+
+export async function getArticlesByCategory(slug: string): Promise<Article[]> {
+  const articles = await getAllArticles();
+  return articles.filter((a) => categorySlug(a.category) === slug);
 }
 
 export interface ArticleWithContent {
   article: Article;
   blocks: NotionBlock[];
-  seriesSlug: string;
-  seriesName: string;
+  categorySlug: string;
+  categoryName: string;
 }
 
 export async function getArticle(
-  seriesSlug: string,
-  articleSlug: string,
+  catSlug: string,
+  articleId: string,
 ): Promise<ArticleWithContent | null> {
-  const config = loadConfig();
   const client = getNotionClient();
   if (!client) return null;
-  const db = config.notion.databases.find((d) => d.slug === seriesSlug);
 
-  if (!db) return null;
+  const articles = await getAllArticles();
+  const article = articles.find((a) => a.id === articleId);
 
-  const articles = await fetchDatabase(client, db.id);
-  const article = articles.find((a) => a.slug === articleSlug);
-
-  if (!article) return null;
+  if (!article || categorySlug(article.category) !== catSlug) return null;
 
   const rawBlocks = await fetchPageBlocks(client, article.id);
-  const { blocks, imageMap } = replaceImageUrls(rawBlocks, seriesSlug, articleSlug);
+  const { blocks, imageMap } = replaceImageUrls(rawBlocks, catSlug, articleId);
 
   const publicDir = path.resolve(process.cwd(), 'public');
   const distDir = path.resolve(process.cwd(), 'dist');
@@ -91,25 +75,17 @@ export async function getArticle(
   return {
     article,
     blocks,
-    seriesSlug,
-    seriesName: db.name,
+    categorySlug: catSlug,
+    categoryName: article.category,
   };
 }
 
 export async function getAllArticlesForStaticPaths(): Promise<
-  { seriesSlug: string; articleSlug: string }[]
+  { categorySlug: string; articleId: string }[]
 > {
-  const config = loadConfig();
-  const client = getNotionClient();
-  if (!client) return [];
-  const paths: { seriesSlug: string; articleSlug: string }[] = [];
-
-  for (const db of config.notion.databases) {
-    const articles = await fetchDatabase(client, db.id);
-    for (const article of articles) {
-      paths.push({ seriesSlug: db.slug, articleSlug: article.slug });
-    }
-  }
-
-  return paths;
+  const articles = await getAllArticles();
+  return articles.map((a) => ({
+    categorySlug: categorySlug(a.category),
+    articleId: a.id,
+  }));
 }

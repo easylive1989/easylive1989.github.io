@@ -15,14 +15,15 @@ function createMockClient() {
 }
 
 describe('fetchDatabase', () => {
-  it('queries database and returns articles with 完成 status', async () => {
+  it('queries database and returns articles with Done status', async () => {
     const mockPages = [
       {
         id: 'page-1',
         created_time: '2026-01-15T00:00:00.000Z',
         properties: {
           Name: { title: [{ plain_text: 'First Post' }] },
-          '狀態': { select: { name: '完成' } },
+          Status: { status: { name: 'Done' } },
+          Category: { select: { name: 'Cat A' } },
         },
         cover: null,
       },
@@ -40,14 +41,14 @@ describe('fetchDatabase', () => {
       expect.objectContaining({
         database_id: 'db-id-1',
         filter: expect.objectContaining({
-          property: '狀態',
+          property: 'Status',
         }),
       })
     );
     expect(articles).toHaveLength(1);
     expect(articles[0].title).toBe('First Post');
-    expect(articles[0].slug).toBe('first-post');
-    expect(articles[0].publishedDate).toBe('2026-01-15');
+    expect(articles[0].category).toBe('Cat A');
+    expect(articles[0].createdTime).toBe('2026-01-15T00:00:00.000Z');
   });
 });
 
@@ -86,9 +87,7 @@ describe('fetchPageBlocks', () => {
     const mockClient = createMockClient();
     const listFn = mockClient.blocks.children.list;
 
-    // First call: top-level blocks
     listFn.mockResolvedValueOnce({ results: mockBlocks, has_more: false });
-    // Second call: children of toggle block
     listFn.mockResolvedValueOnce({ results: childBlocks, has_more: false });
 
     const blocks = await fetchPageBlocks(mockClient as any, 'page-1');

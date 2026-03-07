@@ -16,15 +16,8 @@ author:
       url: "mailto:hello@example.com"
 
 notion:
-  databases:
-    - id: "41d5ffc8ef2d4f7c80d812ba2db5ce8d"
-      name: "30 天輕鬆學會 Flutter 測試"
-      slug: "series-1"
-      description: "從零開始學習 Flutter 測試"
-    - id: "76aeb1020ede4545bcefe80c245d03fb"
-      name: "Flutter 開發設計雜談"
-      slug: "series-2"
-      description: "Flutter 開發中的設計思考與實踐"
+  databaseId: "31c8303f78f78086a16fdffcd6dd1777"
+  defaultCategory: "開發日常"
 
 build:
   schedule: "0 0 * * *"

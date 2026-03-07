@@ -1,31 +1,23 @@
 ---
 interface Props {
   title: string;
-  slug: string;
-  seriesSlug: string;
-  description: string;
-  publishedDate: string;
-  tags: string[];
+  articleId: string;
+  categorySlug: string;
+  createdTime: string;
 }
 
-const { title, slug, seriesSlug, description, publishedDate, tags } = Astro.props;
+const { title, articleId, categorySlug, createdTime } = Astro.props;
 
-const formattedDate = new Date(publishedDate).toLocaleDateString('zh-TW', {
+const formattedDate = new Date(createdTime).toLocaleDateString('zh-TW', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
 });
 ---
 
-<a href={`${import.meta.env.BASE_URL}${seriesSlug}/${slug}/`} class="article-card">
+<a href={`${import.meta.env.BASE_URL}${categorySlug}/${articleId}/`} class="article-card">
   <h3 class="article-title">{title}</h3>
-  {description && <p class="article-description">{description}</p>}
   <div class="article-meta">
-    <time datetime={publishedDate}>{formattedDate}</time>
-    {tags.length > 0 && (
-      <div class="article-tags">
-        {tags.map((tag) => <span class="tag">{tag}</span>)}
-      </div>
-    )}
+    <time datetime={createdTime}>{formattedDate}</time>
   </div>
 </a>
