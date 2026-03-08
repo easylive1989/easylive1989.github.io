@@ -26,7 +26,7 @@ function escapeHtml(str: string): string {
 export function renderRichText(richText: RichTextItem[]): string {
   return richText
     .map((item) => {
-      let text = escapeHtml(item.text.content);
+      let text = escapeHtml(item.text?.content ?? item.plain_text ?? '');
 
       if (item.annotations.code) {
         text = `<code>${text}</code>`;
@@ -44,7 +44,7 @@ export function renderRichText(richText: RichTextItem[]): string {
         text = `<u>${text}</u>`;
       }
 
-      if (item.text.link) {
+      if (item.text?.link) {
         text = `<a href="${escapeHtml(item.text.link.url)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
       }
 
