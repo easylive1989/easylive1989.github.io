@@ -6,10 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "astro": "astro"
   },
   "dependencies": {
     "@notionhq/client": "^2.3.0",
@@ -18,8 +15,6 @@
     "yaml": "^2.8.2"
   },
   "devDependencies": {
-    "@astrojs/sitemap": "^3.7.0",
-    "@playwright/test": "^1.58.2",
-    "vitest": "^4.0.18"
+    "@astrojs/sitemap": "^3.7.0"
   }
 }
