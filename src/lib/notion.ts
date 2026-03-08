@@ -17,7 +17,9 @@ export interface NotionBlock {
 
 function getTitleText(props: any): string {
   const titleProp = props.Title ?? props.Name ?? props.name;
-  return titleProp?.title?.[0]?.plain_text ?? 'Untitled';
+  const titleArr = titleProp?.title;
+  if (!titleArr || titleArr.length === 0) return 'Untitled';
+  return titleArr.map((t: any) => t.plain_text).join('');
 }
 
 export async function fetchDatabase(
