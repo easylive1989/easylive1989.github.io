@@ -33,9 +33,31 @@ jobs:
         run: npm ci
 
       - name: Build site
+        id: build
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-        run: npx astro build
+        run: npx astro build 2>&1 | tee build.log
+
+      - name: Notify Discord on success
+        if: success()
+        run: |
+          curl -s -H "Content-Type: application/json" \
+            -d "{\"content\":\"✅ **Build 成功**\nBranch: \`${{ github.ref_name }}\`\nCommit: \`${{ github.sha }}\`\n[查看詳情](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\"}" \
+            "${{ secrets.DISCORD_WEBHOOK_URL }}"
+
+      - name: Notify Discord on failure
+        if: failure()
+        run: |
+          ERROR=$(tail -30 build.log | head -c 1500 || echo "無法取得錯誤訊息")
+          PAYLOAD=$(jq -n --arg msg "❌ **Build 失敗**
+          Branch: \`${{ github.ref_name }}\`
+          Commit: \`${{ github.sha }}\`
+          [查看詳情](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          \`\`\`
+          $ERROR
+          \`\`\`" '{content: $msg}')
+          curl -s -H "Content-Type: application/json" -d "$PAYLOAD" "${{ secrets.DISCORD_WEBHOOK_URL }}"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
