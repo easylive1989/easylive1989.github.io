@@ -6,5 +6,26 @@ const config = loadConfig();
 <header>
   <nav>
     <a href={import.meta.env.BASE_URL} class="site-title">{config.site.title}</a>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+      <img class="theme-icon sun-icon" src={`${import.meta.env.BASE_URL}assets/sun.svg`} alt="Light mode" />
+      <img class="theme-icon moon-icon" src={`${import.meta.env.BASE_URL}assets/moon.svg`} alt="Dark mode" />
+    </button>
   </nav>
 </header>
+
+<style>
+  .theme-icon {
+    display: none;
+  }
+  /* In light mode, show moon icon (click to switch to dark) */
+  :global(:root) .moon-icon {
+    display: block;
+  }
+  /* In dark mode, show sun icon (click to switch to light) */
+  :global([data-theme="dark"]) .sun-icon {
+    display: block;
+  }
+  :global([data-theme="dark"]) .moon-icon {
+    display: none;
+  }
+</style>
