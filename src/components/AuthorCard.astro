@@ -33,3 +33,94 @@ const iconMap: Record<string, { src: string; label: string }> = {
     </div>
   </div>
 </div>
+
+<div class="about-toggle" id="about-toggle">
+  <button class="about-toggle-btn" id="about-toggle-btn">
+    <span class="about-toggle-arrow">▶</span>
+    <span>更多關於 Paul</span>
+  </button>
+  <div class="about-detail">
+    <div class="about-detail-inner">
+      <p><strong>INTP</strong> — Flutter x 品質至上 x 持續學習</p>
+      <p>從事軟體開發超過十年，目前主要開發 Flutter App，熱愛學習各種軟體工程的知識，不斷優化產品內外品質與工作流程。</p>
+      <p>平常喜歡閱讀各類書籍，透過持續學習，把新的想法帶進專案和團隊合作中。也常常從中得到一些靈感，幫助我在設計產品時更貼近使用者的角度。</p>
+
+      <hr class="about-section-divider" />
+
+      <h3>🏫 教育程度</h3>
+      <ul>
+        <li>中央大學 資訊工程學系 碩士學位 (2011 ~ 2013)</li>
+        <li>淡江大學 資訊工程學系 學士學位 (2007 ~ 2011)</li>
+      </ul>
+
+      <hr class="about-section-divider" />
+
+      <h3>☸️ 工作經驗</h3>
+      <h4>緯雲軟體 (2021/09 ~ Now)</h4>
+      <ul>
+        <li>發展測試 Flutter App 測試流程與工具</li>
+      </ul>
+      <h4>鈦坦科技 (2017/05 ~ 2021/08)</h4>
+      <ul>
+        <li>使用 Flutter 開發 Android / iOS App</li>
+        <li>使用 .Net Core 開發 Web API</li>
+        <li>使用 Vue 開發網站前端</li>
+      </ul>
+      <h4>訊連科技 (2013/09 ~ 2017/04)</h4>
+      <ul>
+        <li>Android 即時通訊 App 架構設計與開發</li>
+        <li>Android 相片編輯 App 功能開發與優化</li>
+      </ul>
+
+      <hr class="about-section-divider" />
+
+      <h3>🛠️ 專業技能</h3>
+      <div class="skill-columns">
+        <div class="skill-column">
+          <h4>語言與框架</h4>
+          <ul>
+            <li>Dart / Flutter</li>
+            <li>Java / Spring Boot</li>
+            <li>Javascript / React</li>
+            <li>C# / .NET</li>
+            <li>Python</li>
+          </ul>
+        </div>
+        <div class="skill-column">
+          <h4>工具與服務</h4>
+          <ul>
+            <li>VIM / Git / GitHub</li>
+            <li>Firebase</li>
+            <li>IntelliJ IDEA</li>
+            <li>Notion / Miro / Raycast</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="about-section-divider" />
+
+      <h3>🏛️ 公開競賽與演講</h3>
+      <ul>
+        <li>✍️ <strong>[2020]</strong> IT 幫鐵人賽 完賽：<a href="https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1" target="_blank" rel="noopener noreferrer">在Kata中尋找Clean Code是否搞錯了什麼</a></li>
+        <li>✍️ <strong>[2022]</strong> IT 幫鐵人賽 佳作：<a href="https://ithelp.ithome.com.tw/users/20129825/ironman/4992" target="_blank" rel="noopener noreferrer">關於 Flutter 開發的一些設計雜談</a></li>
+        <li>✍️ <strong>[2023]</strong> IT 幫鐵人賽 佳作：<a href="https://ithelp.ithome.com.tw/users/20129825/ironman/5974" target="_blank" rel="noopener noreferrer">30 天輕鬆學會 Flutter 測試</a></li>
+        <li>📣 <strong>[2024]</strong> iThome 鐵人講堂：<a href="https://itplus.ithome.com.tw/webinar-page/237" target="_blank" rel="noopener noreferrer">Flutter Widget Test 的深度探索</a></li>
+      </ul>
+
+      <hr class="about-section-divider" />
+
+      <h3>📚 出版書籍</h3>
+      <p>30 天輕鬆學會 Flutter 測試</p>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function() {
+    var toggle = document.getElementById('about-toggle');
+    var btn = document.getElementById('about-toggle-btn');
+    btn.addEventListener('click', function() {
+      toggle.classList.toggle('open');
+    });
+  })();
+</script>
