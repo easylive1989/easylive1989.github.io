@@ -163,6 +163,11 @@ footer {
   margin-bottom: 0.5rem;
 }
 
+.author-links-row {
+  display: flex;
+  align-items: center;
+}
+
 .author-links {
   display: flex;
   gap: 1rem;
@@ -572,13 +577,12 @@ th {
 .about-toggle-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
   background: none;
   border: none;
   cursor: pointer;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  padding: 0.25rem 0;
+  padding: 0.25rem;
+  margin-left: auto;
   transition: color 0.2s;
 }
 
@@ -586,14 +590,13 @@ th {
   color: var(--color-text);
 }
 
-.about-toggle-arrow {
-  display: inline-block;
+.about-toggle-chevron {
+  display: block;
   transition: transform 0.3s;
-  font-size: 0.75rem;
 }
 
-.about-toggle.open .about-toggle-arrow {
-  transform: rotate(90deg);
+.about-toggle-btn.open .about-toggle-chevron {
+  transform: rotate(180deg);
 }
 
 .about-detail {
@@ -688,6 +691,10 @@ th {
   .author-card {
     flex-direction: column;
     text-align: center;
+  }
+
+  .author-links-row {
+    justify-content: center;
   }
 
   .author-links {
