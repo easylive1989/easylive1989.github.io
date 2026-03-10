@@ -1,0 +1,25 @@
+name: Cloudflare Analytics Report
+
+on:
+  schedule:
+    - cron: '30 0 * * *'  # 每天 UTC 00:30 (台灣時間 08:30)
+  workflow_dispatch:       # 允許手動觸發
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch analytics and send report
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: node scripts/cloudflare-analytics.js
