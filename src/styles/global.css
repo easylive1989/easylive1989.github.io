@@ -65,30 +65,6 @@ main {
 }
 
 /* === Header === */
-header {
-  border-bottom: 1px solid var(--color-border);
-  padding: 1rem 1.5rem;
-}
-
-header nav {
-  max-width: 720px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.site-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.site-title:hover {
-  color: var(--color-text-secondary);
-}
-
 /* === Theme Toggle === */
 .theme-toggle {
   background: none;
@@ -98,12 +74,29 @@ header nav {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--color-text);
   opacity: 0.7;
   transition: opacity 0.2s;
 }
 
 .theme-toggle:hover {
   opacity: 1;
+}
+
+.theme-icon {
+  display: none;
+}
+
+.moon-icon {
+  display: block;
+}
+
+[data-theme="dark"] .sun-icon {
+  display: block;
+}
+
+[data-theme="dark"] .moon-icon {
+  display: none;
 }
 
 .theme-toggle img {
@@ -153,9 +146,20 @@ footer {
   object-fit: cover;
 }
 
+.author-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.author-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
 .author-name {
   font-size: 1.25rem;
-  margin-bottom: 0.25rem;
 }
 
 .author-bio {
@@ -262,9 +266,15 @@ footer {
 }
 
 /* === Article Page === */
+.article-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
 .back-link {
   display: inline-block;
-  margin-bottom: 2rem;
   color: var(--color-text-secondary);
   text-decoration: none;
   font-size: 0.875rem;

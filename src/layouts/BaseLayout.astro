@@ -1,6 +1,5 @@
 ---
 import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
 import { loadConfig } from '../lib/config';
 import '../styles/global.css';
 
@@ -66,7 +65,6 @@ const canonicalUrl = new URL(Astro.url.pathname, config.site.url);
     </script>
   </head>
   <body>
-    <Header />
     <main>
       <slot />
     </main>
