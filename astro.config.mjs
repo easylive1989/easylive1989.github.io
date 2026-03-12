@@ -5,6 +5,9 @@ export default defineConfig({
   site: 'https://paul-learning.dev',
   integrations: [sitemap()],
   output: 'static',
+  build: {
+    inlineStylesheets: 'always',
+  },
   vite: {
     ssr: {
       external: ['@notionhq/client'],
