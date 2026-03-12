@@ -189,6 +189,10 @@ footer {
   transform: translateY(-2px);
 }
 
+[data-theme="dark"] .author-links img {
+  filter: invert(1);
+}
+
 /* === Tab Bar === */
 .tab-bar {
   display: flex;
