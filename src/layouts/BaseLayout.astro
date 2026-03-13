@@ -1,4 +1,5 @@
 ---
+import { ViewTransitions } from 'astro:transitions';
 import Footer from '../components/Footer.astro';
 import { loadConfig } from '../lib/config';
 import '../styles/global.css';
@@ -47,9 +48,11 @@ const canonicalUrl = new URL(Astro.url.pathname, config.site.url);
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
 
+    <ViewTransitions />
+
     <!-- Theme initialization (inline to prevent flash) -->
     <script is:inline>
-      (function() {
+      function applyTheme() {
         var params = new URLSearchParams(window.location.search);
         var themeParam = params.get('theme');
         var theme;
@@ -61,8 +64,12 @@ const canonicalUrl = new URL(Astro.url.pathname, config.site.url);
         }
         if (theme === 'dark') {
           document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
         }
-      })();
+      }
+      applyTheme();
+      document.addEventListener('astro:after-swap', applyTheme);
     </script>
   </head>
   <body>
@@ -79,31 +86,41 @@ const canonicalUrl = new URL(Astro.url.pathname, config.site.url);
     </button>
 
     <script is:inline>
-      document.getElementById('theme-toggle').addEventListener('click', function() {
-        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        var newTheme = isDark ? 'light' : 'dark';
-        if (newTheme === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-          document.documentElement.removeAttribute('data-theme');
+      function setupPage() {
+        var toggle = document.getElementById('theme-toggle');
+        if (toggle) {
+          toggle.addEventListener('click', function() {
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            var newTheme = isDark ? 'light' : 'dark';
+            if (newTheme === 'dark') {
+              document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+              document.documentElement.removeAttribute('data-theme');
+            }
+            localStorage.setItem('theme', newTheme);
+          });
         }
-        localStorage.setItem('theme', newTheme);
-      });
 
-      // Back to Top
-      (function() {
         var btn = document.getElementById('back-to-top');
-        window.addEventListener('scroll', function() {
-          if (window.scrollY > 300) {
-            btn.classList.add('visible');
-          } else {
-            btn.classList.remove('visible');
+        if (btn) {
+          function onScroll() {
+            if (window.scrollY > 300) {
+              btn.classList.add('visible');
+            } else {
+              btn.classList.remove('visible');
+            }
           }
-        });
-        btn.addEventListener('click', function() {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      })();
+          window.addEventListener('scroll', onScroll);
+          btn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+          document.addEventListener('astro:before-swap', function() {
+            window.removeEventListener('scroll', onScroll);
+          }, { once: true });
+        }
+      }
+
+      document.addEventListener('astro:page-load', setupPage);
     </script>
   </body>
 </html>
