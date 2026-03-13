@@ -33,6 +33,7 @@ const canonicalUrl = new URL(Astro.url.pathname, config.site.url);
     <link rel="icon" type="image/png" sizes="32x32" href={`${import.meta.env.BASE_URL}favicon-32x32.png`} />
     <link rel="icon" type="image/png" sizes="16x16" href={`${import.meta.env.BASE_URL}favicon-16x16.png`} />
     <link rel="canonical" href={canonicalUrl.href} />
+    <link rel="alternate" type="application/rss+xml" title={config.site.title} href="/rss.xml" />
 
     <!-- Open Graph -->
     <meta property="og:title" content={pageTitle} />

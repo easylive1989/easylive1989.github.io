@@ -21,7 +21,11 @@ const iconMap: Record<string, { src: string; label: string }> = {
   <div class="author-info">
     <div class="author-name-row">
       <h2 class="author-name">{config.author.name}</h2>
-      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+      <div class="header-icons">
+        <a href="/rss.xml" class="rss-link" aria-label="RSS Feed" target="_blank" rel="noopener noreferrer">
+          <img src={`${import.meta.env.BASE_URL}assets/rss.svg`} alt="RSS Feed" width="20" height="20" />
+        </a>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
         <svg class="theme-icon sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="4"/>
           <line x1="12" y1="2" x2="12" y2="5"/>
@@ -37,6 +41,7 @@ const iconMap: Record<string, { src: string; label: string }> = {
           <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
         </svg>
       </button>
+      </div>
     </div>
     <p class="author-bio">{config.author.bio.split('\n').map((line: string, i: number) => i === 0 ? line : [<br />, line])}</p>
     <div class="author-links-row">

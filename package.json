@@ -9,6 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.17",
     "@notionhq/client": "^2.3.0",
     "astro": "^5.17.2",
     "dotenv": "^17.3.1",
