@@ -345,6 +345,33 @@ footer {
   margin-bottom: 0.5rem;
 }
 
+/* === Anchor Links === */
+.heading-anchor-target {
+  position: relative;
+}
+
+.anchor-link {
+  position: absolute;
+  left: -1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+  font-weight: 400;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 0.9em;
+  user-select: none;
+}
+
+.heading-anchor-target:hover .anchor-link {
+  opacity: 1;
+}
+
+.anchor-link:hover {
+  color: var(--color-text-secondary);
+}
+
 .article-content ul,
 .article-content ol {
   margin-bottom: 1.25rem;

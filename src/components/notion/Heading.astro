@@ -7,8 +7,29 @@ const { block } = Astro.props;
 const level = block.type.replace('heading_', '');
 const data = (block as any)[block.type];
 const text = renderRichText(data.rich_text);
-const id = data.rich_text.map((t: any) => t.plain_text).join('').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const rawText = data.rich_text.map((t: any) => t.plain_text).join('');
+const id = rawText
+  .toLowerCase()
+  .trim()
+  .replace(/\s+/g, '-')
+  .replace(/[^\w\u4e00-\u9fff-]/g, '')
+  .replace(/^-+|-+$/g, '');
 ---
-{level === '1' && <h2 id={id} set:html={text} />}
-{level === '2' && <h3 id={id} set:html={text} />}
-{level === '3' && <h4 id={id} set:html={text} />}
+{level === '1' && (
+  <h2 id={id} class="heading-anchor-target">
+    <a href={`#${id}`} class="anchor-link" aria-hidden="true">#</a>
+    <Fragment set:html={text} />
+  </h2>
+)}
+{level === '2' && (
+  <h3 id={id} class="heading-anchor-target">
+    <a href={`#${id}`} class="anchor-link" aria-hidden="true">#</a>
+    <Fragment set:html={text} />
+  </h3>
+)}
+{level === '3' && (
+  <h4 id={id} class="heading-anchor-target">
+    <a href={`#${id}`} class="anchor-link" aria-hidden="true">#</a>
+    <Fragment set:html={text} />
+  </h4>
+)}
