@@ -7,10 +7,11 @@
   --color-bg-secondary: #f9f9f9;
   --color-bg-tag: #f5f5f5;
   --color-border: #eee;
-  --color-border-code: #e5e5e5;
-  --color-code-bg: #1a1a1a;
-  --color-code-text: #e5e5e5;
-  --color-code-header: #767676;
+  --color-border-code: #d0d0d0;
+  --color-code-bg: #f5f5f5;
+  --color-code-text: #1a1a1a;
+  --color-code-header-bg: #e8e8e8;
+  --color-code-header: #555555;
 }
 
 [data-theme="dark"] {
@@ -21,10 +22,11 @@
   --color-bg-secondary: #242424;
   --color-bg-tag: #2a2a2a;
   --color-border: #333;
-  --color-border-code: #444;
+  --color-border-code: #2a2a2a;
   --color-code-bg: #0d0d0d;
-  --color-code-text: #e5e5e5;
-  --color-code-header: #9a9a9a;
+  --color-code-text: #e0e0e0;
+  --color-code-header-bg: #141414;
+  --color-code-header: #888888;
 }
 
 /* === Reset & Base === */
@@ -402,10 +404,11 @@ footer {
 }
 
 .code-header {
-  background: var(--color-code-bg);
+  background: var(--color-code-header-bg);
   padding: 0.5rem 1rem;
   font-size: 0.75rem;
   color: var(--color-code-header);
+  border-bottom: 1px solid var(--color-border-code);
 }
 
 .code-block pre {
@@ -434,6 +437,19 @@ footer {
   background: var(--color-bg-tag);
   padding: 0.125rem 0.375rem;
   font-size: 0.875em;
+}
+
+/* === Shiki Dual Theme === */
+.code-block .shiki,
+.code-block .shiki span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg, var(--color-code-bg));
+}
+
+[data-theme="dark"] .code-block .shiki,
+[data-theme="dark"] .code-block .shiki span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg, var(--color-code-bg));
 }
 
 /* === Callout === */

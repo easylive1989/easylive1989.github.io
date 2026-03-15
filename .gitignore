@@ -23,3 +23,8 @@ pnpm-debug.log*
 # playwright
 test-results/
 playwright-report/
+
+
+firebase-debug.log
+public/assets/notion/
+.gemini-clipboard/
