@@ -126,7 +126,7 @@ const iconMap: Record<string, { src: string; label: string }> = {
 </div>
 
 <script is:inline>
-  (function() {
+  function setupAuthorCard() {
     var toggle = document.getElementById('about-toggle');
     var btn = document.getElementById('about-toggle-btn');
     if (btn && toggle) {
@@ -145,5 +145,7 @@ const iconMap: Record<string, { src: string; label: string }> = {
         worksBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       });
     }
-  })();
+  }
+
+  document.addEventListener('astro:page-load', setupAuthorCard);
 </script>
