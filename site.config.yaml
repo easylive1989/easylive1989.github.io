@@ -14,6 +14,15 @@ author:
       url: "https://www.threads.com/@paul.ch.wu"
     - type: email
       url: "mailto:hello@example.com"
+  works:
+    - type: appstore
+      url: "https://apps.apple.com/no/developer/cheng-hua-wu/id1837458942"
+    - type: googleplay
+      url: "https://play.google.com/store/apps/developer?id=Paul+Wu&hl=zh_TW"
+    - type: stock
+      url: "https://paul-learning.dev/tools/stock"
+    - type: timer
+      url: "https://paul-learning.dev/tools/YouTube-sport-timer"
     - type: playbox
       url: "https://easylive1989.github.io/paul-playbox/"
 

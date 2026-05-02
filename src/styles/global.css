@@ -197,7 +197,10 @@ footer {
 
 .author-links {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 1rem;
+  row-gap: 0.5rem;
 }
 
 .author-links a {
@@ -215,6 +218,49 @@ footer {
 [data-theme="dark"] .author-links img,
 [data-theme="dark"] .rss-link img {
   filter: invert(1);
+}
+
+.works-toggle {
+  background: none;
+  border: 0;
+  padding: 4px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.works-toggle:hover {
+  color: var(--color-text);
+  transform: translateY(-2px);
+}
+
+.works-toggle.active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .works-toggle.active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.works-list {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: max-width 250ms ease-out, opacity 250ms ease-out, transform 250ms ease-out;
+}
+
+.works-list.expanded {
+  max-width: 500px;
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* === Tab Bar === */

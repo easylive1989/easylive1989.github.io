@@ -12,6 +12,7 @@ export interface Author {
   avatar: string;
   bio: string;
   links: AuthorLink[];
+  works: AuthorLink[];
 }
 
 export interface SiteConfig {
