@@ -6,11 +6,8 @@ const iconMap: Record<string, { src: string; label: string }> = {
   github: { src: 'assets/github.svg', label: 'GitHub' },
   threads: { src: 'assets/threads.svg', label: 'Threads' },
   email: { src: 'assets/email.svg', label: 'Email' },
-  works: { src: 'assets/works.svg', label: '作品集' },
   appstore: { src: 'assets/appstore.svg', label: 'App Store' },
   googleplay: { src: 'assets/googleplay.svg', label: 'Google Play' },
-  stock: { src: 'assets/stock.svg', label: '股票工具' },
-  timer: { src: 'assets/timer.svg', label: 'YouTube Sport Timer' },
   playbox: { src: 'assets/playbox.svg', label: 'Paul Playbox' },
 };
 ---
@@ -51,28 +48,25 @@ const iconMap: Record<string, { src: string; label: string }> = {
     <p class="author-bio">{config.author.bio.split('\n').map((line: string, i: number) => i === 0 ? line : [<br />, line])}</p>
     <div class="author-links-row">
       <div class="author-links">
-        {config.author.links.map((link) => {
-          const icon = iconMap[link.type];
-          return (
-            <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={icon?.label ?? link.type}>
-              <img src={`${import.meta.env.BASE_URL}${icon?.src}`} alt={icon?.label ?? link.type} width="20" height="20" />
-            </a>
-          );
-        })}
-        <div class="works-group" id="works-group">
-          <button class="works-toggle" id="works-toggle" aria-label="作品集" aria-expanded="false">
-            <img src={`${import.meta.env.BASE_URL}${iconMap.works.src}`} alt={iconMap.works.label} width="20" height="20" />
-          </button>
-          <div class="works-list" id="works-list">
-            {config.author.works.map((work) => {
-              const icon = iconMap[work.type];
-              return (
-                <a href={work.url} target="_blank" rel="noopener noreferrer" aria-label={icon?.label ?? work.type}>
-                  <img src={`${import.meta.env.BASE_URL}${icon?.src}`} alt={icon?.label ?? work.type} width="20" height="20" />
-                </a>
-              );
-            })}
-          </div>
+        <div class="links-capsule">
+          {config.author.links.map((link) => {
+            const icon = iconMap[link.type];
+            return (
+              <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={icon?.label ?? link.type}>
+                <img src={`${import.meta.env.BASE_URL}${icon?.src}`} alt={icon?.label ?? link.type} width="20" height="20" />
+              </a>
+            );
+          })}
+        </div>
+        <div class="links-capsule">
+          {config.author.works.map((work) => {
+            const icon = iconMap[work.type];
+            return (
+              <a href={work.url} target="_blank" rel="noopener noreferrer" aria-label={icon?.label ?? work.type}>
+                <img src={`${import.meta.env.BASE_URL}${icon?.src}`} alt={icon?.label ?? work.type} width="20" height="20" />
+              </a>
+            );
+          })}
         </div>
       </div>
       <button class="about-toggle-btn" id="about-toggle-btn" aria-label="展開介紹">
@@ -136,17 +130,6 @@ const iconMap: Record<string, { src: string; label: string }> = {
       btn.addEventListener('click', function() {
         toggle.classList.toggle('open');
         btn.classList.toggle('open');
-      });
-    }
-
-    var worksBtn = document.getElementById('works-toggle');
-    var worksList = document.getElementById('works-list');
-    var worksGroup = document.getElementById('works-group');
-    if (worksBtn && worksList && worksGroup) {
-      worksBtn.addEventListener('click', function() {
-        var expanded = worksList.classList.toggle('expanded');
-        worksGroup.classList.toggle('expanded', expanded);
-        worksBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       });
     }
   }
