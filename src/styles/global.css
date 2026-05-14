@@ -767,22 +767,6 @@ th {
   margin: 1rem 0;
 }
 
-.skill-columns {
-  display: flex;
-  gap: 2rem;
-}
-
-.skill-column {
-  flex: 1;
-}
-
-@media (max-width: 640px) {
-  .skill-columns {
-    flex-direction: column;
-    gap: 0;
-  }
-}
-
 /* === Responsive === */
 @media (max-width: 640px) {
   main {
