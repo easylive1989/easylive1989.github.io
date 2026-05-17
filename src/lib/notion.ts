@@ -8,6 +8,14 @@ export interface Article {
   summary: string;
 }
 
+export interface Book {
+  id: string;
+  title: string;
+  progress: number;            // 0..100
+  categories: string[];
+  finishedDate: string | null; // ISO date or null
+}
+
 export interface NotionBlock {
   id: string;
   type: string;
@@ -76,6 +84,75 @@ export async function fetchDatabase(
   }
 
   return pages;
+}
+
+const BOOK_PROPS = {
+  title: '書名',
+  progress: '閱讀進度',
+  categories: '類型',
+  finishedDate: '閱讀時間(月份)',
+};
+
+function getBookTitle(props: any): string {
+  const arr = props[BOOK_PROPS.title]?.title;
+  if (!Array.isArray(arr) || arr.length === 0) return 'Untitled';
+  return arr.map((t: any) => t.plain_text).join('').trim();
+}
+
+function getBookProgress(props: any): number {
+  const raw = props[BOOK_PROPS.progress]?.number;
+  if (typeof raw !== 'number' || Number.isNaN(raw)) return 0;
+  if (raw <= 1) return Math.max(0, Math.min(100, Math.round(raw * 100)));
+  return Math.max(0, Math.min(100, Math.round(raw)));
+}
+
+function getBookCategories(props: any): string[] {
+  const p = props[BOOK_PROPS.categories];
+  if (!p) return [];
+  if (Array.isArray(p.multi_select)) return p.multi_select.map((m: any) => m.name).filter(Boolean);
+  if (p.select?.name) return [p.select.name];
+  return [];
+}
+
+function getBookFinishedDate(props: any): string | null {
+  const p = props[BOOK_PROPS.finishedDate];
+  return p?.date?.start ?? null;
+}
+
+export async function fetchBooksDatabase(
+  client: Client,
+  databaseId: string,
+): Promise<Book[]> {
+  const books: Book[] = [];
+  let cursor: string | undefined = undefined;
+
+  try {
+    do {
+      const response = await client.databases.query({
+        database_id: databaseId,
+        start_cursor: cursor,
+      });
+
+      for (const page of response.results) {
+        const p = page as any;
+        const props = p.properties;
+        books.push({
+          id: p.id,
+          title: getBookTitle(props),
+          progress: getBookProgress(props),
+          categories: getBookCategories(props),
+          finishedDate: getBookFinishedDate(props),
+        });
+      }
+
+      cursor = response.has_more ? (response as any).next_cursor : undefined;
+    } while (cursor);
+  } catch (err: any) {
+    console.warn(`Failed to fetch books database ${databaseId}: ${err.message}`);
+    return [];
+  }
+
+  return books;
 }
 
 export async function fetchPageBlocks(

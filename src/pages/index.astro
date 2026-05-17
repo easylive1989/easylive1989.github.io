@@ -1,8 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ReadingTile from '../components/ReadingTile.astro';
 import { loadConfig } from '../lib/config';
-import { getAllArticles, getArticlesByCategory } from '../lib/data';
+import { getAllArticles, getArticlesByCategory, getAllBooks } from '../lib/data';
 import { categorySlug } from '../lib/category';
+import { bookStatus } from '../lib/bookCover';
 
 const config = loadConfig();
 const BASE = import.meta.env.BASE_URL;
@@ -32,6 +34,13 @@ const defaultTab = tabsData[0];
 
 const latestArticle = allArticles[0] ?? null;
 const latestSlug = latestArticle ? categorySlug(latestArticle.category) : '';
+
+const allBooks = await getAllBooks();
+const currentBook = allBooks.find((b) => bookStatus(b) === 'reading') ?? null;
+const recentBooks = allBooks
+  .filter((b) => bookStatus(b) === 'read')
+  .sort((a, b) => (b.finishedDate ?? '').localeCompare(a.finishedDate ?? ''))
+  .slice(0, 2);
 
 function formatDate(iso: string): string {
   if (!iso) return '';
@@ -127,20 +136,7 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
         <p class="bio">{config.author.bio.split('\n').map((line, i) => i === 0 ? line : [<br />, line])}</p>
       </section>
 
-      <section class="tile tile--dark span-2">
-        <div class="now-head">
-          <span class="label" style="color:rgba(255,255,255,.5)">/now</span>
-          <span class="mono" style="font-size:10px;color:var(--bento-accent-2);letter-spacing:.1em">● LIVE</span>
-        </div>
-        <h3 class="now-title">正在推《30 天輕鬆學會<br />Flutter 測試》</h3>
-        <div class="now-divider"></div>
-        <div class="now-list">
-          <span class="now-key">寫</span><span class="now-val">Flutter Widget Test 深水區</span><span>✏</span>
-          <span class="now-key">講</span><span class="now-val">Agile.Taichung 2025</span><span>🎤</span>
-          <span class="now-key">玩</span><span class="now-val">Paul Playbox 實驗</span><span>🎮</span>
-          <span class="now-key">學</span><span class="now-val">AI 與筆記的交互</span><span>🧠</span>
-        </div>
-      </section>
+      <ReadingTile current={currentBook} recent={recentBooks} />
     </div>
 
     <!-- ─────────── Row 2 — Tabs ─────────── -->
@@ -561,17 +557,6 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
   .tile-theme-toggle .moon-icon { display: block; }
   :global([data-theme="dark"]) .bento-home .tile-theme-toggle .sun-icon { display: block; }
   :global([data-theme="dark"]) .bento-home .tile-theme-toggle .moon-icon { display: none; }
-
-  /* === Now tile === */
-  .now-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
-  .now-title { font-size: 22px; line-height: 1.25; }
-  .now-divider { height: 1px; background: rgba(255, 255, 255, .12); margin: 16px 0 12px; }
-  .now-list {
-    display: grid; grid-template-columns: auto 1fr auto;
-    row-gap: 6px; column-gap: 12px; font-size: 12px;
-  }
-  .now-key { color: rgba(255, 255, 255, .65); }
-  .now-val { color: #fff; }
 
   /* === Tabs === */
   .tabs-tile { padding: 8px; }

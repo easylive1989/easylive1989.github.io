@@ -1,0 +1,726 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getAllBooks } from '../lib/data';
+import {
+  bookStatus,
+  bookFinishedYear,
+  bookFinishedQuarter,
+  coverGradient,
+  normaliseKind,
+  type BookKind,
+} from '../lib/bookCover';
+import type { Book } from '../lib/notion';
+
+const BASE = import.meta.env.BASE_URL;
+const allBooks = await getAllBooks();
+
+const totalCount = allBooks.length;
+const readingCount = allBooks.filter((b) => bookStatus(b) === 'reading').length;
+const readCount = allBooks.filter((b) => bookStatus(b) === 'read').length;
+
+const currentBook = allBooks.find((b) => bookStatus(b) === 'reading') ?? null;
+const currentCover = currentBook ? coverGradient(currentBook) : null;
+
+interface ShelfYear {
+  year: number;
+  count: number;
+  books: Book[];
+  peak: boolean;
+}
+
+const byYear = new Map<number, Book[]>();
+for (const b of allBooks) {
+  const y = bookFinishedYear(b) ?? new Date().getFullYear();
+  if (!byYear.has(y)) byYear.set(y, []);
+  byYear.get(y)!.push(b);
+}
+let peakYear = 0;
+let peakCount = 0;
+for (const [year, items] of byYear) {
+  if (items.length > peakCount) {
+    peakCount = items.length;
+    peakYear = year;
+  }
+}
+const shelves: ShelfYear[] = Array.from(byYear.entries())
+  .sort((a, b) => b[0] - a[0])
+  .map(([year, items]) => ({
+    year,
+    count: items.length,
+    books: items,
+    peak: year === peakYear && items.length > 0,
+  }));
+
+const yearNotes: Record<number, string> = {
+  2026: '架構年',
+  2025: '雜食年',
+  2024: '高峰年',
+  2023: '工作轉折',
+  2022: '入門年',
+  2021: '起點',
+  2020: '前夜',
+};
+
+// Heatmap data
+const heatYears = Array.from(byYear.keys()).filter((y) => y > 0).sort();
+const oldestYear = heatYears[0] ?? new Date().getFullYear();
+const newestYear = heatYears[heatYears.length - 1] ?? new Date().getFullYear();
+const heatRange: number[] = [];
+for (let y = oldestYear; y <= newestYear; y++) heatRange.push(y);
+
+const heatBucket: Record<number, [number, number, number, number]> = {};
+for (const b of allBooks) {
+  if (bookStatus(b) !== 'read') continue;
+  const y = bookFinishedYear(b);
+  const q = bookFinishedQuarter(b);
+  if (y == null || q == null) continue;
+  heatBucket[y] ??= [0, 0, 0, 0];
+  heatBucket[y][q - 1]++;
+}
+const maxCell = Math.max(1, ...Object.values(heatBucket).flatMap((row) => row));
+function heatLevel(v: number): number {
+  if (v <= 0) return 0;
+  return Math.min(4, Math.max(1, Math.round((v / maxCell) * 4)));
+}
+
+const kindMeta: Record<BookKind, { name: string; dotClass: string }> = {
+  tech:   { name: '技術',   dotClass: 'dot-tech' },
+  design: { name: '設計',   dotClass: 'dot-design' },
+  non:    { name: '非虛構', dotClass: 'dot-non' },
+  fic:    { name: '小說',   dotClass: 'dot-fic' },
+  other:  { name: '其他',   dotClass: 'dot-other' },
+};
+
+// Category counts via normaliseKind
+const kindCounts: Record<BookKind, number> = { tech: 0, design: 0, non: 0, fic: 0, other: 0 };
+for (const b of allBooks) {
+  kindCounts[normaliseKind(b.categories[0])]++;
+}
+const chipsData = (Object.keys(kindMeta) as BookKind[])
+  .filter((k) => kindCounts[k] > 0)
+  .map((k) => ({ key: k, ...kindMeta[k], count: kindCounts[k] }));
+---
+
+<BaseLayout title="書單" hideFooter bodyClass="reading-page-body">
+  <div class="reading-page" id="top">
+
+    <!-- Top nav -->
+    <header class="tile reading-topnav">
+      <div class="topnav-left">
+        <a class="back" href={BASE}>
+          <span>←</span><span>保羅的學習筆記</span>
+        </a>
+        <span class="topnav-sep">/</span>
+        <span style="font-weight:500">書單</span>
+      </div>
+      <div class="topnav-right">
+        <span class="mono">{totalCount} books · since {oldestYear}</span>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="tile hero">
+      <div class="hero-left">
+        <div class="label">Reading list · 書單</div>
+        <h1 class="hero-h1">讀過的<span class="hi-em">書</span>。</h1>
+        <p class="hero-desc">隨手記錄看過的書。技術書幫我換腦袋、非虛構幫我換視角、小說幫我換情緒。</p>
+        <div class="stats-row">
+          <div><div class="stat-n" style="color:var(--bento-accent)">{totalCount}</div><div class="stat-l">total</div></div>
+          <div><div class="stat-n" style="color:var(--bento-accent-2)">{readingCount}</div><div class="stat-l">reading</div></div>
+          <div><div class="stat-n" style="color:var(--bento-accent-3)">{readCount}</div><div class="stat-l">read</div></div>
+          <div><div class="stat-n" style="color:var(--bento-pink)">{Math.max(0, newestYear - oldestYear + 1)}</div><div class="stat-l">years</div></div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="heatmap-head">
+          <div class="label">每季讀完的書</div>
+          <span class="mono heatmap-range">{oldestYear} → {newestYear}</span>
+        </div>
+        <div class="heatmap">
+          <div class="heatmap-row">
+            <span class="yr"></span>
+            <div class="heatmap-cells">
+              {['Q1', 'Q2', 'Q3', 'Q4'].map((q) => (
+                <span class="qhead">{q}</span>
+              ))}
+            </div>
+          </div>
+          {heatRange.map((y) => {
+            const row = heatBucket[y] ?? [0, 0, 0, 0];
+            return (
+              <div class="heatmap-row">
+                <span class="yr">{y}</span>
+                <div class="heatmap-cells">
+                  {row.map((v) => (
+                    <span class="cell" data-v={heatLevel(v)} title={`${y} · ${v} 本`}></span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div class="heatmap-legend">
+          <span>少</span>
+          <span class="cell" data-v="0"></span>
+          <span class="cell" data-v="1"></span>
+          <span class="cell" data-v="2"></span>
+          <span class="cell" data-v="3"></span>
+          <span class="cell" data-v="4"></span>
+          <span>多</span>
+        </div>
+      </div>
+    </section>
+
+    {currentBook && currentCover && (
+      <section class="tile current tile--flush">
+        <div class="current-row">
+          <div
+            class="book-spine"
+            aria-hidden="true"
+            style={`background:linear-gradient(135deg, ${currentCover.from} 0%, ${currentCover.to} 100%)`}
+          >
+            <span class="br">{currentBook.categories[0] ?? ''}</span>
+            <strong>{currentBook.title}</strong>
+            <span class="pub"></span>
+          </div>
+          <div class="current-meta">
+            <div class="label" style="color:var(--bento-accent-2)">● 正在讀</div>
+            <h2>{currentBook.title}</h2>
+            {currentBook.categories.length > 0 && (
+              <div class="author">{currentBook.categories.join(' · ')}</div>
+            )}
+            <div class="current-progress">
+              <div class="current-progress-head">
+                <span>進度</span>
+                <span class="mono" style="color:var(--bento-accent-2)">{currentBook.progress}%</span>
+              </div>
+              <div class="current-progress-bar">
+                <div class="current-progress-fill" style={`width:${currentBook.progress}%`}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Filter bar -->
+    <section class="tile filterbar">
+      <div class="filter-row">
+        <div class="search">
+          <span class="search-icon">⌕</span>
+          <input id="reading-q" type="search" placeholder="搜尋書名 / 類型..." autocomplete="off" />
+          <span class="kbd">⌘K</span>
+        </div>
+        <button class="sort-pill" id="reading-sort" type="button" data-dir="desc">
+          <span style="color:var(--bento-sub)">排序：</span>
+          <span class="sort-label">↓ 最近讀完</span>
+        </button>
+        <div class="view-toggle" role="tablist" id="reading-view">
+          <button type="button" data-view="shelf" aria-current="true">書架</button>
+          <button type="button" data-view="list">列表</button>
+        </div>
+      </div>
+      <div class="filter-row chips" id="reading-chips">
+        <button class="chip" data-cat="*" aria-current="true">全部 <span class="ct">{totalCount}</span></button>
+        {chipsData.map((c) => (
+          <button class="chip" data-cat={c.key}>
+            <span class={`dot-cat ${c.dotClass}`}></span>
+            {c.name}
+            <span class="ct">{c.count}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+
+    <!-- Shelves -->
+    <section class="tile tile--flush" id="reading-shelves">
+      {shelves.map((s) => (
+        <div class="year-section" data-year={s.year}>
+          <div class="year-side">
+            <div>
+              <div class="yr-n">{s.year}</div>
+              <div class="yr-l">{s.count} 本</div>
+              {s.peak ? (
+                <div class="yr-badge peak">★ 高峰年</div>
+              ) : (
+                yearNotes[s.year] && <div class="yr-badge">{yearNotes[s.year]}</div>
+              )}
+            </div>
+          </div>
+          <div class="shelf">
+            {s.books.map((b) => {
+              const cv = coverGradient(b);
+              const status = bookStatus(b);
+              const cat = kindMeta[cv.kind];
+              const rawCat = b.categories[0] ?? '';
+              return (
+                <a
+                  class={`book is-${status}`}
+                  href="#"
+                  data-title={b.title}
+                  data-cat={cv.kind}
+                  data-cat-raw={rawCat}
+                  data-date={b.finishedDate ?? ''}
+                  data-progress={b.progress}
+                  title={b.title}
+                >
+                  <div
+                    class="book-cover"
+                    style={`background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
+                  >
+                    <span class="pub">{rawCat}</span>
+                    <span class="title">{b.title}</span>
+                  </div>
+                  <div class="book-meta">
+                    <span class="book-title">{b.title}</span>
+                    {rawCat && (
+                      <div class="book-stats">
+                        <span class="book-tag">
+                          <span class={`dot-cat ${cat.dotClass}`}></span>
+                          {cat.name}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <div class="shelves-empty" id="reading-empty" hidden>沒有符合的書。</div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="tile reading-footer">
+      <span>paul-learning.dev · © {new Date().getFullYear()} Paul Wu · built with Astro</span>
+      <a href="#top" class="mono back-top">↑ back to top</a>
+    </footer>
+  </div>
+
+  <script is:inline>
+    (function () {
+      if (window.__readingAbort) window.__readingAbort.abort();
+
+      function setupReading() {
+        if (window.__readingAbort) window.__readingAbort.abort();
+        const ctrl = new AbortController();
+        window.__readingAbort = ctrl;
+        const signal = ctrl.signal;
+
+        const host = document.getElementById('reading-shelves');
+        if (!host) return;
+        const q = document.getElementById('reading-q');
+        const chips = document.getElementById('reading-chips');
+        const sortBtn = document.getElementById('reading-sort');
+        const view = document.getElementById('reading-view');
+        const emptyEl = document.getElementById('reading-empty');
+        const sections = Array.from(host.querySelectorAll('.year-section'));
+
+        let activeCat = '*';
+        let kw = '';
+
+        function apply() {
+          let anyVisible = false;
+          for (const sec of sections) {
+            const books = Array.from(sec.querySelectorAll('.book'));
+            let visible = 0;
+            for (const book of books) {
+              const cat = book.getAttribute('data-cat') || '';
+              const title = (book.getAttribute('data-title') || '').toLowerCase();
+              const rawCat = (book.getAttribute('data-cat-raw') || '').toLowerCase();
+              const catOk = activeCat === '*' || cat === activeCat;
+              const kwOk = !kw || title.indexOf(kw) >= 0 || rawCat.indexOf(kw) >= 0;
+              const show = catOk && kwOk;
+              book.style.display = show ? '' : 'none';
+              if (show) visible++;
+            }
+            sec.style.display = visible > 0 ? '' : 'none';
+            if (visible > 0) anyVisible = true;
+          }
+          if (emptyEl) emptyEl.hidden = anyVisible;
+        }
+
+        if (q) {
+          q.addEventListener('input', () => {
+            kw = q.value.trim().toLowerCase();
+            apply();
+          }, { signal });
+        }
+
+        if (chips) {
+          chips.querySelectorAll('.chip').forEach((c) => {
+            c.addEventListener('click', () => {
+              chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-current', 'false'));
+              c.setAttribute('aria-current', 'true');
+              activeCat = c.getAttribute('data-cat') || '*';
+              apply();
+            }, { signal });
+          });
+        }
+
+        if (sortBtn) {
+          sortBtn.addEventListener('click', () => {
+            const cur = sortBtn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
+            const next = cur === 'asc' ? 'desc' : 'asc';
+            sortBtn.setAttribute('data-dir', next);
+            const label = sortBtn.querySelector('.sort-label');
+            if (label) label.textContent = next === 'desc' ? '↓ 最近讀完' : '↑ 最舊讀完';
+            const ordered = [...sections].sort((a, b) => {
+              const ya = parseInt(a.getAttribute('data-year') || '0', 10);
+              const yb = parseInt(b.getAttribute('data-year') || '0', 10);
+              return next === 'desc' ? yb - ya : ya - yb;
+            });
+            for (const sec of ordered) host.insertBefore(sec, emptyEl);
+            for (const sec of ordered) {
+              const shelf = sec.querySelector('.shelf');
+              if (!shelf) continue;
+              const books = Array.from(shelf.querySelectorAll('.book'));
+              books.sort((a, b) => {
+                const da = a.getAttribute('data-date') || '';
+                const db = b.getAttribute('data-date') || '';
+                return next === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
+              });
+              for (const bk of books) shelf.appendChild(bk);
+            }
+          }, { signal });
+        }
+
+        if (view) {
+          view.querySelectorAll('button[data-view]').forEach((b) => {
+            b.addEventListener('click', () => {
+              const v = b.getAttribute('data-view');
+              view.querySelectorAll('button[data-view]').forEach((x) => x.setAttribute('aria-current', 'false'));
+              b.setAttribute('aria-current', 'true');
+              host.setAttribute('data-view', v || 'shelf');
+            }, { signal });
+          });
+        }
+
+        document.addEventListener('keydown', (e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            if (q) q.focus();
+          }
+        }, { signal });
+      }
+
+      document.addEventListener('astro:page-load', setupReading);
+    })();
+  </script>
+</BaseLayout>
+
+<style is:global>
+  body.reading-page-body {
+    background: var(--bento-bg);
+    color: var(--bento-ink);
+    font-family: var(--bento-font-sans);
+    line-height: 1.55;
+  }
+  body.reading-page-body main {
+    max-width: 1100px;
+    padding: 20px;
+  }
+  body.reading-page-body a { color: inherit; text-decoration: none; }
+  body.reading-page-body h1,
+  body.reading-page-body h2,
+  body.reading-page-body h3,
+  body.reading-page-body h4 {
+    margin: 0; letter-spacing: -0.025em; font-weight: 600;
+  }
+  body.reading-page-body p { margin: 0; }
+</style>
+
+<style>
+  .reading-page {
+    color: var(--bento-ink);
+    font-family: var(--bento-font-sans);
+    display: grid;
+    gap: var(--bento-gap);
+  }
+
+  .tile {
+    background: var(--bento-surface);
+    border-radius: var(--bento-r-lg);
+    padding: 24px;
+    box-shadow: var(--bento-shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .tile--flush { padding: 0; }
+
+  .label {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--bento-sub); font-weight: 500;
+  }
+  .mono { font-family: var(--bento-font-mono); font-feature-settings: 'zero' on; }
+
+  /* Top nav */
+  .reading-topnav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 22px;
+  }
+  .topnav-left { display: flex; align-items: center; gap: 14px; font-size: 13px; flex-wrap: wrap; }
+  .topnav-sep { color: var(--bento-sub); opacity: .55; }
+  .back {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--bento-sub); padding: 4px 10px; border-radius: var(--bento-r-chip);
+    transition: background .15s, color .15s;
+  }
+  .back:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
+  .topnav-right { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--bento-sub); }
+
+  /* Hero */
+  .hero {
+    display: grid; grid-template-columns: 1fr 360px;
+    gap: 36px; align-items: end; padding: 28px 30px 26px;
+  }
+  .hero-h1 { font-size: 56px; line-height: 0.95; letter-spacing: -0.03em; margin-top: 6px; }
+  .hi-em {
+    color: var(--bento-accent);
+    font-family: 'Newsreader', 'Noto Serif TC', Georgia, serif;
+    font-style: italic; font-weight: 400;
+  }
+  .hero-desc { font-size: 15px; color: var(--bento-sub); margin-top: 14px; max-width: 460px; }
+  .stats-row { display: flex; gap: 28px; margin-top: 20px; flex-wrap: wrap; }
+  .stat-n { font-size: 28px; font-weight: 600; line-height: 1; }
+  .stat-l { font-size: 11px; color: var(--bento-sub); letter-spacing: .1em; text-transform: uppercase; margin-top: 4px; }
+
+  .heatmap-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+  .heatmap-range { font-size: 10px; color: var(--bento-sub); }
+  .heatmap { display: flex; flex-direction: column; gap: 8px; }
+  .heatmap-row { display: flex; align-items: center; gap: 6px; font-family: var(--bento-font-mono); font-size: 10px; color: var(--bento-sub); }
+  .yr { width: 36px; color: var(--bento-ink); font-weight: 500; }
+  .heatmap-cells { display: flex; gap: 3px; }
+  .cell {
+    width: 26px; height: 22px; border-radius: 3px;
+    background: var(--bento-surface-2);
+  }
+  .cell[data-v="1"] { background: color-mix(in oklab, var(--bento-accent) 25%, var(--bento-surface)); }
+  .cell[data-v="2"] { background: color-mix(in oklab, var(--bento-accent) 50%, var(--bento-surface)); }
+  .cell[data-v="3"] { background: color-mix(in oklab, var(--bento-accent) 75%, var(--bento-surface)); }
+  .cell[data-v="4"] { background: var(--bento-accent); }
+  .heatmap-cells .qhead { width: 26px; text-align: center; color: var(--bento-sub); }
+  .heatmap-legend {
+    display: flex; gap: 8px; align-items: center;
+    font-size: 10px; color: var(--bento-sub); margin-top: 8px;
+  }
+  .heatmap-legend .cell { width: 14px; height: 14px; }
+
+  /* Current reading featured */
+  .current {
+    background: linear-gradient(135deg, #243240 0%, #0e1418 100%);
+    color: #fff; padding: 32px;
+  }
+  :global([data-theme="dark"]) .reading-page .current {
+    background: linear-gradient(135deg, #1c2530 0%, #0a0d12 100%);
+  }
+  .current-row { display: grid; grid-template-columns: 160px 1fr; gap: 36px; align-items: center; }
+  .book-spine {
+    width: 160px; aspect-ratio: 3/4; border-radius: 4px 6px 6px 4px;
+    box-shadow: inset 4px 0 0 rgba(0, 0, 0, .25), 0 14px 32px -8px rgba(0, 0, 0, .55);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 18px 14px 14px; font-family: var(--bento-font-sans);
+    position: relative; transform: rotate(-2deg);
+    overflow: hidden;
+  }
+  .book-spine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(255, 255, 255, .15) 0%, transparent 35%, transparent 75%, rgba(0, 0, 0, .15) 100%);
+    pointer-events: none;
+  }
+  .book-spine .br { font-size: 9px; letter-spacing: .2em; opacity: .55; }
+  .book-spine strong { font-size: 22px; line-height: 1.15; font-weight: 600; }
+  .book-spine .pub { font-size: 8px; letter-spacing: .15em; opacity: .5; }
+  .current-meta .label { color: var(--bento-accent-2); }
+  .current-meta h2 { font-size: 32px; line-height: 1.15; margin-top: 8px; }
+  .current-meta .author { font-size: 14px; color: rgba(255, 255, 255, .6); margin-top: 4px; }
+  .current-progress { display: grid; gap: 6px; margin-top: 22px; max-width: 380px; }
+  .current-progress-head { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255, 255, 255, .65); letter-spacing: .05em; }
+  .current-progress-bar { height: 4px; background: rgba(255, 255, 255, .1); border-radius: 3px; overflow: hidden; }
+  .current-progress-fill { height: 100%; background: var(--bento-accent-2); border-radius: 3px; }
+
+  /* Filter bar */
+  .filterbar { padding: 16px 22px; display: flex; flex-direction: column; gap: 12px; }
+  .filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .search {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: var(--bento-surface-2); padding: 9px 14px;
+    border-radius: var(--bento-r-md); min-width: 240px;
+  }
+  .search-icon { color: var(--bento-sub); font-size: 14px; }
+  .search input {
+    flex: 1; border: 0; background: transparent; color: var(--bento-ink);
+    font-size: 14px; outline: none; font-family: inherit;
+  }
+  .search input::placeholder { color: var(--bento-sub); opacity: .7; }
+  .kbd {
+    font-family: var(--bento-font-mono); font-size: 10px;
+    color: var(--bento-sub); opacity: .75;
+    padding: 2px 6px; border: 1px solid var(--bento-rule); border-radius: 4px;
+  }
+  .sort-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bento-surface-2); padding: 9px 13px;
+    border-radius: var(--bento-r-md); font-size: 13px;
+    color: var(--bento-ink); border: 0; cursor: pointer;
+    font-family: inherit;
+  }
+  .sort-pill:hover { background: var(--bento-rule); }
+  .view-toggle { display: inline-flex; background: var(--bento-surface-2); border-radius: var(--bento-r-md); padding: 3px; }
+  .view-toggle button {
+    border: 0; background: transparent; padding: 6px 12px; font-size: 13px;
+    color: var(--bento-sub); border-radius: 8px; cursor: pointer; font-family: inherit;
+    transition: background .15s, color .15s;
+  }
+  .view-toggle button[aria-current="true"] {
+    background: var(--bento-surface); color: var(--bento-ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+  }
+  :global([data-theme="dark"]) .reading-page .view-toggle button[aria-current="true"] {
+    background: var(--bento-ink);
+  }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: var(--bento-r-chip);
+    font-size: 12px; font-weight: 500; color: var(--bento-sub);
+    background: transparent; border: 1px solid var(--bento-rule);
+    cursor: pointer; font-family: inherit;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .chip:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
+  .chip[aria-current="true"] {
+    background: var(--bento-ink); color: var(--bento-ink-on); border-color: var(--bento-ink);
+  }
+  :global([data-theme="dark"]) .reading-page .chip[aria-current="true"] {
+    background: var(--bento-accent); border-color: var(--bento-accent); color: #07151a;
+  }
+  .chip .ct { font-size: 11px; opacity: .7; }
+  .dot-cat { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .dot-tech   { background: var(--bento-accent); }
+  .dot-design { background: var(--bento-accent-2); }
+  .dot-non    { background: var(--bento-accent-3); }
+  .dot-fic    { background: var(--bento-pink); }
+  .dot-other  { background: var(--bento-sub); }
+
+  /* Year section */
+  .year-section {
+    display: grid; grid-template-columns: 100px 1fr; gap: 24px;
+    padding: 28px 22px; border-top: 1px solid var(--bento-rule);
+  }
+  .year-section:first-of-type { border-top: 0; }
+  .yr-n {
+    font-size: 48px; font-weight: 600; letter-spacing: -0.025em;
+    line-height: 1; color: var(--bento-ink);
+  }
+  .yr-l { font-size: 11px; color: var(--bento-sub); margin-top: 4px; letter-spacing: .12em; text-transform: uppercase; }
+  .yr-badge {
+    display: inline-block; padding: 2px 8px; border-radius: var(--bento-r-chip);
+    background: var(--bento-surface-2); color: var(--bento-ink);
+    font-size: 10px; font-weight: 500; margin-top: 10px; letter-spacing: .03em;
+  }
+  .yr-badge.peak { background: var(--bento-accent-2); color: #0a3a26; }
+
+  /* Shelf grid */
+  .shelf {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 18px;
+  }
+  #reading-shelves[data-view="list"] .shelf {
+    display: grid; gap: 6px; grid-template-columns: 1fr;
+  }
+  #reading-shelves[data-view="list"] .book {
+    display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 14px;
+    padding: 10px 12px; border-radius: var(--bento-r-md);
+  }
+  #reading-shelves[data-view="list"] .book:hover { background: var(--bento-surface-2); transform: none; }
+  #reading-shelves[data-view="list"] .book-cover {
+    width: 36px; aspect-ratio: 3/4; padding: 0; box-shadow: none;
+  }
+  #reading-shelves[data-view="list"] .book-cover .pub,
+  #reading-shelves[data-view="list"] .book-cover .title { display: none; }
+  #reading-shelves[data-view="list"] .book-meta { padding: 0; }
+
+  .book {
+    display: flex; flex-direction: column; gap: 8px;
+    color: inherit; cursor: pointer; transition: transform .15s;
+  }
+  .book:hover { transform: translateY(-3px); }
+  .book:hover .book-cover { box-shadow: 0 14px 28px -10px rgba(0, 0, 0, .32); }
+  .book-cover {
+    aspect-ratio: 3 / 4; border-radius: 3px 6px 6px 3px;
+    box-shadow: inset 3px 0 0 rgba(0, 0, 0, .18), 0 6px 14px -6px rgba(0, 0, 0, .18);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 12px 10px 10px; color: #fff;
+    font-family: var(--bento-font-sans); position: relative; overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .book-cover::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(160deg, rgba(255, 255, 255, .18) 0%, transparent 35%, transparent 75%, rgba(0, 0, 0, .15) 100%);
+    pointer-events: none;
+  }
+  .book-cover .pub { font-size: 7px; letter-spacing: .2em; opacity: .55; }
+  .book-cover .title {
+    font-size: 14px; font-weight: 600; line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .book-meta {
+    padding: 0 2px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .book-title { font-size: 13px; font-weight: 500; line-height: 1.3; color: var(--bento-ink); }
+  .book-stats {
+    display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 10px;
+  }
+  .book-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--bento-font-mono); font-size: 9px; color: var(--bento-sub);
+    letter-spacing: .05em;
+  }
+  .book-tag .dot-cat { width: 5px; height: 5px; border-radius: 50%; }
+
+  .book.is-reading .book-cover { outline: 2px solid var(--bento-accent-2); outline-offset: 3px; }
+  .book.is-reading .book-title::before {
+    content: '● 閱讀中  ';
+    color: var(--bento-accent-2); font-size: 10px; letter-spacing: .05em; font-weight: 600;
+  }
+  .book.is-unstarted { opacity: .65; }
+  .book.is-unstarted .book-cover { filter: grayscale(.5); }
+
+  .shelves-empty {
+    padding: 60px 22px; text-align: center; color: var(--bento-sub); font-size: 14px;
+  }
+
+  .reading-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 22px; font-size: 13px; color: var(--bento-sub);
+  }
+  .back-top { font-size: 11px; letter-spacing: .1em; color: var(--bento-sub); }
+  .back-top:hover { color: var(--bento-accent); }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; gap: 22px; padding: 22px; }
+    .hero-h1 { font-size: 38px; }
+    .current { padding: 22px; }
+    .current-row { grid-template-columns: 110px 1fr; gap: 22px; }
+    .book-spine { width: 110px; }
+    .book-spine strong { font-size: 18px; }
+    .current-meta h2 { font-size: 22px; }
+    .year-section { grid-template-columns: 1fr; gap: 14px; padding: 22px 18px; }
+    .year-side { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .yr-n { font-size: 32px; }
+    .yr-badge { margin-top: 0; }
+    .shelf { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 14px; }
+    .heatmap-cells { gap: 2px; }
+    .cell { width: 18px; height: 16px; }
+  }
+</style>

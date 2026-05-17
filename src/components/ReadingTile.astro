@@ -1,0 +1,228 @@
+---
+import type { Book } from '../lib/notion';
+import { coverGradient } from '../lib/bookCover';
+
+interface Props {
+  current: Book | null;
+  recent: Book[];
+}
+
+const { current, recent } = Astro.props;
+const BASE = import.meta.env.BASE_URL;
+const currentCover = current ? coverGradient(current) : null;
+---
+
+<section class="tile tile--dark span-2 reading-tile">
+  <div class="reading-head">
+    <span class="reading-label">/reading</span>
+    {current ? (
+      <span class="reading-status reading-status--live">● 閱讀中</span>
+    ) : (
+      <span class="reading-status reading-status--idle">◌ 暫無</span>
+    )}
+  </div>
+
+  {current && currentCover && (
+    <div class="reading-now">
+      <div
+        class="mini-cover"
+        aria-hidden="true"
+        style={`background:linear-gradient(135deg, ${currentCover.from} 0%, ${currentCover.to} 100%)`}
+      >
+        <span class="mini-cover-top">{current.categories[0] ?? ''}</span>
+        <strong class="mini-cover-title">{current.title}</strong>
+        <span class="mini-cover-bottom"></span>
+      </div>
+      <div class="reading-meta">
+        <h3 class="reading-now-title">{current.title}</h3>
+        {current.categories.length > 0 && (
+          <p class="reading-now-cat">{current.categories.join(' · ')}</p>
+        )}
+        <div class="reading-progress">
+          <div class="reading-progress-head">
+            <span>進度</span>
+            <span class="mono reading-progress-pct">{current.progress}%</span>
+          </div>
+          <div class="reading-progress-track">
+            <div class="reading-progress-fill" style={`width:${current.progress}%`}></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {recent.length > 0 && (
+    <>
+      <div class="reading-divider"></div>
+      <div class="reading-recent-label">最近讀完</div>
+      <ul class="reading-recent-list">
+        {recent.map((b, i) => (
+          <li class="reading-recent-item">
+            <span class="mono reading-recent-idx">{String(recent.length - i).padStart(2, '0')}</span>
+            <span class="reading-recent-title">{b.title}</span>
+            {b.categories[0] && (
+              <span class="mono reading-recent-tag">{b.categories[0]}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  <a href={`${BASE}reading/`} class="reading-more">看完整書單 ↗</a>
+</section>
+
+<style>
+  .reading-tile {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .reading-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+  .reading-label {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .5);
+    font-weight: 500;
+  }
+  .reading-status {
+    font-family: var(--bento-font-mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+  }
+  .reading-status--live { color: var(--bento-accent-2); }
+  .reading-status--idle { color: rgba(255, 255, 255, .35); }
+
+  .reading-now {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 14px;
+    align-items: start;
+    margin-top: 4px;
+  }
+  .mini-cover {
+    width: 64px;
+    aspect-ratio: 3 / 4;
+    border-radius: 4px 6px 6px 4px;
+    box-shadow:
+      inset 4px 0 0 rgba(0, 0, 0, .25),
+      0 6px 16px -4px rgba(0, 0, 0, .45);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px 8px 8px;
+    color: #fff;
+    font-family: var(--bento-font-sans);
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(255, 255, 255, .15) 0%, transparent 35%, transparent 75%, rgba(0, 0, 0, .15) 100%);
+    pointer-events: none;
+  }
+  .mini-cover-top { font-size: 8px; letter-spacing: .16em; opacity: .65; }
+  .mini-cover-title {
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 600;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .mini-cover-bottom { font-size: 7px; letter-spacing: .12em; opacity: .5; }
+
+  .reading-meta { min-width: 0; }
+  .reading-now-title {
+    font-size: 17px;
+    line-height: 1.3;
+    margin: 0;
+    color: #fff;
+  }
+  .reading-now-cat {
+    font-size: 11px;
+    color: rgba(255, 255, 255, .55);
+    margin: 3px 0 0;
+    line-height: 1.45;
+  }
+  .reading-progress { margin-top: 10px; }
+  .reading-progress-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: rgba(255, 255, 255, .55);
+    letter-spacing: .05em;
+    margin-bottom: 4px;
+  }
+  .reading-progress-pct { color: var(--bento-accent-2); }
+  .reading-progress-track {
+    height: 3px;
+    background: rgba(255, 255, 255, .1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .reading-progress-fill {
+    height: 100%;
+    background: var(--bento-accent-2);
+    border-radius: 2px;
+  }
+
+  .reading-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, .12);
+    margin: 16px 0 12px;
+  }
+  .reading-recent-label {
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .45);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .reading-recent-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .reading-recent-item {
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .reading-recent-idx {
+    color: rgba(255, 255, 255, .4);
+    font-size: 10px;
+  }
+  .reading-recent-title { color: #fff; }
+  .reading-recent-tag {
+    color: rgba(255, 255, 255, .45);
+    font-size: 10px;
+  }
+
+  .reading-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--bento-accent-2);
+    text-decoration: none;
+    letter-spacing: .05em;
+  }
+  .reading-more:hover { opacity: .8; }
+</style>

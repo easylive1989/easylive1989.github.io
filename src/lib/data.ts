@@ -1,7 +1,14 @@
 import 'dotenv/config';
 import { Client } from '@notionhq/client';
 import { loadConfig } from './config';
-import { fetchDatabase, fetchPageBlocks, type Article, type NotionBlock } from './notion';
+import {
+  fetchDatabase,
+  fetchPageBlocks,
+  fetchBooksDatabase,
+  type Article,
+  type NotionBlock,
+  type Book,
+} from './notion';
 import { replaceImageUrls, downloadImages } from './images';
 import { categorySlug } from './category';
 import path from 'node:path';
@@ -82,6 +89,17 @@ export async function getArticle(
     categorySlug: catSlug,
     categoryName: article.category,
   };
+}
+
+let cachedBooks: Book[] | null = null;
+
+export async function getAllBooks(): Promise<Book[]> {
+  if (cachedBooks) return cachedBooks;
+  const config = loadConfig();
+  const client = getNotionClient();
+  if (!client || !config.notion.booksDatabaseId) return [];
+  cachedBooks = await fetchBooksDatabase(client, config.notion.booksDatabaseId);
+  return cachedBooks;
 }
 
 export async function getAllArticlesForStaticPaths(): Promise<

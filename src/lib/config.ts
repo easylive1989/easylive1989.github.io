@@ -24,6 +24,7 @@ export interface SiteConfig {
   author: Author;
   notion: {
     databaseId: string;
+    booksDatabaseId?: string;
     defaultCategory: string;
   };
   build: {

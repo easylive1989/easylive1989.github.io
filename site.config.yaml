@@ -24,6 +24,7 @@ author:
 
 notion:
   databaseId: "31c8303f78f78086a16fdffcd6dd1777"
+  booksDatabaseId: "56d746743d0c41ddb48f302dba008592"
   defaultCategory: "開發日常"
 
 build:
