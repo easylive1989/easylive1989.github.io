@@ -1,31 +1,826 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import AuthorCard from '../components/AuthorCard.astro';
-import TabBar from '../components/TabBar.astro';
-import ArticleCard from '../components/ArticleCard.astro';
 import { loadConfig } from '../lib/config';
-import { getAllCategories, getArticlesByCategory } from '../lib/data';
+import { getAllArticles, getArticlesByCategory } from '../lib/data';
 import { categorySlug } from '../lib/category';
 
 const config = loadConfig();
-const categories = await getAllCategories();
+const BASE = import.meta.env.BASE_URL;
+
+const allArticles = await getAllArticles();
 const defaultSlug = categorySlug(config.notion.defaultCategory);
-const articles = await getArticlesByCategory(defaultSlug);
+const defaultCategoryArticles = await getArticlesByCategory(defaultSlug);
+
+const featured = defaultCategoryArticles[0];
+const recentPosts = defaultCategoryArticles.slice(1, 7);
+
+const categoriesOrdered = [
+  { name: '開發日常', countSuffix: '篇' },
+  { name: '30 天輕鬆學會 Flutter 測試', countSuffix: '篇' },
+  { name: 'Flutter 開發設計雜談', countSuffix: '篇' },
+];
+const countsByCategory = allArticles.reduce<Record<string, number>>((acc, a) => {
+  acc[a.category] = (acc[a.category] || 0) + 1;
+  return acc;
+}, {});
+const tabs = categoriesOrdered.map((cat) => ({
+  name: cat.name,
+  slug: categorySlug(cat.name),
+  count: countsByCategory[cat.name] ?? 0,
+}));
+
+function formatDate(iso: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}.${m}.${day}`;
+}
+
+function articleHref(article: { id: string; category: string }): string {
+  return `${BASE}${categorySlug(article.category)}/${article.id}/`;
+}
+
+const postDecorations = [
+  { icon: '🧠', bg: '#f6e9cd' },
+  { icon: '🔍', bg: '#d8e9e1' },
+  { icon: '👆', bg: '#e9dde6' },
+  { icon: '🌀', bg: '#ddd9ea' },
+  { icon: '🧩', bg: '#f0e6da' },
+  { icon: '📂', bg: '#dceaf2' },
+];
+
+const channelByType: Record<string, { label: string; value: string; icon: string }> = {
+  github:     { label: 'GitHub',       value: 'easylive1989',         icon: '⧉' },
+  threads:    { label: 'Threads',      value: 'paul.ch.wu',           icon: '@' },
+  email:      { label: 'Email',        value: 'easylive1989@gmail.com', icon: '✉' },
+  appstore:   { label: 'App Store',    value: 'cheng-hua-wu',         icon: '' },
+  googleplay: { label: 'Google Play',  value: 'Paul Wu',              icon: '▶' },
+  playbox:    { label: 'Paul Playbox', value: 'paul 的遊樂場',         icon: '◈' },
+};
+const channels = [...config.author.links, ...config.author.works];
+
+const talks = [
+  { year: '2025', emoji: '📣', title: '實踐 Flutter 測試的眉眉角角', venue: 'Agile.Taichung', venueColor: 'sub', url: 'https://www.accupass.com/event/2503031416141112169743' },
+  { year: '2024', emoji: '📣', title: 'Flutter Widget Test 深度探索',  venue: 'iThome 鐵人講堂',  venueColor: 'sub', url: 'https://itplus.ithome.com.tw/webinar-page/237' },
+  { year: '2023', emoji: '✍️', title: '30 天輕鬆學會 Flutter 測試',     venue: '鐵人賽佳作',       venueColor: 'green', url: 'https://ithelp.ithome.com.tw/users/20129825/ironman/5974' },
+  { year: '2022', emoji: '✍️', title: 'Flutter 開發設計雜談',           venue: '鐵人賽佳作',       venueColor: 'green', url: 'https://ithelp.ithome.com.tw/users/20129825/ironman/4992' },
+  { year: '2020', emoji: '✍️', title: '在 Kata 中尋找 Clean Code',       venue: '鐵人賽完賽',       venueColor: 'sub', url: 'https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1' },
+];
+
+const playboxUrl = config.author.works.find((w) => w.type === 'playbox')?.url ?? 'https://easylive1989.github.io/paul-playbox/';
+const PLAYBOX_BASE = 'https://easylive1989.github.io/paul-playbox';
+
+const playboxGames = [
+  { name: 'Flutter Breakout',  slug: 'flutter_breakout',  image: 'breakout.png' },
+  { name: 'Flutter Tetris',    slug: 'flutter_tetris',    image: 'tetris.png' },
+  { name: 'Player NS Shaft',   slug: 'player_ns_shaft',   image: 'ns_shaft.png' },
+  { name: 'Ray World Game',    slug: 'ray_world_game',    image: 'ray%20world.png' },
+  { name: 'Water Sort Puzzle', slug: 'water_sort_puzzle', image: 'water_sort_puzzle.png' },
+  { name: 'Tiny Swords RTS',   slug: 'tiny_swords',       image: 'tiny_swords.png' },
+  { name: 'Stock Trading',     slug: 'stock_trading_game', image: 'stock_trading.png' },
+  { name: 'Water Bottle Flip', slug: 'water_bottle_flip', image: 'water_bottle_flip.svg' },
+  { name: 'Sokoban',           slug: 'sokoban',           image: 'sokoban.svg' },
+];
+
+// Snapshot — derived from real data where possible
+const articlesCount = allArticles.length;
+const categoriesCount = tabs.filter((t) => t.count > 0).length;
+const talksCount = talks.length;
+const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox games
 ---
 
-<BaseLayout>
-  <AuthorCard />
-  <TabBar categories={categories} activeSlug={defaultSlug} />
+<BaseLayout hideFooter bodyClass="bento-page">
+  <div class="bento-home">
 
-  <div class="article-list">
-    {articles.length === 0 && <p>目前沒有文章。</p>}
-    {articles.map((article) => (
-      <ArticleCard
-        title={article.title}
-        articleId={article.id}
-        categorySlug={defaultSlug}
-        createdTime={article.createdTime}
-      />
-    ))}
+    <!-- ─────────── Row 1 — Identity + Now ─────────── -->
+    <div class="grid cols-6">
+      <section class="tile span-4 identity-tile">
+        <div class="identity">
+          <img src={`${BASE}${config.author.avatar}`} alt={config.author.name} class="avatar" width="104" height="104" />
+          <div>
+            <div class="label">Hi, I'm</div>
+            <h1 class="h-display">{config.author.name}</h1>
+            <div class="badges">
+              <span class="chip"><span class="dot" style="background:var(--bento-accent-2)"></span> Available for chat</span>
+              <span class="chip">📍 Taipei</span>
+            </div>
+          </div>
+          <button class="tile-theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+            <svg class="theme-icon sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"/>
+              <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="4.93" y1="4.93" x2="7.05" y2="7.05"/><line x1="16.95" y1="16.95" x2="19.07" y2="19.07"/>
+              <line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+              <line x1="4.93" y1="19.07" x2="7.05" y2="16.95"/><line x1="16.95" y1="7.05" x2="19.07" y2="4.93"/>
+            </svg>
+            <svg class="theme-icon moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
+            </svg>
+          </button>
+        </div>
+        <p class="bio">{config.author.bio.split('\n').map((line, i) => i === 0 ? line : [<br />, line])}</p>
+      </section>
+
+      <section class="tile tile--dark span-2">
+        <div class="now-head">
+          <span class="label" style="color:rgba(255,255,255,.5)">/now</span>
+          <span class="mono" style="font-size:10px;color:var(--bento-accent-2);letter-spacing:.1em">● LIVE</span>
+        </div>
+        <h3 class="now-title">正在推《30 天輕鬆學會<br />Flutter 測試》</h3>
+        <div class="now-divider"></div>
+        <div class="now-list">
+          <span class="now-key">寫</span><span class="now-val">Flutter Widget Test 深水區</span><span>✏</span>
+          <span class="now-key">講</span><span class="now-val">Agile.Taichung 2025</span><span>🎤</span>
+          <span class="now-key">玩</span><span class="now-val">Paul Playbox 實驗</span><span>🎮</span>
+          <span class="now-key">學</span><span class="now-val">AI 與筆記的交互</span><span>🧠</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- ─────────── Row 2 — Tabs ─────────── -->
+    <div class="grid cols-tabs" style="margin-top:var(--bento-gap)">
+      <nav class="tile tabs-tile">
+        <div class="tabs" role="tablist">
+          {tabs.map((tab, i) => (
+            <a
+              href={`${BASE}${tab.slug}/`}
+              role="tab"
+              aria-current={i === 0 ? 'true' : undefined}
+              class:list={['tab-link', { active: i === 0 }]}
+            >
+              <div class="tab-meta">
+                {i === 0 ? `Active · ${tab.count} 篇` : `${tab.count} 篇`}
+              </div>
+              <div class="tab-label">{tab.name}</div>
+              {i === 0 && <span class="live-dot">●</span>}
+            </a>
+          ))}
+        </div>
+      </nav>
+    </div>
+
+    <!-- ─────────── Row 3 — Featured + Book + Snapshot ─────────── -->
+    <div class="grid cols-6" style="margin-top:var(--bento-gap)">
+      {featured && (
+        <article class="tile tile--accent span-4 featured">
+          <div class="featured-body">
+            <div class="featured-head">
+              <span class="chip chip--on-accent">★ Featured · {config.notion.defaultCategory}</span>
+              <span class="mono" style="font-size:11px;color:rgba(255,255,255,.7);letter-spacing:.1em">{formatDate(featured.createdTime)}</span>
+            </div>
+            <h2>{featured.title}</h2>
+            <p>最近發布的一篇文章 — 點進去看看我最近在學什麼、做什麼。</p>
+            <div style="display:flex;gap:10px;align-items:center">
+              <a href={articleHref(featured)} class="btn-pri">閱讀全文 <span>↗</span></a>
+              <span style="font-size:12px;color:rgba(255,255,255,.7)">{config.notion.defaultCategory}</span>
+            </div>
+          </div>
+          <div class="featured-band">
+            <span>📑 共 {articlesCount} 篇文章</span><span>·</span>
+            <span>🧠 {categoriesCount} 個系列</span><span>·</span>
+            <span>⏱ 從 2020 寫到現在</span>
+          </div>
+        </article>
+      )}
+
+      <div class="grid span-2 stack-2">
+        <section class="tile tile--green book-tile">
+          <img src={`${BASE}assets/flutter-testing.webp`} alt="30 天輕鬆學會 Flutter 測試" class="book-cover-img" width="80" />
+          <div>
+            <div class="label label--on-color">出版書籍 · Book</div>
+            <h4 class="book-title">30 天輕鬆學會<br />Flutter 測試</h4>
+            <p class="book-blurb">由 2023 鐵人賽佳作改寫成書，從基礎到進階一次到位。</p>
+            <a href="https://www.tenlong.com.tw/products/9786263339804" target="_blank" rel="noopener" class="book-cta">看書 →</a>
+          </div>
+        </section>
+        <section class="tile snapshot-tile">
+          <div class="label" style="margin-bottom:12px">Snapshot</div>
+          <div class="stats">
+            <div class="stat"><div class="stat-n" style="color:var(--bento-accent)">{articlesCount}</div><div class="stat-l">篇文章</div></div>
+            <div class="stat"><div class="stat-n" style="color:var(--bento-accent-2)">5y+</div><div class="stat-l">持續寫</div></div>
+            <div class="stat"><div class="stat-n" style="color:var(--bento-pink)">{projectsCount}</div><div class="stat-l">side projects</div></div>
+            <div class="stat"><div class="stat-n" style="color:var(--bento-accent-3)">{talksCount}</div><div class="stat-l">講座 / 賽事</div></div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ─────────── Row 4 — Posts + Channels + Talks ─────────── -->
+    <div class="grid cols-6" style="margin-top:var(--bento-gap)">
+      <section class="tile span-4 tile--flush">
+        <div class="posts-head">
+          <div>
+            <div class="label">All posts</div>
+            <h3 style="font-size:24px;margin-top:4px">最近 {recentPosts.length} 篇</h3>
+          </div>
+          <a href={`${BASE}${defaultSlug}/`} class="posts-link mono">↓ 新到舊 · 看全部 ↗</a>
+        </div>
+        <div class="posts-divider"></div>
+
+        {recentPosts.map((post, i) => {
+          const deco = postDecorations[i % postDecorations.length];
+          return (
+            <a class="post-row" href={articleHref(post)}>
+              <div class="post-icon" style={`background:${deco.bg}`}>{deco.icon}</div>
+              <div>
+                <div class="post-title">{post.title}</div>
+                <div class="post-meta"><span class="chip chip--mini">{post.category}</span> {formatDate(post.createdTime)}</div>
+              </div>
+              <span class="post-tail mono">{post.category}</span>
+              <span class="arrow">↗</span>
+            </a>
+          );
+        })}
+      </section>
+
+      <div class="grid span-2 stack-2">
+        <section class="tile" style="padding:20px">
+          <div class="label" style="margin-bottom:14px">Find me at</div>
+          <div class="channels">
+            {channels.map((link) => {
+              const info = channelByType[link.type];
+              if (!info) return null;
+              return (
+                <a class="ch-row" href={link.url} target="_blank" rel="noopener">
+                  <span class="ch-left">
+                    <span class="ch-icon">{info.icon}</span>
+                    <span>{info.label}</span>
+                  </span>
+                  <span class="ch-val">{info.value}</span>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+        <section class="tile" style="padding:20px">
+          <div class="label" style="margin-bottom:14px">競賽與演講 · Awards & Talks</div>
+          <ul class="talks-list">
+            {talks.map((t) => (
+              <li>
+                <span class="mono talks-year">{t.year}</span>
+                <span>
+                  {t.emoji} <a href={t.url} target="_blank" rel="noopener" class="talks-link">{t.title}</a>
+                  <br />
+                  <span class={`talks-venue talks-venue--${t.venueColor}`}>{t.venue}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </div>
+
+    <!-- ─────────── Row 5 — Side projects ─────────── -->
+    <div class="grid cols-6" style="margin-top:var(--bento-gap)">
+      <section class="tile span-6 sec-head">
+        <div>
+          <h3>Side projects</h3>
+          <p>固定回頭維護的小東西。都是自己做給自己用的。</p>
+        </div>
+        <div class="sec-head-meta mono">solo · for fun · always shipping</div>
+      </section>
+
+      <!-- Hero: Lorescape -->
+      <article class="tile span-4 project-hero">
+        <div class="project-cover project-cover--image" style="background-image:url('https://lorescape.app/images/hero-bg.jpg')">
+          <div class="project-cover-overlay"></div>
+          <span class="mono project-tag">MOBILE APP</span>
+          <span class="pill project-pill">● 活著</span>
+        </div>
+        <div class="project-body">
+          <h4>Lorescape <span class="project-sub">· 沉浸式歷史探索</span></h4>
+          <p class="project-blurb">用 AI 當你的隨身歷史導覽，把眼前的石頭、巷弄、廟宇的故事娓娓道來。從 0 完整流程上架 iOS / Android。</p>
+          <div class="project-chips">
+            <span class="chip">iOS · Android</span>
+            <span class="chip chip--outline">Flutter · Dart · Supabase</span>
+          </div>
+          <div class="project-foot project-foot--links">
+            <a href="https://github.com/easylive1989/instant_explore" target="_blank" rel="noopener">GitHub ↗</a>
+            <a href="https://lorescape.app/" target="_blank" rel="noopener" class="link-accent">官網 lorescape.app ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <div class="tile span-2 tile--flush">
+        <div class="project-stack">
+          <div class="project-stack-cell">
+            <div class="project-stack-head">
+              <div class="pj-icon" style="background:var(--bento-accent)">▲</div>
+              <span class="pill pill--muted">● 活著</span>
+            </div>
+            <div>
+              <h4 class="project-stack-title">台股趨勢分析</h4>
+              <div class="mono project-stack-sub">Web · Publixia</div>
+            </div>
+            <p class="project-stack-blurb">從 TWSE 抓盤後資料、自己畫圖、找有趣的價量訊號。每天自己也在看。</p>
+            <div class="project-stack-chips">
+              <span class="chip chip--mini">React</span>
+              <span class="chip chip--mini">FastAPI</span>
+            </div>
+            <div class="project-stack-foot">
+              <a href="https://github.com/easylive1989/publixia" target="_blank" rel="noopener">GitHub</a>
+              <a href="https://stock.paul-learning.dev/" target="_blank" rel="noopener" class="link-accent">進站 ↗</a>
+            </div>
+          </div>
+          <div class="project-stack-cell">
+            <div class="project-stack-head">
+              <div class="pj-icon" style="background:#2eb88a">◆</div>
+              <span class="pill pill--muted">● 活著</span>
+            </div>
+            <div>
+              <h4 class="project-stack-title">YouTube 運動計時器</h4>
+              <div class="mono project-stack-sub">Web tool</div>
+            </div>
+            <p class="project-stack-blurb">看 YouTube 運動影片時疊加的區間計時器，幫忙在固定秒數提醒換動作。</p>
+            <div class="project-stack-chips">
+              <span class="chip chip--mini">Vanilla JS</span>
+            </div>
+            <div class="project-stack-foot">
+              <a href="https://github.com/easylive1989/youtube-sport-timer" target="_blank" rel="noopener">GitHub</a>
+              <a href="https://paul-learning.dev/youtube-sport-timer/" target="_blank" rel="noopener" class="link-accent">進站 ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────── Row 6 — Paul Playbox (dedicated section) ─────────── -->
+    <div class="grid cols-6" style="margin-top:var(--bento-gap)">
+      <section class="tile span-6 sec-head">
+        <div>
+          <div class="mono lab-eyebrow">↳ paul playbox</div>
+          <h3>保羅的遊樂場</h3>
+          <p>遊戲是第九藝術，喜歡遊戲，熱愛遊戲，持續追尋創意。{playboxGames.length} 個瀏覽器小遊戲，點開直接玩。</p>
+        </div>
+        <a href={playboxUrl} target="_blank" rel="noopener" class="mono lab-link">easylive1989.github.io/paul-playbox ↗</a>
+      </section>
+
+      <section class="tile span-6 tile--flush">
+        <div class="playbox-grid">
+          {playboxGames.map((game) => (
+            <a class="game" href={`${PLAYBOX_BASE}/${game.slug}/`} target="_blank" rel="noopener">
+              <div class="game-cover">
+                <img src={`${PLAYBOX_BASE}/public/${game.image}`} alt={`${game.name} screenshot`} loading="lazy" />
+                <span class="play-btn">▶ play</span>
+              </div>
+              <div class="game-body">
+                <div class="game-name mono">./{game.slug.replace(/_/g, '-')}</div>
+                <p class="game-blurb">{game.name}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    </div>
+
+    <!-- ─────────── Footer ─────────── -->
+    <div class="grid cols-tabs" style="margin-top:var(--bento-gap)">
+      <footer class="tile bento-footer">
+        <span>paul-learning.dev · © {new Date().getFullYear()} {config.author.name} · built with Astro</span>
+        <a href="/rss.xml" class="mono bento-footer-rss">RSS ↗</a>
+      </footer>
+    </div>
+
   </div>
 </BaseLayout>
+
+<style is:global>
+  /* Body / main overrides only when the bento homepage is loaded */
+  body.bento-page {
+    background: var(--bento-bg);
+    color: var(--bento-ink);
+    font-family: var(--bento-font-sans);
+    line-height: 1.5;
+  }
+  body.bento-page main {
+    max-width: 1100px;
+    padding: 20px;
+  }
+  body.bento-page a { color: inherit; text-decoration: none; }
+  body.bento-page h1, body.bento-page h2, body.bento-page h3,
+  body.bento-page h4, body.bento-page h5 {
+    margin: 0; letter-spacing: -0.025em; font-weight: 600;
+  }
+  body.bento-page p { margin: 0; }
+</style>
+
+<style>
+  .bento-home {
+    color: var(--bento-ink);
+    font-family: var(--bento-font-sans);
+  }
+
+  /* === Grid === */
+  .grid { display: grid; gap: var(--bento-gap); }
+  .cols-6 { grid-template-columns: repeat(6, 1fr); }
+  .cols-tabs { grid-template-columns: 1fr; }
+  .span-1 { grid-column: span 1; }
+  .span-2 { grid-column: span 2; }
+  .span-3 { grid-column: span 3; }
+  .span-4 { grid-column: span 4; }
+  .span-6 { grid-column: span 6; }
+  .stack-2 { grid-template-rows: auto auto; }
+
+  /* === Tile primitive === */
+  .tile {
+    background: var(--bento-surface);
+    border-radius: var(--bento-r-lg);
+    padding: var(--bento-pad);
+    box-shadow: var(--bento-shadow);
+    position: relative;
+    overflow: hidden;
+    transition: background .2s, box-shadow .2s;
+  }
+  .tile--dark { background: var(--bento-ink); color: var(--bento-ink-on); }
+  :global([data-theme="dark"]) .bento-home .tile--dark { background: var(--bento-surface-2); }
+  .tile--flush { padding: 0; }
+  .tile--accent { background: var(--bento-accent); color: #fff; }
+  .tile--green { background: var(--bento-accent-2); color: #fff; }
+
+  /* === Helpers === */
+  .label {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--bento-sub);
+    font-weight: 500;
+  }
+  .label--on-color { color: rgba(255, 255, 255, .8); }
+  .mono { font-family: var(--bento-font-mono); font-feature-settings: 'zero' on; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: var(--bento-r-chip);
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--bento-surface-2);
+    color: var(--bento-ink);
+  }
+  .chip--outline { background: transparent; border: 1px solid var(--bento-rule); color: var(--bento-sub); }
+  .chip--on-accent { background: rgba(255, 255, 255, .18); color: #fff; }
+  .chip--mini { font-size: 10px; padding: 1px 7px; }
+  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+
+  /* === Identity tile === */
+  .identity { display: flex; align-items: center; gap: 22px; }
+  .avatar {
+    width: 104px; height: 104px; border-radius: 50%;
+    flex-shrink: 0; object-fit: cover;
+    background: #f6e9cd;
+  }
+  .h-display { font-size: 56px; line-height: 0.96; margin: 2px 0 0; }
+  .bio {
+    font-size: 17px; line-height: 1.55;
+    color: var(--bento-sub);
+    margin-top: 22px; max-width: 520px;
+  }
+  .badges { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  .tile-theme-toggle {
+    margin-left: auto;
+    align-self: flex-start;
+    background: transparent;
+    border: 1px solid var(--bento-rule);
+    color: var(--bento-sub);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: color .2s, border-color .2s;
+  }
+  .tile-theme-toggle:hover { color: var(--bento-ink); border-color: var(--bento-ink); }
+  .tile-theme-toggle .theme-icon { display: none; }
+  .tile-theme-toggle .moon-icon { display: block; }
+  :global([data-theme="dark"]) .bento-home .tile-theme-toggle .sun-icon { display: block; }
+  :global([data-theme="dark"]) .bento-home .tile-theme-toggle .moon-icon { display: none; }
+
+  /* === Now tile === */
+  .now-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+  .now-title { font-size: 22px; line-height: 1.25; }
+  .now-divider { height: 1px; background: rgba(255, 255, 255, .12); margin: 16px 0 12px; }
+  .now-list {
+    display: grid; grid-template-columns: auto 1fr auto;
+    row-gap: 6px; column-gap: 12px; font-size: 12px;
+  }
+  .now-key { color: rgba(255, 255, 255, .65); }
+  .now-val { color: #fff; }
+
+  /* === Tabs === */
+  .tabs-tile { padding: 8px; }
+  .tabs { display: flex; gap: 6px; padding: 0; }
+  .tab-link {
+    flex: 1;
+    background: transparent;
+    color: var(--bento-sub);
+    padding: 16px 20px;
+    border-radius: var(--bento-r-md);
+    text-align: left;
+    position: relative;
+    transition: background .15s, color .15s;
+    display: block;
+  }
+  .tab-link:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
+  .tab-link.active {
+    background: var(--bento-ink);
+    color: var(--bento-ink-on);
+    flex: 1.4;
+  }
+  :global([data-theme="dark"]) .bento-home .tab-link.active { background: var(--bento-surface-2); }
+  .tab-label { font-size: 16px; font-weight: 500; }
+  .tab-meta {
+    font-size: 11px; opacity: .6; margin-bottom: 4px;
+    letter-spacing: .1em; text-transform: uppercase;
+  }
+  .tab-link.active .tab-meta { opacity: .85; }
+  .live-dot {
+    position: absolute; top: 14px; right: 16px;
+    color: var(--bento-accent-2); font-size: 18px;
+  }
+
+  /* === Featured === */
+  .featured { padding: 0; }
+  .featured-body { padding: 28px 28px 24px; }
+  .featured-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; gap: 10px; }
+  .featured h2 { font-size: 36px; line-height: 1.08; color: #fff; }
+  .featured p { font-size: 15px; line-height: 1.6; color: rgba(255, 255, 255, .85); margin: 14px 0 18px; max-width: 460px; }
+  .btn-pri {
+    background: #fff; color: var(--bento-accent); padding: 10px 16px;
+    border: 0; border-radius: var(--bento-r-sm); font-size: 14px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .featured-band {
+    min-height: 56px; background: rgba(0, 0, 0, .18);
+    display: flex; align-items: center; padding: 14px 28px; gap: 14px;
+    font-size: 11px; color: rgba(255, 255, 255, .7);
+    flex-wrap: wrap;
+  }
+
+  /* === Book tile === */
+  .book-tile {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .book-cover-img {
+    width: 80px;
+    aspect-ratio: 3 / 4;
+    border-radius: 6px;
+    object-fit: cover;
+    box-shadow: 0 6px 18px -4px rgba(0, 0, 0, .35);
+  }
+  .book-title { font-size: 19px; line-height: 1.2; color: #fff; }
+  .book-blurb { font-size: 12px; color: rgba(255, 255, 255, .8); margin-top: 8px; line-height: 1.5; }
+  .book-cta {
+    display: inline-block; background: #fff; color: var(--bento-accent-2);
+    padding: 7px 12px; border-radius: var(--bento-r-sm);
+    font-size: 12px; font-weight: 500; margin-top: 10px;
+  }
+
+  /* === Snapshot === */
+  .snapshot-tile { padding: 18px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { background: var(--bento-surface-2); border-radius: var(--bento-r-md); padding: 12px 14px; }
+  .stat-n { font-size: 28px; line-height: 1; font-weight: 600; }
+  .stat-l { font-size: 11px; color: var(--bento-sub); margin-top: 4px; }
+
+  /* === Posts === */
+  .posts-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 22px 24px 14px; gap: 12px;
+  }
+  .posts-link { font-size: 11px; color: var(--bento-sub); letter-spacing: .1em; }
+  .posts-link:hover { color: var(--bento-accent); }
+  .posts-divider { height: 1px; background: var(--bento-rule); margin: 0 24px; }
+  .post-row {
+    display: grid;
+    grid-template-columns: 44px 1fr 110px 28px;
+    column-gap: 14px;
+    padding: 16px 24px;
+    align-items: center;
+    transition: transform .15s;
+    border-bottom: 1px solid var(--bento-rule);
+  }
+  .post-row:last-child { border-bottom: 0; }
+  .post-row:hover { transform: translateX(4px); }
+  .post-row:hover .arrow { color: var(--bento-accent); }
+  .post-icon {
+    width: 36px; height: 36px; border-radius: var(--bento-r-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .post-title { font-size: 15px; font-weight: 500; line-height: 1.3; }
+  .post-meta {
+    font-size: 12px; color: var(--bento-sub);
+    margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .post-tail { font-size: 11px; color: var(--bento-sub); text-align: right; }
+  .arrow { color: var(--bento-sub); font-size: 16px; text-align: right; transition: color .15s; }
+
+  /* === Channels === */
+  .channels { display: grid; gap: 4px; }
+  .ch-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--bento-rule);
+    transition: transform .15s;
+  }
+  .ch-row:hover { transform: translateX(4px); }
+  .ch-row:last-child { border-bottom: 0; }
+  .ch-left { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+  .ch-icon { width: 22px; color: var(--bento-sub); font-size: 13px; text-align: center; }
+  .ch-val { font-size: 12px; color: var(--bento-sub); }
+
+  /* === Talks === */
+  .talks-list {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; gap: 11px; font-size: 12px;
+  }
+  .talks-list li {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 10px;
+    line-height: 1.4;
+  }
+  .talks-year { color: var(--bento-sub); font-size: 11px; }
+  .talks-link {
+    color: var(--bento-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--bento-rule);
+    text-underline-offset: 3px;
+  }
+  .talks-link:hover { text-decoration-color: var(--bento-accent); }
+  .talks-venue { font-size: 11px; }
+  .talks-venue--sub { color: var(--bento-sub); }
+  .talks-venue--green { color: var(--bento-accent-2); }
+
+  /* === Sec head === */
+  .sec-head {
+    padding: 18px 22px 16px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .sec-head h3 { font-size: 26px; }
+  .sec-head p { font-size: 13px; color: var(--bento-sub); margin-top: 4px; }
+  .sec-head-meta {
+    font-size: 11px; color: var(--bento-sub);
+    letter-spacing: .12em; text-transform: uppercase;
+  }
+
+  /* === Project hero === */
+  .project-hero { padding: 0; overflow: hidden; }
+  .project-cover {
+    aspect-ratio: 21 / 8;
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+  }
+  .project-cover-stripes {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent 0 27px, rgba(255, 255, 255, .08) 27px 28px);
+  }
+  .project-cover--image {
+    background-size: cover;
+    background-position: center;
+    background-color: #0e1418;
+  }
+  .project-cover-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(14, 20, 24, .35) 0%, rgba(14, 20, 24, .55) 100%);
+  }
+  .project-cover svg {
+    position: absolute; bottom: 14px; left: 16px; right: 16px;
+    height: 80px; width: calc(100% - 32px); opacity: .85;
+  }
+  .project-tag {
+    position: absolute; top: 14px; left: 16px;
+    color: rgba(255, 255, 255, .9); font-size: 11px; letter-spacing: .15em;
+  }
+  .pill {
+    background: var(--bento-accent-2); color: #0a3a26; font-size: 11px;
+    padding: 3px 10px; border-radius: var(--bento-r-chip); font-weight: 600;
+  }
+  .project-pill { position: absolute; top: 14px; right: 16px; }
+  .pill--muted { background: rgba(46, 184, 138, .14); color: var(--bento-accent-2); }
+  .pill--blue { background: rgba(52, 120, 246, .14); color: #3478f6; }
+  :global([data-theme="dark"]) .bento-home .pill--muted { background: rgba(74, 210, 159, .15); }
+
+  .project-body { padding: 16px 20px 18px; }
+  .project-body h4 { font-size: 22px; }
+  .project-sub { color: var(--bento-sub); font-size: 14px; font-weight: 400; }
+  .project-blurb { font-size: 14px; line-height: 1.55; color: var(--bento-sub); margin-top: 6px; }
+  .project-chips { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .project-foot {
+    margin-top: 12px; font-size: 12px; color: var(--bento-sub);
+    display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+  }
+  .project-foot--links { font-weight: 500; }
+  .project-foot a { color: var(--bento-sub); transition: color .15s; }
+  .project-foot a:hover { color: var(--bento-ink); }
+  .link-accent { color: var(--bento-accent) !important; }
+  .link-accent:hover { color: var(--bento-accent) !important; opacity: .8; }
+
+  /* === Project stack === */
+  .project-stack { display: grid; grid-template-rows: 1fr 1fr; height: 100%; }
+  .project-stack-cell { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .project-stack-cell + .project-stack-cell { border-top: 1px solid var(--bento-rule); }
+  .project-stack-head { display: flex; justify-content: space-between; align-items: center; }
+  .project-stack-title { font-size: 17px; line-height: 1.15; }
+  .project-stack-sub { font-size: 10px; color: var(--bento-sub); letter-spacing: .1em; margin-top: 2px; }
+  .project-stack-blurb { font-size: 12px; color: var(--bento-sub); line-height: 1.5; flex: 1; }
+  .project-stack-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .project-stack-foot {
+    font-size: 11px; color: var(--bento-sub);
+    display: flex; justify-content: space-between; gap: 6px;
+  }
+  .project-stack-foot a { color: var(--bento-sub); transition: color .15s; }
+  .project-stack-foot a:hover { color: var(--bento-ink); }
+  .project-stack-foot a.link-accent { color: var(--bento-accent); }
+  .pj-icon {
+    width: 36px; height: 36px; border-radius: var(--bento-r-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 16px; font-weight: 700;
+  }
+
+  /* === Paul Playbox === */
+  .lab-eyebrow {
+    font-size: 10px; color: var(--bento-accent);
+    letter-spacing: .15em; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .lab-link {
+    font-size: 11px; color: var(--bento-accent); letter-spacing: .1em;
+    align-self: flex-end;
+  }
+  .lab-link:hover { opacity: .8; }
+
+  .playbox-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .game {
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--bento-rule);
+    border-bottom: 1px solid var(--bento-rule);
+    transition: background .15s;
+  }
+  .game:hover { background: var(--bento-surface-2); }
+  .game:nth-child(3n) { border-right: 0; }
+  .game:nth-last-child(-n+3) { border-bottom: 0; }
+  .game-cover {
+    aspect-ratio: 16 / 9;
+    position: relative; overflow: hidden;
+    background: var(--bento-surface-2);
+  }
+  .game-cover img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .25s ease;
+  }
+  .game:hover .game-cover img { transform: scale(1.04); }
+  .play-btn {
+    position: absolute; bottom: 10px; right: 10px;
+    background: rgba(0, 0, 0, .55); color: #fff;
+    padding: 4px 10px; border-radius: var(--bento-r-chip);
+    font-size: 11px;
+    font-weight: 500;
+    backdrop-filter: blur(4px);
+  }
+  .game-body { padding: 12px 14px 14px; }
+  .game-name { font-size: 12px; font-weight: 600; color: var(--bento-accent); }
+  .game-blurb { font-size: 13px; color: var(--bento-ink); margin-top: 4px; line-height: 1.4; font-weight: 500; }
+
+  /* === Footer === */
+  .bento-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 22px; font-size: 13px; color: var(--bento-sub);
+  }
+  .bento-footer-rss { font-size: 11px; letter-spacing: .1em; color: var(--bento-sub); }
+  .bento-footer-rss:hover { color: var(--bento-accent); }
+
+  /* === Responsive === */
+  @media (max-width: 860px) {
+    .cols-6 { grid-template-columns: repeat(2, 1fr); }
+    .span-1, .span-2, .span-3, .span-4, .span-6 { grid-column: span 2; }
+    .h-display { font-size: 40px; }
+    .featured h2 { font-size: 26px; }
+    .tabs { flex-direction: column; }
+    .tab-link.active { flex: 1; }
+    .project-cover { aspect-ratio: 16 / 9; }
+    .playbox-grid { grid-template-columns: repeat(2, 1fr); }
+    .game { border-right: 1px solid var(--bento-rule); border-bottom: 1px solid var(--bento-rule); }
+    .game:nth-child(3n) { border-right: 1px solid var(--bento-rule); }
+    .game:nth-last-child(-n+3) { border-bottom: 1px solid var(--bento-rule); }
+    .game:nth-child(2n) { border-right: 0; }
+    .game:nth-last-child(-n+1):nth-child(odd) { border-right: 0; }
+    .lab-link { align-self: flex-start; }
+    .post-row { grid-template-columns: 36px 1fr 28px; }
+    .post-tail { display: none; }
+    .identity { flex-wrap: wrap; }
+    .tile-theme-toggle { order: -1; }
+  }
+</style>
