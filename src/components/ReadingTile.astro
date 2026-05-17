@@ -12,7 +12,7 @@ const BASE = import.meta.env.BASE_URL;
 const currentCover = current ? coverGradient(current) : null;
 ---
 
-<section class="tile tile--dark span-2 reading-tile">
+<section class="reading-tile">
   <div class="reading-head">
     <span class="reading-label">/reading</span>
     {current ? (
@@ -74,8 +74,23 @@ const currentCover = current ? coverGradient(current) : null;
 
 <style>
   .reading-tile {
+    background: var(--bento-ink);
+    color: var(--bento-ink-on);
+    border-radius: var(--bento-r-lg);
+    padding: var(--bento-pad);
+    box-shadow: var(--bento-shadow);
+    position: relative;
+    overflow: hidden;
+    grid-column: span 2;
     display: flex;
     flex-direction: column;
+    transition: background .2s, box-shadow .2s;
+  }
+  :global([data-theme="dark"]) .reading-tile {
+    background: var(--bento-surface-2);
+  }
+  @media (max-width: 860px) {
+    .reading-tile { grid-column: span 2; }
   }
 
   .reading-head {
