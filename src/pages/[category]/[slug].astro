@@ -180,34 +180,48 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
 
 <script is:inline>
   (function () {
-    const fill = document.getElementById('article-progress-fill');
-    const tocLinks = Array.from(document.querySelectorAll('#article-toc .toc-link'));
-    const sections = tocLinks
-      .map((a) => {
-        const id = (a.getAttribute('href') || '').slice(1);
-        return id ? document.getElementById(id) : null;
-      })
-      .filter(Boolean);
+    if (window.__articleAbort) window.__articleAbort.abort();
 
-    function onScroll() {
-      const doc = document.documentElement;
-      const total = doc.scrollHeight - doc.clientHeight;
-      const pct = total > 0 ? Math.min(100, Math.max(0, (doc.scrollTop / total) * 100)) : 0;
-      if (fill) fill.style.width = pct + '%';
+    function setupArticle() {
+      if (window.__articleAbort) window.__articleAbort.abort();
+      const ctrl = new AbortController();
+      window.__articleAbort = ctrl;
+      const signal = ctrl.signal;
 
-      if (sections.length === 0) return;
-      let activeIdx = 0;
-      const probe = doc.scrollTop + 140;
-      for (let i = 0; i < sections.length; i++) {
-        if (sections[i].offsetTop <= probe) activeIdx = i;
+      const fill = document.getElementById('article-progress-fill');
+      const tocLinks = Array.from(document.querySelectorAll('#article-toc .toc-link'));
+      const sections = tocLinks
+        .map((a) => {
+          const id = (a.getAttribute('href') || '').slice(1);
+          return id ? document.getElementById(id) : null;
+        })
+        .filter(Boolean);
+
+      // No article on this page (e.g. navigated to the homepage) — bail.
+      if (!fill && sections.length === 0) return;
+
+      function onScroll() {
+        const doc = document.documentElement;
+        const total = doc.scrollHeight - doc.clientHeight;
+        const pct = total > 0 ? Math.min(100, Math.max(0, (doc.scrollTop / total) * 100)) : 0;
+        if (fill) fill.style.width = pct + '%';
+
+        if (sections.length === 0) return;
+        let activeIdx = 0;
+        const probe = doc.scrollTop + 140;
+        for (let i = 0; i < sections.length; i++) {
+          if (sections[i].offsetTop <= probe) activeIdx = i;
+        }
+        tocLinks.forEach((a, i) => {
+          if (i === activeIdx) a.classList.add('is-active');
+          else a.classList.remove('is-active');
+        });
       }
-      tocLinks.forEach((a, i) => {
-        if (i === activeIdx) a.classList.add('is-active');
-        else a.classList.remove('is-active');
-      });
+      addEventListener('scroll', onScroll, { passive: true, signal });
+      onScroll();
     }
-    addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
+
+    document.addEventListener('astro:page-load', setupArticle);
   })();
 </script>
 

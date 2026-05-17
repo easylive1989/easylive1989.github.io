@@ -405,36 +405,47 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
 
   <script is:inline>
     (function () {
-      const tabBtns = Array.from(document.querySelectorAll('[data-tab-target]'));
-      const panels  = Array.from(document.querySelectorAll('[data-tab-content]'));
-      if (tabBtns.length === 0 || panels.length === 0) return;
-      const valid = new Set(tabBtns.map((b) => b.getAttribute('data-tab-target')));
+      if (window.__bentoTabsAbort) window.__bentoTabsAbort.abort();
 
-      function activate(slug, opts) {
-        if (!valid.has(slug)) return;
-        const pushUrl = !opts || opts.pushUrl !== false;
-        tabBtns.forEach((b) => {
-          const on = b.getAttribute('data-tab-target') === slug;
-          b.classList.toggle('active', on);
-          if (on) b.setAttribute('aria-current', 'true');
-          else b.removeAttribute('aria-current');
-        });
-        panels.forEach((p) => {
-          p.hidden = p.getAttribute('data-tab-content') !== slug;
-        });
-        if (pushUrl) {
-          const url = new URL(location.href);
-          url.searchParams.set('tab', slug);
-          history.replaceState({}, '', url);
+      function setupBentoTabs() {
+        if (window.__bentoTabsAbort) window.__bentoTabsAbort.abort();
+        const ctrl = new AbortController();
+        window.__bentoTabsAbort = ctrl;
+        const signal = ctrl.signal;
+
+        const tabBtns = Array.from(document.querySelectorAll('[data-tab-target]'));
+        const panels  = Array.from(document.querySelectorAll('[data-tab-content]'));
+        if (tabBtns.length === 0 || panels.length === 0) return;
+        const valid = new Set(tabBtns.map((b) => b.getAttribute('data-tab-target')));
+
+        function activate(slug, opts) {
+          if (!valid.has(slug)) return;
+          const pushUrl = !opts || opts.pushUrl !== false;
+          tabBtns.forEach((b) => {
+            const on = b.getAttribute('data-tab-target') === slug;
+            b.classList.toggle('active', on);
+            if (on) b.setAttribute('aria-current', 'true');
+            else b.removeAttribute('aria-current');
+          });
+          panels.forEach((p) => {
+            p.hidden = p.getAttribute('data-tab-content') !== slug;
+          });
+          if (pushUrl) {
+            const url = new URL(location.href);
+            url.searchParams.set('tab', slug);
+            history.replaceState({}, '', url);
+          }
         }
+
+        const initial = new URL(location.href).searchParams.get('tab');
+        if (initial && valid.has(initial)) activate(initial, { pushUrl: false });
+
+        tabBtns.forEach((b) => {
+          b.addEventListener('click', () => activate(b.getAttribute('data-tab-target')), { signal });
+        });
       }
 
-      const initial = new URL(location.href).searchParams.get('tab');
-      if (initial && valid.has(initial)) activate(initial, { pushUrl: false });
-
-      tabBtns.forEach((b) => {
-        b.addEventListener('click', () => activate(b.getAttribute('data-tab-target')));
-      });
+      document.addEventListener('astro:page-load', setupBentoTabs);
     })();
   </script>
 </BaseLayout>

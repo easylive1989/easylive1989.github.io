@@ -233,93 +233,105 @@ const heroDesc = isScoped
 
 <script is:inline>
   (function () {
-    const list = document.getElementById('archive-list');
-    if (!list) return;
-    const q = document.getElementById('archive-q');
-    const chips = document.getElementById('archive-chips');
-    const sortBtn = document.getElementById('archive-sort');
-    const emptyEl = document.getElementById('archive-empty');
-    const sections = Array.from(list.querySelectorAll('.year-section'));
+    // Tracked across view-transitions so old listeners get torn down on re-setup.
+    if (window.__archiveAbort) window.__archiveAbort.abort();
 
-    let activeCat = '*';
-    let kw = '';
+    function setupArchive() {
+      if (window.__archiveAbort) window.__archiveAbort.abort();
+      const ctrl = new AbortController();
+      window.__archiveAbort = ctrl;
+      const signal = ctrl.signal;
 
-    function apply() {
-      let anyVisible = false;
-      for (const sec of sections) {
-        const rows = Array.from(sec.querySelectorAll('.archive-row'));
-        let visibleInSection = 0;
-        for (const row of rows) {
-          const cat = row.getAttribute('data-cat') || '';
-          const title = (row.getAttribute('data-title') || '').toLowerCase();
-          const catOk = activeCat === '*' || cat === activeCat;
-          const kwOk = !kw || title.indexOf(kw) >= 0 || cat.toLowerCase().indexOf(kw) >= 0;
-          const show = catOk && kwOk;
-          row.style.display = show ? '' : 'none';
-          if (show) visibleInSection++;
+      const list = document.getElementById('archive-list');
+      if (!list) return;
+      const q = document.getElementById('archive-q');
+      const chips = document.getElementById('archive-chips');
+      const sortBtn = document.getElementById('archive-sort');
+      const emptyEl = document.getElementById('archive-empty');
+      const sections = Array.from(list.querySelectorAll('.year-section'));
+
+      let activeCat = '*';
+      let kw = '';
+
+      function apply() {
+        let anyVisible = false;
+        for (const sec of sections) {
+          const rows = Array.from(sec.querySelectorAll('.archive-row'));
+          let visibleInSection = 0;
+          for (const row of rows) {
+            const cat = row.getAttribute('data-cat') || '';
+            const title = (row.getAttribute('data-title') || '').toLowerCase();
+            const catOk = activeCat === '*' || cat === activeCat;
+            const kwOk = !kw || title.indexOf(kw) >= 0 || cat.toLowerCase().indexOf(kw) >= 0;
+            const show = catOk && kwOk;
+            row.style.display = show ? '' : 'none';
+            if (show) visibleInSection++;
+          }
+          sec.style.display = visibleInSection > 0 ? '' : 'none';
+          if (visibleInSection > 0) anyVisible = true;
         }
-        sec.style.display = visibleInSection > 0 ? '' : 'none';
-        if (visibleInSection > 0) anyVisible = true;
+        if (emptyEl) emptyEl.hidden = anyVisible;
       }
-      if (emptyEl) emptyEl.hidden = anyVisible;
-    }
 
-    if (q) {
-      q.addEventListener('input', () => {
-        kw = q.value.trim().toLowerCase();
-        apply();
-      });
-    }
-
-    if (chips) {
-      chips.querySelectorAll('.chip').forEach((c) => {
-        c.addEventListener('click', () => {
-          chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-current', 'false'));
-          c.setAttribute('aria-current', 'true');
-          activeCat = c.getAttribute('data-cat') || '*';
+      if (q) {
+        q.addEventListener('input', () => {
+          kw = q.value.trim().toLowerCase();
           apply();
-        });
-      });
-    }
-
-    if (sortBtn) {
-      sortBtn.addEventListener('click', () => {
-        const cur = sortBtn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
-        const next = cur === 'asc' ? 'desc' : 'asc';
-        sortBtn.setAttribute('data-dir', next);
-        const label = sortBtn.querySelector('.sort-label');
-        if (label) label.textContent = next === 'desc' ? '↓ 新到舊' : '↑ 舊到新';
-
-        // Reorder year sections
-        const ordered = [...sections].sort((a, b) => {
-          const ya = parseInt(a.getAttribute('data-year') || '0', 10);
-          const yb = parseInt(b.getAttribute('data-year') || '0', 10);
-          return next === 'desc' ? yb - ya : ya - yb;
-        });
-        for (const sec of ordered) list.insertBefore(sec, emptyEl);
-
-        // Reorder rows inside each section by date
-        for (const sec of ordered) {
-          const rowsHost = sec.querySelector('.rows');
-          if (!rowsHost) continue;
-          const rows = Array.from(rowsHost.querySelectorAll('.archive-row'));
-          rows.sort((a, b) => {
-            const da = a.getAttribute('data-date') || '';
-            const db = b.getAttribute('data-date') || '';
-            return next === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
-          });
-          for (const r of rows) rowsHost.appendChild(r);
-        }
-      });
-    }
-
-    // ⌘K / Ctrl+K focuses search
-    document.addEventListener('keydown', (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        if (q) q.focus();
+        }, { signal });
       }
-    });
+
+      if (chips) {
+        chips.querySelectorAll('.chip').forEach((c) => {
+          c.addEventListener('click', () => {
+            chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-current', 'false'));
+            c.setAttribute('aria-current', 'true');
+            activeCat = c.getAttribute('data-cat') || '*';
+            apply();
+          }, { signal });
+        });
+      }
+
+      if (sortBtn) {
+        sortBtn.addEventListener('click', () => {
+          const cur = sortBtn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
+          const next = cur === 'asc' ? 'desc' : 'asc';
+          sortBtn.setAttribute('data-dir', next);
+          const label = sortBtn.querySelector('.sort-label');
+          if (label) label.textContent = next === 'desc' ? '↓ 新到舊' : '↑ 舊到新';
+
+          // Reorder year sections
+          const ordered = [...sections].sort((a, b) => {
+            const ya = parseInt(a.getAttribute('data-year') || '0', 10);
+            const yb = parseInt(b.getAttribute('data-year') || '0', 10);
+            return next === 'desc' ? yb - ya : ya - yb;
+          });
+          for (const sec of ordered) list.insertBefore(sec, emptyEl);
+
+          // Reorder rows inside each section by date
+          for (const sec of ordered) {
+            const rowsHost = sec.querySelector('.rows');
+            if (!rowsHost) continue;
+            const rows = Array.from(rowsHost.querySelectorAll('.archive-row'));
+            rows.sort((a, b) => {
+              const da = a.getAttribute('data-date') || '';
+              const db = b.getAttribute('data-date') || '';
+              return next === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
+            });
+            for (const r of rows) rowsHost.appendChild(r);
+          }
+        }, { signal });
+      }
+
+      // ⌘K / Ctrl+K focuses search
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          if (q) q.focus();
+        }
+      }, { signal });
+    }
+
+    document.addEventListener('astro:page-load', setupArchive);
   })();
 </script>
 
