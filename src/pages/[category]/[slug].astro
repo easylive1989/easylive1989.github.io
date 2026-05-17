@@ -349,6 +349,13 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
     padding: 0;
     font-size: inherit;
   }
+  /* Code chrome is always dark — force Shiki's dark theme tokens
+     and clear the per-span background-color the global Shiki rule sets. */
+  body.article-page-body .prose .code-block .shiki,
+  body.article-page-body .prose .code-block .shiki span {
+    color: var(--shiki-dark);
+    background-color: transparent !important;
+  }
   body.article-page-body .prose .code-caption {
     background: rgba(255,255,255,.04);
     border-top: 1px solid rgba(255,255,255,.08);
