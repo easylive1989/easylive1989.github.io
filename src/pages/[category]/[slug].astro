@@ -2,7 +2,14 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import NotionRenderer from '../../components/notion/NotionRenderer.astro';
 import { loadConfig } from '../../lib/config';
-import { getArticle, getAllArticlesForStaticPaths, getArticlesByCategory } from '../../lib/data';
+import {
+  getArticle,
+  getAllArticlesForStaticPaths,
+  getArticlesByCategory,
+  getAllCategories,
+} from '../../lib/data';
+import { categorySlug } from '../../lib/category';
+import { computeMeta } from '../../lib/articleMeta';
 
 export async function getStaticPaths() {
   const paths = await getAllArticlesForStaticPaths();
@@ -18,81 +25,634 @@ if (!data) {
   return Astro.redirect('/404');
 }
 
-const { article, blocks, categorySlug, categoryName } = data;
+const { article, blocks, categoryName } = data;
+const catSlug = categorySlug(article.category);
 
-const allArticles = await getArticlesByCategory(categorySlug);
+const allArticles = await getArticlesByCategory(catSlug);
 const currentIndex = allArticles.findIndex((a) => a.id === slug);
 const prevArticle = currentIndex < allArticles.length - 1 ? allArticles[currentIndex + 1] : null;
 const nextArticle = currentIndex > 0 ? allArticles[currentIndex - 1] : null;
 
-const formattedDate = new Date(article.createdTime).toLocaleDateString('zh-TW', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
+const meta = computeMeta(blocks);
+
+const dateObj = new Date(article.createdTime);
+const isoDate = article.createdTime;
+const dottedDate = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+const longDate = dateObj.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
 
 const config = loadConfig();
+const BASE = import.meta.env.BASE_URL;
+
+const allCategories = await getAllCategories();
+const palette = ['var(--bento-accent-2)', 'var(--bento-accent)', 'var(--bento-pink)', 'var(--bento-accent-3)'];
+const catIdx = allCategories.findIndex((c) => c.name === article.category);
+const catColor = catIdx === -1 ? 'var(--bento-sub)' : palette[catIdx % palette.length];
+
+function fmtPrevNextDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ?? '#';
 ---
 
-<BaseLayout title={article.title}>
-  <article class="article-page">
-    <div class="article-top-bar">
-      <a href={`${import.meta.env.BASE_URL}${categorySlug}/`} class="back-link">&larr; {categoryName}</a>
-      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-        <svg class="theme-icon sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="4"/>
-          <line x1="12" y1="2" x2="12" y2="5"/>
-          <line x1="12" y1="19" x2="12" y2="22"/>
-          <line x1="4.93" y1="4.93" x2="7.05" y2="7.05"/>
-          <line x1="16.95" y1="16.95" x2="19.07" y2="19.07"/>
-          <line x1="2" y1="12" x2="5" y2="12"/>
-          <line x1="19" y1="12" x2="22" y2="12"/>
-          <line x1="4.93" y1="19.07" x2="7.05" y2="16.95"/>
-          <line x1="16.95" y1="7.05" x2="19.07" y2="4.93"/>
-        </svg>
-        <svg class="theme-icon moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
-        </svg>
-      </button>
-    </div>
+<BaseLayout title={article.title} hideFooter bodyClass="article-page-body">
+  <div class="article-progress"><div class="article-progress-fill" id="article-progress-fill"></div></div>
 
-    <header class="article-header">
-      <h1>{article.title}</h1>
-      <div class="article-meta">
-        <time datetime={article.createdTime}>{formattedDate}</time>
+  <div class="article-page" id="top">
+
+    <!-- Top nav -->
+    <header class="tile article-topnav">
+      <div class="topnav-left">
+        <a class="back" href={BASE}><span>←</span><span>保羅的學習筆記</span></a>
+        <span class="topnav-sep">/</span>
+        <a class="crumb-cat" href={`${BASE}${catSlug}/`} style={`color:${catColor}`}>{categoryName}</a>
+        <span class="topnav-sep">/</span>
+        <span class="crumb-title">{article.title}</span>
+      </div>
+      <div class="topnav-right">
+        <span class="mono">{dottedDate}</span>
+        <span class="topnav-sep">·</span>
+        <span class="mono">{meta.readMinutes} min read</span>
       </div>
     </header>
 
-    <div class="article-content">
-      <NotionRenderer blocks={blocks} />
+    <article class="tile tile--flush article-main">
+      <header class="article-header">
+        <a class="cat-chip" href={`${BASE}${catSlug}/`}>
+          <span class="cat-dot" style={`background:${catColor}`}></span>
+          {categoryName}
+        </a>
+        <h1 class="article-h1">{article.title}</h1>
+        <div class="article-meta">
+          <div class="author">
+            <img class="avatar-sm" src={`${BASE}${config.author.avatar}`} alt={config.author.name} width="36" height="36" />
+            <div>
+              <strong>{config.author.name}</strong>
+              <div class="author-sub">@easylive1989 · Taichung</div>
+            </div>
+          </div>
+          <span class="meta-sep"></span>
+          <span class="mono-meta">📑 {meta.chars.toLocaleString()} 字</span>
+          <span class="meta-sep"></span>
+          <time class="mono-meta" datetime={isoDate}>{longDate}</time>
+        </div>
+      </header>
+
+      <div class="article-grid">
+        <aside class="article-aside">
+          {meta.toc.length > 0 && (
+            <>
+              <div class="toc-label">章節 / Contents</div>
+              <nav class="toc" id="article-toc">
+                {meta.toc.map((item, i) => (
+                  <a
+                    href={`#${item.id}`}
+                    class:list={['toc-link', { 'toc-link-h3': item.level === 2, 'toc-link-h4': item.level === 3, 'is-active': i === 0 }]}
+                  >
+                    {item.text}
+                  </a>
+                ))}
+              </nav>
+            </>
+          )}
+        </aside>
+
+        <div class="prose" id="article-prose">
+          <NotionRenderer blocks={blocks} />
+
+          <div class="end-block">
+            <h3>讀完了？</h3>
+            <p>如果這篇對你有幫助，可以分享給朋友，或追蹤後續更新。我在 Threads 也會貼一些零碎想法。</p>
+            <div class="end-actions">
+              {nextArticle && (
+                <a class="pri" href={`${BASE}${catSlug}/${nextArticle.id}/`}>下一篇：{nextArticle.title} →</a>
+              )}
+              <a href={threadsUrl} target="_blank" rel="noopener">Threads 追蹤</a>
+              <a href="#top">↑ 回到頂部</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <section class="tile author-bio">
+      <img class="bio-av" src={`${BASE}${config.author.avatar}`} alt={config.author.name} width="72" height="72" />
+      <div>
+        <h4>{config.author.name}</h4>
+        <p>{config.author.bio.split('\n').map((line, i) => i === 0 ? line : [<br />, line])}</p>
+      </div>
+      <a href={BASE} class="bio-more">看更多 ↗</a>
+    </section>
+
+    <div class="pn">
+      {prevArticle ? (
+        <a class="tile pn-cell" href={`${BASE}${catSlug}/${prevArticle.id}/`}>
+          <span class="pn-dir mono">← 上一篇</span>
+          <span class="pn-title">{prevArticle.title}</span>
+          <span class="pn-date mono">{fmtPrevNextDate(prevArticle.createdTime)}</span>
+        </a>
+      ) : <div></div>}
+      {nextArticle ? (
+        <a class="tile pn-cell pn-right" href={`${BASE}${catSlug}/${nextArticle.id}/`}>
+          <span class="pn-dir mono">下一篇 →</span>
+          <span class="pn-title">{nextArticle.title}</span>
+          <span class="pn-date mono">{fmtPrevNextDate(nextArticle.createdTime)}</span>
+        </a>
+      ) : <div></div>}
     </div>
 
-    <nav class="article-nav">
-      {prevArticle && (
-        <a href={`${import.meta.env.BASE_URL}${categorySlug}/${prevArticle.id}/`} class="nav-prev">
-          &larr; {prevArticle.title}
-        </a>
-      )}
-      {nextArticle && (
-        <a href={`${import.meta.env.BASE_URL}${categorySlug}/${nextArticle.id}/`} class="nav-next">
-          {nextArticle.title} &rarr;
-        </a>
-      )}
-    </nav>
-  </article>
+    <footer class="tile article-footer">
+      <span>paul-learning.dev · © {new Date().getFullYear()} {config.author.name}</span>
+      <a href="#top" class="mono">↑ back to top</a>
+    </footer>
+  </div>
 
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "headline": article.title,
     "datePublished": article.createdTime,
-    "author": {
-      "@type": "Person",
-      "name": config.author.name,
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": config.site.title,
-    },
+    "author": { "@type": "Person", "name": config.author.name },
+    "publisher": { "@type": "Organization", "name": config.site.title },
   })} />
 </BaseLayout>
+
+<script is:inline>
+  (function () {
+    const fill = document.getElementById('article-progress-fill');
+    const tocLinks = Array.from(document.querySelectorAll('#article-toc .toc-link'));
+    const sections = tocLinks
+      .map((a) => {
+        const id = (a.getAttribute('href') || '').slice(1);
+        return id ? document.getElementById(id) : null;
+      })
+      .filter(Boolean);
+
+    function onScroll() {
+      const doc = document.documentElement;
+      const total = doc.scrollHeight - doc.clientHeight;
+      const pct = total > 0 ? Math.min(100, Math.max(0, (doc.scrollTop / total) * 100)) : 0;
+      if (fill) fill.style.width = pct + '%';
+
+      if (sections.length === 0) return;
+      let activeIdx = 0;
+      const probe = doc.scrollTop + 140;
+      for (let i = 0; i < sections.length; i++) {
+        if (sections[i].offsetTop <= probe) activeIdx = i;
+      }
+      tocLinks.forEach((a, i) => {
+        if (i === activeIdx) a.classList.add('is-active');
+        else a.classList.remove('is-active');
+      });
+    }
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
+
+<style is:global>
+  body.article-page-body {
+    background: var(--bento-bg);
+    color: var(--bento-ink);
+    font-family: var(--bento-font-sans);
+    line-height: 1.55;
+  }
+  body.article-page-body main {
+    max-width: 1100px;
+    padding: 20px;
+  }
+  body.article-page-body a { color: inherit; text-decoration: none; }
+  body.article-page-body h1, body.article-page-body h2,
+  body.article-page-body h3, body.article-page-body h4 {
+    margin: 0; letter-spacing: -0.02em; font-weight: 600;
+  }
+  body.article-page-body p { margin: 0; }
+
+  /* Prose: serif body, comfortable measure */
+  body.article-page-body .prose {
+    max-width: 660px;
+    margin: 0;
+    font-family: 'Newsreader','Noto Serif TC',Georgia,serif;
+  }
+  body.article-page-body .prose > p,
+  body.article-page-body .prose ul > li,
+  body.article-page-body .prose ol > li {
+    font-size: 18px;
+    line-height: 1.72;
+    color: var(--bento-ink);
+  }
+  body.article-page-body .prose > p { margin: 0; }
+  body.article-page-body .prose > p + p,
+  body.article-page-body .prose > * + p,
+  body.article-page-body .prose > * + ul,
+  body.article-page-body .prose > * + ol,
+  body.article-page-body .prose > * + .code-block,
+  body.article-page-body .prose > * + figure,
+  body.article-page-body .prose > * + .callout {
+    margin-top: 1.1em;
+  }
+  body.article-page-body .prose h2,
+  body.article-page-body .prose .heading-anchor-target {
+    font-family: var(--bento-font-sans);
+    letter-spacing: -0.02em;
+  }
+  body.article-page-body .prose h2 {
+    font-size: 28px; line-height: 1.15;
+    margin-top: 2.2em;
+    padding-top: 18px;
+    border-top: 1px solid var(--bento-rule);
+  }
+  body.article-page-body .prose h3 {
+    font-family: var(--bento-font-sans);
+    font-size: 20px; margin-top: 1.6em;
+  }
+  body.article-page-body .prose h4 {
+    font-family: var(--bento-font-sans);
+    font-size: 16px; margin-top: 1.4em;
+  }
+  body.article-page-body .prose h2 + p,
+  body.article-page-body .prose h3 + p,
+  body.article-page-body .prose h4 + p { margin-top: 0.8em; }
+
+  body.article-page-body .prose a {
+    color: var(--bento-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in oklab, var(--bento-accent) 40%, transparent);
+    transition: text-decoration-color .15s;
+  }
+  body.article-page-body .prose a:hover { text-decoration-color: var(--bento-accent); }
+  body.article-page-body .prose strong { color: var(--bento-ink); font-weight: 600; }
+  body.article-page-body .prose em { font-style: italic; color: var(--bento-ink); }
+  body.article-page-body .prose :not(pre) > code {
+    font-family: var(--bento-font-mono); font-size: 0.86em;
+    background: var(--bento-surface-2); color: var(--bento-ink);
+    padding: 1px 6px; border-radius: 5px;
+    border: 1px solid var(--bento-rule);
+  }
+  body.article-page-body .prose ul,
+  body.article-page-body .prose ol {
+    padding-left: 1.4em;
+    margin-top: 1em;
+  }
+  body.article-page-body .prose li { margin: 0.4em 0; }
+  body.article-page-body .prose li::marker { color: var(--bento-sub); }
+  body.article-page-body .prose blockquote {
+    margin: 1.6em 0;
+    padding: 8px 0 8px 22px;
+    border-left: 3px solid var(--bento-accent);
+    font-style: italic;
+    color: var(--bento-sub);
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  body.article-page-body .prose hr {
+    border: 0; height: 1px; background: var(--bento-rule);
+    margin: 2.4em auto; max-width: 60%;
+  }
+
+  /* Anchor link inside headings: tone it down */
+  body.article-page-body .prose .anchor-link {
+    color: var(--bento-sub);
+    opacity: 0.5;
+  }
+
+  /* Code block – macOS-ish dark chrome */
+  body.article-page-body .prose .code-block {
+    background: #0f1620;
+    border-radius: var(--bento-r-md);
+    margin: 1.4em 0;
+    font-family: var(--bento-font-mono);
+    font-size: 13.5px;
+    line-height: 1.65;
+    overflow: hidden;
+    box-shadow: 0 4px 20px -8px rgba(0,0,0,.18);
+    border: 0;
+  }
+  body.article-page-body .prose .code-header {
+    background: rgba(255,255,255,.04);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: 10px 14px;
+    color: #7d8a99;
+    font-size: 11px;
+    letter-spacing: .08em;
+  }
+  body.article-page-body .prose .code-block pre {
+    margin: 0; padding: 16px 18px;
+    background: transparent !important;
+  }
+  body.article-page-body .prose .code-block pre code {
+    background: transparent !important;
+    color: #d6dde6;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+  }
+  body.article-page-body .prose .code-caption {
+    background: rgba(255,255,255,.04);
+    border-top: 1px solid rgba(255,255,255,.08);
+    color: #7d8a99;
+  }
+
+  /* Callout */
+  body.article-page-body .prose .callout {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    padding: 16px 18px;
+    border-radius: var(--bento-r-md);
+    background: color-mix(in oklab, var(--bento-accent) 8%, var(--bento-surface));
+    border: 1px solid color-mix(in oklab, var(--bento-accent) 25%, var(--bento-rule));
+    margin: 1.4em 0;
+  }
+  body.article-page-body .prose .callout-icon {
+    font-size: 20px; line-height: 1; padding-top: 2px;
+    color: var(--bento-accent);
+  }
+  body.article-page-body .prose .callout-content {
+    font-family: var(--bento-font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--bento-ink);
+  }
+
+  /* Image */
+  body.article-page-body .prose figure { margin: 1.6em 0; }
+  body.article-page-body .prose figure img { max-width: 100%; height: auto; display: block; border-radius: var(--bento-r-sm); }
+  body.article-page-body .prose figcaption {
+    font-family: var(--bento-font-sans);
+    font-size: 12px;
+    color: var(--bento-sub);
+    text-align: center;
+    margin-top: 8px;
+    letter-spacing: .03em;
+  }
+
+  /* Bookmark */
+  body.article-page-body .prose .bookmark a {
+    text-decoration: none;
+    color: var(--bento-ink);
+    border: 1px solid var(--bento-rule);
+    border-radius: var(--bento-r-md);
+    background: var(--bento-surface-2);
+  }
+  body.article-page-body .prose .bookmark a:hover { border-color: var(--bento-accent); }
+
+  /* Heading anchor link */
+  body.article-page-body .prose .anchor-link {
+    color: var(--bento-sub);
+    text-decoration: none;
+  }
+</style>
+
+<style>
+  .article-page {
+    color: var(--bento-ink);
+    font-family: var(--bento-font-sans);
+    display: grid;
+    gap: var(--bento-gap);
+  }
+
+  .tile {
+    background: var(--bento-surface);
+    border-radius: var(--bento-r-lg);
+    padding: 24px;
+    box-shadow: var(--bento-shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .tile--flush { padding: 0; }
+
+  .mono { font-family: var(--bento-font-mono); font-feature-settings: 'zero' on; }
+
+  /* Reading progress */
+  .article-progress {
+    position: fixed; top: 0; left: 0; right: 0; height: 3px;
+    background: transparent; z-index: 30;
+  }
+  .article-progress-fill {
+    height: 100%; width: 0;
+    background: var(--bento-accent);
+    transition: width .1s linear;
+  }
+
+  /* Top nav */
+  .article-topnav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 22px; gap: 12px;
+  }
+  .topnav-left {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 13px;
+    min-width: 0; flex-wrap: wrap;
+  }
+  .topnav-sep { color: var(--bento-sub); opacity: .55; }
+  .back {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--bento-sub); padding: 4px 10px; border-radius: var(--bento-r-chip);
+    transition: background .15s, color .15s;
+  }
+  .back:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
+  .crumb-cat { font-weight: 500; padding: 4px 10px; border-radius: var(--bento-r-chip); transition: background .15s; }
+  .crumb-cat:hover { background: var(--bento-surface-2); }
+  .crumb-title {
+    color: var(--bento-sub); font-size: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 280px;
+  }
+  .topnav-right {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--bento-sub);
+    flex-shrink: 0;
+  }
+
+  /* Article header */
+  .article-header { padding: 36px 36px 28px; }
+  .cat-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 11px; border-radius: var(--bento-r-chip);
+    font-size: 11px; font-weight: 500;
+    background: var(--bento-surface-2); color: var(--bento-ink);
+    transition: background .15s;
+  }
+  .cat-chip:hover { background: var(--bento-rule); }
+  .cat-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .article-h1 {
+    font-family: var(--bento-font-sans);
+    font-size: 46px; line-height: 1.08;
+    margin-top: 18px;
+    max-width: 760px;
+  }
+  .article-meta {
+    display: flex; align-items: center; gap: 24px;
+    margin-top: 24px;
+    font-size: 13px; color: var(--bento-sub);
+    padding-top: 18px;
+    border-top: 1px solid var(--bento-rule);
+    flex-wrap: wrap;
+  }
+  .author { display: flex; align-items: center; gap: 10px; }
+  .author strong { color: var(--bento-ink); font-weight: 500; }
+  .author-sub { font-size: 11px; color: var(--bento-sub); opacity: .8; }
+  .avatar-sm {
+    width: 36px; height: 36px; border-radius: 50%;
+    object-fit: cover;
+    background: #f6e9cd;
+  }
+  .meta-sep { width: 1px; height: 16px; background: var(--bento-rule); }
+  .mono-meta { font-family: var(--bento-font-mono); font-size: 12px; }
+
+  /* Two-column reading layout */
+  .article-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 32px;
+    padding: 0 36px 40px;
+  }
+  .article-aside {
+    position: sticky; top: 20px;
+    align-self: start;
+    max-height: calc(100vh - 40px);
+    overflow: auto;
+  }
+  .toc-label {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--bento-sub); font-weight: 500; margin-bottom: 10px;
+  }
+  .toc {
+    display: grid; gap: 2px;
+    border-left: 1px solid var(--bento-rule);
+    padding-left: 14px;
+  }
+  .toc-link {
+    font-size: 13px; color: var(--bento-sub);
+    line-height: 1.45; padding: 5px 0;
+    transition: color .15s, transform .15s;
+    display: block;
+  }
+  .toc-link:hover { color: var(--bento-ink); transform: translateX(2px); }
+  .toc-link.is-active { color: var(--bento-accent); font-weight: 500; }
+  .toc-link-h3 { padding-left: 12px; font-size: 12px; }
+  .toc-link-h4 { padding-left: 24px; font-size: 12px; opacity: .9; }
+
+  /* End block */
+  .end-block {
+    margin: 3em 0 1em;
+    padding: 28px;
+    background: var(--bento-ink);
+    color: var(--bento-ink-on);
+    border-radius: var(--bento-r-md);
+    max-width: 660px;
+  }
+  :global([data-theme="dark"]) .article-page .end-block { background: var(--bento-surface-2); }
+  .end-block h3 {
+    font-family: var(--bento-font-sans); font-size: 22px;
+  }
+  .end-block p {
+    font-size: 14px; line-height: 1.6;
+    color: rgba(255,255,255,.75);
+    margin-top: 8px;
+    font-family: var(--bento-font-sans);
+  }
+  .end-actions {
+    display: flex; gap: 10px; margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .end-actions a {
+    background: rgba(255,255,255,.12);
+    color: #fff;
+    padding: 9px 14px;
+    border-radius: var(--bento-r-sm);
+    font-size: 13px;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: background .15s;
+    font-family: var(--bento-font-sans);
+  }
+  .end-actions a:hover { background: rgba(255,255,255,.22); }
+  .end-actions .pri {
+    background: var(--bento-accent-2);
+    color: #0a3a26;
+  }
+  .end-actions .pri:hover {
+    background: color-mix(in oklab, var(--bento-accent-2) 80%, white);
+  }
+
+  /* Author bio */
+  .author-bio {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 18px;
+    padding: 22px 24px;
+    align-items: center;
+  }
+  .bio-av {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #f6e9cd; object-fit: cover;
+  }
+  .author-bio h4 { font-family: var(--bento-font-sans); font-size: 18px; }
+  .author-bio p {
+    font-size: 13px; color: var(--bento-sub);
+    margin-top: 4px; line-height: 1.6;
+    font-family: var(--bento-font-sans);
+  }
+  .bio-more {
+    color: var(--bento-accent);
+    font-size: 13px;
+  }
+
+  /* Prev / next */
+  .pn {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--bento-gap);
+  }
+  .pn-cell {
+    display: grid;
+    grid-template-rows: auto auto auto;
+    gap: 4px;
+    padding: 18px 22px;
+    color: var(--bento-ink);
+    transition: transform .15s;
+  }
+  .pn-cell:hover { transform: translateY(-2px); }
+  .pn-dir {
+    font-size: 11px; color: var(--bento-sub);
+    letter-spacing: .1em;
+  }
+  .pn-title {
+    font-size: 15px; font-weight: 500;
+    line-height: 1.4; color: var(--bento-ink);
+  }
+  .pn-date {
+    font-size: 11px; color: var(--bento-sub); opacity: .8;
+  }
+  .pn-right { text-align: right; }
+
+  /* Footer */
+  .article-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 22px; font-size: 13px; color: var(--bento-sub);
+  }
+  .article-footer .mono {
+    font-size: 11px;
+    letter-spacing: .1em;
+    color: var(--bento-sub);
+  }
+  .article-footer .mono:hover { color: var(--bento-accent); }
+
+  /* Responsive */
+  @media (max-width: 860px) {
+    .article-header { padding: 24px 22px 22px; }
+    .article-h1 { font-size: 32px; }
+    .article-grid {
+      grid-template-columns: 1fr;
+      gap: 0;
+      padding: 0 22px 28px;
+    }
+    .article-aside { display: none; }
+    .pn { grid-template-columns: 1fr; }
+    .pn-right { text-align: left; }
+    .crumb-title { max-width: 100%; }
+  }
+</style>

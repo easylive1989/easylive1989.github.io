@@ -1,0 +1,542 @@
+---
+import type { Article } from '../lib/notion';
+import type { Category } from '../lib/data';
+import { categorySlug } from '../lib/category';
+
+interface Props {
+  articles: Article[];
+  allCategories: Category[];
+  scopeCategoryName?: string;
+}
+
+const BASE = import.meta.env.BASE_URL;
+const { articles, allCategories, scopeCategoryName } = Astro.props;
+const isScoped = Boolean(scopeCategoryName);
+
+function fmtMonthDay(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function estimateMin(title: string): number {
+  return Math.max(3, Math.min(15, Math.round(title.length / 8) + 3));
+}
+
+interface YearGroup {
+  year: number;
+  count: number;
+  peak: boolean;
+  items: Article[];
+}
+
+const grouped = new Map<number, Article[]>();
+for (const a of articles) {
+  const year = new Date(a.createdTime).getFullYear();
+  if (!grouped.has(year)) grouped.set(year, []);
+  grouped.get(year)!.push(a);
+}
+let peakYear = 0;
+let peakCount = 0;
+for (const [year, items] of grouped.entries()) {
+  if (items.length > peakCount) {
+    peakCount = items.length;
+    peakYear = year;
+  }
+}
+const yearGroups: YearGroup[] = Array.from(grouped.entries())
+  .sort((a, b) => b[0] - a[0])
+  .map(([year, items]) => ({
+    year,
+    count: items.length,
+    peak: year === peakYear,
+    items,
+  }));
+
+const years = yearGroups.map((g) => g.year);
+const oldestYear = years.length ? Math.min(...years) : new Date().getFullYear();
+const newestYear = years.length ? Math.max(...years) : new Date().getFullYear();
+const yearSpan = Math.max(1, newestYear - oldestYear + 1);
+const totalPosts = articles.length;
+
+const histogram = [...yearGroups].sort((a, b) => a.year - b.year);
+const maxYearCount = histogram.reduce((m, g) => Math.max(m, g.count), 0);
+
+const yearNotes: Record<number, string> = {
+  2026: '回歸更新',
+  2025: '思考程式設計的本質',
+  2024: '深入 Widget 底層',
+  2023: '工作流與細節',
+  2022: '工作、轉折',
+  2021: '第一年',
+  2020: '入門 Kata 練習',
+};
+
+const palette = ['var(--bento-accent-2)', 'var(--bento-accent)', 'var(--bento-pink)', 'var(--bento-accent-3)'];
+function catColor(name: string): string {
+  const idx = allCategories.findIndex((c) => c.name === name);
+  if (idx === -1) return 'var(--bento-sub)';
+  return palette[idx % palette.length];
+}
+
+const chipData = allCategories.map((c) => ({
+  name: c.name,
+  count: articles.filter((a) => a.category === c.name).length,
+  color: catColor(c.name),
+}));
+
+const heroTitle = isScoped ? scopeCategoryName! : '所有文章';
+const heroDesc = isScoped
+  ? `這個分類底下的 ${totalPosts} 篇文章，跨 ${yearSpan} 年。`
+  : `從 ${oldestYear} 年的第一篇開始，記錄學習歷程。寫到自己也忘記為什麼開始的那一天。`;
+---
+
+<div class="archive-page">
+  <!-- Top nav -->
+  <header class="tile archive-topnav">
+    <div class="topnav-left">
+      <a href={BASE} class="back">
+        <span>←</span><span>保羅的學習筆記</span>
+      </a>
+      <span class="topnav-sep">/</span>
+      {isScoped ? (
+        <>
+          <a href={`${BASE}archive/`} class="back" style="padding:4px 10px">所有文章</a>
+          <span class="topnav-sep">/</span>
+          <span style="font-weight:500">{scopeCategoryName}</span>
+        </>
+      ) : (
+        <span style="font-weight:500">所有文章</span>
+      )}
+    </div>
+    <div class="topnav-right">
+      <a href="/rss.xml" class="iconbtn" title="RSS" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M6.18 17.82c0 1.2-.97 2.18-2.18 2.18S1.82 19.02 1.82 17.82 2.79 15.64 4 15.64s2.18.98 2.18 2.18zM4 4.44v3.06A12.5 12.5 0 0 1 16.5 20h3.06A15.56 15.56 0 0 0 4 4.44zM4 10.6v3.07A6.4 6.4 0 0 1 10.4 20h3.07A9.47 9.47 0 0 0 4 10.6z"/>
+        </svg>
+      </a>
+      <a href="https://github.com/easylive1989" class="iconbtn" title="GitHub" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-2.03c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.4-5.26 5.68.41.36.78 1.05.78 2.12v3.14c0 .3.21.66.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/>
+        </svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero: title + histogram -->
+  <section class="tile archive-hero">
+    <div class="hero-left">
+      <div class="archive-label">Archive · 歸檔</div>
+      <h1 class="hero-h1">{heroTitle}<span class="hi-em">。</span></h1>
+      <p class="hero-desc">{heroDesc}</p>
+      <div class="stats-row">
+        <div>
+          <div class="stat-n" style="color:var(--bento-accent)">{totalPosts}</div>
+          <div class="stat-l">total posts</div>
+        </div>
+        <div>
+          <div class="stat-n" style="color:var(--bento-accent-2)">{yearSpan} yrs</div>
+          <div class="stat-l">spanning</div>
+        </div>
+        <div>
+          <div class="stat-n" style="color:var(--bento-pink)">{allCategories.length}</div>
+          <div class="stat-l">categories</div>
+        </div>
+        <div>
+          <div class="stat-n" style="color:var(--bento-accent-3)">{peakYear || '-'}</div>
+          <div class="stat-l">peak year · {peakCount} 篇</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="archive-label" style="margin-bottom:10px">每年發文量</div>
+      <div class="histo">
+        {histogram.map((g) => (
+          <div class={`histo-col${g.peak ? ' peak' : ''}`}>
+            <div class="histo-bar-wrap">
+              <div class="histo-bar" style={`height:${maxYearCount > 0 ? (g.count / maxYearCount) * 100 : 0}%`} title={`${g.count} 篇`}></div>
+            </div>
+            <div class="yr">{g.year}</div>
+            <div class="ct">{g.count} 篇</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter bar -->
+  <section class="tile archive-filter">
+    <div class="filter-row">
+      <div class="search">
+        <span class="search-icon">⌕</span>
+        <input id="archive-q" type="search" placeholder="搜尋標題..." autocomplete="off" />
+        <span class="kbd">⌘K</span>
+      </div>
+      <button class="sort-pill" id="archive-sort" type="button" data-dir="desc">
+        <span style="color:var(--bento-sub)">排序：</span>
+        <span class="sort-label">↓ 新到舊</span>
+      </button>
+    </div>
+    {!isScoped && (
+      <div class="chips" id="archive-chips">
+        <button class="chip" data-cat="*" aria-current="true">全部 <span class="ct">{totalPosts}</span></button>
+        {chipData.map((c) => (
+          <button class="chip" data-cat={c.name}>
+            <span class="dot-cat" style={`background:${c.color}`}></span>
+            {c.name}
+            <span class="ct">{c.count}</span>
+          </button>
+        ))}
+      </div>
+    )}
+  </section>
+
+  <!-- Articles, grouped by year -->
+  <section class="tile tile--flush archive-list" id="archive-list">
+    {yearGroups.map((g) => (
+      <div class="year-section" data-year={g.year}>
+        <div class="year-side">
+          <div>
+            <div class="yr-n">{g.year}</div>
+            <div class="yr-l">{g.count} 篇</div>
+            {g.peak && <div class="yr-mini">★ 高峰年</div>}
+            {yearNotes[g.year] && <div class="yr-note">{yearNotes[g.year]}</div>}
+          </div>
+        </div>
+        <div class="rows">
+          {g.items.map((a) => (
+            <a
+              class="archive-row"
+              href={`${BASE}${categorySlug(a.category)}/${a.id}/`}
+              data-cat={a.category}
+              data-title={a.title}
+              data-date={a.createdTime}
+            >
+              <span class="row-date mono">{fmtMonthDay(a.createdTime)}</span>
+              <span class="row-title">{a.title}</span>
+              <span class="row-cat"><span class="dot" style={`background:${catColor(a.category)}`}></span>{a.category}</span>
+              <span class="row-min mono">{estimateMin(a.title)} min</span>
+              <span class="row-arrow">↗</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))}
+    <div class="archive-empty" id="archive-empty" hidden>沒有符合的文章。</div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="tile archive-footer">
+    <span>paul-learning.dev · © {new Date().getFullYear()} Paul Wu · built with Astro</span>
+    <a href="#top" class="mono" style="font-size:11px;letter-spacing:.1em">↑ back to top</a>
+  </footer>
+</div>
+
+<script is:inline>
+  (function () {
+    const list = document.getElementById('archive-list');
+    if (!list) return;
+    const q = document.getElementById('archive-q');
+    const chips = document.getElementById('archive-chips');
+    const sortBtn = document.getElementById('archive-sort');
+    const emptyEl = document.getElementById('archive-empty');
+    const sections = Array.from(list.querySelectorAll('.year-section'));
+
+    let activeCat = '*';
+    let kw = '';
+
+    function apply() {
+      let anyVisible = false;
+      for (const sec of sections) {
+        const rows = Array.from(sec.querySelectorAll('.archive-row'));
+        let visibleInSection = 0;
+        for (const row of rows) {
+          const cat = row.getAttribute('data-cat') || '';
+          const title = (row.getAttribute('data-title') || '').toLowerCase();
+          const catOk = activeCat === '*' || cat === activeCat;
+          const kwOk = !kw || title.indexOf(kw) >= 0 || cat.toLowerCase().indexOf(kw) >= 0;
+          const show = catOk && kwOk;
+          row.style.display = show ? '' : 'none';
+          if (show) visibleInSection++;
+        }
+        sec.style.display = visibleInSection > 0 ? '' : 'none';
+        if (visibleInSection > 0) anyVisible = true;
+      }
+      if (emptyEl) emptyEl.hidden = anyVisible;
+    }
+
+    if (q) {
+      q.addEventListener('input', () => {
+        kw = q.value.trim().toLowerCase();
+        apply();
+      });
+    }
+
+    if (chips) {
+      chips.querySelectorAll('.chip').forEach((c) => {
+        c.addEventListener('click', () => {
+          chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-current', 'false'));
+          c.setAttribute('aria-current', 'true');
+          activeCat = c.getAttribute('data-cat') || '*';
+          apply();
+        });
+      });
+    }
+
+    if (sortBtn) {
+      sortBtn.addEventListener('click', () => {
+        const cur = sortBtn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
+        const next = cur === 'asc' ? 'desc' : 'asc';
+        sortBtn.setAttribute('data-dir', next);
+        const label = sortBtn.querySelector('.sort-label');
+        if (label) label.textContent = next === 'desc' ? '↓ 新到舊' : '↑ 舊到新';
+
+        // Reorder year sections
+        const ordered = [...sections].sort((a, b) => {
+          const ya = parseInt(a.getAttribute('data-year') || '0', 10);
+          const yb = parseInt(b.getAttribute('data-year') || '0', 10);
+          return next === 'desc' ? yb - ya : ya - yb;
+        });
+        for (const sec of ordered) list.insertBefore(sec, emptyEl);
+
+        // Reorder rows inside each section by date
+        for (const sec of ordered) {
+          const rowsHost = sec.querySelector('.rows');
+          if (!rowsHost) continue;
+          const rows = Array.from(rowsHost.querySelectorAll('.archive-row'));
+          rows.sort((a, b) => {
+            const da = a.getAttribute('data-date') || '';
+            const db = b.getAttribute('data-date') || '';
+            return next === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
+          });
+          for (const r of rows) rowsHost.appendChild(r);
+        }
+      });
+    }
+
+    // ⌘K / Ctrl+K focuses search
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (q) q.focus();
+      }
+    });
+  })();
+</script>
+
+<style is:global>
+  body.archive-page-body {
+    background: var(--bento-bg);
+    color: var(--bento-ink);
+    font-family: var(--bento-font-sans);
+    line-height: 1.5;
+  }
+  body.archive-page-body main {
+    max-width: 1100px;
+    padding: 20px;
+  }
+  body.archive-page-body a { color: inherit; text-decoration: none; }
+  body.archive-page-body h1,
+  body.archive-page-body h2,
+  body.archive-page-body h3,
+  body.archive-page-body h4 {
+    margin: 0; letter-spacing: -0.025em; font-weight: 600;
+  }
+  body.archive-page-body p { margin: 0; }
+</style>
+
+<style>
+  .archive-page { color: var(--bento-ink); font-family: var(--bento-font-sans); display: grid; gap: var(--bento-gap); }
+
+  .tile {
+    background: var(--bento-surface);
+    border-radius: var(--bento-r-lg);
+    padding: 24px;
+    box-shadow: var(--bento-shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .tile--flush { padding: 0; }
+
+  .mono { font-family: var(--bento-font-mono); font-feature-settings: 'zero' on; }
+  .archive-label {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--bento-sub); font-weight: 500;
+  }
+
+  /* Top nav */
+  .archive-topnav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 22px;
+  }
+  .topnav-left { display: flex; align-items: center; gap: 14px; font-size: 13px; flex-wrap: wrap; }
+  .topnav-sep { color: var(--bento-sub-2, var(--bento-sub)); }
+  .back {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--bento-sub); padding: 4px 10px; border-radius: var(--bento-r-chip);
+    transition: background .15s, color .15s;
+  }
+  .back:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
+  .topnav-right { display: flex; align-items: center; gap: 8px; }
+  .iconbtn {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--bento-rule);
+    background: transparent;
+    color: var(--bento-sub);
+    border-radius: 8px;
+    transition: background .15s, color .15s;
+  }
+  .iconbtn:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
+
+  /* Hero */
+  .archive-hero {
+    display: grid; grid-template-columns: 1fr 320px;
+    gap: 32px; align-items: end; padding: 28px 28px 24px;
+  }
+  .hero-h1 { font-size: 64px; line-height: 0.95; margin-top: 6px; }
+  .hi-em { color: var(--bento-accent); font-style: italic; font-weight: 500; }
+  .hero-desc { font-size: 15px; color: var(--bento-sub); margin-top: 14px; max-width: 460px; }
+  .stats-row { display: flex; gap: 22px; margin-top: 18px; flex-wrap: wrap; }
+  .stat-n { font-size: 26px; font-weight: 600; line-height: 1; }
+  .stat-l { font-size: 11px; color: var(--bento-sub); letter-spacing: .1em; text-transform: uppercase; margin-top: 4px; }
+
+  .histo { display: flex; align-items: stretch; gap: 8px; height: 100px; }
+  .histo-col {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-family: var(--bento-font-mono); font-size: 10px;
+    color: var(--bento-sub); letter-spacing: .05em;
+  }
+  .histo-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+  .histo-bar {
+    width: 100%; background: var(--bento-accent); border-radius: 3px; min-height: 2px;
+    transition: background .2s;
+  }
+  .histo-col.peak .histo-bar { background: var(--bento-accent-2); }
+  .histo-col .yr { color: var(--bento-ink); font-weight: 500; }
+  .histo-col .ct { color: var(--bento-sub); opacity: .75; }
+
+  /* Filter bar */
+  .archive-filter { padding: 16px 22px; display: flex; flex-direction: column; gap: 12px; }
+  .filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .search {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: var(--bento-surface-2); padding: 9px 14px;
+    border-radius: var(--bento-r-md); min-width: 240px;
+  }
+  .search-icon { color: var(--bento-sub); font-size: 14px; }
+  .search input {
+    flex: 1; border: 0; background: transparent; color: var(--bento-ink);
+    font-size: 14px; outline: none; font-family: inherit;
+  }
+  .search input::placeholder { color: var(--bento-sub); opacity: .7; }
+  .kbd {
+    font-family: var(--bento-font-mono); font-size: 10px;
+    color: var(--bento-sub); opacity: .75;
+    padding: 2px 6px; border: 1px solid var(--bento-rule); border-radius: 4px;
+  }
+  .sort-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bento-surface-2); padding: 9px 13px;
+    border-radius: var(--bento-r-md); font-size: 13px;
+    color: var(--bento-ink); border: 0; cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+  }
+  .sort-pill:hover { background: var(--bento-rule); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: var(--bento-r-chip);
+    font-size: 12px; font-weight: 500; color: var(--bento-sub);
+    background: transparent; border: 1px solid var(--bento-rule);
+    cursor: pointer; font-family: inherit;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .chip:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
+  .chip[aria-current="true"] {
+    background: var(--bento-ink); color: var(--bento-ink-on); border-color: var(--bento-ink);
+  }
+  :global([data-theme="dark"]) .chip[aria-current="true"] {
+    background: var(--bento-accent); border-color: var(--bento-accent); color: #07151a;
+  }
+  .chip .ct { font-size: 11px; opacity: .7; }
+  .dot-cat { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+  /* Year section */
+  .year-section {
+    display: grid; grid-template-columns: 100px 1fr; gap: 24px;
+    padding: 28px 22px; border-top: 1px solid var(--bento-rule);
+  }
+  .year-section:first-of-type { border-top: 0; }
+  .yr-n {
+    font-size: 48px; font-weight: 600; letter-spacing: -0.025em;
+    line-height: 1; color: var(--bento-ink);
+  }
+  .yr-l { font-size: 11px; color: var(--bento-sub); margin-top: 4px; letter-spacing: .12em; text-transform: uppercase; }
+  .yr-note {
+    font-size: 11px; color: var(--bento-sub); opacity: .8;
+    margin-top: 14px; max-width: 80px; line-height: 1.55;
+  }
+  .yr-mini {
+    display: inline-block; padding: 2px 8px; border-radius: var(--bento-r-chip);
+    background: var(--bento-accent-2); color: #0a3a26;
+    font-size: 10px; font-weight: 600; margin-top: 10px;
+  }
+
+  .rows { display: grid; gap: 2px; }
+  .archive-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 160px 60px 18px;
+    column-gap: 14px;
+    padding: 12px 14px;
+    align-items: center;
+    border-radius: var(--bento-r-md);
+    transition: background .12s, transform .12s;
+  }
+  .archive-row:hover { background: var(--bento-surface-2); transform: translateX(2px); }
+  .archive-row:hover .row-arrow { color: var(--bento-accent); transform: translate(3px, -3px); }
+  .row-date { font-size: 11px; color: var(--bento-sub); letter-spacing: .03em; }
+  .row-title { font-size: 15px; font-weight: 500; line-height: 1.35; color: var(--bento-ink); }
+  .row-cat {
+    font-size: 11px; padding: 2px 9px; border-radius: var(--bento-r-chip);
+    justify-self: start;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--bento-surface-2); color: var(--bento-ink);
+    font-weight: 500;
+  }
+  .row-cat .dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+  .row-min { font-size: 11px; color: var(--bento-sub); text-align: right; opacity: .85; }
+  .row-arrow {
+    font-size: 14px; color: var(--bento-sub); opacity: .75;
+    text-align: right;
+    transition: color .15s, transform .15s;
+    display: inline-block;
+  }
+
+  .archive-empty {
+    text-align: center; padding: 60px 20px;
+    color: var(--bento-sub); font-size: 14px;
+  }
+
+  /* Footer */
+  .archive-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 22px; font-size: 13px; color: var(--bento-sub);
+  }
+  .archive-footer .mono { color: var(--bento-sub); }
+  .archive-footer .mono:hover { color: var(--bento-accent); }
+
+  /* Responsive */
+  @media (max-width: 860px) {
+    .archive-hero { grid-template-columns: 1fr; gap: 22px; padding: 22px; }
+    .hero-h1 { font-size: 44px; }
+    .histo { height: 70px; }
+    .year-section { grid-template-columns: 1fr; gap: 14px; padding: 22px 18px; }
+    .year-side { display: flex; align-items: baseline; gap: 12px; }
+    .yr-n { font-size: 32px; }
+    .yr-note { display: none; }
+    .archive-row { grid-template-columns: 70px 1fr 50px 16px; }
+    .row-cat { display: none; }
+  }
+</style>

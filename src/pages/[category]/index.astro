@@ -1,8 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import AuthorCard from '../../components/AuthorCard.astro';
-import TabBar from '../../components/TabBar.astro';
-import ArticleCard from '../../components/ArticleCard.astro';
+import ArchiveView from '../../components/ArchiveView.astro';
 import { getAllCategories, getArticlesByCategory } from '../../lib/data';
 
 export async function getStaticPaths() {
@@ -19,19 +17,10 @@ const categories = await getAllCategories();
 const articles = await getArticlesByCategory(category!);
 ---
 
-<BaseLayout title={categoryName}>
-  <AuthorCard />
-  <TabBar categories={categories} activeSlug={category!} />
-
-  <div class="article-list">
-    {articles.length === 0 && <p>目前沒有文章。</p>}
-    {articles.map((article) => (
-      <ArticleCard
-        title={article.title}
-        articleId={article.id}
-        categorySlug={category!}
-        createdTime={article.createdTime}
-      />
-    ))}
-  </div>
+<BaseLayout title={categoryName} hideFooter bodyClass="archive-page-body">
+  <ArchiveView
+    articles={articles}
+    allCategories={categories}
+    scopeCategoryName={categoryName}
+  />
 </BaseLayout>
