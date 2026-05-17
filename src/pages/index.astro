@@ -8,26 +8,27 @@ const config = loadConfig();
 const BASE = import.meta.env.BASE_URL;
 
 const allArticles = await getAllArticles();
-const defaultSlug = categorySlug(config.notion.defaultCategory);
-const defaultCategoryArticles = await getArticlesByCategory(defaultSlug);
-
-const featured = defaultCategoryArticles[0];
-const recentPosts = defaultCategoryArticles.slice(1, 7);
 
 const categoriesOrdered = [
-  { name: '開發日常', countSuffix: '篇' },
-  { name: '30 天輕鬆學會 Flutter 測試', countSuffix: '篇' },
-  { name: 'Flutter 開發設計雜談', countSuffix: '篇' },
+  { name: '開發日常' },
+  { name: '30 天輕鬆學會 Flutter 測試' },
+  { name: 'Flutter 開發設計雜談' },
 ];
-const countsByCategory = allArticles.reduce<Record<string, number>>((acc, a) => {
-  acc[a.category] = (acc[a.category] || 0) + 1;
-  return acc;
-}, {});
-const tabs = categoriesOrdered.map((cat) => ({
-  name: cat.name,
-  slug: categorySlug(cat.name),
-  count: countsByCategory[cat.name] ?? 0,
-}));
+
+const tabsData = await Promise.all(
+  categoriesOrdered.map(async (cat) => {
+    const slug = categorySlug(cat.name);
+    const articles = await getArticlesByCategory(slug);
+    return {
+      name: cat.name,
+      slug,
+      count: articles.length,
+      featured: articles[0] ?? null,
+      recent: articles.slice(1, 7),
+    };
+  })
+);
+const defaultTab = tabsData[0];
 
 function formatDate(iso: string): string {
   if (!iso) return '';
@@ -86,7 +87,7 @@ const playboxGames = [
 
 // Snapshot — derived from real data where possible
 const articlesCount = allArticles.length;
-const categoriesCount = tabs.filter((t) => t.count > 0).length;
+const categoriesCount = tabsData.filter((t) => t.count > 0).length;
 const talksCount = talks.length;
 const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox games
 ---
@@ -143,19 +144,21 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
     <div class="grid cols-tabs" style="margin-top:var(--bento-gap)">
       <nav class="tile tabs-tile">
         <div class="tabs" role="tablist">
-          {tabs.map((tab, i) => (
-            <a
-              href={`${BASE}${tab.slug}/`}
+          {tabsData.map((tab, i) => (
+            <button
+              type="button"
               role="tab"
+              data-tab-target={tab.slug}
               aria-current={i === 0 ? 'true' : undefined}
               class:list={['tab-link', { active: i === 0 }]}
             >
               <div class="tab-meta">
-                {i === 0 ? `Active · ${tab.count} 篇` : `${tab.count} 篇`}
+                <span class="tab-meta-active">Active · {tab.count} 篇</span>
+                <span class="tab-meta-idle">{tab.count} 篇</span>
               </div>
               <div class="tab-label">{tab.name}</div>
-              {i === 0 && <span class="live-dot">●</span>}
-            </a>
+              <span class="live-dot">●</span>
+            </button>
           ))}
         </div>
       </nav>
@@ -163,18 +166,22 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
 
     <!-- ─────────── Row 3 — Featured + Book + Snapshot ─────────── -->
     <div class="grid cols-6" style="margin-top:var(--bento-gap)">
-      {featured && (
-        <article class="tile tile--accent span-4 featured">
+      {tabsData.map((t) => t.featured && (
+        <article
+          class="tile tile--accent span-4 featured"
+          data-tab-content={t.slug}
+          hidden={t.slug !== defaultTab.slug}
+        >
           <div class="featured-body">
             <div class="featured-head">
-              <span class="chip chip--on-accent">★ Featured · {config.notion.defaultCategory}</span>
-              <span class="mono" style="font-size:11px;color:rgba(255,255,255,.7);letter-spacing:.1em">{formatDate(featured.createdTime)}</span>
+              <span class="chip chip--on-accent">★ Featured · {t.name}</span>
+              <span class="mono" style="font-size:11px;color:rgba(255,255,255,.7);letter-spacing:.1em">{formatDate(t.featured.createdTime)}</span>
             </div>
-            <h2>{featured.title}</h2>
+            <h2>{t.featured.title}</h2>
             <p>最近發布的一篇文章 — 點進去看看我最近在學什麼、做什麼。</p>
             <div style="display:flex;gap:10px;align-items:center">
-              <a href={articleHref(featured)} class="btn-pri">閱讀全文 <span>↗</span></a>
-              <span style="font-size:12px;color:rgba(255,255,255,.7)">{config.notion.defaultCategory}</span>
+              <a href={articleHref(t.featured)} class="btn-pri">閱讀全文 <span>↗</span></a>
+              <span style="font-size:12px;color:rgba(255,255,255,.7)">{t.name}</span>
             </div>
           </div>
           <div class="featured-band">
@@ -183,7 +190,7 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
             <span>⏱ 從 2020 寫到現在</span>
           </div>
         </article>
-      )}
+      ))}
 
       <div class="grid span-2 stack-2">
         <section class="tile tile--green book-tile">
@@ -209,31 +216,41 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
 
     <!-- ─────────── Row 4 — Posts + Channels + Talks ─────────── -->
     <div class="grid cols-6" style="margin-top:var(--bento-gap)">
-      <section class="tile span-4 tile--flush">
-        <div class="posts-head">
-          <div>
-            <div class="label">All posts</div>
-            <h3 style="font-size:24px;margin-top:4px">最近 {recentPosts.length} 篇</h3>
+      {tabsData.map((t) => (
+        <section
+          class="tile span-4 tile--flush"
+          data-tab-content={t.slug}
+          hidden={t.slug !== defaultTab.slug}
+        >
+          <div class="posts-head">
+            <div>
+              <div class="label">All posts</div>
+              <h3 style="font-size:24px;margin-top:4px">最近 {t.recent.length} 篇</h3>
+            </div>
+            <a href={`${BASE}${t.slug}/`} class="posts-link mono">↓ 新到舊 · 看全部 ↗</a>
           </div>
-          <a href={`${BASE}archive/`} class="posts-link mono">↓ 新到舊 · 看全部 ↗</a>
-        </div>
-        <div class="posts-divider"></div>
+          <div class="posts-divider"></div>
 
-        {recentPosts.map((post, i) => {
-          const deco = postDecorations[i % postDecorations.length];
-          return (
-            <a class="post-row" href={articleHref(post)}>
-              <div class="post-icon" style={`background:${deco.bg}`}>{deco.icon}</div>
-              <div>
-                <div class="post-title">{post.title}</div>
-                <div class="post-meta"><span class="chip chip--mini">{post.category}</span> {formatDate(post.createdTime)}</div>
-              </div>
-              <span class="post-tail mono">{post.category}</span>
-              <span class="arrow">↗</span>
-            </a>
-          );
-        })}
-      </section>
+          {t.recent.length === 0 ? (
+            <p class="posts-empty">目前還沒有文章。</p>
+          ) : (
+            t.recent.map((post, i) => {
+              const deco = postDecorations[i % postDecorations.length];
+              return (
+                <a class="post-row" href={articleHref(post)}>
+                  <div class="post-icon" style={`background:${deco.bg}`}>{deco.icon}</div>
+                  <div>
+                    <div class="post-title">{post.title}</div>
+                    <div class="post-meta"><span class="chip chip--mini">{post.category}</span> {formatDate(post.createdTime)}</div>
+                  </div>
+                  <span class="post-tail mono">{post.category}</span>
+                  <span class="arrow">↗</span>
+                </a>
+              );
+            })
+          )}
+        </section>
+      ))}
 
       <div class="grid span-2 stack-2">
         <section class="tile" style="padding:20px">
@@ -384,6 +401,41 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
     </div>
 
   </div>
+
+  <script is:inline>
+    (function () {
+      const tabBtns = Array.from(document.querySelectorAll('[data-tab-target]'));
+      const panels  = Array.from(document.querySelectorAll('[data-tab-content]'));
+      if (tabBtns.length === 0 || panels.length === 0) return;
+      const valid = new Set(tabBtns.map((b) => b.getAttribute('data-tab-target')));
+
+      function activate(slug, opts) {
+        if (!valid.has(slug)) return;
+        const pushUrl = !opts || opts.pushUrl !== false;
+        tabBtns.forEach((b) => {
+          const on = b.getAttribute('data-tab-target') === slug;
+          b.classList.toggle('active', on);
+          if (on) b.setAttribute('aria-current', 'true');
+          else b.removeAttribute('aria-current');
+        });
+        panels.forEach((p) => {
+          p.hidden = p.getAttribute('data-tab-content') !== slug;
+        });
+        if (pushUrl) {
+          const url = new URL(location.href);
+          url.searchParams.set('tab', slug);
+          history.replaceState({}, '', url);
+        }
+      }
+
+      const initial = new URL(location.href).searchParams.get('tab');
+      if (initial && valid.has(initial)) activate(initial, { pushUrl: false });
+
+      tabBtns.forEach((b) => {
+        b.addEventListener('click', () => activate(b.getAttribute('data-tab-target')));
+      });
+    })();
+  </script>
 </BaseLayout>
 
 <style is:global>
@@ -517,11 +569,14 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
     background: transparent;
     color: var(--bento-sub);
     padding: 16px 20px;
+    border: 0;
     border-radius: var(--bento-r-md);
     text-align: left;
     position: relative;
-    transition: background .15s, color .15s;
+    transition: background .15s, color .15s, flex .2s;
     display: block;
+    font: inherit;
+    cursor: pointer;
   }
   .tab-link:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
   .tab-link.active {
@@ -536,9 +591,22 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
     letter-spacing: .1em; text-transform: uppercase;
   }
   .tab-link.active .tab-meta { opacity: .85; }
+  .tab-link .tab-meta-active { display: none; }
+  .tab-link .tab-meta-idle   { display: inline; }
+  .tab-link.active .tab-meta-active { display: inline; }
+  .tab-link.active .tab-meta-idle   { display: none; }
   .live-dot {
     position: absolute; top: 14px; right: 16px;
     color: var(--bento-accent-2); font-size: 18px;
+    display: none;
+  }
+  .tab-link.active .live-dot { display: inline; }
+
+  .posts-empty {
+    padding: 32px 24px;
+    color: var(--bento-sub);
+    font-size: 14px;
+    text-align: center;
   }
 
   /* === Featured === */
