@@ -59,7 +59,7 @@ const channelByType: Record<string, { label: string; value: string; icon: string
   googleplay: { label: 'Google Play',  value: 'Paul Wu',              icon: '▶' },
   playbox:    { label: 'Paul Playbox', value: 'paul 的遊樂場',         icon: '◈' },
 };
-const channels = [...config.author.links, ...config.author.works];
+const channels = config.author.links;
 
 const talks = [
   { year: '2025', emoji: '📣', title: '實踐 Flutter 測試的眉眉角角', venue: 'Agile.Taichung', venueColor: 'sub', url: 'https://www.accupass.com/event/2503031416141112169743' },
@@ -104,7 +104,7 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
             <h1 class="h-display">{config.author.name}</h1>
             <div class="badges">
               <span class="chip"><span class="dot" style="background:var(--bento-accent-2)"></span> Available for chat</span>
-              <span class="chip">📍 Taipei</span>
+              <span class="chip">📍 Taichung</span>
             </div>
           </div>
           <button class="tile-theme-toggle" id="theme-toggle" aria-label="Toggle theme">
