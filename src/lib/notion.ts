@@ -5,6 +5,7 @@ export interface Article {
   title: string;
   category: string;
   createdTime: string;
+  summary: string;
 }
 
 export interface NotionBlock {
@@ -20,6 +21,19 @@ function getTitleText(props: any): string {
   const titleArr = titleProp?.title;
   if (!titleArr || titleArr.length === 0) return 'Untitled';
   return titleArr.map((t: any) => t.plain_text).join('');
+}
+
+function getSummaryText(props: any): string {
+  const candidates = ['Summary', 'Description', 'Excerpt', 'Subtitle', '摘要', 'summary'];
+  for (const name of candidates) {
+    const prop = props[name];
+    if (!prop) continue;
+    const rt = prop.rich_text;
+    if (Array.isArray(rt) && rt.length > 0) {
+      return rt.map((t: any) => t.plain_text).join('').trim();
+    }
+  }
+  return '';
 }
 
 export async function fetchDatabase(
@@ -50,6 +64,7 @@ export async function fetchDatabase(
           title: getTitleText(props),
           category: props.Category?.select?.name ?? '',
           createdTime: p.created_time,
+          summary: getSummaryText(props),
         });
       }
 
