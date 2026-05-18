@@ -26,9 +26,25 @@ function saveCache(cache: Cache): void {
 
 type FetchResult = { url: string | null; transient: boolean };
 
-const GOOGLE_KEY = process.env.GOOGLE_BOOKS_API_KEY;
+const GOOGLE_KEY_RAW = process.env.GOOGLE_BOOKS_API_KEY;
+const GOOGLE_KEY = GOOGLE_KEY_RAW ? GOOGLE_KEY_RAW.trim() : '';
+let googleDiagPrinted = false;
+
+function printGoogleDiagOnce() {
+  if (googleDiagPrinted) return;
+  googleDiagPrinted = true;
+  if (!GOOGLE_KEY) {
+    console.log('[covers] Google Books: no GOOGLE_BOOKS_API_KEY in env — anonymous (0/day quota)');
+    return;
+  }
+  // Don't leak the key — just length + first 4 chars to confirm shape.
+  console.log(
+    `[covers] Google Books: using key (len=${GOOGLE_KEY.length}, prefix=${GOOGLE_KEY.slice(0, 4)}…)`,
+  );
+}
 
 async function fetchFromGoogleBooks(isbn: string): Promise<FetchResult> {
+  printGoogleDiagOnce();
   try {
     const keyParam = GOOGLE_KEY ? `&key=${encodeURIComponent(GOOGLE_KEY)}` : '';
     const res = await fetch(
@@ -40,7 +56,12 @@ async function fetchFromGoogleBooks(isbn: string): Promise<FetchResult> {
       return { url: null, transient: true };
     }
     if (!res.ok) {
-      return { url: null, transient: false };
+      // 4xx other than 429 — surface body so we can debug auth / referer / IP-restriction issues
+      let body = '';
+      try { body = (await res.text()).slice(0, 280); } catch {}
+      console.warn(`[covers]  ! Google Books ${res.status} for ${isbn}: ${body}`);
+      // Treat as transient — don't cache a permanent null when auth might be misconfigured
+      return { url: null, transient: true };
     }
     const data: any = await res.json();
     if (data?.error) {
