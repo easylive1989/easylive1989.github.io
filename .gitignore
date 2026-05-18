@@ -28,3 +28,6 @@ playwright-report/
 firebase-debug.log
 public/assets/notion/
 .gemini-clipboard/
+
+# build-time cover lookups (regenerated each build)
+.cache/

@@ -9,6 +9,7 @@ import {
   type NotionBlock,
   type Book,
 } from './notion';
+import { enrichBookCovers } from './bookCovers';
 import { replaceImageUrls, downloadImages } from './images';
 import { categorySlug } from './category';
 import path from 'node:path';
@@ -98,7 +99,8 @@ export async function getAllBooks(): Promise<Book[]> {
   const config = loadConfig();
   const client = getNotionClient();
   if (!client || !config.notion.booksDatabaseId) return [];
-  cachedBooks = await fetchBooksDatabase(client, config.notion.booksDatabaseId);
+  const raw = await fetchBooksDatabase(client, config.notion.booksDatabaseId);
+  cachedBooks = await enrichBookCovers(raw);
   return cachedBooks;
 }
 

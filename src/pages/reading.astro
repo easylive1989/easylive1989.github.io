@@ -174,15 +174,21 @@ const chipsData = (Object.keys(kindMeta) as BookKind[])
     {currentBook && currentCover && (
       <section class="tile current tile--flush">
         <div class="current-row">
-          <div
-            class="book-spine"
-            aria-hidden="true"
-            style={`background:linear-gradient(135deg, ${currentCover.from} 0%, ${currentCover.to} 100%)`}
-          >
-            <span class="br">{currentBook.categories[0] ?? ''}</span>
-            <strong>{currentBook.title}</strong>
-            <span class="pub"></span>
-          </div>
+          {currentBook.coverUrl ? (
+            <div class="book-spine book-spine--image" aria-hidden="true">
+              <img src={currentBook.coverUrl} alt="" loading="lazy" />
+            </div>
+          ) : (
+            <div
+              class="book-spine"
+              aria-hidden="true"
+              style={`background:linear-gradient(135deg, ${currentCover.from} 0%, ${currentCover.to} 100%)`}
+            >
+              <span class="br">{currentBook.categories[0] ?? ''}</span>
+              <strong>{currentBook.title}</strong>
+              <span class="pub"></span>
+            </div>
+          )}
           <div class="current-meta">
             <div class="label" style="color:var(--bento-accent-2)">● 正在讀</div>
             <h2>{currentBook.title}</h2>
@@ -264,13 +270,19 @@ const chipsData = (Object.keys(kindMeta) as BookKind[])
                   data-progress={b.progress}
                   title={b.title}
                 >
-                  <div
-                    class="book-cover"
-                    style={`background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
-                  >
-                    <span class="pub">{rawCat}</span>
-                    <span class="title">{b.title}</span>
-                  </div>
+                  {b.coverUrl ? (
+                    <div class="book-cover book-cover--image">
+                      <img src={b.coverUrl} alt={b.title} loading="lazy" />
+                    </div>
+                  ) : (
+                    <div
+                      class="book-cover"
+                      style={`background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
+                    >
+                      <span class="pub">{rawCat}</span>
+                      <span class="title">{b.title}</span>
+                    </div>
+                  )}
                   <div class="book-meta">
                     <span class="book-title">{b.title}</span>
                     {rawCat && (
@@ -531,6 +543,14 @@ const chipsData = (Object.keys(kindMeta) as BookKind[])
     background: linear-gradient(160deg, rgba(255, 255, 255, .15) 0%, transparent 35%, transparent 75%, rgba(0, 0, 0, .15) 100%);
     pointer-events: none;
   }
+  .book-spine--image {
+    padding: 0;
+    background: #1a1a1a;
+  }
+  .book-spine--image::after { display: none; }
+  .book-spine--image img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
   .book-spine .br { font-size: 9px; letter-spacing: .2em; opacity: .55; }
   .book-spine strong { font-size: 22px; line-height: 1.15; font-weight: 600; }
   .book-spine .pub { font-size: 8px; letter-spacing: .15em; opacity: .5; }
@@ -665,6 +685,16 @@ const chipsData = (Object.keys(kindMeta) as BookKind[])
     background: linear-gradient(160deg, rgba(255, 255, 255, .18) 0%, transparent 35%, transparent 75%, rgba(0, 0, 0, .15) 100%);
     pointer-events: none;
   }
+  .book-cover--image {
+    padding: 0;
+    background: var(--bento-surface-2);
+  }
+  .book-cover--image::after { display: none; }
+  .book-cover--image img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  /* In list view, the image still needs to fit the 36px slot */
+  #reading-shelves[data-view="list"] .book-cover--image { background: transparent; }
   .book-cover .pub { font-size: 7px; letter-spacing: .2em; opacity: .55; }
   .book-cover .title {
     font-size: 14px; font-weight: 600; line-height: 1.2;

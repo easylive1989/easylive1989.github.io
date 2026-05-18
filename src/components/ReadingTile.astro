@@ -24,15 +24,21 @@ const currentCover = current ? coverGradient(current) : null;
 
   {current && currentCover && (
     <div class="reading-now">
-      <div
-        class="mini-cover"
-        aria-hidden="true"
-        style={`background:linear-gradient(135deg, ${currentCover.from} 0%, ${currentCover.to} 100%)`}
-      >
-        <span class="mini-cover-top">{current.categories[0] ?? ''}</span>
-        <strong class="mini-cover-title">{current.title}</strong>
-        <span class="mini-cover-bottom"></span>
-      </div>
+      {current.coverUrl ? (
+        <div class="mini-cover mini-cover--image" aria-hidden="true">
+          <img src={current.coverUrl} alt="" loading="lazy" />
+        </div>
+      ) : (
+        <div
+          class="mini-cover"
+          aria-hidden="true"
+          style={`background:linear-gradient(135deg, ${currentCover.from} 0%, ${currentCover.to} 100%)`}
+        >
+          <span class="mini-cover-top">{current.categories[0] ?? ''}</span>
+          <strong class="mini-cover-title">{current.title}</strong>
+          <span class="mini-cover-bottom"></span>
+        </div>
+      )}
       <div class="reading-meta">
         <h3 class="reading-now-title">{current.title}</h3>
         {current.categories.length > 0 && (
@@ -143,6 +149,10 @@ const currentCover = current ? coverGradient(current) : null;
     inset: 0;
     background: linear-gradient(160deg, rgba(255, 255, 255, .15) 0%, transparent 35%, transparent 75%, rgba(0, 0, 0, .15) 100%);
     pointer-events: none;
+  }
+  .mini-cover--image { padding: 0; }
+  .mini-cover--image img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
   }
   .mini-cover-top { font-size: 8px; letter-spacing: .16em; opacity: .65; }
   .mini-cover-title {

@@ -14,6 +14,8 @@ export interface Book {
   progress: number;            // 0..100
   categories: string[];
   finishedDate: string | null; // ISO date or null
+  isbn: string | null;
+  coverUrl?: string | null;    // populated by enrichBookCovers at build time
 }
 
 export interface NotionBlock {
@@ -91,7 +93,23 @@ const BOOK_PROPS = {
   progress: '閱讀進度',
   categories: '類型',
   finishedDate: '閱讀時間(月份)',
+  isbn: 'ISBN',
 };
+
+function getBookIsbn(props: any): string | null {
+  const candidates = [BOOK_PROPS.isbn, 'isbn'];
+  for (const name of candidates) {
+    const p = props[name];
+    if (!p) continue;
+    const rt = p.rich_text;
+    if (Array.isArray(rt) && rt.length > 0) {
+      const raw = rt.map((t: any) => t.plain_text ?? '').join('').trim();
+      return raw || null;
+    }
+    if (typeof p.number === 'number') return String(p.number);
+  }
+  return null;
+}
 
 function getBookTitle(props: any): string {
   const arr = props[BOOK_PROPS.title]?.title;
@@ -142,6 +160,7 @@ export async function fetchBooksDatabase(
           progress: getBookProgress(props),
           categories: getBookCategories(props),
           finishedDate: getBookFinishedDate(props),
+          isbn: getBookIsbn(props),
         });
       }
 
