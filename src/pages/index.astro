@@ -359,6 +359,49 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
           </div>
         </div>
       </div>
+
+      <!-- Row 5b: smaller side projects -->
+      <article class="tile span-3 project-card">
+        <div class="project-stack-head">
+          <div class="pj-icon" style="background:#7d3a55">🎲</div>
+          <span class="pill pill--muted">● 活著</span>
+        </div>
+        <div>
+          <h4 class="project-stack-title">小遊戲機器人</h4>
+          <div class="mono project-stack-sub">Line Bot · LittleFlowerBot</div>
+        </div>
+        <p class="project-stack-blurb">用 Line 跟朋友 / 群組玩五子棋、象棋、井字遊戲、海戰棋、猜數字的機器人。輸入「玩五子棋」就開戰。</p>
+        <div class="project-stack-chips">
+          <span class="chip chip--mini">Line Bot</span>
+          <span class="chip chip--mini">.NET</span>
+          <span class="chip chip--mini">MongoDB</span>
+        </div>
+        <div class="project-stack-foot">
+          <a href="https://github.com/easylive1989/LittleFlowerBot" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/easylive1989/LittleFlowerBot/blob/master/HOW%20TO%20PLAY.md" target="_blank" rel="noopener" class="link-accent">怎麼玩 ↗</a>
+        </div>
+      </article>
+
+      <article class="tile span-3 project-card">
+        <div class="project-stack-head">
+          <div class="pj-icon" style="background:#c8a45a">▤</div>
+          <span class="pill pill--muted">● 活著</span>
+        </div>
+        <div>
+          <h4 class="project-stack-title">今彩 539 分析</h4>
+          <div class="mono project-stack-sub">Web · ito539-analytics</div>
+        </div>
+        <p class="project-stack-blurb">抓今彩 539 開獎資料、看號碼分布跟出現頻率。純粹自己想看數字、不是要中獎。</p>
+        <div class="project-stack-chips">
+          <span class="chip chip--mini">React</span>
+          <span class="chip chip--mini">TypeScript</span>
+          <span class="chip chip--mini">Python</span>
+        </div>
+        <div class="project-stack-foot">
+          <a href="https://github.com/easylive1989/ito539_analytics" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://paul-learning.dev/ito539_analytics/" target="_blank" rel="noopener" class="link-accent">進站 ↗</a>
+        </div>
+      </article>
     </div>
 
     <!-- ─────────── Row 6 — Paul Playbox (dedicated section) ─────────── -->
@@ -801,6 +844,8 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
   .project-stack { display: grid; grid-template-rows: 1fr 1fr; height: 100%; }
   .project-stack-cell { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
   .project-stack-cell + .project-stack-cell { border-top: 1px solid var(--bento-rule); }
+  .project-card { display: flex; flex-direction: column; gap: 10px; }
+  .project-card .project-stack-blurb { flex: 1; }
   .project-stack-head { display: flex; justify-content: space-between; align-items: center; }
   .project-stack-title { font-size: 17px; line-height: 1.15; }
   .project-stack-sub { font-size: 10px; color: var(--bento-sub); letter-spacing: .1em; margin-top: 2px; }
