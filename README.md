@@ -1,10 +1,10 @@
-# Learn with Paul
+# Paul's Blog
 
 使用 [Astro](https://astro.build/) 建立的靜態部落格網站，內容來源為 Notion 資料庫。
 
 ## 網站
 
-https://easylive1989.github.io/
+https://paul-learning.dev
 
 ## 技術棧
 
