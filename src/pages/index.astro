@@ -625,7 +625,10 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
     color: var(--bento-ink-on);
     flex: 1.4;
   }
-  :global([data-theme="dark"]) .bento-home .tab-link.active { background: var(--bento-surface-2); }
+  :global([data-theme="dark"]) .bento-home .tab-link.active {
+    background: var(--bento-accent);
+    color: #07151a;
+  }
   .tab-label { font-size: 16px; font-weight: 500; }
   .tab-meta {
     font-size: 11px; opacity: .6; margin-bottom: 4px;

@@ -55,12 +55,12 @@
 
   /* === Bento design tokens (dark) === */
   --bento-bg:        #0c1014;
-  --bento-surface:   #161b22;
-  --bento-surface-2: #1e242c;
+  --bento-surface:   #283038;
+  --bento-surface-2: #283038;
   --bento-ink:       #f3f4f5;
   --bento-ink-on:    #0a0a0a;
   --bento-sub:       #98a0aa;
-  --bento-rule:      #262d36;
+  --bento-rule:      #303843;
   --bento-accent:    #4cc1d8;
   --bento-accent-2:  #4ad29f;
   --bento-accent-3:  #f4c378;
