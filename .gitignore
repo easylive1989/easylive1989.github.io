@@ -31,3 +31,6 @@ public/assets/notion/
 
 # build-time cover lookups (regenerated each build)
 .cache/
+
+# Notion incremental fetch cache (restored from GitHub Actions cache in CI)
+.notion-cache/

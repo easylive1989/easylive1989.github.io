@@ -12,11 +12,21 @@ import {
 import { enrichBookCovers } from './bookCovers';
 import { replaceImageUrls, downloadImages } from './images';
 import { categorySlug } from './category';
+import {
+  loadCachedBlocks,
+  saveCachedBlocks,
+  pruneBlockCache,
+} from './notionCache';
 import path from 'node:path';
+
+const isProductionBuild = (): boolean => process.env.NODE_ENV === 'production';
 
 function getNotionClient(): Client | null {
   const token = process.env.NOTION_API_KEY;
   if (!token) {
+    if (isProductionBuild()) {
+      throw new Error('NOTION_API_KEY not set — aborting production build');
+    }
     console.warn('NOTION_API_KEY not set — returning empty data');
     return null;
   }
@@ -35,7 +45,19 @@ export async function getAllArticles(): Promise<Article[]> {
   const config = loadConfig();
   const client = getNotionClient();
   if (!client) return [];
-  cachedArticles = await fetchDatabase(client, config.notion.databaseId);
+  const articles = await fetchDatabase(client, config.notion.databaseId);
+
+  if (isProductionBuild()) {
+    const min = config.build.minArticles ?? 1;
+    if (articles.length < min) {
+      throw new Error(
+        `Fetched ${articles.length} articles from Notion, below minimum ${min} — aborting production build`,
+      );
+    }
+    pruneBlockCache(new Set(articles.map((a) => a.id)));
+  }
+
+  cachedArticles = articles;
   return cachedArticles;
 }
 
@@ -77,7 +99,11 @@ export async function getArticle(
 
   if (!article || categorySlug(article.category) !== catSlug) return null;
 
-  const rawBlocks = await fetchPageBlocks(client, article.id);
+  let rawBlocks = loadCachedBlocks(article.id, article.lastEditedTime);
+  if (!rawBlocks) {
+    rawBlocks = await fetchPageBlocks(client, article.id);
+    saveCachedBlocks(article.id, article.lastEditedTime, rawBlocks);
+  }
   const { blocks, imageMap } = replaceImageUrls(rawBlocks, catSlug, articleId);
 
   const publicDir = path.resolve(process.cwd(), 'public');

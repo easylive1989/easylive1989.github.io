@@ -32,6 +32,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Restore Notion cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .notion-cache
+            public/assets/notion
+          key: notion-cache-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            notion-cache-
+
       - name: Build site
         id: build
         env:

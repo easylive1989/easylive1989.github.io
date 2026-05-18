@@ -5,6 +5,7 @@ export interface Article {
   title: string;
   category: string;
   createdTime: string;
+  lastEditedTime: string;
   summary: string;
 }
 
@@ -74,6 +75,7 @@ export async function fetchDatabase(
           title: getTitleText(props),
           category: props.Category?.select?.name ?? '',
           createdTime: p.created_time,
+          lastEditedTime: p.last_edited_time,
           summary: getSummaryText(props),
         });
       }
@@ -81,6 +83,9 @@ export async function fetchDatabase(
       cursor = response.has_more ? (response as any).next_cursor : undefined;
     } while (cursor);
   } catch (err: any) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(`Failed to fetch database ${databaseId}: ${err.message}`);
+    }
     console.warn(`Failed to fetch database ${databaseId}: ${err.message}`);
     return [];
   }
