@@ -510,25 +510,25 @@ const chipsData = Array.from(rawCatCounts.entries())
   .stat-n { font-size: 28px; font-weight: 600; line-height: 1; }
   .stat-l { font-size: 11px; color: var(--bento-sub); letter-spacing: .1em; text-transform: uppercase; margin-top: 4px; }
 
-  .heatmap-head { display: flex; justify-content: flex-end; align-items: baseline; margin-bottom: 14px; }
-  .heatmap { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
-  .heatmap-row { display: flex; align-items: center; gap: 6px; font-family: var(--bento-font-mono); font-size: 10px; color: var(--bento-sub); }
-  .yr { width: 36px; color: var(--bento-ink); font-weight: 500; text-align: right; }
-  .heatmap-cells { display: flex; gap: 3px; }
+  .heatmap-head { display: flex; justify-content: flex-end; align-items: baseline; margin-bottom: 8px; }
+  .heatmap { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+  .heatmap-row { display: flex; align-items: center; gap: 5px; font-family: var(--bento-font-mono); font-size: 9px; color: var(--bento-sub); }
+  .yr { width: 30px; color: var(--bento-ink); font-weight: 500; text-align: right; }
+  .heatmap-cells { display: flex; gap: 2px; }
   .cell {
-    width: 26px; height: 22px; border-radius: 3px;
+    width: 18px; height: 14px; border-radius: 2px;
     background: var(--bento-surface-2);
   }
   .cell[data-v="1"] { background: color-mix(in oklab, var(--bento-accent) 25%, var(--bento-surface)); }
   .cell[data-v="2"] { background: color-mix(in oklab, var(--bento-accent) 50%, var(--bento-surface)); }
   .cell[data-v="3"] { background: color-mix(in oklab, var(--bento-accent) 75%, var(--bento-surface)); }
   .cell[data-v="4"] { background: var(--bento-accent); }
-  .heatmap-cells .qhead { width: 26px; text-align: center; color: var(--bento-sub); }
+  .heatmap-cells .qhead { width: 18px; text-align: center; color: var(--bento-sub); }
   .heatmap-legend {
-    display: flex; gap: 8px; align-items: center; justify-content: flex-end;
-    font-size: 10px; color: var(--bento-sub); margin-top: 8px;
+    display: flex; gap: 6px; align-items: center; justify-content: flex-end;
+    font-size: 9px; color: var(--bento-sub); margin-top: 6px;
   }
-  .heatmap-legend .cell { width: 14px; height: 14px; }
+  .heatmap-legend .cell { width: 11px; height: 11px; }
 
   /* Currently reading — right column, dark, minimal */
   .current {
