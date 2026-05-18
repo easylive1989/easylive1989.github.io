@@ -91,14 +91,21 @@ const kindMeta: Record<BookKind, { name: string; dotClass: string }> = {
   other:  { name: '其他',   dotClass: 'dot-other' },
 };
 
-// Category counts via normaliseKind
-const kindCounts: Record<BookKind, number> = { tech: 0, design: 0, non: 0, fic: 0, other: 0 };
+// Raw Notion 類型 counts — books appear in every category they're tagged with.
+const rawCatCounts = new Map<string, number>();
 for (const b of allBooks) {
-  kindCounts[normaliseKind(b.categories[0])]++;
+  for (const c of b.categories) {
+    if (!c) continue;
+    rawCatCounts.set(c, (rawCatCounts.get(c) ?? 0) + 1);
+  }
 }
-const chipsData = (Object.keys(kindMeta) as BookKind[])
-  .filter((k) => kindCounts[k] > 0)
-  .map((k) => ({ key: k, ...kindMeta[k], count: kindCounts[k] }));
+const chipsData = Array.from(rawCatCounts.entries())
+  .sort((a, b) => b[1] - a[1])
+  .map(([name, count]) => ({
+    name,
+    count,
+    dotClass: kindMeta[normaliseKind(name)].dotClass,
+  }));
 ---
 
 <BaseLayout title="書單" hideFooter bodyClass="reading-page-body">
@@ -228,7 +235,7 @@ const chipsData = (Object.keys(kindMeta) as BookKind[])
       <div class="filter-row chips" id="reading-chips">
         <button class="chip" data-cat="*" aria-current="true">全部 <span class="ct">{totalCount}</span></button>
         {chipsData.map((c) => (
-          <button class="chip" data-cat={c.key}>
+          <button class="chip" data-cat={c.name}>
             <span class={`dot-cat ${c.dotClass}`}></span>
             {c.name}
             <span class="ct">{c.count}</span>
@@ -263,8 +270,7 @@ const chipsData = (Object.keys(kindMeta) as BookKind[])
                   class={`book is-${status}`}
                   href="#"
                   data-title={b.title}
-                  data-cat={cv.kind}
-                  data-cat-raw={rawCat}
+                  data-cats={b.categories.join('|')}
                   data-date={b.finishedDate ?? ''}
                   data-progress={b.progress}
                   title={b.title}
@@ -337,11 +343,12 @@ const chipsData = (Object.keys(kindMeta) as BookKind[])
             const books = Array.from(sec.querySelectorAll('.book'));
             let visible = 0;
             for (const book of books) {
-              const cat = book.getAttribute('data-cat') || '';
+              const catsRaw = book.getAttribute('data-cats') || '';
+              const cats = catsRaw ? catsRaw.split('|') : [];
               const title = (book.getAttribute('data-title') || '').toLowerCase();
-              const rawCat = (book.getAttribute('data-cat-raw') || '').toLowerCase();
-              const catOk = activeCat === '*' || cat === activeCat;
-              const kwOk = !kw || title.indexOf(kw) >= 0 || rawCat.indexOf(kw) >= 0;
+              const catsLower = catsRaw.toLowerCase();
+              const catOk = activeCat === '*' || cats.indexOf(activeCat) >= 0;
+              const kwOk = !kw || title.indexOf(kw) >= 0 || catsLower.indexOf(kw) >= 0;
               const show = catOk && kwOk;
               book.style.display = show ? '' : 'none';
               if (show) visible++;
