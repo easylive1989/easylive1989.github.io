@@ -5,6 +5,7 @@ export interface Article {
   title: string;
   category: string;
   createdTime: string;
+  lastEditedTime: string;
   summary: string;
 }
 
@@ -74,6 +75,7 @@ export async function fetchDatabase(
           title: getTitleText(props),
           category: props.Category?.select?.name ?? '',
           createdTime: p.created_time,
+          lastEditedTime: p.last_edited_time,
           summary: getSummaryText(props),
         });
       }
