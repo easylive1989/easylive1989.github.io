@@ -42,6 +42,14 @@ jobs:
           restore-keys: |
             notion-cache-
 
+      - name: Restore book covers cache
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: book-covers-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            book-covers-
+
       - name: Build site
         id: build
         env:
