@@ -125,95 +125,92 @@ const chipsData = Array.from(rawCatCounts.entries())
       </div>
     </header>
 
-    <!-- Hero -->
-    <section class="tile hero">
-      <div class="hero-left">
-        <div class="label">Reading list · 書單</div>
-        <h1 class="hero-h1">讀過的<span class="hi-em">書</span>。</h1>
-        <p class="hero-desc">隨手記錄看過的書。技術書幫我換腦袋、非虛構幫我換視角、小說幫我換情緒。</p>
-        <div class="stats-row">
-          <div><div class="stat-n" style="color:var(--bento-accent)">{totalCount}</div><div class="stat-l">total</div></div>
-          <div><div class="stat-n" style="color:var(--bento-accent-2)">{readingCount}</div><div class="stat-l">reading</div></div>
-          <div><div class="stat-n" style="color:var(--bento-accent-3)">{readCount}</div><div class="stat-l">read</div></div>
-          <div><div class="stat-n" style="color:var(--bento-pink)">{Math.max(0, newestYear - oldestYear + 1)}</div><div class="stat-l">years</div></div>
-        </div>
-      </div>
-      <div class="hero-right">
-        <div class="heatmap-head">
-          <div class="label">每季讀完的書</div>
-        </div>
-        <div class="heatmap">
-          <div class="heatmap-row">
-            <span class="yr"></span>
-            <div class="heatmap-cells">
-              {['Q1', 'Q2', 'Q3', 'Q4'].map((q) => (
-                <span class="qhead">{q}</span>
-              ))}
-            </div>
+    <!-- Hero + currently reading (side by side) -->
+    <div class="grid cols-6 top-row">
+      <section class:list={['tile', 'hero', currentBook ? 'span-4' : 'span-6']}>
+        <div class="hero-left">
+          <div class="label">Reading list · 書單</div>
+          <h1 class="hero-h1">讀過的<span class="hi-em">書</span>。</h1>
+          <p class="hero-desc">隨手記錄看過的書。技術書幫我換腦袋、非虛構幫我換視角、小說幫我換情緒。</p>
+          <div class="stats-row">
+            <div><div class="stat-n" style="color:var(--bento-accent)">{totalCount}</div><div class="stat-l">total</div></div>
+            <div><div class="stat-n" style="color:var(--bento-accent-2)">{readingCount}</div><div class="stat-l">reading</div></div>
+            <div><div class="stat-n" style="color:var(--bento-accent-3)">{readCount}</div><div class="stat-l">read</div></div>
+            <div><div class="stat-n" style="color:var(--bento-pink)">{Math.max(0, newestYear - oldestYear + 1)}</div><div class="stat-l">years</div></div>
           </div>
-          {heatRange.map((y) => {
-            const row = heatBucket[y] ?? [0, 0, 0, 0];
-            return (
-              <div class="heatmap-row">
-                <span class="yr">{y}</span>
-                <div class="heatmap-cells">
-                  {row.map((v) => (
-                    <span class="cell" data-v={heatLevel(v)} title={`${y} · ${v} 本`}></span>
-                  ))}
+        </div>
+        <div class="hero-right">
+          <div class="heatmap-head">
+            <div class="label">每季讀完的書</div>
+          </div>
+          <div class="heatmap">
+            <div class="heatmap-row">
+              <span class="yr"></span>
+              <div class="heatmap-cells">
+                {['Q1', 'Q2', 'Q3', 'Q4'].map((q) => (
+                  <span class="qhead">{q}</span>
+                ))}
+              </div>
+            </div>
+            {heatRange.map((y) => {
+              const row = heatBucket[y] ?? [0, 0, 0, 0];
+              return (
+                <div class="heatmap-row">
+                  <span class="yr">{y}</span>
+                  <div class="heatmap-cells">
+                    {row.map((v) => (
+                      <span class="cell" data-v={heatLevel(v)} title={`${y} · ${v} 本`}></span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-        <div class="heatmap-legend">
-          <span>少</span>
-          <span class="cell" data-v="0"></span>
-          <span class="cell" data-v="1"></span>
-          <span class="cell" data-v="2"></span>
-          <span class="cell" data-v="3"></span>
-          <span class="cell" data-v="4"></span>
-          <span>多</span>
-        </div>
-      </div>
-    </section>
-
-    {currentBook && currentCover && (
-      <section class="tile current tile--flush">
-        <div class="current-row">
-          {currentBook.coverUrl ? (
-            <div class="book-spine book-spine--image" aria-hidden="true">
-              <img src={currentBook.coverUrl} alt="" loading="lazy" />
-            </div>
-          ) : (
-            <div
-              class="book-spine"
-              aria-hidden="true"
-              style={`background:linear-gradient(135deg, ${currentCover.from} 0%, ${currentCover.to} 100%)`}
-            >
-              <span class="br">{currentBook.categories[0] ?? ''}</span>
-              <strong>{currentBook.title}</strong>
-              <span class="pub"></span>
-            </div>
-          )}
-          <div class="current-meta">
-            <div class="label" style="color:var(--bento-accent-2)">● 正在讀</div>
-            <h2>{currentBook.title}</h2>
-            {currentBook.categories.length > 0 && (
-              <div class="author">{currentBook.categories.join(' · ')}</div>
-            )}
-            <div class="current-progress">
-              <div class="current-progress-head">
-                <span>進度</span>
-                <span class="mono" style="color:var(--bento-accent-2)">{currentBook.progress}%</span>
-              </div>
-              <div class="current-progress-bar">
-                <div class="current-progress-fill" style={`width:${currentBook.progress}%`}></div>
-              </div>
-            </div>
+              );
+            })}
+          </div>
+          <div class="heatmap-legend">
+            <span>少</span>
+            <span class="cell" data-v="0"></span>
+            <span class="cell" data-v="1"></span>
+            <span class="cell" data-v="2"></span>
+            <span class="cell" data-v="3"></span>
+            <span class="cell" data-v="4"></span>
+            <span>多</span>
           </div>
         </div>
       </section>
-    )}
+
+      {currentBook && (
+        <section class="tile current span-2">
+          <span class="current-chip">● 正在讀</span>
+          <div class="current-book">
+            {currentBook.coverUrl ? (
+              <div class="book-spine book-spine--image" aria-hidden="true">
+                <img src={currentBook.coverUrl} alt="" loading="lazy" />
+              </div>
+            ) : (
+              <div class="book-spine" aria-hidden="true">
+                <span class="br">{currentBook.categories[0] ?? ''}</span>
+                <strong>{currentBook.title}</strong>
+              </div>
+            )}
+            <div class="current-meta">
+              <h2>{currentBook.title}</h2>
+              {currentBook.categories[0] && (
+                <div class="subtopic">{currentBook.categories[0]}</div>
+              )}
+              <div class="current-progress">
+                <div class="current-progress-head">
+                  <span>進度</span>
+                  <span class="pct">{currentBook.progress}%</span>
+                </div>
+                <div class="current-progress-bar">
+                  <div class="current-progress-fill" style={`width:${currentBook.progress}%`}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+    </div>
 
     <!-- Filter bar -->
     <section class="tile filterbar">
@@ -457,6 +454,13 @@ const chipsData = Array.from(rawCatCounts.entries())
     gap: var(--bento-gap);
   }
 
+  /* Grid + span utilities (scoped to reading page; mirror index.astro's tokens) */
+  .grid { display: grid; gap: var(--bento-gap); }
+  .cols-6 { grid-template-columns: repeat(6, 1fr); }
+  .span-2 { grid-column: span 2; }
+  .span-4 { grid-column: span 4; }
+  .span-6 { grid-column: span 6; }
+
   .tile {
     background: var(--bento-surface);
     border-radius: var(--bento-r-lg);
@@ -489,11 +493,13 @@ const chipsData = Array.from(rawCatCounts.entries())
   .topnav-right { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--bento-sub); }
 
   /* Hero */
+  .top-row { align-items: stretch; }
+
   .hero {
-    display: grid; grid-template-columns: 1fr 360px;
-    gap: 36px; align-items: end; padding: 28px 30px 26px;
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 28px; align-items: end; padding: 28px 30px 26px;
   }
-  .hero-h1 { font-size: 56px; line-height: 0.95; letter-spacing: -0.03em; margin-top: 6px; }
+  .hero-h1 { font-size: 50px; line-height: 0.95; letter-spacing: -0.03em; margin-top: 6px; }
   .hi-em {
     color: var(--bento-accent);
     font-family: 'Newsreader', 'Noto Serif TC', Georgia, serif;
@@ -524,47 +530,70 @@ const chipsData = Array.from(rawCatCounts.entries())
   }
   .heatmap-legend .cell { width: 14px; height: 14px; }
 
-  /* Current reading featured */
+  /* Currently reading — right column, dark, minimal */
   .current {
-    background: linear-gradient(135deg, #243240 0%, #0e1418 100%);
-    color: #fff; padding: 32px;
+    background: linear-gradient(160deg, #243240 0%, #0e1418 100%);
+    color: #fff;
+    padding: 28px 28px 32px;
+    display: flex; flex-direction: column; gap: 18px;
   }
   :global([data-theme="dark"]) .reading-page .current {
-    background: linear-gradient(135deg, #1c2530 0%, #0a0d12 100%);
+    background: linear-gradient(160deg, #1c2530 0%, #0a0d12 100%);
   }
-  .current-row { display: grid; grid-template-columns: 160px 1fr; gap: 36px; align-items: center; }
+  .current-chip {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--bento-accent-2); font-weight: 500;
+  }
+  .current-book {
+    flex: 1;
+    display: grid; grid-template-columns: 130px 1fr; gap: 22px;
+    align-items: center;
+    min-height: 0;
+  }
   .book-spine {
-    width: 160px; aspect-ratio: 3/4; border-radius: 4px 6px 6px 4px;
-    box-shadow: inset 4px 0 0 rgba(0, 0, 0, .25), 0 14px 32px -8px rgba(0, 0, 0, .55);
+    width: 130px; aspect-ratio: 3 / 4;
+    align-self: center;
+    border-radius: 4px 6px 6px 4px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #0e0e0e 100%);
+    box-shadow: inset 4px 0 0 rgba(0, 0, 0, .35), 0 14px 28px -10px rgba(0, 0, 0, .55);
     display: flex; flex-direction: column; justify-content: space-between;
-    padding: 18px 14px 14px; font-family: var(--bento-font-sans);
-    position: relative; transform: rotate(-2deg);
-    overflow: hidden;
+    padding: 12px 10px 10px; font-family: var(--bento-font-sans);
+    position: relative; overflow: hidden;
+    color: #fff;
   }
-  .book-spine::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(160deg, rgba(255, 255, 255, .15) 0%, transparent 35%, transparent 75%, rgba(0, 0, 0, .15) 100%);
-    pointer-events: none;
+  .book-spine--image { padding: 0; background: #1a1a1a; }
+  .book-spine--image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .book-spine .br { font-size: 9px; letter-spacing: .22em; opacity: .55; }
+  .book-spine strong {
+    font-size: 15px; line-height: 1.25; font-weight: 600;
+    align-self: center; text-align: center;
+    flex: 1; display: flex; align-items: center; justify-content: center;
   }
-  .book-spine--image {
-    padding: 0;
-    background: #1a1a1a;
+
+  .current-meta {
+    display: flex; flex-direction: column; justify-content: center;
+    min-width: 0;
   }
-  .book-spine--image::after { display: none; }
-  .book-spine--image img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
+  .current-meta h2 {
+    font-family: var(--bento-font-sans);
+    font-size: 22px; line-height: 1.15; margin: 0;
+    letter-spacing: -0.02em; font-weight: 700;
   }
-  .book-spine .br { font-size: 9px; letter-spacing: .2em; opacity: .55; }
-  .book-spine strong { font-size: 22px; line-height: 1.15; font-weight: 600; }
-  .book-spine .pub { font-size: 8px; letter-spacing: .15em; opacity: .5; }
-  .current-meta .label { color: var(--bento-accent-2); }
-  .current-meta h2 { font-size: 32px; line-height: 1.15; margin-top: 8px; }
-  .current-meta .author { font-size: 14px; color: rgba(255, 255, 255, .6); margin-top: 4px; }
-  .current-progress { display: grid; gap: 6px; margin-top: 22px; max-width: 380px; }
-  .current-progress-head { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255, 255, 255, .65); letter-spacing: .05em; }
-  .current-progress-bar { height: 4px; background: rgba(255, 255, 255, .1); border-radius: 3px; overflow: hidden; }
+  .current-meta .subtopic {
+    font-size: 13px; color: rgba(255, 255, 255, .55);
+    margin-top: 6px;
+  }
+  .current-progress { display: grid; gap: 6px; margin-top: 16px; }
+  .current-progress-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px; color: rgba(255, 255, 255, .65);
+    font-family: var(--bento-font-sans);
+  }
+  .current-progress-head .pct {
+    color: var(--bento-accent-2); font-weight: 500;
+    font-family: var(--bento-font-mono); font-size: 12px;
+  }
+  .current-progress-bar { height: 4px; background: rgba(255, 255, 255, .12); border-radius: 3px; overflow: hidden; }
   .current-progress-fill { height: 100%; background: var(--bento-accent-2); border-radius: 3px; }
 
   /* Filter bar */
@@ -743,13 +772,14 @@ const chipsData = Array.from(rawCatCounts.entries())
   .back-top:hover { color: var(--bento-accent); }
 
   @media (max-width: 860px) {
+    .cols-6 { grid-template-columns: 1fr; }
+    .span-2, .span-4, .span-6 { grid-column: auto; }
     .hero { grid-template-columns: 1fr; gap: 22px; padding: 22px; }
     .hero-h1 { font-size: 38px; }
     .current { padding: 22px; }
-    .current-row { grid-template-columns: 110px 1fr; gap: 22px; }
-    .book-spine { width: 110px; }
-    .book-spine strong { font-size: 18px; }
-    .current-meta h2 { font-size: 22px; }
+    .current-book { grid-template-columns: 96px 1fr; gap: 18px; }
+    .book-spine { width: 96px; }
+    .current-meta h2 { font-size: 20px; }
     .year-section { grid-template-columns: 1fr; gap: 14px; padding: 22px 18px; }
     .year-side { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
     .yr-n { font-size: 32px; }
