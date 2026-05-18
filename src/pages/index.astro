@@ -17,23 +17,24 @@ const categoriesOrdered = [
   { name: 'Flutter 開發設計雜談' },
 ];
 
+const latestArticle = allArticles[0] ?? null;
+const latestSlug = latestArticle ? categorySlug(latestArticle.category) : '';
+
 const tabsData = await Promise.all(
   categoriesOrdered.map(async (cat) => {
     const slug = categorySlug(cat.name);
     const articles = await getArticlesByCategory(slug);
+    const skipFirst = slug === latestSlug;
     return {
       name: cat.name,
       slug,
       count: articles.length,
       featured: articles[0] ?? null,
-      recent: articles.slice(1, 7),
+      recent: skipFirst ? articles.slice(1, 7) : articles.slice(0, 6),
     };
   })
 );
 const defaultTab = tabsData[0];
-
-const latestArticle = allArticles[0] ?? null;
-const latestSlug = latestArticle ? categorySlug(latestArticle.category) : '';
 
 const allBooks = await getAllBooks();
 const currentBook = allBooks.find((b) => bookStatus(b) === 'reading') ?? null;
