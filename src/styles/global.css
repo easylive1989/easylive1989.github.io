@@ -83,6 +83,9 @@
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
+  /* Always reserve room for the vertical scrollbar so filtering / sorting
+     that shortens the page doesn't reflow the layout sideways. */
+  scrollbar-gutter: stable;
 }
 
 body {
