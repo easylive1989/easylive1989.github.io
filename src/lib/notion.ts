@@ -81,6 +81,9 @@ export async function fetchDatabase(
       cursor = response.has_more ? (response as any).next_cursor : undefined;
     } while (cursor);
   } catch (err: any) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(`Failed to fetch database ${databaseId}: ${err.message}`);
+    }
     console.warn(`Failed to fetch database ${databaseId}: ${err.message}`);
     return [];
   }

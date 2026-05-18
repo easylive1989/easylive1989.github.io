@@ -63,6 +63,8 @@ export async function downloadImages(
   publicDir: string,
   distDir?: string,
 ): Promise<void> {
+  const isProductionBuild = process.env.NODE_ENV === 'production';
+
   for (const [remoteUrl, localPath] of Object.entries(imageMap)) {
     const publicFilePath = path.join(publicDir, localPath);
 
@@ -79,7 +81,9 @@ export async function downloadImages(
     try {
       const response = await fetch(remoteUrl);
       if (!response.ok) {
-        console.warn(`Failed to download image: ${remoteUrl} (${response.status})`);
+        const msg = `Failed to download image: ${remoteUrl} (${response.status})`;
+        if (isProductionBuild) throw new Error(msg);
+        console.warn(msg);
         continue;
       }
       const buffer = Buffer.from(await response.arrayBuffer());
@@ -93,6 +97,7 @@ export async function downloadImages(
         fs.writeFileSync(distFilePath, buffer);
       }
     } catch (err) {
+      if (isProductionBuild) throw err;
       console.warn(`Failed to download image: ${remoteUrl}`, err);
     }
   }

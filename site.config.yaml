@@ -31,3 +31,4 @@ notion:
 
 build:
   schedule: "0 0 * * *"
+  minArticles: 1

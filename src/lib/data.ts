@@ -14,9 +14,14 @@ import { replaceImageUrls, downloadImages } from './images';
 import { categorySlug } from './category';
 import path from 'node:path';
 
+const isProductionBuild = (): boolean => process.env.NODE_ENV === 'production';
+
 function getNotionClient(): Client | null {
   const token = process.env.NOTION_API_KEY;
   if (!token) {
+    if (isProductionBuild()) {
+      throw new Error('NOTION_API_KEY not set — aborting production build');
+    }
     console.warn('NOTION_API_KEY not set — returning empty data');
     return null;
   }
@@ -35,7 +40,18 @@ export async function getAllArticles(): Promise<Article[]> {
   const config = loadConfig();
   const client = getNotionClient();
   if (!client) return [];
-  cachedArticles = await fetchDatabase(client, config.notion.databaseId);
+  const articles = await fetchDatabase(client, config.notion.databaseId);
+
+  if (isProductionBuild()) {
+    const min = config.build.minArticles ?? 1;
+    if (articles.length < min) {
+      throw new Error(
+        `Fetched ${articles.length} articles from Notion, below minimum ${min} — aborting production build`,
+      );
+    }
+  }
+
+  cachedArticles = articles;
   return cachedArticles;
 }
 
