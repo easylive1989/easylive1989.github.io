@@ -18,8 +18,8 @@ const totalCount = allBooks.length;
 const readingCount = allBooks.filter((b) => bookStatus(b) === 'reading').length;
 const readCount = allBooks.filter((b) => bookStatus(b) === 'read').length;
 
-const currentBook = allBooks.find((b) => bookStatus(b) === 'reading') ?? null;
-const currentCover = currentBook ? coverGradient(currentBook) : null;
+const currentBooks = allBooks.filter((b) => bookStatus(b) === 'reading');
+const hasCurrent = currentBooks.length > 0;
 
 interface ShelfYear {
   year: number;
@@ -127,7 +127,7 @@ const chipsData = Array.from(rawCatCounts.entries())
 
     <!-- Hero + currently reading (side by side) -->
     <div class="grid cols-6 top-row">
-      <section class:list={['tile', 'hero', currentBook ? 'span-4' : 'span-6']}>
+      <section class:list={['tile', 'hero', hasCurrent ? 'span-4' : 'span-6']}>
         <div class="hero-left">
           <div class="label">Reading list · 書單</div>
           <h1 class="hero-h1">讀過的<span class="hi-em">書</span>。</h1>
@@ -178,36 +178,59 @@ const chipsData = Array.from(rawCatCounts.entries())
         </div>
       </section>
 
-      {currentBook && (
-        <section class="tile current span-2">
-          <span class="current-chip">● 正在讀</span>
-          <div class="current-book">
-            {currentBook.coverUrl ? (
-              <div class="book-spine book-spine--image" aria-hidden="true">
-                <img src={currentBook.coverUrl} alt="" loading="lazy" />
-              </div>
-            ) : (
-              <div class="book-spine" aria-hidden="true">
-                <span class="br">{currentBook.categories[0] ?? ''}</span>
-                <strong>{currentBook.title}</strong>
-              </div>
-            )}
-            <div class="current-meta">
-              <h2>{currentBook.title}</h2>
-              {currentBook.categories[0] && (
-                <div class="subtopic">{currentBook.categories[0]}</div>
-              )}
-              <div class="current-progress">
-                <div class="current-progress-head">
-                  <span>進度</span>
-                  <span class="pct">{currentBook.progress}%</span>
+      {hasCurrent && (
+        <section class="tile current span-2" id="current-tile">
+          <span class="current-chip">
+            ● 正在讀{currentBooks.length > 1 ? ` · ${currentBooks.length} 本` : ''}
+          </span>
+          <div class="current-slides">
+            <div class="current-track">
+              {currentBooks.map((book, i) => (
+                <div class="current-slide" data-slide-index={i}>
+                  <div class="current-book">
+                    {book.coverUrl ? (
+                      <div class="book-spine book-spine--image" aria-hidden="true">
+                        <img src={book.coverUrl} alt="" loading="lazy" />
+                      </div>
+                    ) : (
+                      <div class="book-spine" aria-hidden="true">
+                        <span class="br">{book.categories[0] ?? ''}</span>
+                        <strong>{book.title}</strong>
+                      </div>
+                    )}
+                    <div class="current-meta">
+                      <h2>{book.title}</h2>
+                      {book.categories[0] && (
+                        <div class="subtopic">{book.categories[0]}</div>
+                      )}
+                      <div class="current-progress">
+                        <div class="current-progress-head">
+                          <span>進度</span>
+                          <span class="pct">{book.progress}%</span>
+                        </div>
+                        <div class="current-progress-bar">
+                          <div class="current-progress-fill" style={`width:${book.progress}%`}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="current-progress-bar">
-                  <div class="current-progress-fill" style={`width:${currentBook.progress}%`}></div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
+          {currentBooks.length > 1 && (
+            <div class="current-dots" role="tablist" aria-label="切換正在讀的書">
+              {currentBooks.map((_, i) => (
+                <button
+                  type="button"
+                  class="current-dot"
+                  data-dot-index={i}
+                  aria-current={i === 0 ? 'true' : undefined}
+                  aria-label={`第 ${i + 1} 本`}
+                ></button>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>
@@ -418,6 +441,81 @@ const chipsData = Array.from(rawCatCounts.entries())
             if (q) q.focus();
           }
         }, { signal });
+
+        // Currently-reading carousel
+        const currentTile = document.getElementById('current-tile');
+        if (currentTile) {
+          const track = currentTile.querySelector('.current-track');
+          const slides = Array.from(currentTile.querySelectorAll('.current-slide'));
+          const dots = Array.from(currentTile.querySelectorAll('.current-dot'));
+          if (track && slides.length > 1) {
+            let active = 0;
+            let timer = null;
+            let dragging = false;
+            let startX = 0;
+            let pointerId = null;
+            const INTERVAL_MS = 6000;
+            const SWIPE_RATIO = 0.18; // 18% of slide width to commit
+
+            function applyTransform(offsetPx, animate) {
+              track.style.transition = animate ? '' : 'none';
+              track.style.transform = `translateX(calc(${-active * 100}% + ${offsetPx}px))`;
+            }
+            function show(idx) {
+              active = (idx + slides.length) % slides.length;
+              applyTransform(0, true);
+              dots.forEach((d, i) => {
+                if (i === active) d.setAttribute('aria-current', 'true');
+                else d.removeAttribute('aria-current');
+              });
+            }
+            function start() { stop(); timer = setInterval(() => show(active + 1), INTERVAL_MS); }
+            function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+            dots.forEach((d, i) => {
+              d.addEventListener('click', () => { show(i); start(); }, { signal });
+            });
+            currentTile.addEventListener('mouseenter', stop, { signal });
+            currentTile.addEventListener('mouseleave', start, { signal });
+
+            // Pointer-based swipe (covers mouse + touch + pen)
+            track.addEventListener('pointerdown', (e) => {
+              if (e.button !== undefined && e.button !== 0) return;
+              dragging = true;
+              startX = e.clientX;
+              pointerId = e.pointerId;
+              try { track.setPointerCapture(pointerId); } catch {}
+              stop();
+            }, { signal });
+            track.addEventListener('pointermove', (e) => {
+              if (!dragging) return;
+              const delta = e.clientX - startX;
+              applyTransform(delta, false);
+            }, { signal });
+            const release = (e) => {
+              if (!dragging) return;
+              dragging = false;
+              const delta = e.clientX - startX;
+              const w = track.offsetWidth || 1;
+              if (Math.abs(delta) > w * SWIPE_RATIO) {
+                show(active + (delta < 0 ? 1 : -1));
+              } else {
+                applyTransform(0, true);
+              }
+              if (pointerId != null) {
+                try { track.releasePointerCapture(pointerId); } catch {}
+                pointerId = null;
+              }
+              start();
+            };
+            track.addEventListener('pointerup', release, { signal });
+            track.addEventListener('pointercancel', release, { signal });
+
+            signal.addEventListener('abort', stop);
+            applyTransform(0, false);
+            start();
+          }
+        }
       }
 
       document.addEventListener('astro:page-load', setupReading);
@@ -595,6 +693,48 @@ const chipsData = Array.from(rawCatCounts.entries())
   }
   .current-progress-bar { height: 4px; background: rgba(255, 255, 255, .12); border-radius: 3px; overflow: hidden; }
   .current-progress-fill { height: 100%; background: var(--bento-accent-2); border-radius: 3px; }
+
+  .current-slides {
+    flex: 1; min-height: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .current-track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transform: translateX(0);
+    transition: transform .4s cubic-bezier(.4, 0, .2, 1);
+    touch-action: pan-y;
+    cursor: grab;
+  }
+  .current-track:active { cursor: grabbing; }
+  .current-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    user-select: none;
+  }
+  .current-slide .current-book {
+    height: 100%;
+  }
+  .current-slide img,
+  .current-slide .book-spine { pointer-events: none; }
+  .current-dots {
+    display: flex; justify-content: center; gap: 6px; margin-top: 4px;
+  }
+  .current-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    border: 0; padding: 0;
+    background: rgba(255, 255, 255, .22);
+    cursor: pointer;
+    transition: background .15s, transform .15s;
+  }
+  .current-dot:hover { background: rgba(255, 255, 255, .45); }
+  .current-dot[aria-current="true"] {
+    background: var(--bento-accent-2);
+    transform: scale(1.25);
+  }
 
   /* Filter bar */
   .filterbar { padding: 16px 22px; display: flex; flex-direction: column; gap: 12px; }
