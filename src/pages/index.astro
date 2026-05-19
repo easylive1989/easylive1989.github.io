@@ -295,10 +295,9 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
           <img src={`${BASE}assets/avatar_2.png`} alt="" class="sec-head-avatar" width="64" height="64" />
           <div>
             <h3>Side projects</h3>
-            <p>固定回頭維護的小東西。都是自己做給自己用的。</p>
+            <p class="mono sec-head-tagline">solo · for fun · always shipping</p>
           </div>
         </div>
-        <div class="sec-head-meta mono">solo · for fun · always shipping</div>
       </section>
 
       <!-- Hero: Lorescape -->
@@ -414,9 +413,8 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
         <div class="sec-head-left">
           <img src={`${BASE}assets/avatar_3.png`} alt="" class="sec-head-avatar" width="64" height="64" />
           <div>
-            <div class="mono lab-eyebrow">↳ paul playbox</div>
-            <h3>遊樂場</h3>
-            <p>遊戲是第九藝術，喜歡遊戲，熱愛遊戲，持續追尋創意。{playboxGames.length} 個瀏覽器小遊戲，點開直接玩。</p>
+            <h3>Playbox</h3>
+            <p class="mono sec-head-tagline">play · prototype · always tinkering</p>
           </div>
         </div>
         <a href="https://github.com/easylive1989/paul-playbox" target="_blank" rel="noopener" class="mono lab-link">github.com/easylive1989/paul-playbox ↗</a>
@@ -795,6 +793,13 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
   .sec-head-meta {
     font-size: 11px; color: var(--bento-sub);
     letter-spacing: .12em; text-transform: uppercase;
+  }
+  .sec-head p.sec-head-tagline {
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--bento-sub);
+    margin-top: 6px;
   }
   .sec-head-left {
     display: flex;
