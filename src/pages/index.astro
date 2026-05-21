@@ -1,10 +1,21 @@
 ---
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ReadingTile from '../components/ReadingTile.astro';
 import { loadConfig } from '../lib/config';
 import { getAllArticles, getArticlesByCategory, getAllBooks } from '../lib/data';
 import { categorySlug } from '../lib/category';
 import { bookStatus } from '../lib/bookCover';
+import avatar2 from '../assets/avatar_2.png';
+import avatar3 from '../assets/avatar_3.png';
+import bookCover from '../assets/flutter-testing.webp';
+import breakoutImg from '../assets/breakout.png';
+import tetrisImg from '../assets/tetris.png';
+import nsShaftImg from '../assets/ns_shaft.png';
+import rayWorldImg from '../assets/ray_world.png';
+import waterSortImg from '../assets/water_sort_puzzle.png';
+import tinySwordsImg from '../assets/tiny_swords.png';
+import stockTradingImg from '../assets/stock_trading.png';
 
 const config = loadConfig();
 const BASE = import.meta.env.BASE_URL;
@@ -88,13 +99,13 @@ const playboxUrl = config.author.works.find((w) => w.type === 'playbox')?.url ??
 const PLAYBOX_BASE = 'https://easylive1989.github.io/paul-playbox';
 
 const playboxGames = [
-  { name: 'Flutter Breakout',  slug: 'flutter_breakout',  image: 'breakout.png' },
-  { name: 'Flutter Tetris',    slug: 'flutter_tetris',    image: 'tetris.png' },
-  { name: 'Player NS Shaft',   slug: 'player_ns_shaft',   image: 'ns_shaft.png' },
-  { name: 'Ray World Game',    slug: 'ray_world_game',    image: 'ray%20world.png' },
-  { name: 'Water Sort Puzzle', slug: 'water_sort_puzzle', image: 'water_sort_puzzle.png' },
-  { name: 'Tiny Swords RTS',   slug: 'tiny_swords',       image: 'tiny_swords.png' },
-  { name: 'Stock Trading',     slug: 'stock_trading_game', image: 'stock_trading.png' },
+  { name: 'Flutter Breakout',  slug: 'flutter_breakout',  image: breakoutImg },
+  { name: 'Flutter Tetris',    slug: 'flutter_tetris',    image: tetrisImg },
+  { name: 'Player NS Shaft',   slug: 'player_ns_shaft',   image: nsShaftImg },
+  { name: 'Ray World Game',    slug: 'ray_world_game',    image: rayWorldImg },
+  { name: 'Water Sort Puzzle', slug: 'water_sort_puzzle', image: waterSortImg },
+  { name: 'Tiny Swords RTS',   slug: 'tiny_swords',       image: tinySwordsImg },
+  { name: 'Stock Trading',     slug: 'stock_trading_game', image: stockTradingImg },
   { name: 'Water Bottle Flip', slug: 'water_bottle_flip', image: 'water_bottle_flip.svg' },
   { name: 'Sokoban',           slug: 'sokoban',           image: 'sokoban.svg' },
 ];
@@ -193,7 +204,7 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
 
       <div class="grid span-2 stack-2">
         <section class="tile tile--green book-tile">
-          <img src={`${BASE}assets/flutter-testing.webp`} alt="30 天輕鬆學會 Flutter 測試" class="book-cover-img" width="80" />
+          <Image src={bookCover} alt="30 天輕鬆學會 Flutter 測試" class="book-cover-img" width={160} height={213} loading="eager" />
           <div>
             <div class="label label--on-color">出版書籍 · Book</div>
             <h4 class="book-title">30 天輕鬆學會<br />Flutter 測試</h4>
@@ -292,7 +303,7 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
     <div class="grid cols-6" style="margin-top:calc(var(--bento-gap) * 4)">
       <section class="tile span-6 sec-head">
         <div class="sec-head-left">
-          <img src={`${BASE}assets/avatar_2.png`} alt="" class="sec-head-avatar" width="64" height="64" />
+          <Image src={avatar2} alt="" class="sec-head-avatar" width={128} height={128} loading="lazy" />
           <div>
             <h3>Side projects</h3>
             <p class="mono sec-head-tagline">solo · for fun · always shipping</p>
@@ -411,7 +422,7 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
     <div class="grid cols-6" style="margin-top:calc(var(--bento-gap) * 4)">
       <section class="tile span-6 sec-head">
         <div class="sec-head-left">
-          <img src={`${BASE}assets/avatar_3.png`} alt="" class="sec-head-avatar" width="64" height="64" />
+          <Image src={avatar3} alt="" class="sec-head-avatar" width={128} height={128} loading="lazy" />
           <div>
             <h3>Playbox</h3>
             <p class="mono sec-head-tagline">play · prototype · always tinkering</p>
@@ -425,7 +436,11 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
           {playboxGames.map((game) => (
             <a class="game" href={`${PLAYBOX_BASE}/${game.slug}/`} target="_blank" rel="noopener">
               <div class="game-cover">
-                <img src={`${BASE}assets/${game.image}`} alt={`${game.name} screenshot`} loading="lazy" />
+                {typeof game.image === 'string' ? (
+                  <img src={`${BASE}assets/${game.image}`} alt={`${game.name} screenshot`} loading="lazy" />
+                ) : (
+                  <Image src={game.image} alt={`${game.name} screenshot`} width={480} height={270} loading="lazy" />
+                )}
                 <span class="play-btn">▶ play</span>
               </div>
               <div class="game-body">
