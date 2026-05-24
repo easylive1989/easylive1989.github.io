@@ -27,6 +27,8 @@ author:
 notion:
   databaseId: "31c8303f78f78086a16fdffcd6dd1777"
   booksDatabaseId: "56d746743d0c41ddb48f302dba008592"
+  sideProjectsDatabaseId: "36a8303f78f780c39eb7cecbce962dbf"
+  playboxDatabaseId: "36a8303f78f7802881dcf2ac4296063e"
   defaultCategory: "開發日常"
 
 build:

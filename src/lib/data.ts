@@ -9,6 +9,8 @@ import {
   type NotionBlock,
   type Book,
 } from './notion';
+import { fetchSideProjects, type SideProject } from './sideProjects';
+import { fetchPlayboxGames, type PlayboxGame } from './playbox';
 import { enrichBookCovers } from './bookCovers';
 import { replaceImageUrls, downloadImages } from './images';
 import { categorySlug } from './category';
@@ -17,6 +19,7 @@ import {
   saveCachedBlocks,
   pruneBlockCache,
 } from './notionCache';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 
 const isProductionBuild = (): boolean => process.env.NODE_ENV === 'production';
@@ -138,4 +141,71 @@ export async function getAllArticlesForStaticPaths(): Promise<
     categorySlug: categorySlug(a.category),
     articleId: a.id,
   }));
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Side Projects & Playbox — fetched from Notion, with image download
+// ─────────────────────────────────────────────────────────────────
+
+function getNotionFileLocalPath(remoteUrl: string, bucket: string): string {
+  const urlObj = new URL(remoteUrl);
+  // Notion's signed S3 URLs include the original filename in the path; hash
+  // origin + pathname so re-signed URLs of the same file resolve to the
+  // same cached local copy.
+  const basePath = urlObj.origin + urlObj.pathname;
+  const hash = createHash('md5').update(basePath).digest('hex').slice(0, 12);
+  const ext = path.extname(urlObj.pathname).toLowerCase() || '.png';
+  return `/assets/notion/${bucket}/${hash}${ext}`;
+}
+
+let cachedSideProjects: SideProject[] | null = null;
+
+export async function getAllSideProjects(): Promise<SideProject[]> {
+  if (cachedSideProjects) return cachedSideProjects;
+  const config = loadConfig();
+  const client = getNotionClient();
+  if (!client || !config.notion.sideProjectsDatabaseId) return [];
+
+  const raw = await fetchSideProjects(client, config.notion.sideProjectsDatabaseId);
+
+  const imageMap: Record<string, string> = {};
+  const enriched = raw.map((p) => {
+    if (!p.coverUrl) return p;
+    const localPath = getNotionFileLocalPath(p.coverUrl, 'side-projects');
+    imageMap[p.coverUrl] = localPath;
+    return { ...p, coverUrl: localPath };
+  });
+
+  const publicDir = path.resolve(process.cwd(), 'public');
+  const distDir = path.resolve(process.cwd(), 'dist');
+  await downloadImages(imageMap, publicDir, distDir);
+
+  cachedSideProjects = enriched;
+  return cachedSideProjects;
+}
+
+let cachedPlayboxGames: PlayboxGame[] | null = null;
+
+export async function getAllPlayboxGames(): Promise<PlayboxGame[]> {
+  if (cachedPlayboxGames) return cachedPlayboxGames;
+  const config = loadConfig();
+  const client = getNotionClient();
+  if (!client || !config.notion.playboxDatabaseId) return [];
+
+  const raw = await fetchPlayboxGames(client, config.notion.playboxDatabaseId);
+
+  const imageMap: Record<string, string> = {};
+  const enriched = raw.map((g) => {
+    if (!g.imageUrl) return g;
+    const localPath = getNotionFileLocalPath(g.imageUrl, 'playbox');
+    imageMap[g.imageUrl] = localPath;
+    return { ...g, imageUrl: localPath };
+  });
+
+  const publicDir = path.resolve(process.cwd(), 'public');
+  const distDir = path.resolve(process.cwd(), 'dist');
+  await downloadImages(imageMap, publicDir, distDir);
+
+  cachedPlayboxGames = enriched;
+  return cachedPlayboxGames;
 }

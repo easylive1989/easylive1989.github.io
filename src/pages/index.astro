@@ -3,20 +3,19 @@ import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ReadingTile from '../components/ReadingTile.astro';
 import { loadConfig } from '../lib/config';
-import { getAllArticles, getArticlesByCategory, getAllBooks } from '../lib/data';
+import {
+  getAllArticles,
+  getArticlesByCategory,
+  getAllBooks,
+  getAllSideProjects,
+  getAllPlayboxGames,
+} from '../lib/data';
 import { getGithubContributions } from '../lib/github';
 import { categorySlug } from '../lib/category';
 import { bookStatus } from '../lib/bookCover';
 import avatar2 from '../assets/avatar_2.png';
 import avatar3 from '../assets/avatar_3.png';
 import bookCover from '../assets/flutter-testing.webp';
-import breakoutImg from '../assets/breakout.png';
-import tetrisImg from '../assets/tetris.png';
-import nsShaftImg from '../assets/ns_shaft.png';
-import rayWorldImg from '../assets/ray_world.png';
-import waterSortImg from '../assets/water_sort_puzzle.png';
-import tinySwordsImg from '../assets/tiny_swords.png';
-import stockTradingImg from '../assets/stock_trading.png';
 
 const config = loadConfig();
 const BASE = import.meta.env.BASE_URL;
@@ -96,20 +95,12 @@ const talks = [
   { year: '2020', emoji: '✍️', title: '在 Kata 中尋找 Clean Code',       venue: '鐵人賽完賽',       venueColor: 'sub', url: 'https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1' },
 ];
 
-const playboxUrl = config.author.works.find((w) => w.type === 'playbox')?.url ?? 'https://easylive1989.github.io/paul-playbox/';
-const PLAYBOX_BASE = 'https://easylive1989.github.io/paul-playbox';
-
-const playboxGames = [
-  { name: 'Flutter Breakout',  slug: 'flutter_breakout',  image: breakoutImg },
-  { name: 'Flutter Tetris',    slug: 'flutter_tetris',    image: tetrisImg },
-  { name: 'Player NS Shaft',   slug: 'player_ns_shaft',   image: nsShaftImg },
-  { name: 'Ray World Game',    slug: 'ray_world_game',    image: rayWorldImg },
-  { name: 'Water Sort Puzzle', slug: 'water_sort_puzzle', image: waterSortImg },
-  { name: 'Tiny Swords RTS',   slug: 'tiny_swords',       image: tinySwordsImg },
-  { name: 'Stock Trading',     slug: 'stock_trading_game', image: stockTradingImg },
-  { name: 'Water Bottle Flip', slug: 'water_bottle_flip', image: 'water_bottle_flip.svg' },
-  { name: 'Sokoban',           slug: 'sokoban',           image: 'sokoban.svg' },
-];
+// Fetched from Notion (sorted by 排序 ascending)
+const allSideProjects = await getAllSideProjects();
+const heroProject = allSideProjects[0] ?? null;
+const stackProjects = allSideProjects.slice(1, 3);
+const cardProjects = allSideProjects.slice(3);
+const playboxGames = await getAllPlayboxGames();
 
 const articlesCount = allArticles.length;
 const categoriesCount = tabsData.filter((t) => t.count > 0).length;
@@ -353,111 +344,120 @@ const contribYear = new Date().getFullYear();
         </div>
       </section>
 
-      <!-- Hero: Lorescape -->
-      <article class="tile span-4 project-hero">
-        <div class="project-cover project-cover--image" style="background-image:url('https://lorescape.app/images/hero-bg.jpg')">
-          <div class="project-cover-overlay"></div>
-          <span class="mono project-tag">MOBILE APP</span>
-          <span class="pill project-pill">● 活著</span>
-        </div>
-        <div class="project-body">
-          <h4>Lorescape <span class="project-sub">· 沉浸式歷史探索</span></h4>
-          <p class="project-blurb">用 AI 當你的隨身歷史導覽，把眼前的石頭、巷弄、廟宇的故事娓娓道來。從 0 完整流程上架 iOS / Android。</p>
-          <div class="project-chips">
-            <span class="chip">iOS · Android</span>
-            <span class="chip chip--outline">Flutter · Dart · Supabase</span>
+      {heroProject && (
+        <article class="tile span-4 project-hero">
+          <div
+            class:list={['project-cover', { 'project-cover--image': !!heroProject.coverUrl }]}
+            style={heroProject.coverUrl ? `background-image:url('${heroProject.coverUrl}')` : undefined}
+          >
+            <div class="project-cover-overlay"></div>
+            {heroProject.platforms.length > 0 && (
+              <span class="mono project-tag">{heroProject.platforms.join(' · ')}</span>
+            )}
+            <span class="pill project-pill">● {heroProject.status || '活著'}</span>
           </div>
-          <div class="project-foot project-foot--links">
-            <a href="https://github.com/easylive1989/instant_explore" target="_blank" rel="noopener">GitHub ↗</a>
-            <a href="https://lorescape.app/" target="_blank" rel="noopener" class="link-accent">官網 lorescape.app ↗</a>
+          <div class="project-body">
+            <h4>
+              {heroProject.title}
+              {heroProject.subtitle && <span class="project-sub"> · {heroProject.subtitle}</span>}
+            </h4>
+            {heroProject.description && (
+              <p class="project-blurb">{heroProject.description}</p>
+            )}
+            {heroProject.tags.length > 0 && (
+              <div class="project-chips">
+                {heroProject.tags.map((tag) => (
+                  <span class="chip">{tag}</span>
+                ))}
+              </div>
+            )}
+            <div class="project-foot project-foot--links">
+              {heroProject.githubUrl && (
+                <a href={heroProject.githubUrl} target="_blank" rel="noopener">GitHub ↗</a>
+              )}
+              {heroProject.mainUrl && (
+                <a href={heroProject.mainUrl} target="_blank" rel="noopener" class="link-accent">進站 ↗</a>
+              )}
+            </div>
           </div>
-        </div>
-      </article>
+        </article>
+      )}
 
-      <div class="tile span-2 tile--flush">
-        <div class="project-stack">
-          <div class="project-stack-cell">
-            <div class="project-stack-head">
-              <div class="pj-icon" style="background:var(--bento-accent)">▲</div>
-              <span class="pill pill--muted">● 活著</span>
-            </div>
-            <div>
-              <h4 class="project-stack-title">台股趨勢分析</h4>
-              <div class="mono project-stack-sub">Web · Publixia</div>
-            </div>
-            <p class="project-stack-blurb">從 TWSE 抓盤後資料、自己畫圖、找有趣的價量訊號。每天自己也在看。</p>
+      {stackProjects.length > 0 && (
+        <div class="tile span-2 tile--flush">
+          <div class="project-stack">
+            {stackProjects.map((p) => (
+              <div class="project-stack-cell">
+                <div class="project-stack-head">
+                  {p.icon && (
+                    <div class="pj-icon" style={`background:${p.iconBg || 'var(--bento-accent)'}`}>{p.icon}</div>
+                  )}
+                  <span class="pill pill--muted">● {p.status || '活著'}</span>
+                </div>
+                <div>
+                  <h4 class="project-stack-title">{p.title}</h4>
+                  {p.platforms.length > 0 && (
+                    <div class="mono project-stack-sub">{p.platforms.join(' · ')}</div>
+                  )}
+                </div>
+                {p.description && (
+                  <p class="project-stack-blurb">{p.description}</p>
+                )}
+                {p.tags.length > 0 && (
+                  <div class="project-stack-chips">
+                    {p.tags.map((tag) => (
+                      <span class="chip chip--mini">{tag}</span>
+                    ))}
+                  </div>
+                )}
+                <div class="project-stack-foot">
+                  {p.githubUrl && (
+                    <a href={p.githubUrl} target="_blank" rel="noopener">GitHub</a>
+                  )}
+                  {p.mainUrl && (
+                    <a href={p.mainUrl} target="_blank" rel="noopener" class="link-accent">進站 ↗</a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {cardProjects.map((p) => (
+        <article class="tile span-3 project-card">
+          <div class="project-stack-head">
+            {p.icon && (
+              <div class="pj-icon" style={`background:${p.iconBg || 'var(--bento-accent)'}`}>{p.icon}</div>
+            )}
+            <span class="pill pill--muted">● {p.status || '活著'}</span>
+          </div>
+          <div>
+            <h4 class="project-stack-title">{p.title}</h4>
+            {p.platforms.length > 0 && (
+              <div class="mono project-stack-sub">{p.platforms.join(' · ')}</div>
+            )}
+          </div>
+          {p.description && (
+            <p class="project-stack-blurb">{p.description}</p>
+          )}
+          {p.tags.length > 0 && (
             <div class="project-stack-chips">
-              <span class="chip chip--mini">React</span>
-              <span class="chip chip--mini">FastAPI</span>
+              {p.tags.map((tag) => (
+                <span class="chip chip--mini">{tag}</span>
+              ))}
             </div>
-            <div class="project-stack-foot">
-              <a href="https://github.com/easylive1989/publixia" target="_blank" rel="noopener">GitHub</a>
-              <a href="https://stock.paul-learning.dev/" target="_blank" rel="noopener" class="link-accent">進站 ↗</a>
-            </div>
+          )}
+          <div class="project-stack-foot">
+            {p.githubUrl && (
+              <a href={p.githubUrl} target="_blank" rel="noopener">GitHub</a>
+            )}
+            {p.mainUrl && (
+              <a href={p.mainUrl} target="_blank" rel="noopener" class="link-accent">進站 ↗</a>
+            )}
           </div>
-          <div class="project-stack-cell">
-            <div class="project-stack-head">
-              <div class="pj-icon" style="background:#2eb88a">◆</div>
-              <span class="pill pill--muted">● 活著</span>
-            </div>
-            <div>
-              <h4 class="project-stack-title">YouTube 運動計時器</h4>
-              <div class="mono project-stack-sub">Web tool</div>
-            </div>
-            <p class="project-stack-blurb">看 YouTube 運動影片時疊加的區間計時器，幫忙在固定秒數提醒換動作。</p>
-            <div class="project-stack-chips">
-              <span class="chip chip--mini">Vanilla JS</span>
-            </div>
-            <div class="project-stack-foot">
-              <a href="https://github.com/easylive1989/youtube-sport-timer" target="_blank" rel="noopener">GitHub</a>
-              <a href="https://paul-learning.dev/youtube-sport-timer/" target="_blank" rel="noopener" class="link-accent">進站 ↗</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Row 5b: smaller side projects -->
-      <article class="tile span-3 project-card">
-        <div class="project-stack-head">
-          <div class="pj-icon" style="background:#7d3a55">🎲</div>
-          <span class="pill pill--muted">● 活著</span>
-        </div>
-        <div>
-          <h4 class="project-stack-title">小遊戲機器人</h4>
-          <div class="mono project-stack-sub">Line Bot · LittleFlowerBot</div>
-        </div>
-        <p class="project-stack-blurb">用 Line 跟朋友 / 群組玩五子棋、象棋、井字遊戲、海戰棋、猜數字的機器人。輸入「玩五子棋」就開戰。</p>
-        <div class="project-stack-chips">
-          <span class="chip chip--mini">Line Bot</span>
-          <span class="chip chip--mini">.NET</span>
-          <span class="chip chip--mini">MongoDB</span>
-        </div>
-        <div class="project-stack-foot">
-          <a href="https://github.com/easylive1989/LittleFlowerBot" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://github.com/easylive1989/LittleFlowerBot/blob/master/HOW%20TO%20PLAY.md" target="_blank" rel="noopener" class="link-accent">怎麼玩 ↗</a>
-        </div>
-      </article>
-
-      <article class="tile span-3 project-card">
-        <div class="project-stack-head">
-          <div class="pj-icon" style="background:#c8a45a">▤</div>
-          <span class="pill pill--muted">● 活著</span>
-        </div>
-        <div>
-          <h4 class="project-stack-title">今彩 539 分析</h4>
-          <div class="mono project-stack-sub">Web · ito539-analytics</div>
-        </div>
-        <p class="project-stack-blurb">抓今彩 539 開獎資料、看號碼分布跟出現頻率。純粹自己想看數字、不是要中獎。</p>
-        <div class="project-stack-chips">
-          <span class="chip chip--mini">React</span>
-          <span class="chip chip--mini">TypeScript</span>
-          <span class="chip chip--mini">Python</span>
-        </div>
-        <div class="project-stack-foot">
-          <a href="https://github.com/easylive1989/ito539_analytics" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://paul-learning.dev/ito539_analytics/" target="_blank" rel="noopener" class="link-accent">進站 ↗</a>
-        </div>
-      </article>
+        </article>
+      ))}
     </div>
 
     <!-- ─────────── Row 6 — Paul Playbox (dedicated section) ─────────── -->
@@ -475,22 +475,30 @@ const contribYear = new Date().getFullYear();
 
       <section class="tile span-6 tile--flush">
         <div class="playbox-grid">
-          {playboxGames.map((game) => (
-            <a class="game" href={`${PLAYBOX_BASE}/${game.slug}/`} target="_blank" rel="noopener">
-              <div class="game-cover">
-                {typeof game.image === 'string' ? (
-                  <img src={`${BASE}assets/${game.image}`} alt={`${game.name} screenshot`} loading="lazy" />
-                ) : (
-                  <Image src={game.image} alt={`${game.name} screenshot`} width={480} height={270} loading="lazy" />
-                )}
-                <span class="play-btn">▶ play</span>
-              </div>
-              <div class="game-body">
-                <div class="game-name mono">./{game.slug.replace(/_/g, '-')}</div>
-                <p class="game-blurb">{game.name}</p>
-              </div>
-            </a>
-          ))}
+          {playboxGames.map((game) => {
+            const slug = (() => {
+              try {
+                const u = new URL(game.url);
+                return u.pathname.replace(/^\/paul-playbox\//, '').replace(/\/$/, '') || game.name;
+              } catch {
+                return game.name;
+              }
+            })();
+            return (
+              <a class="game" href={game.url} target="_blank" rel="noopener">
+                <div class="game-cover">
+                  {game.imageUrl && (
+                    <img src={game.imageUrl} alt={`${game.name} screenshot`} loading="lazy" />
+                  )}
+                  <span class="play-btn">▶ play</span>
+                </div>
+                <div class="game-body">
+                  <div class="game-name mono">./{slug.replace(/_/g, '-')}</div>
+                  <p class="game-blurb">{game.name}</p>
+                </div>
+              </a>
+            );
+          })}
         </div>
       </section>
     </div>

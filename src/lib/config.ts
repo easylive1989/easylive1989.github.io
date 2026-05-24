@@ -25,6 +25,8 @@ export interface SiteConfig {
   notion: {
     databaseId: string;
     booksDatabaseId?: string;
+    sideProjectsDatabaseId?: string;
+    playboxDatabaseId?: string;
     defaultCategory: string;
   };
   build: {
