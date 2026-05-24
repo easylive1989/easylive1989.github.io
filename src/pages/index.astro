@@ -475,30 +475,19 @@ const contribYear = new Date().getFullYear();
 
       <section class="tile span-6 tile--flush">
         <div class="playbox-grid">
-          {playboxGames.map((game) => {
-            const slug = (() => {
-              try {
-                const u = new URL(game.url);
-                return u.pathname.replace(/^\/paul-playbox\//, '').replace(/\/$/, '') || game.name;
-              } catch {
-                return game.name;
-              }
-            })();
-            return (
-              <a class="game" href={game.url} target="_blank" rel="noopener">
-                <div class="game-cover">
-                  {game.imageUrl && (
-                    <img src={game.imageUrl} alt={`${game.name} screenshot`} loading="lazy" />
-                  )}
-                  <span class="play-btn">▶ play</span>
-                </div>
-                <div class="game-body">
-                  <div class="game-name mono">./{slug.replace(/_/g, '-')}</div>
-                  <p class="game-blurb">{game.name}</p>
-                </div>
-              </a>
-            );
-          })}
+          {playboxGames.map((game) => (
+            <a class="game" href={game.url} target="_blank" rel="noopener">
+              <div class="game-cover">
+                {game.imageUrl && (
+                  <img src={game.imageUrl} alt={`${game.name} screenshot`} loading="lazy" />
+                )}
+              </div>
+              <div class="game-body">
+                <p class="game-blurb">{game.name}</p>
+                <span class="play-btn">▶ play</span>
+              </div>
+            </a>
+          ))}
         </div>
       </section>
     </div>
@@ -1075,16 +1064,22 @@ const contribYear = new Date().getFullYear();
   }
   .game:hover .game-cover img { transform: scale(1.04); }
   .play-btn {
-    position: absolute; bottom: 10px; right: 10px;
-    background: rgba(0, 0, 0, .55); color: #fff;
-    padding: 4px 10px; border-radius: var(--bento-r-chip);
+    background: var(--bento-ink); color: var(--bento-ink-on);
+    padding: 4px 12px; border-radius: var(--bento-r-chip);
     font-size: 11px;
     font-weight: 500;
-    backdrop-filter: blur(4px);
+    white-space: nowrap;
+    flex-shrink: 0;
   }
-  .game-body { padding: 12px 14px 14px; }
-  .game-name { font-size: 12px; font-weight: 600; color: var(--bento-accent); }
-  .game-blurb { font-size: 13px; color: var(--bento-ink); margin-top: 4px; line-height: 1.4; font-weight: 500; }
+  .game:hover .play-btn { background: var(--bento-accent); }
+  .game-body {
+    padding: 12px 14px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .game-blurb { font-size: 13px; color: var(--bento-ink); line-height: 1.4; font-weight: 500; }
 
   /* === Footer === */
   .bento-footer {
