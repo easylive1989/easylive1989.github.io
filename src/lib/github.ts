@@ -156,6 +156,10 @@ function buildWindow(cells: Map<string, RawCell>, endDate: Date) {
   return { weeks, monthLabels };
 }
 
+function reportFailure(username: string, reason: string): void {
+  console.error(`[github-fetch-failed] user=${username} reason=${reason}`);
+}
+
 export async function getGithubContributions(username: string): Promise<ContribData> {
   try {
     const today = new Date();
@@ -170,13 +174,13 @@ export async function getGithubContributions(username: string): Promise<ContribD
       },
     });
     if (!res.ok) {
-      console.warn(`[github] contributions fetch failed: HTTP ${res.status}`);
+      reportFailure(username, `HTTP ${res.status} ${res.statusText}`);
       return emptyData();
     }
     const html = await res.text();
     const { cells, totalThisYear } = parseHtml(html);
     if (cells.size === 0) {
-      console.warn('[github] contributions parse returned 0 cells — markup may have changed');
+      reportFailure(username, 'parse returned 0 cells (markup may have changed)');
       return emptyData();
     }
     const { weeks, monthLabels } = buildWindow(cells, today);
@@ -191,7 +195,8 @@ export async function getGithubContributions(username: string): Promise<ContribD
       ok: true,
     };
   } catch (err) {
-    console.warn('[github] contributions fetch threw:', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    reportFailure(username, `exception: ${msg}`);
     return emptyData();
   }
 }

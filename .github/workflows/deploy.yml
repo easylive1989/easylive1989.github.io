@@ -57,6 +57,22 @@ jobs:
           GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
         run: npx astro build 2>&1 | tee build.log
 
+      - name: Notify Discord on GitHub fetch failure
+        if: always() && hashFiles('build.log') != ''
+        run: |
+          if grep -q '\[github-fetch-failed\]' build.log; then
+            REASON=$(grep '\[github-fetch-failed\]' build.log | head -1 | head -c 800)
+            PAYLOAD=$(jq -n --arg msg "⚠️ **GitHub 抓取失敗（首頁熱力圖用空 fallback）**
+            Branch: \`${{ github.ref_name }}\`
+            Commit: \`${{ github.sha }}\`
+            [查看詳情](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            \`\`\`
+            $REASON
+            \`\`\`" '{content: $msg}')
+            curl -s -H "Content-Type: application/json" -d "$PAYLOAD" "${{ secrets.DISCORD_WEBHOOK_URL }}"
+          fi
+
       - name: Notify Discord on success
         if: success()
         run: |
