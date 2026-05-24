@@ -15,8 +15,8 @@ const BASE = import.meta.env.BASE_URL;
 const allBooks = await getAllBooks();
 
 const totalCount = allBooks.length;
-const readingCount = allBooks.filter((b) => bookStatus(b) === 'reading').length;
 const readCount = allBooks.filter((b) => bookStatus(b) === 'read').length;
+const wishlistCount = allBooks.filter((b) => bookStatus(b) === 'unstarted').length;
 
 const currentBooks = allBooks.filter((b) => bookStatus(b) === 'reading');
 const hasCurrent = currentBooks.length > 0;
@@ -28,8 +28,12 @@ interface ShelfYear {
   peak: boolean;
 }
 
+const shelfBooks = allBooks.filter((b) => bookStatus(b) !== 'unstarted');
+const wishlistBooks = allBooks
+  .filter((b) => bookStatus(b) === 'unstarted')
+  .sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant'));
 const byYear = new Map<number, Book[]>();
-for (const b of allBooks) {
+for (const b of shelfBooks) {
   const y = bookFinishedYear(b) ?? new Date().getFullYear();
   if (!byYear.has(y)) byYear.set(y, []);
   byYear.get(y)!.push(b);
@@ -134,8 +138,8 @@ const chipsData = Array.from(rawCatCounts.entries())
           <p class="hero-desc">隨手記錄看過的書。技術書幫我換腦袋、非虛構幫我換視角、小說幫我換情緒。</p>
           <div class="stats-row">
             <div><div class="stat-n" style="color:var(--bento-accent)">{totalCount}</div><div class="stat-l">total</div></div>
-            <div><div class="stat-n" style="color:var(--bento-accent-2)">{readingCount}</div><div class="stat-l">reading</div></div>
-            <div><div class="stat-n" style="color:var(--bento-accent-3)">{readCount}</div><div class="stat-l">read</div></div>
+            <div><div class="stat-n" style="color:var(--bento-accent-2)">{readCount}</div><div class="stat-l">read</div></div>
+            <div><div class="stat-n" style="color:var(--bento-accent-3)">{wishlistCount}</div><div class="stat-l">wishlist</div></div>
             <div><div class="stat-n" style="color:var(--bento-pink)">{Math.max(0, newestYear - oldestYear + 1)}</div><div class="stat-l">years</div></div>
           </div>
         </div>
@@ -248,8 +252,8 @@ const chipsData = Array.from(rawCatCounts.entries())
           <span class="sort-label">↓ 最近讀完</span>
         </button>
         <div class="view-toggle" role="tablist" id="reading-view">
-          <button type="button" data-view="shelf" aria-current="true">書架</button>
-          <button type="button" data-view="list">列表</button>
+          <button type="button" data-view="read" aria-current="true">已讀</button>
+          <button type="button" data-view="wish">想讀 <span class="view-count">{wishlistBooks.length}</span></button>
         </div>
       </div>
       <div class="filter-row chips" id="reading-chips">
@@ -265,33 +269,83 @@ const chipsData = Array.from(rawCatCounts.entries())
     </section>
 
     <!-- Shelves -->
-    <section class="tile tile--flush" id="reading-shelves">
-      {shelves.map((s) => (
-        <div class="year-section" data-year={s.year}>
-          <div class="year-side">
-            <div>
-              <div class="yr-n">{s.year}</div>
-              <div class="yr-l">{s.count} 本</div>
-              {s.peak ? (
-                <div class="yr-badge peak">★ 高峰年</div>
-              ) : (
-                yearNotes[s.year] && <div class="yr-badge">{yearNotes[s.year]}</div>
-              )}
+    <section class="tile tile--flush" id="reading-shelves" data-view="read">
+      <div class="shelves-read" data-view-content="read">
+        {shelves.map((s) => (
+          <div class="year-section" data-year={s.year}>
+            <div class="year-side">
+              <div>
+                <div class="yr-n">{s.year}</div>
+                <div class="yr-l">{s.count} 本</div>
+                {s.peak ? (
+                  <div class="yr-badge peak">★ 高峰年</div>
+                ) : (
+                  yearNotes[s.year] && <div class="yr-badge">{yearNotes[s.year]}</div>
+                )}
+              </div>
+            </div>
+            <div class="shelf">
+              {s.books.map((b) => {
+                const cv = coverGradient(b);
+                const status = bookStatus(b);
+                const cat = kindMeta[cv.kind];
+                const rawCat = b.categories[0] ?? '';
+                return (
+                  <a
+                    class={`book is-${status}`}
+                    href="#"
+                    data-title={b.title}
+                    data-cats={b.categories.join('|')}
+                    data-date={b.finishedDate ?? ''}
+                    data-progress={b.progress}
+                    title={b.title}
+                  >
+                    {b.coverUrl ? (
+                      <div class="book-cover book-cover--image">
+                        <img src={b.coverUrl} alt={b.title} loading="lazy" />
+                      </div>
+                    ) : (
+                      <div
+                        class="book-cover"
+                        style={`background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
+                      >
+                        <span class="pub">{rawCat}</span>
+                        <span class="title">{b.title}</span>
+                      </div>
+                    )}
+                    <div class="book-meta">
+                      <span class="book-title">{b.title}</span>
+                      {rawCat && (
+                        <div class="book-stats">
+                          <span class="book-tag">
+                            <span class={`dot-cat ${cat.dotClass}`}></span>
+                            {rawCat}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </a>
+                );
+              })}
             </div>
           </div>
+        ))}
+      </div>
+
+      <div class="shelves-wish wishlist-shelf" data-view-content="wish" hidden>
+        {wishlistBooks.length > 0 ? (
           <div class="shelf">
-            {s.books.map((b) => {
+            {wishlistBooks.map((b) => {
               const cv = coverGradient(b);
-              const status = bookStatus(b);
               const cat = kindMeta[cv.kind];
               const rawCat = b.categories[0] ?? '';
               return (
                 <a
-                  class={`book is-${status}`}
+                  class="book is-wish"
                   href="#"
                   data-title={b.title}
                   data-cats={b.categories.join('|')}
-                  data-date={b.finishedDate ?? ''}
+                  data-date=""
                   data-progress={b.progress}
                   title={b.title}
                 >
@@ -323,8 +377,11 @@ const chipsData = Array.from(rawCatCounts.entries())
               );
             })}
           </div>
-        </div>
-      ))}
+        ) : (
+          <div class="shelves-empty">還沒加任何想讀的書。</div>
+        )}
+      </div>
+
       <div class="shelves-empty" id="reading-empty" hidden>沒有符合的書。</div>
     </section>
 
@@ -352,29 +409,45 @@ const chipsData = Array.from(rawCatCounts.entries())
         const sortBtn = document.getElementById('reading-sort');
         const view = document.getElementById('reading-view');
         const emptyEl = document.getElementById('reading-empty');
-        const sections = Array.from(host.querySelectorAll('.year-section'));
+        const readContainer = host.querySelector('[data-view-content="read"]');
+        const wishContainer = host.querySelector('[data-view-content="wish"]');
+        const sections = readContainer ? Array.from(readContainer.querySelectorAll('.year-section')) : [];
 
         let activeCat = '*';
         let kw = '';
+        let currentView = 'read';
+
+        function bookMatches(book) {
+          const catsRaw = book.getAttribute('data-cats') || '';
+          const cats = catsRaw ? catsRaw.split('|') : [];
+          const title = (book.getAttribute('data-title') || '').toLowerCase();
+          const catsLower = catsRaw.toLowerCase();
+          const catOk = activeCat === '*' || cats.indexOf(activeCat) >= 0;
+          const kwOk = !kw || title.indexOf(kw) >= 0 || catsLower.indexOf(kw) >= 0;
+          return catOk && kwOk;
+        }
 
         function apply() {
           let anyVisible = false;
-          for (const sec of sections) {
-            const books = Array.from(sec.querySelectorAll('.book'));
-            let visible = 0;
-            for (const book of books) {
-              const catsRaw = book.getAttribute('data-cats') || '';
-              const cats = catsRaw ? catsRaw.split('|') : [];
-              const title = (book.getAttribute('data-title') || '').toLowerCase();
-              const catsLower = catsRaw.toLowerCase();
-              const catOk = activeCat === '*' || cats.indexOf(activeCat) >= 0;
-              const kwOk = !kw || title.indexOf(kw) >= 0 || catsLower.indexOf(kw) >= 0;
-              const show = catOk && kwOk;
-              book.style.display = show ? '' : 'none';
-              if (show) visible++;
+          if (currentView === 'read') {
+            for (const sec of sections) {
+              const books = Array.from(sec.querySelectorAll('.book'));
+              let visible = 0;
+              for (const book of books) {
+                const show = bookMatches(book);
+                book.style.display = show ? '' : 'none';
+                if (show) visible++;
+              }
+              sec.style.display = visible > 0 ? '' : 'none';
+              if (visible > 0) anyVisible = true;
             }
-            sec.style.display = visible > 0 ? '' : 'none';
-            if (visible > 0) anyVisible = true;
+          } else if (wishContainer) {
+            const books = Array.from(wishContainer.querySelectorAll('.book'));
+            for (const book of books) {
+              const show = bookMatches(book);
+              book.style.display = show ? '' : 'none';
+              if (show) anyVisible = true;
+            }
           }
           if (emptyEl) emptyEl.hidden = anyVisible;
         }
@@ -399,6 +472,7 @@ const chipsData = Array.from(rawCatCounts.entries())
 
         if (sortBtn) {
           sortBtn.addEventListener('click', () => {
+            if (currentView !== 'read' || !readContainer) return;
             const cur = sortBtn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
             const next = cur === 'asc' ? 'desc' : 'asc';
             sortBtn.setAttribute('data-dir', next);
@@ -409,7 +483,7 @@ const chipsData = Array.from(rawCatCounts.entries())
               const yb = parseInt(b.getAttribute('data-year') || '0', 10);
               return next === 'desc' ? yb - ya : ya - yb;
             });
-            for (const sec of ordered) host.insertBefore(sec, emptyEl);
+            for (const sec of ordered) readContainer.appendChild(sec);
             for (const sec of ordered) {
               const shelf = sec.querySelector('.shelf');
               if (!shelf) continue;
@@ -427,10 +501,16 @@ const chipsData = Array.from(rawCatCounts.entries())
         if (view) {
           view.querySelectorAll('button[data-view]').forEach((b) => {
             b.addEventListener('click', () => {
-              const v = b.getAttribute('data-view');
+              const v = b.getAttribute('data-view') || 'read';
+              if (v === currentView) return;
               view.querySelectorAll('button[data-view]').forEach((x) => x.setAttribute('aria-current', 'false'));
               b.setAttribute('aria-current', 'true');
-              host.setAttribute('data-view', v || 'shelf');
+              currentView = v;
+              host.setAttribute('data-view', v);
+              if (readContainer) readContainer.hidden = v !== 'read';
+              if (wishContainer) wishContainer.hidden = v !== 'wish';
+              if (sortBtn) sortBtn.hidden = v !== 'read';
+              apply();
             }, { signal });
           });
         }
@@ -776,6 +856,12 @@ const chipsData = Array.from(rawCatCounts.entries())
   :global([data-theme="dark"]) .reading-page .view-toggle button[aria-current="true"] {
     background: var(--bento-ink);
   }
+  .view-count {
+    font-family: var(--bento-font-mono);
+    font-size: 10px;
+    opacity: .65;
+    margin-left: 4px;
+  }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
@@ -825,20 +911,7 @@ const chipsData = Array.from(rawCatCounts.entries())
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 18px;
   }
-  #reading-shelves[data-view="list"] .shelf {
-    display: grid; gap: 6px; grid-template-columns: 1fr;
-  }
-  #reading-shelves[data-view="list"] .book {
-    display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 14px;
-    padding: 10px 12px; border-radius: var(--bento-r-md);
-  }
-  #reading-shelves[data-view="list"] .book:hover { background: var(--bento-surface-2); transform: none; }
-  #reading-shelves[data-view="list"] .book-cover {
-    width: 36px; aspect-ratio: 3/4; padding: 0; box-shadow: none;
-  }
-  #reading-shelves[data-view="list"] .book-cover .pub,
-  #reading-shelves[data-view="list"] .book-cover .title { display: none; }
-  #reading-shelves[data-view="list"] .book-meta { padding: 0; }
+  .wishlist-shelf { padding: 28px 22px; }
 
   .book {
     display: flex; flex-direction: column; gap: 8px;
@@ -867,8 +940,6 @@ const chipsData = Array.from(rawCatCounts.entries())
   .book-cover--image img {
     width: 100%; height: 100%; object-fit: cover; display: block;
   }
-  /* In list view, the image still needs to fit the 36px slot */
-  #reading-shelves[data-view="list"] .book-cover--image { background: transparent; }
   .book-cover .pub { font-size: 7px; letter-spacing: .2em; opacity: .55; }
   .book-cover .title {
     font-size: 14px; font-weight: 600; line-height: 1.2;
