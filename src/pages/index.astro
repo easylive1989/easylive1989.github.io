@@ -49,10 +49,20 @@ const defaultTab = tabsData[0];
 
 const allBooks = await getAllBooks();
 const currentBook = allBooks.find((b) => bookStatus(b) === 'reading') ?? null;
-const recentBooks = allBooks
+const readBooks = allBooks
   .filter((b) => bookStatus(b) === 'read')
-  .sort((a, b) => (b.finishedDate ?? '').localeCompare(a.finishedDate ?? ''))
-  .slice(0, 2);
+  .sort((a, b) => (b.finishedDate ?? '').localeCompare(a.finishedDate ?? ''));
+const recentBooks = readBooks.slice(0, 2);
+
+const wantToReadCount = allBooks.filter((b) => bookStatus(b) === 'unstarted').length;
+const currentYear = new Date().getFullYear();
+const finishedThisYearCount = readBooks.filter(
+  (b) => b.finishedDate && new Date(b.finishedDate).getFullYear() === currentYear,
+).length;
+const lastFinishedDate = readBooks[0]?.finishedDate ?? null;
+const daysSinceLastFinished = lastFinishedDate
+  ? Math.max(0, Math.floor((Date.now() - new Date(lastFinishedDate).getTime()) / 86_400_000))
+  : null;
 
 function formatDate(iso: string): string {
   if (!iso) return '';
@@ -144,7 +154,13 @@ const contribYear = new Date().getFullYear();
         <p class="bio">{config.author.bio.split('\n').map((line, i) => i === 0 ? line : [<br />, line])}</p>
       </section>
 
-      <ReadingTile current={currentBook} recent={recentBooks} />
+      <ReadingTile
+        current={currentBook}
+        recent={recentBooks}
+        daysSinceLastFinished={daysSinceLastFinished}
+        wantToReadCount={wantToReadCount}
+        finishedThisYearCount={finishedThisYearCount}
+      />
     </div>
 
     <!-- ─────────── Row 2 — Tabs ─────────── -->
