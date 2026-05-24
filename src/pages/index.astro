@@ -4,6 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ReadingTile from '../components/ReadingTile.astro';
 import { loadConfig } from '../lib/config';
 import { getAllArticles, getArticlesByCategory, getAllBooks } from '../lib/data';
+import { getGithubContributions } from '../lib/github';
 import { categorySlug } from '../lib/category';
 import { bookStatus } from '../lib/bookCover';
 import avatar2 from '../assets/avatar_2.png';
@@ -110,11 +111,14 @@ const playboxGames = [
   { name: 'Sokoban',           slug: 'sokoban',           image: 'sokoban.svg' },
 ];
 
-// Snapshot — derived from real data where possible
 const articlesCount = allArticles.length;
 const categoriesCount = tabsData.filter((t) => t.count > 0).length;
-const talksCount = talks.length;
-const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox games
+
+const githubChannel = config.author.links.find((l) => l.type === 'github');
+const githubUsername =
+  githubChannel?.url.match(/github\.com\/([^/]+)/)?.[1] ?? 'easylive1989';
+const contrib = await getGithubContributions(githubUsername);
+const contribYear = new Date().getFullYear();
 ---
 
 <BaseLayout hideFooter bodyClass="bento-page">
@@ -176,7 +180,7 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
       </nav>
     </div>
 
-    <!-- ─────────── Row 3 — Featured + Book + Snapshot ─────────── -->
+    <!-- ─────────── Row 3 — Featured + Book + GitHub ─────────── -->
     <div class="grid cols-6" style="margin-top:var(--bento-gap)">
       {latestArticle && (
         <article class="tile tile--accent span-4 featured">
@@ -212,15 +216,53 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
             <a href="https://www.tenlong.com.tw/products/9786264140010?list_name=srh" target="_blank" rel="noopener" class="book-cta">看書 →</a>
           </div>
         </section>
-        <section class="tile snapshot-tile">
-          <div class="label" style="margin-bottom:12px">Snapshot</div>
-          <div class="stats">
-            <div class="stat"><div class="stat-n" style="color:var(--bento-accent)">{articlesCount}</div><div class="stat-l">篇文章</div></div>
-            <div class="stat"><div class="stat-n" style="color:var(--bento-accent-2)">5y+</div><div class="stat-l">持續寫</div></div>
-            <div class="stat"><div class="stat-n" style="color:var(--bento-pink)">{projectsCount}</div><div class="stat-l">side projects</div></div>
-            <div class="stat"><div class="stat-n" style="color:var(--bento-accent-3)">{talksCount}</div><div class="stat-l">講座 / 賽事</div></div>
+        <a
+          class="tile contrib-tile"
+          href={`https://github.com/${githubUsername}`}
+          target="_blank"
+          rel="noopener"
+          aria-label={`@${githubUsername} on GitHub`}
+        >
+          <div class="contrib-head">
+            <div class="contrib-head-text">
+              <div class="label">GitHub · 過去 18 週</div>
+              <div class="contrib-summary">
+                <strong>{contrib.totalThisYear.toLocaleString()}</strong> contributions in {contribYear}
+              </div>
+            </div>
+            {contrib.currentStreak > 0 && (
+              <span class="mono contrib-active">● active</span>
+            )}
           </div>
-        </section>
+
+          <div class="contrib-months" aria-hidden="true">
+            {contrib.monthLabels.map((m) => <span>{m}</span>)}
+          </div>
+          <div
+            class="contrib-grid"
+            role="img"
+            aria-label={`過去 18 週 GitHub 貢獻熱度，共 ${contrib.totalThisYear} 次`}
+          >
+            {Array.from({ length: 7 }).map((_, d) => (
+              contrib.weeks.map((week) => {
+                const cell = week[d];
+                if (!cell.inRange) return <i aria-hidden="true" style="visibility:hidden"></i>;
+                if (cell.level === 0) return <i aria-hidden="true"></i>;
+                return <i class={`l${cell.level}`} aria-hidden="true"></i>;
+              })
+            ))}
+          </div>
+
+          <div class="contrib-foot">
+            <div class="contrib-streaks">
+              <span><strong>{contrib.currentStreak}</strong> 天連續</span>
+              <span><strong>{contrib.longestStreak}</strong> 最長</span>
+            </div>
+            <span class="contrib-legend" aria-hidden="true">
+              less <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> more
+            </span>
+          </div>
+        </a>
       </div>
     </div>
 
@@ -722,12 +764,74 @@ const projectsCount = 3 + playboxGames.length; // 3 main side projects + Playbox
     font-size: 12px; font-weight: 500; margin-top: 10px;
   }
 
-  /* === Snapshot === */
-  .snapshot-tile { padding: 18px; }
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat { background: var(--bento-surface-2); border-radius: var(--bento-r-md); padding: 12px 14px; }
-  .stat-n { font-size: 28px; line-height: 1; font-weight: 600; }
-  .stat-l { font-size: 11px; color: var(--bento-sub); margin-top: 4px; }
+  /* === GitHub contribution tile === */
+  .contrib-tile {
+    padding: 18px;
+    display: block;
+    color: inherit;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .contrib-tile:hover { transform: translateY(-2px); }
+  .contrib-tile:hover .contrib-summary strong { color: var(--bento-accent-2); }
+  .contrib-head {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; margin-bottom: 14px;
+  }
+  .contrib-head-text { min-width: 0; flex: 1; }
+  .contrib-summary {
+    margin-top: 6px; font-size: 13px; color: var(--bento-sub);
+  }
+  .contrib-summary strong {
+    color: var(--bento-ink); font-size: 18px; font-weight: 600;
+  }
+  .contrib-active {
+    font-size: 10px; color: var(--bento-accent-2); letter-spacing: .1em;
+  }
+  .contrib-months {
+    display: flex; justify-content: space-between;
+    font-family: var(--bento-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+    font-size: 9px; color: var(--bento-sub); letter-spacing: .1em;
+    padding: 0 1px;
+  }
+  .contrib-grid {
+    display: grid;
+    grid-template-columns: repeat(18, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 3px;
+    aspect-ratio: 18 / 7;
+    margin: 4px 0 6px;
+  }
+  .contrib-grid > i {
+    display: block;
+    border-radius: 2px;
+    background: var(--bento-rule);
+  }
+  :global([data-theme="dark"]) .bento-home .contrib-grid > i { background: #21282f; }
+  .contrib-grid > i.l1 { background: color-mix(in oklab, var(--bento-accent-2) 22%, var(--bento-surface)); }
+  .contrib-grid > i.l2 { background: color-mix(in oklab, var(--bento-accent-2) 45%, var(--bento-surface)); }
+  .contrib-grid > i.l3 { background: color-mix(in oklab, var(--bento-accent-2) 70%, var(--bento-surface)); }
+  .contrib-grid > i.l4 { background: var(--bento-accent-2); }
+  .contrib-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid var(--bento-rule);
+    font-size: 12px;
+  }
+  .contrib-streaks { display: flex; gap: 16px; color: var(--bento-sub); }
+  .contrib-streaks strong { color: var(--bento-ink); font-size: 13px; font-weight: 600; }
+  .contrib-legend {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; color: var(--bento-sub);
+  }
+  .contrib-legend i {
+    width: 9px; height: 9px; border-radius: 2px; display: inline-block;
+    background: var(--bento-rule);
+  }
+  :global([data-theme="dark"]) .bento-home .contrib-legend i { background: #21282f; }
+  .contrib-legend i.l1 { background: color-mix(in oklab, var(--bento-accent-2) 22%, var(--bento-surface)); }
+  .contrib-legend i.l2 { background: color-mix(in oklab, var(--bento-accent-2) 45%, var(--bento-surface)); }
+  .contrib-legend i.l3 { background: color-mix(in oklab, var(--bento-accent-2) 70%, var(--bento-surface)); }
+  .contrib-legend i.l4 { background: var(--bento-accent-2); }
 
   /* === Posts === */
   .posts-head {
