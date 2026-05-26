@@ -125,7 +125,6 @@ function getBookTitle(props: any): string {
 function getBookProgress(props: any): number {
   const raw = props[BOOK_PROPS.progress]?.number;
   if (typeof raw !== 'number' || Number.isNaN(raw)) return 0;
-  if (raw <= 1) return Math.max(0, Math.min(100, Math.round(raw * 100)));
   return Math.max(0, Math.min(100, Math.round(raw)));
 }
 
