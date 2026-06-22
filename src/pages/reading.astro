@@ -291,9 +291,8 @@ const chipsData = Array.from(rawCatCounts.entries())
                 const cat = kindMeta[cv.kind];
                 const rawCat = b.categories[0] ?? '';
                 return (
-                  <a
+                  <div
                     class={`book is-${status}`}
-                    href="#"
                     data-title={b.title}
                     data-cats={b.categories.join('|')}
                     data-date={b.finishedDate ?? ''}
@@ -324,7 +323,7 @@ const chipsData = Array.from(rawCatCounts.entries())
                         </div>
                       )}
                     </div>
-                  </a>
+                  </div>
                 );
               })}
             </div>
@@ -340,9 +339,8 @@ const chipsData = Array.from(rawCatCounts.entries())
               const cat = kindMeta[cv.kind];
               const rawCat = b.categories[0] ?? '';
               return (
-                <a
+                <div
                   class="book is-wish"
-                  href="#"
                   data-title={b.title}
                   data-cats={b.categories.join('|')}
                   data-date=""
@@ -373,7 +371,7 @@ const chipsData = Array.from(rawCatCounts.entries())
                       </div>
                     )}
                   </div>
-                </a>
+                </div>
               );
             })}
           </div>
@@ -915,7 +913,7 @@ const chipsData = Array.from(rawCatCounts.entries())
 
   .book {
     display: flex; flex-direction: column; gap: 8px;
-    color: inherit; cursor: pointer; transition: transform .15s;
+    color: inherit; transition: transform .15s;
   }
   .book:hover { transform: translateY(-3px); }
   .book:hover .book-cover { box-shadow: 0 14px 28px -10px rgba(0, 0, 0, .32); }
