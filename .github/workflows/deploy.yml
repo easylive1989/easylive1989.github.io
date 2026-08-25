@@ -52,6 +52,9 @@ jobs:
 
       - name: Build site
         id: build
+        # pipefail: without it the `| tee` below masks a failed astro build,
+        # and a build that aborted on missing data would still deploy.
+        shell: bash
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}

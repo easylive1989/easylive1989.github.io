@@ -32,6 +32,7 @@ export interface SiteConfig {
   build: {
     schedule: string;
     minArticles?: number;
+    minBooks?: number;
   };
 }
 

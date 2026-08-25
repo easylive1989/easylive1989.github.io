@@ -33,7 +33,8 @@ function getNotionClient(): Client | null {
     console.warn('NOTION_API_KEY not set — returning empty data');
     return null;
   }
-  return new Client({ auth: token });
+  // Default is 60s; large database queries have timed out at that limit.
+  return new Client({ auth: token, timeoutMs: 120_000 });
 }
 
 export interface Category {
@@ -129,6 +130,16 @@ export async function getAllBooks(): Promise<Book[]> {
   const client = getNotionClient();
   if (!client || !config.notion.booksDatabaseId) return [];
   const raw = await fetchBooksDatabase(client, config.notion.booksDatabaseId);
+
+  if (isProductionBuild()) {
+    const min = config.build.minBooks ?? 1;
+    if (raw.length < min) {
+      throw new Error(
+        `Fetched ${raw.length} books from Notion, below minimum ${min} — aborting production build`,
+      );
+    }
+  }
+
   cachedBooks = await enrichBookCovers(raw);
   return cachedBooks;
 }

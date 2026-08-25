@@ -47,6 +47,39 @@ function getSummaryText(props: any): string {
   return '';
 }
 
+const MAX_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 1000;
+
+// Notion times out or rate-limits occasionally on larger databases. A single
+// transient failure used to publish a half-empty site, so retry those before
+// letting the error surface.
+const TRANSIENT_CODES = new Set([
+  'notionhq_client_request_timeout',
+  'notionhq_client_response_error',
+  'rate_limited',
+  'internal_server_error',
+  'service_unavailable',
+  'conflict_error',
+]);
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function withRetry<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      const transient = TRANSIENT_CODES.has(err?.code);
+      if (!transient || attempt >= MAX_ATTEMPTS) throw err;
+      const delay = RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
+      console.warn(
+        `${label} failed (attempt ${attempt}/${MAX_ATTEMPTS}): ${err.message} — retrying in ${delay}ms`,
+      );
+      await sleep(delay);
+    }
+  }
+}
+
 export async function fetchDatabase(
   client: Client,
   databaseId: string,
@@ -56,15 +89,17 @@ export async function fetchDatabase(
 
   try {
     do {
-      const response = await client.databases.query({
-        database_id: databaseId,
-        filter: {
-          property: 'Status',
-          status: { equals: 'Done' },
-        },
-        sorts: [{ property: 'Created time', direction: 'descending' }],
-        start_cursor: cursor,
-      });
+      const response = await withRetry(`Query database ${databaseId}`, () =>
+        client.databases.query({
+          database_id: databaseId,
+          filter: {
+            property: 'Status',
+            status: { equals: 'Done' },
+          },
+          sorts: [{ property: 'Created time', direction: 'descending' }],
+          start_cursor: cursor,
+        }),
+      );
 
       for (const page of response.results) {
         const p = page as any;
@@ -150,10 +185,12 @@ export async function fetchBooksDatabase(
 
   try {
     do {
-      const response = await client.databases.query({
-        database_id: databaseId,
-        start_cursor: cursor,
-      });
+      const response = await withRetry(`Query books database ${databaseId}`, () =>
+        client.databases.query({
+          database_id: databaseId,
+          start_cursor: cursor,
+        }),
+      );
 
       for (const page of response.results) {
         const p = page as any;
@@ -171,6 +208,9 @@ export async function fetchBooksDatabase(
       cursor = response.has_more ? (response as any).next_cursor : undefined;
     } while (cursor);
   } catch (err: any) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(`Failed to fetch books database ${databaseId}: ${err.message}`);
+    }
     console.warn(`Failed to fetch books database ${databaseId}: ${err.message}`);
     return [];
   }
