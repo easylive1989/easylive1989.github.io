@@ -266,3 +266,32 @@ export function leaf({ size = 256, seed = 27 } = {}) {
   const [c, hgt] = [color, height].map(img => cnv(W, H, x => x.putImageData(img, 0, 0)));
   return { color:c, normal:normalFromHeight(hgt, 1.2 * W / 256) };
 }
+
+// The garden behind the window, painted onto `c` in three depths: far woods, the garden's own trees, a hedge under the sill.
+// Each depth is drawn small and scaled up, so the farthest is the softest — an out-of-focus blur that needs no canvas filter.
+export function paintGarden(c, { sky, trees, bare = false, night = false, seed = 11 }) {
+  const x = c.getContext('2d'), w = c.width, h = c.height, R = rng(seed), pick = () => trees[Math.floor(R() * trees.length)];
+  const depth = (k, draw) => x.drawImage(cnv(Math.round(w * k), Math.round(h * k), lx => { lx.scale(k, k); lx.lineCap = 'round'; draw(lx); }), 0, 0, w, h);
+  const blob = (lx, bx, by, r, col, a) => { lx.globalAlpha = a; lx.fillStyle = col; lx.beginPath(); lx.arc(bx, by, r, 0, 6.2832); lx.fill(); };
+  // tint whatever the layer already holds, and nothing else
+  const wash = (lx, style, a = 1) => { lx.globalCompositeOperation = 'source-atop'; lx.globalAlpha = a; lx.fillStyle = style; lx.fillRect(0, 0, w, h); lx.globalCompositeOperation = 'source-over'; };
+  const fade = (lx, x0, y0, x1, y1, from, to) => { const g = lx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, from); g.addColorStop(1, to); return g; };
+  const tree = (lx, tx, base, H) => {
+    const lean = (R() - .5) * .3, crown = H * (.3 + R() * .1), main = pick(), cx = tx + Math.sin(lean) * H * .66, cy = base - H * .66;
+    const bough = (x0, y0, ang, len, wd, n) => { const x1 = x0 + Math.sin(ang) * len, y1 = y0 - Math.cos(ang) * len; lx.lineWidth = wd; lx.beginPath(); lx.moveTo(x0, y0); lx.lineTo(x1, y1); lx.stroke();
+      if (n) for (let k = 0; k < (bare ? 3 : 2); k++) bough(x1, y1, ang + (R() - .5) * 1.6, len * (.5 + R() * .25), wd * .62, n - 1); };
+    lx.globalAlpha = 1; lx.strokeStyle = '#2a2018'; bough(tx, base, lean, H * .46, H * .055, bare ? 4 : 2);
+    // foliage: clumps gathered into a crown — or, on a bare tree, what little still clings to the boughs
+    for (let k = 0, n = bare ? 30 : 150; k < n; k++) { const a = R() * 6.2832, d = Math.sqrt(R()), bx = cx + Math.cos(a) * d * crown * 1.15, by = cy + Math.sin(a) * d * crown * .85, r = crown * (bare ? .07 + R() * .08 : .1 + R() * .13);
+      blob(lx, bx, by, r, R() < .72 ? main : pick(), bare ? .85 : .8 + R() * .2);
+      const lit = -(Math.cos(a) * .6 + Math.sin(a) * .8) * d; blob(lx, bx, by, r, lit > 0 ? '#fff' : '#000', Math.abs(lit) * (lit > 0 ? .22 : .32)); } // lit from the upper left
+  };
+  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+  x.fillStyle = fade(x, 0, 0, 0, h * .72, sky[0], sky[1]); x.fillRect(0, 0, w, h);
+  depth(.1, lx => { for (let i = 0; i < 110; i++) blob(lx, R() * w, h * (.46 + R() * .22), 26 + R() * 48, pick(), .6); wash(lx, sky[0], .5); }); // haze
+  x.fillStyle = sky[1]; x.fillRect(0, h * .7, w, h * .3); x.fillStyle = fade(x, 0, h * .68, 0, h, 'rgba(0,0,0,0)', 'rgba(0,0,0,.3)'); x.fillRect(0, h * .68, w, h * .32); // the lawn, darker towards the house
+  depth(.18, lx => { for (let i = 0; i < 6; i++) tree(lx, (i + .2 + R() * .6) / 6 * w, h * (.69 + R() * .05), h * (.42 + R() * .16));
+    wash(lx, fade(lx, 0, h * .35, 0, h * .8, 'rgba(0,0,0,0)', 'rgba(0,0,0,.3)')); }); // shade gathers under the crowns
+  depth(.3, lx => { for (let i = 0; i < 160; i++) blob(lx, R() * w, h * (.82 + R() * .14), 12 + R() * 22, pick(), .9); wash(lx, '#000', .3); });
+  if (night) { x.fillStyle = 'rgba(6,14,22,.58)'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(40,70,60,.25)'; x.fillRect(0, h * .3, w, h * .7); }
+}

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur, spineAtlas, SPINES, pageEdges, brushedMetal, terracotta, leaf } from './studyTextures.js';
+import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur, spineAtlas, SPINES, pageEdges, brushedMetal, terracotta, leaf, paintGarden } from './studyTextures.js';
 
 /* ================= content ================= */
 // Filled at build time from Notion (src/lib/study.ts). Ids are the room's physical
@@ -542,16 +542,7 @@ let season = (() => { const mo = new Date().getMonth() + 1; return mo >= 3 && mo
 let night = true;
 function paintOutside() {
   const s = SKY[season]; scene.background.set(night ? '#0e151e' : s.day[0]);
-  const c = outsideTex.image, x = c.getContext('2d'), w = c.width, h = c.height;
-  let r = 11; const R = () => (r = (r * 16807) % 2147483647) / 2147483647;
-  const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, s.day[0]); g.addColorStop(1, s.day[1]); x.fillStyle = g; x.fillRect(0,0,w,h);
-  x.fillStyle = s.day[1]; x.fillRect(0, h*.68, w, h*.32);
-  x.filter = 'blur(10px)';
-  for (let i = 0; i < 260; i++) { const tx = R()*w, ty = h*.05 + R()*h*.7, rr = 20 + R()*70; x.fillStyle = s.trees[Math.floor(R()*s.trees.length)]; x.globalAlpha = .55 + R()*.4; x.beginPath(); x.arc(tx, ty, rr, 0, Math.PI*2); x.fill(); }
-  x.globalAlpha = 1; x.filter = 'blur(3px)';
-  for (let i = 0; i < 9; i++) { x.fillStyle = '#2a2018'; x.fillRect(60 + i*118 + R()*30, h*.45 + R()*h*.1, 8 + R()*8, h*.35); }
-  x.filter = 'none';
-  if (night) { x.fillStyle = 'rgba(6,14,22,.58)'; x.fillRect(0,0,w,h); x.fillStyle = 'rgba(40,70,60,.25)'; x.fillRect(0, h*.3, w, h*.7); }
+  paintGarden(outsideTex.image, { sky:s.day, trees:s.trees, bare:season === '冬', night });
   outsideTex.needsUpdate = true;
 }
 const shapeTex = kind => ctex(64, 64, (x, w, h) => { x.clearRect(0,0,w,h); x.fillStyle = '#fff'; x.beginPath();
