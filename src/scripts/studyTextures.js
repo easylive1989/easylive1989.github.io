@@ -46,6 +46,8 @@ export function normalFromHeight(src, strength = 2) {
     x.putImageData(img, 0, 0); });
 }
 
+const layer = (x, op, alpha) => { x.globalCompositeOperation = op; x.globalAlpha = alpha; };
+
 // Short dark dashes running along y: the open pores of the wood.
 const poreCanvas = (n, seed) => cnv(n, n, x => { const R = rng(seed); x.fillStyle = '#fff'; x.fillRect(0, 0, n, n);
   for (let i = 0; i < n * 14; i++) { x.fillStyle = 'rgba(0,0,0,' + (.08 + R() * .4) + ')'; x.fillRect(R() * n, R() * n, 1, 6 + R() * 50); } });
@@ -57,7 +59,6 @@ export function plankFloor({ size = 2048, planks = 24, seed = 5, tones = ['#4a2b
   const figure = noiseCanvas(N, { seed:seed + 1 }), pores = poreCanvas(N, seed + 2), wear = noiseCanvas(256, { octaves:4, base:2, seed:seed + 3 });
   const color = cnv(S, S), height = cnv(S, S), rough = cnv(S / 2, S / 2);
   const c = color.getContext('2d'), hx = height.getContext('2d'), rx = rough.getContext('2d'); rx.scale(.5, .5);
-  const layer = (x, op, alpha) => { x.globalCompositeOperation = op; x.globalAlpha = alpha; };
   const joints = [];
   const board = (p, x, y, w, L) => {
     layer(c, 'source-over', 1); c.fillStyle = p.tone; c.fillRect(x, y, w, L);
@@ -129,4 +130,30 @@ export function woodGrain({ size = 1024, boards = 8, seed = 9 } = {}) {
   }
   const [c, hgt, r] = [color, height, rough].map(img => cnv(S, S, x => x.putImageData(img, 0, 0)));
   return { color:c, normal:normalFromHeight(hgt, S / 1024), rough:r };
+}
+
+// A tileable sheet of hand-trowelled plaster: soft clouds of tone, the sweeps of the trowel and a fine sandy tooth.
+// Pale and neutral so the material colour can paint it. Returns colour, normal and roughness canvases.
+export function plaster({ size = 1024, seed = 4 } = {}) {
+  const S = size, u = S / 1024, R = rng(seed);
+  const cloud = noiseCanvas(256, { base:3, seed:seed + 1 }), tooth = noiseCanvas(512, { octaves:3, base:96, seed:seed + 2 });
+  const color = cnv(S, S), height = cnv(S, S), rough = cnv(S / 2, S / 2);
+  const c = color.getContext('2d'), hx = height.getContext('2d'), rx = rough.getContext('2d'), all = [c, hx, rx]; rx.scale(.5, .5);
+  c.fillStyle = '#bdbdbd'; hx.fillStyle = '#808080'; rx.fillStyle = '#f0f0f0'; all.forEach(x => { x.fillRect(0, 0, S, S); x.lineCap = 'round'; });
+  layer(c, 'soft-light', .32); layer(hx, 'overlay', .3); layer(rx, 'overlay', .22); all.forEach(x => x.drawImage(cloud, 0, 0, S, S));
+  all.forEach(x => layer(x, 'source-over', 1));
+  for (let i = 0; i < 170; i++) {
+    const x0 = R() * S, y0 = R() * S, a = R() * 6.283, L = (110 + R() * 260) * u, k = (R() - .5) * .5, w = (44 + R() * 80) * u, tone = R() < .5 ? '255,255,255,' : '0,0,0,', al = .01 + R() * .018;
+    const x1 = x0 + Math.cos(a) * L, y1 = y0 + Math.sin(a) * L, mx = (x0 + x1) / 2 - Math.sin(a) * L * k, my = (y0 + y1) / 2 + Math.cos(a) * L * k;
+    // a sweep that leaves the sheet comes back in on the other side
+    for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) {
+      if (Math.max(x0, x1, mx) + ox < -w || Math.min(x0, x1, mx) + ox > S + w || Math.max(y0, y1, my) + oy < -w || Math.min(y0, y1, my) + oy > S + w) continue;
+      const sweep = (x, style, wd) => { x.strokeStyle = style; x.lineWidth = wd; x.beginPath(); x.moveTo(x0 + ox, y0 + oy); x.quadraticCurveTo(mx + ox, my + oy, x1 + ox, y1 + oy); x.stroke(); };
+      [1, .7, .4].forEach(f => { sweep(c, 'rgba(' + tone + al + ')', w * f); sweep(hx, 'rgba(' + tone + al * 2.5 + ')', w * f); });
+      [1, .6].forEach(f => sweep(rx, 'rgba(0,0,0,' + al * .8 + ')', w * f)); // the trowel burnishes where it passes
+    }
+  }
+  layer(c, 'overlay', .14); layer(hx, 'overlay', .5); layer(rx, 'overlay', .2);
+  all.forEach(x => { for (const ox of [0, S / 2]) for (const oy of [0, S / 2]) x.drawImage(tooth, ox, oy, S / 2, S / 2); });
+  return { color, normal:normalFromHeight(height, 2.5 * u), rough };
 }

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rng, cnv, texOf, plankFloor, woodGrain } from './studyTextures.js';
+import { rng, cnv, texOf, plankFloor, woodGrain, plaster } from './studyTextures.js';
 
 /* ================= content ================= */
 // Filled at build time from Notion (src/lib/study.ts). Ids are the room's physical
@@ -75,6 +75,11 @@ const mk = (geo, m, name, p, r) => { const o = new THREE.Mesh(geo, m); o.name = 
 const uvR = rng(23);
 const box = (w, h, d, m, name, p, r, ax) => { const g = rboxGeo(w, h, d, Math.min(.012, Math.min(w, h, d) * .2), ax).clone(), uv = g.attributes.uv, du = uvR() * 4, dv = uvR() * 4;
   for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) + du, uv.getY(i) + dv); return mk(g, m, name, p, r); };
+// a wall is built from several boxes: give them room coordinates as UVs instead, so the plaster runs unbroken from one to the next
+const roomUV = m => { const { position:p, normal:n, uv } = m.geometry.attributes, o = m.position;
+  for (let i = 0; i < p.count; i++) { const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i)), x = p.getX(i) + o.x, y = p.getY(i) + o.y, z = p.getZ(i) + o.z;
+    ax > ay && ax > az ? uv.setXY(i, z, y) : ay > az ? uv.setXY(i, x, z) : uv.setXY(i, x, y); }
+  return m; };
 const cyl = (rt, rb, h, seg, m, name, p, r, open) => mk(new THREE.CylinderGeometry(rt, rb, h, seg, 1, !!open), m, name, p, r);
 const UP = new THREE.Vector3(0,1,0);
 const rod = (a, b, rad, m, name) => { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A); const o = mk(new THREE.CylinderGeometry(rad, rad, d.length(), 10), m, name); o.position.copy(A).addScaledVector(d, .5); o.quaternion.setFromUnitVectors(UP, d.normalize()); return o; };
@@ -120,7 +125,6 @@ function rboxGeo(w, h, d, r, ax) {
   }
   grainUV(g, [w, h, d], ax); return geoCache[key] = g;
 }
-const plasterC = cnv(256, 256, (x, w, h) => { x.fillStyle = '#bdbdbd'; x.fillRect(0,0,w,h); for (let i = 0; i < 2600; i++) { const v = Math.floor(150 + RN()*90); x.fillStyle = 'rgba(' + v + ',' + v + ',' + v + ',' + (.08 + RN()*.12) + ')'; const r = .6 + RN()*3.5; x.beginPath(); x.arc(RN()*w, RN()*h, r, 0, 6.283); x.fill(); } });
 const fabricC = cnv(128, 128, (x, w, h) => { x.fillStyle = '#bbb'; x.fillRect(0,0,w,h); for (let i = 0; i < w; i += 4) { x.fillStyle = 'rgba(255,255,255,.25)'; x.fillRect(i, 0, 2, h); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, i + 2, w, 2); } for (let i = 0; i < 900; i++) { x.fillStyle = 'rgba(0,0,0,' + RN()*.15 + ')'; x.fillRect(RN()*w, RN()*h, 1 + RN()*2, 1); } });
 const tabbyC = cnv(256, 128, (x, w, h) => { x.fillStyle = '#f0a663'; x.fillRect(0,0,w,h); for (let i = 0; i < 26; i++) { const xx = i/26*w + RN()*4; x.fillStyle = 'rgba(150,70,25,' + (.35 + RN()*.3) + ')'; x.beginPath(); x.moveTo(xx, 0); for (let y = 0; y <= h; y += 8) x.lineTo(xx + Math.sin(y*.08 + i)*3 + (RN()-.5)*2, y); x.lineTo(xx + 4 + RN()*3, h); for (let y = h; y >= 0; y -= 8) x.lineTo(xx + 4 + Math.sin(y*.08 + i)*3, y); x.fill(); }
   const g = x.createLinearGradient(0, h*.6, 0, h); g.addColorStop(0, 'rgba(250,225,190,0)'); g.addColorStop(1, 'rgba(250,225,190,.9)'); x.fillStyle = g; x.fillRect(0, 0, w, h); });
@@ -129,21 +133,22 @@ const spineC = cnv(256, 32, (x, w, h) => { x.fillStyle = '#a8a8a8'; x.fillRect(0
 const LOW = matchMedia('(pointer: coarse)').matches; // phones get half-size canvases
 // one sheet of grain, 2 m along it and 1 m across, stained three ways by the material colours
 const woodC = woodGrain({ size:LOW ? 512 : 1024 }), woodTex = { map:texOf(woodC.color, [.5, 1]), normalMap:texOf(woodC.normal, [.5, 1], false), roughnessMap:texOf(woodC.rough, [.5, 1], false), normalScale:new THREE.Vector2(.35, .35) };
-const plasterMap = texOf(plasterC, [1.5, 1.5]), plasterBump = texOf(plasterC, [1.5, 1.5], false);
+// one 2.5 m sheet of plaster, painted two shades by the material colours
+const plasterC = plaster({ size:LOW ? 512 : 1024 }), plasterTex = { map:texOf(plasterC.color, [.4, .4]), normalMap:texOf(plasterC.normal, [.4, .4], false), roughnessMap:texOf(plasterC.rough, [.4, .4], false), normalScale:new THREE.Vector2(.55, .55) };
 const fabricMap = texOf(fabricC, [18, 18]), fabricBump = texOf(fabricC, [18, 18], false);
 const pbr = (name, c, o = {}) => new THREE.MeshPhysicalMaterial({ name, color:col(c), roughness:.6, ...o });
 Object.assign(M, {
   wood: pbr('wood', '#9a5f3c', { ...woodTex, roughness:.52, clearcoat:.45, clearcoatRoughness:.28 }),
   woodD: pbr('wood-dark', '#6a3f29', { ...woodTex, roughness:.62, clearcoat:.3, clearcoatRoughness:.35 }),
   woodL: pbr('wood-light', '#b07a50', { ...woodTex, roughness:.47, clearcoat:.5, clearcoatRoughness:.25 }),
-  wall: std('wall', '#544739', { map:plasterMap, bumpMap:plasterBump, bumpScale:2, roughness:.93 }),
-  wallL: std('wall-light', '#665645', { map:plasterMap, bumpMap:plasterBump, bumpScale:2, roughness:.93 }),
+  wall: std('wall', '#544739', { ...plasterTex, roughness:1 }),
+  wallL: std('wall-light', '#665645', { ...plasterTex, roughness:1 }),
   fabric: std('fabric', '#9a917a', { map:fabricMap, bumpMap:fabricBump, bumpScale:3, roughness:1 }),
   fabricD: std('fabric-dark', '#7a7262', { map:fabricMap, bumpMap:fabricBump, bumpScale:3, roughness:1 }),
   brass: pbr('brass', '#d2a868', { metalness:1, roughness:.26 }), bronze: pbr('bronze', '#6a442a', { metalness:.9, roughness:.38 }),
   alu: pbr('aluminium', '#b4b2ad', { metalness:1, roughness:.32 }),
   cat: std('cat', '#ffffff', { map:texOf(tabbyC), roughness:1 }), catL: std('cat-light', '#f7dcb8', { roughness:1 }),
-  cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }), terracotta: std('terracotta', '#b8653c', { bumpMap:plasterBump, bumpScale:1.5, roughness:.95 }),
+  cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }), terracotta: std('terracotta', '#b8653c', { normalMap:texOf(plasterC.normal, [1, 1], false), normalScale:new THREE.Vector2(.6, .6), roughness:.95 }),
   glass: new THREE.MeshPhysicalMaterial({ name:'glass', color:col('#c8d8d4'), transparent:true, opacity:.14, roughness:.04, metalness:0, depthWrite:false, clearcoat:1 }),
 });
 
@@ -152,15 +157,15 @@ Object.assign(M, {
 const floorC = plankFloor({ size:LOW ? 1024 : 2048 });
 const [floorMap, floorNormal, floorRough] = [[floorC.color, true], [floorC.normal, false], [floorC.rough, false]].map(([c, srgb]) => { const t = texOf(c, [2, 2], srgb); t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; });
 room.add(mk(new THREE.PlaneGeometry(6, 6), new THREE.MeshPhysicalMaterial({ name:'floor', map:floorMap, normalMap:floorNormal, normalScale:new THREE.Vector2(.7, .7), roughnessMap:floorRough, roughness:1, clearcoat:.25, clearcoatRoughness:.35 }), 'floor', [0,0,0], [-Math.PI/2,0,0]));
-room.add(box(.1, 2.8, 6, M.wall, 'wall-left', [-3.05,1.4,0]));
-room.add(box(.1, 2.8, 6, M.wall, 'wall-right', [3.05,1.4,0]));
+room.add(roomUV(box(.1, 2.8, 6, M.wall, 'wall-left', [-3.05,1.4,0])));
+room.add(roomUV(box(.1, 2.8, 6, M.wall, 'wall-right', [3.05,1.4,0])));
 // back wall with niche + window openings
-room.add(box(.7, 2.8, .1, M.wall, 'wall-back', [-2.7,1.4,-2.55]));
-room.add(box(.6, 2.8, .1, M.wall, 'wall-back', [-.25,1.4,-2.55]));
-room.add(box(.4, 2.8, .1, M.wall, 'wall-back', [2.85,1.4,-2.55]));
-room.add(box(1.8, .25, .1, M.wall, 'wall-back', [-1.45,2.68,-2.55]));
-room.add(box(2.6, 1.0, .1, M.wall, 'wall-back', [1.35,.5,-2.55]));
-room.add(box(2.6, .3, .1, M.wall, 'wall-back', [1.35,2.65,-2.55]));
+room.add(roomUV(box(.7, 2.8, .1, M.wall, 'wall-back', [-2.7,1.4,-2.55])));
+room.add(roomUV(box(.6, 2.8, .1, M.wall, 'wall-back', [-.25,1.4,-2.55])));
+room.add(roomUV(box(.4, 2.8, .1, M.wall, 'wall-back', [2.85,1.4,-2.55])));
+room.add(roomUV(box(1.8, .25, .1, M.wall, 'wall-back', [-1.45,2.68,-2.55])));
+room.add(roomUV(box(2.6, 1.0, .1, M.wall, 'wall-back', [1.35,.5,-2.55])));
+room.add(roomUV(box(2.6, .3, .1, M.wall, 'wall-back', [1.35,2.65,-2.55])));
 // crown + skirting
 [[-3,0,'x'],[3,0,'x']].forEach(([x]) => { room.add(box(.08, .12, 6, M.cream, 'crown', [x*.985,2.74,0])); room.add(box(.05, .14, 6, M.woodD, 'skirting', [x*.99,.07,0])); });
 room.add(box(6, .12, .08, M.cream, 'crown', [0,2.74,-2.48]));
@@ -234,7 +239,7 @@ room.add(duck); tag(duck, { type:'egg', id:'e3', view:'duck' });
 /* ================= display niche ================= */
 const niche = new THREE.Group(); niche.name = 'display-niche'; room.add(niche);
 const NX0 = -2.35, NX1 = -.55, NZB = -2.92, NZF = -2.5;
-niche.add(box(NX1 - NX0, 1.75, .04, M.wallL, 'niche-back', [(NX0+NX1)/2, 1.725, NZB]));
+niche.add(roomUV(box(NX1 - NX0, 1.75, .04, M.wallL, 'niche-back', [(NX0+NX1)/2, 1.725, NZB])));
 [NX0, NX1].forEach(x => niche.add(box(.06, 1.75, NZF - NZB, M.wood, 'niche-side', [x, 1.725, (NZB+NZF)/2])));
 niche.add(box(NX1 - NX0 + .06, .06, NZF - NZB, M.wood, 'niche-top', [(NX0+NX1)/2, 2.58, (NZB+NZF)/2]));
 const NL = [.86, 1.3, 1.75, 2.2];
@@ -325,7 +330,7 @@ wf.add(box(WIN.x1 - WIN.x0 + .1, .08, .14, M.woodD, 'window-frame', [1.35, WIN.y
 [1.55, 2.08].forEach(y => wf.add(box(WIN.x1 - WIN.x0, .045, .08, M.woodD, 'transom', [1.35, y, WZ])));
 const glass = mk(new THREE.PlaneGeometry(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0), M.glass, 'glass', [1.35, (WIN.y0+WIN.y1)/2, WZ - .02]); glass.castShadow = false; wf.add(glass);
 wf.add(box(WIN.x1 - WIN.x0 + .4, .04, .1, M.cream, 'sill', [1.35, WIN.y0 - .02, -2.5]));
-[WIN.x0 - .1, WIN.x1 + .1].forEach(x => wf.add(box(.12, WIN.y1 - WIN.y0 + .3, .12, M.wallL, 'reveal', [x, (WIN.y0+WIN.y1)/2, -2.5])));
+[WIN.x0 - .1, WIN.x1 + .1].forEach(x => wf.add(roomUV(box(.12, WIN.y1 - WIN.y0 + .3, .12, M.wallL, 'reveal', [x, (WIN.y0+WIN.y1)/2, -2.5]))));
 const moon = mk(new THREE.SphereGeometry(.16, 32, 20), new THREE.MeshBasicMaterial({ name:'moon', color:col('#f3ead2') }), 'moon', [2.15, 2.35, -4.4]); moon.castShadow = false; room.add(moon);
 tag(moon, { type:'egg', id:'e2', view:'window' }, [0,0,0]);
 
