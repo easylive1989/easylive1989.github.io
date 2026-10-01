@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur } from './studyTextures.js';
+import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur, spineAtlas, SPINES, pageEdges } from './studyTextures.js';
 
 /* ================= content ================= */
 // Filled at build time from Notion (src/lib/study.ts). Ids are the room's physical
@@ -125,8 +125,6 @@ function rboxGeo(w, h, d, r, ax) {
   }
   grainUV(g, [w, h, d], ax); return geoCache[key] = g;
 }
-const spineC = cnv(256, 32, (x, w, h) => { x.fillStyle = '#a8a8a8'; x.fillRect(0,0,w,h); x.fillStyle = '#f2e3b5'; [[.08,.012],[.115,.006],[.885,.006],[.91,.012]].forEach(([p, t]) => x.fillRect(p*w, 0, t*w, h)); x.fillStyle = 'rgba(0,0,0,.28)'; x.fillRect(.62*w, 4, .16*w, h - 8); x.fillStyle = 'rgba(255,240,200,.35)'; x.fillRect(.65*w, 12, .1*w, 2); x.fillRect(.65*w, 18, .07*w, 2);
-  for (let i = 0; i < 300; i++) { x.fillStyle = 'rgba(0,0,0,' + RN()*.08 + ')'; x.fillRect(RN()*w, RN()*h, 2, 1); } });
 const LOW = matchMedia('(pointer: coarse)').matches; // phones get half-size canvases
 // one sheet of grain, 2 m along it and 1 m across, stained three ways by the material colours
 const woodC = woodGrain({ size:LOW ? 512 : 1024 }), woodTex = { map:texOf(woodC.color, [.5, 1]), normalMap:texOf(woodC.normal, [.5, 1], false), roughnessMap:texOf(woodC.rough, [.5, 1], false), normalScale:new THREE.Vector2(.35, .35) };
@@ -182,9 +180,29 @@ LV.slice(1).forEach(y => { const s = mk(new THREE.BoxGeometry(.02, .01, SZ1 - SZ
 const spineCols = [C.c900, C.m900, C.m800, '#24402f', '#2e4a3a', '#1f2c3d', C.cream, '#6b3a26', '#8a6b45', C.n800, '#3d2a1e', C.c800, '#c9b88f', '#5a1f1f'];
 const featured = { 2:{ bay:1, ids:['s1','s2','s3'], label:'系列', th:.12 }, 3:{ bay:1, ids:['w1','w2','w3','w4','w5','w6'], label:'最近寫的', th:.07 }, 4:{ bay:1, ids:['r1','r2','r3','r4'], label:'書單', th:.07 } };
 Object.keys(featured).forEach(lv => { featured[lv].ids = featured[lv].ids.filter(has); if (!featured[lv].ids.length) delete featured[lv]; });
-const bookGeo = rboxGeo(1, 1, 1, .09);
-const spineMap = texOf(spineC); spineMap.offset.set(.5, 0);
-const inst = new THREE.InstancedMesh(bookGeo, new THREE.MeshStandardMaterial({ name:'books', map:spineMap, roughness:.68 }), 900); inst.castShadow = true; inst.receiveShadow = true;
+// every shelved book is one instance of a unit block; `aBook` gives each its own spine layout, and the shader tells its cloth from its paper
+const bookGeo = rboxGeo(1, 1, 1, .09).clone(), bookAttr = new THREE.InstancedBufferAttribute(new Float32Array(900 * 2), 2), bookR = rng(41); bookGeo.setAttribute('aBook', bookAttr);
+const bookMat = new THREE.MeshStandardMaterial({ name:'books', roughness:.68 }), spines = texOf(spineAtlas(), [1, 1], false);
+bookMat.onBeforeCompile = sh => {
+  sh.uniforms.uSpines = { value:spines };
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aBook;\nvarying vec3 vBookP;\nvarying vec3 vBookN;\nvarying vec2 vBook;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvBookP = position; vBookN = normal; vBook = aBook;');
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D uSpines;\nvarying vec3 vBookP;\nvarying vec3 vBookN;\nvarying vec2 vBook;\nfloat bookFoil = 0.0;').replace('#include <color_fragment>', `#include <color_fragment>
+    vec3 bn = abs(vBookN);
+    if ((vBookN.y > 0.0 && bn.y > bn.x && bn.y > bn.z) || (vBookN.x < 0.0 && bn.x > bn.y && bn.x > bn.z)) {
+      // head and fore-edge are the paper block: sheets across the thickness, blurring into plain cream once they are too fine to draw
+      float s = vBookP.z * 22.0, sheet = mix(0.84 + 0.16 * sin(s * 6.2832), 0.92, smoothstep(0.25, 0.7, fwidth(s)));
+      diffuseColor.rgb = vec3(0.82, 0.74, 0.57) * sheet;
+    } else {
+      float across = clamp(vBookP.z + 0.5, 0.04, 0.96);
+      vec3 deco = texture2D(uSpines, vec2(vBookP.y + 0.5, (vBook.x + across) / ${SPINES}.0)).rgb, cloth = diffuseColor.rgb * (0.78 + 0.22 * sin(across * 3.1416)); // the spine rounds away at its edges
+      // pale cloth is stamped in dark ink, dark cloth in gold or, for one book in four, silver
+      bool pale = dot(cloth, vec3(0.3, 0.6, 0.1)) > 0.22;
+      vec3 foil = pale ? vec3(0.03, 0.018, 0.012) : vBook.y > 0.75 ? vec3(0.62, 0.6, 0.55) : vec3(0.69, 0.48, 0.17);
+      bookFoil = pale ? 0.0 : deco.r;
+      diffuseColor.rgb = mix(mix(mix(cloth, cloth * 0.4, deco.b), vec3(0.84, 0.78, 0.62), deco.g), foil, deco.r);
+    }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.35, bookFoil);').replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.85, bookFoil);');
+};
+const inst = new THREE.InstancedMesh(bookGeo, bookMat, 900); inst.castShadow = true; inst.receiveShadow = true;
 let ni = 0; const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
 const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
 const featPos = {};
@@ -199,7 +217,7 @@ for (let lv = 0; lv < 7; lv++) for (let b = 0; b < 3; b++) {
     if (z + t > zEnd) break;
     const lean = rnd() < .04 && z + .2 < zEnd ? .22 : 0;
     q.setFromEuler(new THREE.Euler(lean, 0, 0)); sc.set(d, h, t); ps.set(-2.78 + (.26 - d)/2 + .02, LV[lv] + .018 + h/2, z + t/2 + (lean ? .03 : 0));
-    m4.compose(ps, q, sc); inst.setMatrixAt(ni, m4); const c = col(spineCols[Math.floor(rnd()*spineCols.length)]); c.multiplyScalar(.8 + rnd()*.35); inst.setColorAt(ni, c); ni++;
+    m4.compose(ps, q, sc); inst.setMatrixAt(ni, m4); const c = col(spineCols[Math.floor(rnd()*spineCols.length)]); c.multiplyScalar(.8 + rnd()*.35); inst.setColorAt(ni, c); bookAttr.setXY(ni, Math.floor(bookR() * SPINES), bookR()); ni++;
     z += t + .003 + (lean ? .05 : 0);
   }
 }
@@ -207,18 +225,20 @@ inst.count = ni; shelf.add(inst);
 // featured books with real spines
 const hasCJK = s => /[\u3400-\u9fff]/.test(s);
 const spineTex = (title, bg, fg) => ctex(96, 512, (x, w, h) => {
-  x.fillStyle = bg; x.fillRect(0,0,w,h); x.fillStyle = fg; x.fillRect(0, 26, w, 4); x.fillRect(0, h-30, w, 4);
+  x.fillStyle = bg; x.fillRect(0,0,w,h);
+  const g = x.createLinearGradient(0, 0, w, 0); [[0,.3],[.2,0],[.8,0],[1,.3]].forEach(([p, a]) => g.addColorStop(p, 'rgba(0,0,0,' + a + ')')); x.fillStyle = g; x.fillRect(0,0,w,h); // the spine rounds away at its edges
+  x.fillStyle = fg; x.fillRect(0, 26, w, 4); x.fillRect(0, h-30, w, 4); x.fillRect(0, 35, w, 1.5); x.fillRect(0, h-36.5, w, 1.5);
   const t = title.replace(/[《》]/g, ''); x.textAlign = 'center'; x.textBaseline = 'middle';
   if (hasCJK(t)) { const n = t.length, fs = Math.min(58, 400 / n); x.font = `600 ${fs}px ${SERIF}`; [...t].forEach((ch, i) => x.fillText(ch, w/2, 60 + fs/2 + i*fs*1.05)); }
   else { x.save(); x.translate(w/2, h/2); x.rotate(Math.PI/2); x.font = `600 40px ${SERIF}`; x.fillText(t, 0, 2, h - 80); x.restore(); }
 });
 const fPal = [[C.c800,C.cream],[C.m800,C.cream],['#2e4a3a',C.cream],[C.cream,C.ink],['#6b3a26',C.cream],[C.c900,C.yel],[C.cream,C.m700],['#1f2c3d',C.cream]];
 const fCols = {}; Object.keys(featPos).forEach((id, i) => fCols[id] = id === 'r3' ? [C.cyan, C.paper] : fPal[i % fPal.length]);
-const books = {};
+const books = {}, pagesMat = std('pages', '#ffffff', { map:texOf(pageEdges()), roughness:.9 });
 Object.entries(featPos).forEach(([id, p]) => {
   const [bg, fg] = fCols[id]; const h = id[0] === 's' ? .32 : id[0] === 'r' ? .29 : .3;
   const sm = new THREE.MeshStandardMaterial({ name:'spine-' + id, map:spineTex(ITEMS[id].sp || ITEMS[id].t, bg, fg), roughness:.7 });
-  const cm = std('cover-' + id, bg, { roughness:.7 }), pm = std('pages', C.cream, { roughness:.9 });
+  const cm = std('cover-' + id, bg, { roughness:.7 }), pm = pagesMat;
   const g = new THREE.Group(); g.position.set(-2.78 + .13 - .01, p.y + .018 + h/2, p.z);
   g.add(mk(new THREE.BoxGeometry(.24, h, p.th), [sm, pm, pm, pm, cm, cm], 'book-' + id)); shelf.add(g); books[id] = g;
   tag(g, { type:'item', id, view:'shelf' }, [.1, 0, 0]);
