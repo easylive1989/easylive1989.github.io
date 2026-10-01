@@ -1,5 +1,5 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import DeskLayout from '../layouts/DeskLayout.astro';
 import ArchiveView from '../components/ArchiveView.astro';
 import { getAllArticles, getAllCategories } from '../lib/data';
 
@@ -7,6 +7,6 @@ const articles = await getAllArticles();
 const categories = await getAllCategories();
 ---
 
-<BaseLayout title="所有文章" hideFooter bodyClass="archive-page-body">
+<DeskLayout title="所有文章" width="reading" crumbs={[{ label: '所有文章' }]}>
   <ArchiveView articles={articles} allCategories={categories} />
-</BaseLayout>
+</DeskLayout>

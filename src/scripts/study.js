@@ -2,43 +2,22 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* ================= content ================= */
-const ITEMS = {
-  r1:{cat:'shelf',kind:'reading',sp:'聖盃',k:'最近讀完 · 投資理財',t:'交易．創造自己的聖盃（第二版）',b:['書架上最近讀完的兩本之一。'],m:'書單 · 最近讀完 02',links:[{l:'看完整書單 ↗',u:'https://paul-learning.dev/reading/',p:1}]},
-  r2:{cat:'shelf',kind:'reading',sp:'系統思考',k:'最近讀完 · 思維邏輯',t:'系統思考實作篇',by:'一眼看清規律背後的結構和邏輯，解決現實世界中的複雜問題',b:['書架上最近讀完的兩本之一。'],m:'書單 · 最近讀完 01',links:[{l:'看完整書單 ↗',u:'https://paul-learning.dev/reading/',p:1}]},
-  r3:{cat:'shelf',kind:'mybook',sp:'Flutter 測試',k:'我出的書 · Book',t:'30 天輕鬆學會 Flutter 測試',b:['由 2023 iThome 鐵人賽佳作改寫成書，從基礎到進階一次到位。'],m:'出版書籍',links:[{l:'看書 ↗',u:'https://www.tenlong.com.tw/products/9786264140010?list_name=srh',p:1}]},
-  r4:{cat:'shelf',kind:'reading',sp:'下一本？',k:'書架空著 · /reading',t:'目前沒在讀什麼',b:['上一本讀完已經 30 天了，正在挑下一本。','想讀 29 本 · 今年讀了 13 本。'],m:'書單',links:[{l:'看完整書單 ↗',u:'https://paul-learning.dev/reading/',p:1}]},
-  w1:{cat:'shelf',kind:'writing',sp:'動畫拆小',k:'★ 最新文章 · 開發日常 · 2026.06.19',t:'開發筆記 - 把複雜的動畫任務變拆小',b:['探討軟體開發中的 Baby Step 原則如何應用在動畫實作上。透過將複雜的動畫任務拆解為獨立的、簡單的步驟（例如單一圓圈動畫、疊加多個圓圈、再實作滑動軌跡），減輕開發負擔，並分享實作心得。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/3848303f-78f7-8121-bcda-e646d955f0e9/',p:1}]},
-  w2:{cat:'shelf',kind:'writing',sp:'AI 找碴',k:'開發日常 · 2026.03.14',t:'請 AI 來找碴！我的 Heptabase 筆記活化實驗',b:['開發日常系列文章。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/3238303f-78f7-80ff-be85-d8438e337a89/',p:1}]},
-  w3:{cat:'shelf',kind:'writing',sp:'看懂測試',k:'開發日常 · 2025.10.05',t:'這個 Flutter 小技巧，讓你看懂 Widget Test 到底哪裡壞了',b:['開發日常系列文章。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/2838303f-78f7-80a1-9f9e-ed48ccc9f2c6/',p:1}]},
-  w4:{cat:'shelf',kind:'writing',sp:'tap 祕密',k:'開發日常 · 2025.08.23',t:'Widget Test 的 tap 原來這樣運作？一探 Flutter 測試點擊的祕密',b:['開發日常系列文章。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/2588303f-78f7-80b3-a789-ccdae073e04a/',p:1}]},
-  w5:{cat:'shelf',kind:'writing',sp:'Vibe 回顧',k:'開發日常 · 2025.08.07',t:'Vibe Coding 回顧',b:['開發日常系列文章。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/2488303f-78f7-804e-b849-e2bb796fa8ca/',p:1}]},
-  w6:{cat:'shelf',kind:'writing',sp:'隱晦邏輯',k:'開發日常 · 2025.07.07',t:'避免隱晦的程式邏輯 - 避免把細節當狀態',b:['「避免隱晦的程式邏輯」系列的一篇。系列索引寫於 2025.03.09。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/2298303f-78f7-807f-b25f-f4f4fad22b5b/',p:1},{l:'系列 Index ↗',u:'https://paul-learning.dev/4b3ce25e/1b18303f-78f7-8071-9e3a-f619d44bc33f/'}]},
-  s1:{cat:'shelf',kind:'series',sp:'開發日常',k:'系列 · Active · 51 篇',t:'開發日常',b:['從 2020 寫到現在，記錄日常開發遇到的問題與想法。'],m:'共 111 篇文章 · 3 個系列',links:[{l:'看全部文章 ↗',u:'https://paul-learning.dev/4b3ce25e/',p:1}]},
-  s2:{cat:'shelf',kind:'series',sp:'Flutter 測試',k:'系列 · 30 篇',t:'30 天輕鬆學會 Flutter 測試',b:['2023 iThome 鐵人賽佳作，後來改寫成書。'],m:'iThome 鐵人賽',links:[{l:'鐵人賽系列 ↗',u:'https://ithelp.ithome.com.tw/users/20129825/ironman/5974',p:1}]},
-  s3:{cat:'shelf',kind:'series',sp:'設計雜談',k:'系列 · 30 篇',t:'Flutter 開發設計雜談',b:['2022 iThome 鐵人賽佳作。'],m:'iThome 鐵人賽',links:[{l:'鐵人賽系列 ↗',u:'https://ithelp.ithome.com.tw/users/20129825/ironman/4992',p:1}]},
-  p1:{cat:'display',kind:'project',k:'Side Project · iOS · Android · 活著',t:'Lorescape · 沉浸式歷史探索',b:['用 AI 當你的隨身歷史導覽，把眼前的石頭、巷弄、廟宇的故事娓娓道來。從 0 完整流程上架 iOS / Android。'],tech:['Flutter','Dart','Supabase'],m:'展示架 · 大相框',links:[{l:'玩玩看 ↗',u:'https://lorescape.app/',p:1},{l:'GitHub ↗',u:'https://github.com/easylive1989/instant_explore'}]},
-  p3:{cat:'display',kind:'project',k:'Side Project · Web · 活著',t:'YouTube 運動計時器',b:['看 YouTube 運動影片時疊加的區間計時器，幫忙在固定秒數提醒換動作。'],tech:['Vanilla JS'],m:'展示架 · 座鐘',links:[{l:'玩玩看 ↗',u:'https://paul-learning.dev/youtube-sport-timer/',p:1},{l:'GitHub ↗',u:'https://github.com/easylive1989/youtube-sport-timer'}]},
-  g2:{cat:'display',kind:'project',k:'Side Project · Line Bot · 活著',t:'小遊戲機器人',b:['用 Line 跟朋友 / 群組玩五子棋、象棋、井字遊戲、海戰棋、猜數字的機器人。輸入「玩五子棋」就開戰。'],tech:['.NET','MongoDB'],m:'展示架 · 棋子',links:[{l:'怎麼玩 ↗',u:'https://github.com/easylive1989/LittleFlowerBot/blob/master/HOW%20TO%20PLAY.md',p:1},{l:'GitHub ↗',u:'https://github.com/easylive1989/LittleFlowerBot'}]},
-  g3:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Tiny Swords RTS',b:['Playbox 裡的即時戰略小遊戲。'],m:'展示架 · 戰場畫',links:[{l:'▶ 玩',u:'https://easylive1989.github.io/paul-playbox/tiny_swords/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
-  t2:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Stock Trading',b:['Playbox 裡的股票交易小遊戲。'],m:'展示架 · 小相框',links:[{l:'▶ 玩',u:'https://easylive1989.github.io/paul-playbox/stock_trading_game/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
-  g4:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Water Bottle Flip',b:['Playbox 裡的翻水瓶小遊戲。'],m:'展示架 · 水瓶',links:[{l:'▶ 玩',u:'https://easylive1989.github.io/paul-playbox/water_bottle_flip/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
-  g1:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Sokoban',b:['Playbox 裡的推箱子。'],m:'展示架 · 木箱',links:[{l:'▶ 玩',u:'https://easylive1989.github.io/paul-playbox/sokoban/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
-  p2:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Moonbeast',b:['Playbox 裡的月獸小遊戲。'],m:'展示架 · 銅像',links:[{l:'▶ 玩',u:'https://paul-learning.dev/moonbeast-game/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
-  aw:{cat:'display',kind:'award',k:'競賽與演講 · Awards & Talks',t:'獎狀與講稿',b:[],list:[['2025','演講','實踐 Flutter 測試的眉眉角角','Agile.Taichung','https://www.accupass.com/event/2503031416141112169743'],['2024','演講','Flutter Widget Test 深度探索','iThome 鐵人講堂','https://itplus.ithome.com.tw/webinar-page/237'],['2023','鐵人賽佳作','30 天輕鬆學會 Flutter 測試','iThome','https://ithelp.ithome.com.tw/users/20129825/ironman/5974'],['2022','鐵人賽佳作','Flutter 開發設計雜談','iThome','https://ithelp.ithome.com.tw/users/20129825/ironman/4992'],['2020','鐵人賽完賽','在 Kata 中尋找 Clean Code','iThome','https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1']],m:'展示架 · 獎狀'},
-  d1:{cat:'desk',kind:'draft',k:'草稿 · 寫到一半',t:'AI 寫的測試，算不算測試？',b:['最近越來越常讓 AI 幫忙補 widget test。補得很快，但有一次它把一個壞掉的行為寫成了「預期結果」，測試全綠——','（草稿到這裡就斷了。）'],m:'範例草稿 · 之後換成真的'},
-  d2:{cat:'desk',kind:'draft',k:'草稿 · 寫到一半',t:'Lorescape 上架後記',b:['從 0 到 App Store 和 Google Play 都上架，最花時間的不是寫 code，而是','（草稿到這裡就斷了。）'],m:'範例草稿 · 之後換成真的'},
-  d3:{cat:'desk',kind:'draft',k:'草稿 · 寫到一半',t:'Baby Step 動畫，續',b:['上一篇把動畫拆成三步。這次想試試看：如果連「滑動軌跡」都再拆一次，會不會','（草稿到這裡就斷了。）'],m:'範例草稿 · 之後換成真的'},
-};
-const ABOUT_LINKS = [['GitHub','easylive1989','https://github.com/easylive1989'],['Threads','@paul.ch.wu','https://www.threads.com/@paul.ch.wu'],['LinkedIn','Paul Wu','https://www.linkedin.com/in/paul-wu-810280135/'],['Email','easylive1989@gmail.com','mailto:easylive1989@gmail.com']];
+// Filled at build time from Notion (src/lib/study.ts). Ids are the room's physical
+// slots — a spine on the shelf, a spot in the niche, a page on the desk.
+const DATA = JSON.parse(document.getElementById('study-data').textContent);
+const { items: ITEMS, about: ABOUT, github: GH, site: SITE } = DATA;
 const EGGS = {
   e1:{t:'椅子上的貓',b:['這張椅子已經不是我的了。']},
   e2:{t:'窗外的月亮',b:['寫不出來的時候，我會盯著它看。它從來不催稿。']},
   e3:{t:'書架頂上的橡皮鴨',b:['Rubber duck debugging 的那隻。所有 bug 都是先講給它聽的。']},
 };
-const LINKS = [['w2','s1'],['w3','s2'],['w4','s2'],['r3','s2'],['w1','s1'],['p1','d2'],['g1','g3'],['w5','w2'],['w6','s1'],['r2','w6'],['aw','r3'],['d1','w3'],['d3','w1'],['g2','g1'],['t2','r1'],['g4','p2'],['p3','w5'],['s3','aw']];
-const related = id => LINKS.filter(l => l.includes(id)).map(l => l[0] === id ? l[1] : l[0]);
+const related = id => DATA.links.filter(l => l.includes(id)).map(l => l[0] === id ? l[1] : l[0]);
 const IDS = Object.keys(ITEMS);
 const CATS = [{ id:'shelf', name:'書架' }, { id:'display', name:'展示架' }, { id:'desk', name:'書桌' }];
+const has = id => !!ITEMS[id];
+const glyph = id => (ITEMS[id] && ITEMS[id].ch) || '書';
+const isExt = u => /^(https?:)?\/\/|^mailto:/.test(u);
+const linkAttrs = u => isExt(u) ? ' target="_blank" rel="noopener"' : '';
 
 /* ================= palette ================= */
 const css = getComputedStyle(document.documentElement);
@@ -55,8 +34,16 @@ const C = {
 const col = h => new THREE.Color(h);
 
 /* ================= renderer ================= */
-const stage = document.getElementById('stage');
-const renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
+const byId = id => document.getElementById(id);
+const stage = byId('stage');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true }); }
+catch (err) {
+  // no WebGL (old browser, GPU blocklist): the room can't open, so leave the doors to the rest of the site
+  const intro = byId('intro'); intro.classList.remove('off'); intro.style.pointerEvents = 'auto';
+  intro.innerHTML = '<div>這間書房需要 WebGL 才能走進去。<br><br><a href="' + SITE.reading + '">書單</a> · <a href="' + SITE.archive + '">全部文章</a> · <a href="' + SITE.rss + '">RSS</a></div>';
+  throw err;
+}
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
@@ -181,6 +168,7 @@ shelf.add(box(.42, .18, SZ1 - SZ0 + .05, M.wood, 'shelf-cornice', [-2.8,2.68,(SZ
 LV.slice(1).forEach(y => { const s = mk(new THREE.BoxGeometry(.02, .01, SZ1 - SZ0), new THREE.MeshBasicMaterial({ name:'led', color:col('#b98450') }), 'led-strip', [-2.63, y - .025, (SZ0+SZ1)/2]); s.castShadow = false; shelf.add(s); });
 const spineCols = [C.c900, C.m900, C.m800, '#24402f', '#2e4a3a', '#1f2c3d', C.cream, '#6b3a26', '#8a6b45', C.n800, '#3d2a1e', C.c800, '#c9b88f', '#5a1f1f'];
 const featured = { 2:{ bay:1, ids:['s1','s2','s3'], label:'系列', th:.12 }, 3:{ bay:1, ids:['w1','w2','w3','w4','w5','w6'], label:'最近寫的', th:.07 }, 4:{ bay:1, ids:['r1','r2','r3','r4'], label:'書單', th:.07 } };
+Object.keys(featured).forEach(lv => { featured[lv].ids = featured[lv].ids.filter(has); if (!featured[lv].ids.length) delete featured[lv]; });
 const bookGeo = rboxGeo(1, 1, 1, .09);
 const spineMap = texOf(spineC); spineMap.offset.set(.5, 0);
 const inst = new THREE.InstancedMesh(bookGeo, new THREE.MeshStandardMaterial({ name:'books', map:spineMap, roughness:.68 }), 900); inst.castShadow = true; inst.receiveShadow = true;
@@ -223,7 +211,7 @@ Object.entries(featPos).forEach(([id, p]) => {
   tag(g, { type:'item', id, view:'shelf' }, [.1, 0, 0]);
 });
 const plateTex = s => ctex(256, 64, (x, w, h) => { x.fillStyle = C.brass; x.fillRect(0,0,w,h); x.strokeStyle = '#6e5228'; x.lineWidth = 4; x.strokeRect(4,4,w-8,h-8); x.fillStyle = '#2a1d0e'; x.font = `600 34px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(s, w/2, h/2+2); });
-[2, 3, 4].forEach(lv => { const f = featured[lv]; const zc = bays[f.bay] + .32 + .02 + f.ids.length*(f.th + .015)/2;
+[2, 3, 4].forEach(lv => { const f = featured[lv]; if (!f) return; const zc = bays[f.bay] + .32 + .02 + f.ids.length*(f.th + .015)/2;
   const pm = new THREE.MeshStandardMaterial({ name:'brass-plate', map:plateTex(f.label), roughness:.4, metalness:.6 });
   shelf.add(mk(new THREE.BoxGeometry(.005, .045, .18), [pm, M.brass, M.brass, M.brass, M.brass, M.brass], 'brass-plate', [-2.605, LV[lv] - .005, zc])); });
 // rubber duck (egg 3) on top of shelf
@@ -242,9 +230,11 @@ niche.add(box(NX1 - NX0, 1.75, .04, M.wallL, 'niche-back', [(NX0+NX1)/2, 1.725, 
 niche.add(box(NX1 - NX0 + .06, .06, NZF - NZB, M.wood, 'niche-top', [(NX0+NX1)/2, 2.58, (NZB+NZF)/2]));
 const NL = [.86, 1.3, 1.75, 2.2];
 NL.forEach(y => niche.add(box(NX1 - NX0, .04, NZF - NZB + .02, M.woodL, 'niche-shelf', [(NX0+NX1)/2, y, (NZB+NZF)/2])));
-niche.add(box(NX1 - NX0 + .12, .84, .5, M.wood, 'niche-cabinet', [(NX0+NX1)/2, .42, -2.67]));
-[-1.9, -1.0].forEach(x => niche.add(box(.8, .66, .01, M.woodD, 'cabinet-door', [x, .45, -2.415])));
-[-1.52, -1.38].forEach(x => niche.add(cyl(.012, .012, .05, 8, M.brass, 'knob', [x, .5, -2.4], [Math.PI/2,0,0])));
+const cabinet = new THREE.Group(); cabinet.name = 'cabinet'; niche.add(cabinet);
+cabinet.add(box(NX1 - NX0 + .12, .84, .5, M.wood, 'niche-cabinet', [(NX0+NX1)/2, .42, -2.67]));
+[-1.9, -1.0].forEach(x => cabinet.add(box(.8, .66, .01, M.woodD, 'cabinet-door', [x, .45, -2.415])));
+[-1.52, -1.38].forEach(x => cabinet.add(cyl(.012, .012, .05, 8, M.brass, 'knob', [x, .5, -2.4], [Math.PI/2,0,0])));
+if (has('cab')) tag(cabinet, { type:'item', id:'cab', view:'niche' }, [0,0,.03]);
 [[-1.9, 2.55], [-1.0, 2.55]].forEach(([x, y]) => { const s = mk(new THREE.CircleGeometry(.03, 16), new THREE.MeshBasicMaterial({ color:col('#ffe2b0') }), 'downlight', [x, y - .001, -2.72], [Math.PI/2,0,0]); niche.add(s); });
 // picture textures (typographic prints)
 const printTex = (ch, ink, bg = C.cream) => ctex(256, 320, (x, w, h) => { x.fillStyle = bg; x.fillRect(0,0,w,h); x.fillStyle = '#d9ccad'; x.fillRect(24,24,w-48,h-48); x.fillStyle = bg; x.fillRect(30,30,w-60,h-60);
@@ -257,14 +247,15 @@ const frame = (w, h, ch, ink, name) => { const g = new THREE.Group(); g.name = n
   g.add(box(.02, h, .035, M.woodD, 'frame-edge', [w/2, 0, .005])); g.add(box(.02, h, .035, M.woodD, 'frame-edge', [-w/2, 0, .005]));
   return g; };
 const exh = {};
-const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); niche.add(g); exh[id] = g; tag(g, { type:'item', id, view:'niche' }); };
-place(frame(.5, .32, '史', C.c800, 'frame-large'), 'p1', -1.65, 2.24 + .17, -2.8, 0, -.05);
+if (has('cab')) exh.cab = cabinet;
+const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { if (!has(id)) return; g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); niche.add(g); exh[id] = g; tag(g, { type:'item', id, view:'niche' }); };
+place(frame(.5, .32, glyph('p1'), C.c800, 'frame-large'), 'p1', -1.65, 2.24 + .17, -2.8, 0, -.05);
 const statue = new THREE.Group(); statue.name = 'statue';
 const sPts = [[0,0],[.06,0],[.06,.02],[.035,.04],[.04,.12],[.05,.2],[.035,.27],[.045,.31],[.03,.36],[0,.38]].map(([a,b]) => new THREE.Vector2(a, b));
 statue.add(mk(new THREE.LatheGeometry(sPts, 32), M.bronze, 'statue-body'));
 statue.add(mk(new THREE.SphereGeometry(.03, 16, 12), M.bronze, 'statue-head', [0,.41,0]));
 place(statue, 'p2', -.85, 2.22, -2.72, 0, 0);
-place(frame(.4, .32, '獎', C.m800, 'frame-mid'), 'aw', -1.85, 1.77 + .16, -2.82, .08, -.08);
+place(frame(.4, .32, glyph('aw'), C.m800, 'frame-mid'), 'aw', -1.85, 1.77 + .16, -2.82, .08, -.08);
 const deskClock = new THREE.Group(); deskClock.name = 'clock';
 const clockTex = ctex(256, 256, (x, w, h) => { const d = new Date(); x.fillStyle = C.cream; x.fillRect(0,0,w,h); x.strokeStyle = '#3a2a18'; x.lineWidth = 8; x.beginPath(); x.arc(128,128,118,0,Math.PI*2); x.stroke();
   for (let i = 0; i < 12; i++) { const a = i/12*Math.PI*2; x.lineWidth = i % 3 ? 3 : 7; x.beginPath(); x.moveTo(128 + Math.sin(a)*96, 128 - Math.cos(a)*96); x.lineTo(128 + Math.sin(a)*110, 128 - Math.cos(a)*110); x.stroke(); }
@@ -287,7 +278,7 @@ candle.add(cyl(.018, .018, .14, 16, M.cream, 'candle-wax', [0,.155,0]));
 const flame = mk(new THREE.SphereGeometry(.012, 12, 8), new THREE.MeshBasicMaterial({ name:'flame', color:col('#ffd27a') }), 'flame', [0,.24,0]); flame.scale.set(1, 2.2, 1); flame.castShadow = false; candle.add(flame);
 candle.position.set(-2.1, 1.32, -2.7); niche.add(candle);
 const candleLight = new THREE.PointLight(0xffb45a, .5, 1.6, 2); candleLight.position.set(-2.1, 1.6, -2.62); room.add(candleLight);
-place(frame(.2, .25, '股', C.c700, 'frame-small'), 't2', -1.55, 1.32 + .125, -2.78, .15, -.12);
+place(frame(.2, .25, glyph('t2'), C.c700, 'frame-small'), 't2', -1.55, 1.32 + .125, -2.78, .15, -.12);
 const bottle = new THREE.Group(); bottle.name = 'water-bottle';
 const btPts = [[0,0],[.032,0],[.034,.01],[.034,.12],[.026,.15],[.013,.17],[.013,.19],[0,.19]].map(([a,b]) => new THREE.Vector2(a, b));
 bottle.add(mk(new THREE.LatheGeometry(btPts, 32), new THREE.MeshStandardMaterial({ name:'bottle-plastic', color:col('#b9d8e6'), transparent:true, opacity:.55, roughness:.1 }), 'bottle'));
@@ -299,7 +290,7 @@ const woodBox = new THREE.Group(); woodBox.name = 'wooden-box';
 woodBox.add(box(.3, .14, .2, M.woodD, 'box-body', [0,.07,0])); woodBox.add(box(.31, .035, .21, M.wood, 'box-lid', [0,.155,0]));
 woodBox.add(box(.04, .03, .01, M.brass, 'box-latch', [0,.12,.105]));
 place(woodBox, 'g1', -1.95, .88, -2.7, .1, 0);
-place(frame(.38, .3, '劍', C.ink, 'frame-landscape'), 'g3', -1.05, .88 + .15, -2.8, -.05, -.1);
+place(frame(.38, .3, glyph('g3'), C.ink, 'frame-landscape'), 'g3', -1.05, .88 + .15, -2.8, -.05, -.1);
 
 /* ================= window + outside ================= */
 const WIN = { x0:.05, x1:2.65, y0:1.0, y1:2.5 };
@@ -346,23 +337,26 @@ laptop.add(box(.5, .016, .34, M.alu, 'laptop-base', [0,.008,0]));
 const kbTex = ctex(256, 160, (x, w, h) => { x.fillStyle = '#86847f'; x.fillRect(0,0,w,h); x.fillStyle = '#2a2a2a'; for (let r = 0; r < 5; r++) for (let c = 0; c < 13; c++) x.fillRect(10 + c*18.4, 10 + r*16, 15, 13); x.fillStyle = '#7a7873'; x.fillRect(80, 100, 96, 52); }, false);
 laptop.add(mk(new THREE.PlaneGeometry(.44, .27), new THREE.MeshStandardMaterial({ name:'keyboard', map:kbTex, roughness:.5 }), 'keyboard', [0,.0165,.02], [-Math.PI/2,0,0]));
 const screenTex = ctex(512, 320, (x, w, h) => { x.fillStyle = '#0d1117'; x.fillRect(0,0,w,h);
-  x.fillStyle = '#e6edf3'; x.font = '600 24px ' + SERIF; x.fillText('easylive1989', 30, 46); x.fillStyle = '#8b949e'; x.font = '400 16px ' + SERIF; x.fillText('3,782 contributions in 2026', 30, 72);
-  let r = 5; const R = () => (r = (r * 16807) % 2147483647) / 2147483647; const G = ['#161b22','#0e4429','#006d32','#26a641','#39d353'];
-  for (let c = 0; c < 26; c++) for (let d = 0; d < 7; d++) { const v = R(); x.fillStyle = G[v < .12 ? 0 : v < .35 ? 1 : v < .62 ? 2 : v < .85 ? 3 : 4]; x.fillRect(30 + c*17.4, 96 + d*17.4, 14, 14); }
-  x.fillStyle = '#e6edf3'; x.font = '600 20px ' + SERIF; x.fillText('10 天連續 · 最長 97 天', 30, 252); x.fillStyle = '#8b949e'; x.font = '400 15px ' + SERIF; x.fillText('Threads @paul.ch.wu · LinkedIn · Email', 30, 282); });
+  x.fillStyle = '#e6edf3'; x.font = '600 24px ' + SERIF; x.fillText(GH.username, 30, 46); x.fillStyle = '#8b949e'; x.font = '400 16px ' + SERIF;
+  x.fillText(GH.ok ? GH.total.toLocaleString() + ' contributions in ' + GH.year : 'GitHub activity', 30, 72);
+  const G = ['#161b22','#0e4429','#006d32','#26a641','#39d353'], cols = 18;
+  for (let c = 0; c < cols; c++) for (let d = 0; d < 7; d++) { x.fillStyle = G[(GH.weeks[c] && GH.weeks[c][d]) || 0]; x.fillRect(30 + c*24.2, 96 + d*20.2, 20, 17); }
+  x.fillStyle = '#e6edf3'; x.font = '600 20px ' + SERIF; x.fillText(GH.ok ? GH.current + ' 天連續 · 最長 ' + GH.longest + ' 天' : '點開看 GitHub 活動', 30, 252);
+  x.fillStyle = '#8b949e'; x.font = '400 15px ' + SERIF; x.fillText('Threads · LinkedIn · Email', 30, 282); });
 const lid = new THREE.Group(); lid.position.set(0, .016, -.17); lid.rotation.x = -.28; laptop.add(lid);
 lid.add(box(.5, .32, .01, M.alu, 'laptop-lid', [0,.16,-.005]));
 lid.add(mk(new THREE.PlaneGeometry(.46, .29), new THREE.MeshBasicMaterial({ name:'screen', map:screenTex }), 'screen', [0,.165,.0015]));
 tag(laptop, { type:'list', view:'desk' }, [0,.02,0]);
 const screenLight = new THREE.PointLight(0xdfe8ff, .25, 1.2, 2); screenLight.position.set(1.62, DY + .25, -1.85); room.add(screenLight);
 // drafts
-const draftTex = (title) => ctex(256, 340, (x, w, h) => { x.fillStyle = '#efe8d8'; x.fillRect(0,0,w,h); x.fillStyle = C.ink; x.font = `600 22px ${SERIF}`; x.fillText(title, 22, 44, w - 44); x.fillStyle = C.m700; x.font = `italic 400 13px ${SERIF}`; x.fillText('草稿', 22, 66);
+const draftTex = (title, stamp) => ctex(256, 340, (x, w, h) => { x.fillStyle = '#efe8d8'; x.fillRect(0,0,w,h); x.fillStyle = C.ink; x.font = `600 22px ${SERIF}`; x.fillText(title, 22, 44, w - 44); x.fillStyle = C.m700; x.font = `italic 400 13px ${SERIF}`; x.fillText(stamp, 22, 66);
   x.strokeStyle = '#6d6a64'; x.lineWidth = 1.6; const n = 9 + title.length % 4; for (let i = 0; i < n; i++) { x.beginPath(); x.moveTo(22, 96 + i*20); const L = i === n-1 ? 70 : 190 + Math.sin(i*3.1)*20; for (let s = 0; s < L; s += 6) x.lineTo(22 + s, 96 + i*20 + Math.sin(s*.5 + i)*1.2); x.stroke(); }
   x.strokeStyle = C.m700; x.lineWidth = 2; x.beginPath(); x.moveTo(30, 96 + n*20); x.lineTo(80, 96 + n*20 + 4); x.stroke(); });
 const drafts = {};
 [['d1', 2.2, -2.18, .25], ['d2', 2.42, -1.95, -.35], ['d3', 2.05, -1.86, .05]].forEach(([id, x, z, r], i) => {
+  if (!has(id)) return;
   const g = new THREE.Group(); g.name = 'draft-' + id; g.position.set(x, DY + .027 + i*.0025, z); g.rotation.y = r;
-  g.add(mk(new THREE.PlaneGeometry(.21, .28), new THREE.MeshStandardMaterial({ name:'draft-paper', map:draftTex(ITEMS[id].t), roughness:.9 }), 'draft-paper', [0,0,0], [-Math.PI/2,0,0]));
+  g.add(mk(new THREE.PlaneGeometry(.21, .28), new THREE.MeshStandardMaterial({ name:'draft-paper', map:draftTex(ITEMS[id].t, (ITEMS[id].k.match(/\d{4}\.\d{2}\.\d{2}/) || ['舊稿'])[0]), roughness:.9 }), 'draft-paper', [0,0,0], [-Math.PI/2,0,0]));
   desk.add(g); drafts[id] = g; tag(g, { type:'item', id, view:'desk' }, [0,.03,0]);
 });
 const pen = rod([1.95, DY + .033, -1.72], [2.12, DY + .033, -1.78], .006, M.ink, 'pen'); desk.add(pen);
@@ -380,7 +374,7 @@ const portrait = new THREE.Group(); portrait.name = 'self-portrait'; portrait.po
 const pf = new THREE.Group(); pf.position.y = .135; pf.rotation.x = -.16; portrait.add(pf);
 const portraitMat = new THREE.MeshStandardMaterial({ name:'portrait', map:portraitTex, roughness:.85 });
 pf.add(mk(new THREE.BoxGeometry(.2, .25, .015), [M.brass, M.brass, M.brass, M.brass, portraitMat, M.brass], 'portrait-frame'));
-const AVATAR = import.meta.env.BASE_URL + 'assets/avatar.jpg';
+const AVATAR = ABOUT.avatar;
 new THREE.TextureLoader().setCrossOrigin('anonymous').load(AVATAR, t => { t.colorSpace = THREE.SRGBColorSpace; const a = t.image.width / t.image.height, fa = .2 / .25; if (a > fa) { t.repeat.set(fa / a, 1); t.offset.set((1 - fa / a) / 2, 0); } else { t.repeat.set(1, a / fa); t.offset.set(0, (1 - a / fa) / 2); } portraitMat.map = t; portraitMat.needsUpdate = true; }, undefined, () => {});
 [[.1,0],[-.1,0]].forEach(([x]) => pf.add(box(.012, .25, .02, M.brass, 'frame-edge', [x,0,.003]))); [[.125],[-.125]].forEach(([y]) => pf.add(box(.21, .012, .02, M.brass, 'frame-edge', [0,y,.003])));
 portrait.add(rod([0,.01,-.07], [0,.2,-.005], .006, M.brass, 'easel-leg'));
@@ -533,57 +527,50 @@ function setNight(n) {
 setSeason(season); setNight(night);
 
 /* ================= UI ================= */
-const st = { seen:{}, eggs:{}, cur:null, list:null, game:null, hl:{ text:'', i:0 }, about:false };
+const st = { seen:{}, eggs:{}, cur:null, about:false };
 const $ = id => document.getElementById(id);
-const d0 = new Date(); ($('date') || {}).textContent = `${d0.getFullYear()} 年 ${d0.getMonth()+1} 月 ${d0.getDate()} 日 星期${'日一二三四五六'[d0.getDay()]}`;
 let toastT; const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); };
 function renderChips() {
-  $('chips').innerHTML = CATS.map(c => { const ids = IDS.filter(k => ITEMS[k].cat === c.id), n = ids.filter(k => st.seen[k]).length;
+  $('chips').innerHTML = CATS.map(c => { const ids = IDS.filter(k => ITEMS[k].cat === c.id), n = ids.filter(k => st.seen[k]).length; if (!ids.length) return '';
     return `<span class="tag ${n === ids.length ? 'tag-accent' : n ? 'tag-outline' : 'tag-neutral'}">${n === ids.length ? '✓ ' : ''}${c.name} ${n}/${ids.length}</span>`; }).join('')
     + `<span class="tag ${st.about ? 'tag-accent' : 'tag-neutral'}">${st.about ? '✓ ' : ''}自畫像</span><span class="count">彩蛋 ${Object.keys(st.eggs).length} / 3</span>`;
 }
 const panel = $('panel'), pbody = $('pbody');
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
-const HL = [t => `號外！${t}——專家：「完全沒想到」`, t => `震撼全城：${t}`, t => `獨家｜${t}，知情人士首度證實`, t => `${t}？本報記者連夜追查`];
 const where = id => ({ shelf:'書架', display:'展示架', desk:'書桌' }[ITEMS[id].cat]);
-const linkBtns = ls => ls && ls.length ? `<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-4) 0">${ls.map(l => `<a class="btn ${l.p ? 'btn-primary' : 'btn-secondary'}" href="${l.u}" target="_blank" rel="noopener" style="text-decoration:none">${l.l}</a>`).join('')}</div>` : '';
+const ghostBtn = 'justify-content:flex-start;margin-left:-6px;text-align:left;text-decoration:none';
+const linkBtns = ls => ls && ls.length ? `<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-4) 0">${ls.map(l => `<a class="btn ${l.p ? 'btn-primary' : 'btn-secondary'}" href="${esc(l.u)}"${linkAttrs(l.u)} style="text-decoration:none">${esc(l.l)}</a>`).join('')}</div>` : '';
 function renderPanel(mode) {
   let h = '';
   if (mode === 'egg') { const e = EGGS[st.cur]; h = `<span class="card-kicker" style="color:var(--color-accent-2-700)">彩蛋 · ${Object.keys(st.eggs).length} / 3</span><h2>${e.t}</h2><div class="body">${e.b.map(p => `<p>${p}</p>`).join('')}</div>`; }
-  else if (mode === 'about') { h = '<span class="card-kicker">書桌 · 自畫像</span><div style="display:flex;gap:var(--space-4);align-items:center;margin:var(--space-3) 0 var(--space-4)"><img src="' + AVATAR + '" alt="Paul Wu" style="width:88px;height:88px;object-fit:cover;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)"><div><div style="font-size:14px;font-style:italic">Hi, I&#39;m</div><h2 style="margin:0">Paul Wu</h2><div style="font-size:14px;margin-top:4px">台中 · Available for chat</div></div></div>'
-      + '<div class="body"><p>Driven by a love for figuring things out and creating seamless experiences. Always curious, exploring — from fresh concepts to unexpected rabbit holes.</p><p>從 2020 寫到現在：111 篇文章、3 個系列，還出了一本書。</p></div>'
-      + '<div class="rel"><span class="lab card-kicker">Find me at</span>' + ABOUT_LINKS.map(([k, v, u]) => '<a class="btn btn-ghost" href="' + u + '" target="_blank" rel="noopener" style="justify-content:flex-start;margin-left:-6px;text-decoration:none">' + k + '：' + v + '</a>').join('') + '</div>'
-      + '<div class="meta"><a href="https://paul-learning.dev/" target="_blank" rel="noopener">paul-learning.dev</a></div>'; }
-  else if (mode === 'list') { h = '<span class="card-kicker">書桌 · 筆電</span><h2>GitHub 活動</h2><p class="intro">過去 18 週，2026 年共 3,782 次 contributions。目前連續 10 天，最長 97 天。</p>'
-      + linkBtns([{ l:'GitHub · easylive1989 ↗', u:'https://github.com/easylive1989', p:1 }, { l:'Threads ↗', u:'https://www.threads.com/@paul.ch.wu' }])
-      + '<div class="rel"><span class="lab card-kicker">最近 6 篇 →</span>' + ['w1','w2','w3','w4','w5','w6'].map(k => '<button class="btn btn-ghost" data-item="' + k + '" style="justify-content:flex-start;margin-left:-6px;text-align:left">' + ITEMS[k].t + '</button>').join('') + '</div>'; }
+  else if (mode === 'about') { h = '<span class="card-kicker">書桌 · 自畫像</span><div style="display:flex;gap:var(--space-4);align-items:center;margin:var(--space-3) 0 var(--space-4)"><img src="' + esc(AVATAR) + '" alt="' + esc(ABOUT.name) + '" style="width:88px;height:88px;object-fit:cover;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)"><div><div style="font-size:14px;font-style:italic">Hi, I&#39;m</div><h2 style="margin:0">' + esc(ABOUT.name) + '</h2><div style="font-size:14px;margin-top:4px">' + esc(ABOUT.tagline) + '</div></div></div>'
+      + '<div class="body"><p>' + esc(ABOUT.bio) + '</p><p>' + esc(ABOUT.summary) + '</p></div>'
+      + '<div class="rel"><span class="lab card-kicker">Find me at</span>' + ABOUT.channels.map(([k, v, u]) => '<a class="btn btn-ghost" href="' + esc(u) + '"' + linkAttrs(u) + ' style="' + ghostBtn + '">' + esc(k) + '：' + esc(v) + '</a>').join('') + '</div>'
+      + '<div class="rel"><span class="lab card-kicker">站內</span><a class="btn btn-ghost" href="' + esc(SITE.reading) + '" style="' + ghostBtn + '">書單</a><a class="btn btn-ghost" href="' + esc(SITE.archive) + '" style="' + ghostBtn + '">全部文章</a><a class="btn btn-ghost" href="' + esc(SITE.rss) + '" style="' + ghostBtn + '">RSS</a></div>'; }
+  else if (mode === 'list') { const recent = IDS.filter(k => /^w\d$/.test(k));
+    h = '<span class="card-kicker">書桌 · 筆電</span><h2>GitHub 活動</h2><p class="intro">' + (GH.ok ? `過去 18 週，${GH.year} 年共 ${GH.total.toLocaleString()} 次 contributions。目前連續 ${GH.current} 天，最長 ${GH.longest} 天。` : '活動統計暫時讀不到，直接去 GitHub 看吧。') + '</p>'
+      + linkBtns(ABOUT.channels.filter(c => c[0] === 'GitHub' || c[0] === 'Threads').map(c => c[0] === 'GitHub' ? { l:`GitHub · ${c[1]} ↗`, u:c[2], p:1 } : { l:'Threads ↗', u:c[2] }))
+      + (recent.length ? '<div class="rel"><span class="lab card-kicker">最近 ' + recent.length + ' 篇 →</span>' + recent.map(k => '<button class="btn btn-ghost" data-item="' + k + '" style="' + ghostBtn + '">' + esc(ITEMS[k].t) + '</button>').join('') + '</div>' : '')
+      + '<div class="rel"><a class="btn btn-ghost" href="' + esc(SITE.archive) + '" style="' + ghostBtn + '">全部文章 →</a></div>'; }
   else { const it = ITEMS[st.cur];
-    const accent2 = it.kind === 'draft';
-    h += `<div style="margin-top:var(--space-2)"><span class="card-kicker"${accent2 ? ' style="color:var(--color-accent-2-700)"' : ''}>${it.k}</span><h3>${it.t}</h3>${it.by ? `<div style="font-size:15px;font-style:italic;margin-top:-6px">${it.by}</div>` : ''}</div>`;
-    if (it.tech) h += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:var(--space-2) 0 var(--space-3)">${it.tech.map(t => `<span class="tag tag-neutral">${t}</span>`).join('')}</div>`;
-    if (it.list) h += `<div class="list" style="gap:var(--space-4)">${it.list.map(([y, kind, t, org, u]) => `<a href="${u}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--color-text)"><span class="card-kicker">${y} · ${kind}</span><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.3">${t} ↗</span><span style="font-size:14px">${org}</span></a>`).join('')}</div>`;
-    if (it.pg) h += `<div style="margin:var(--space-4) 0 var(--space-3)"><div class="prog"><i style="width:${Math.round(it.pg[0]/it.pg[1]*100)}%"></i></div><span style="font-size:13px">讀到第 ${it.pg[0]} 頁，共 ${it.pg[1]} 頁</span></div>`;
-    h += `<div class="body">${it.b.map(p => `<p${p.startsWith('（') ? ' style="font-style:italic"' : ''}>${p}</p>`).join('')}</div>`;
-    if (it.type === 'game') h += `<div class="game"><div class="plate"><span style="color:var(--color-accent)">印</span><span id="gm" style="color:var(--color-accent-2)">印</span></div><label>左右<input id="gx" type="range" min="-40" max="40" value="0"></label><label>上下<input id="gy" type="range" min="-40" max="40" value="0"></label><span id="gmsg" style="font-style:italic"></span><button class="btn btn-secondary" data-act="regame">再印一張</button></div>`;
-    if (it.type === 'headline') h += `<input class="input" id="hl" value="${esc(st.hl.text)}" placeholder="輸入一件小事" style="width:100%;box-sizing:border-box;font-size:16px"><div class="hlout"><span style="height:3px;background:var(--color-text)"></span><span class="big" id="hlo"></span><span style="height:1px;background:var(--color-text)"></span></div><button class="btn btn-secondary" data-act="hl">換個語氣</button>`;
+    const accent2 = it.kind === 'older';
+    h += `<div style="margin-top:var(--space-2)"><span class="card-kicker"${accent2 ? ' style="color:var(--color-accent-2-700)"' : ''}>${esc(it.k)}</span><h3>${esc(it.t)}</h3>${it.by ? `<div style="font-size:15px;font-style:italic;margin-top:-6px">${esc(it.by)}</div>` : ''}</div>`;
+    if (it.tech && it.tech.length) h += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:var(--space-2) 0 var(--space-3)">${it.tech.map(t => `<span class="tag tag-neutral">${esc(t)}</span>`).join('')}</div>`;
+    if (it.list) h += `<div class="list" style="gap:var(--space-4);margin-bottom:var(--space-4)">${it.list.map(([y, kind, t, org, u]) => `<a href="${esc(u)}"${linkAttrs(u)} style="display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--color-text)"><span class="card-kicker">${esc(y)} · ${esc(kind)}</span><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.3">${esc(t)} ↗</span>${org ? `<span style="font-size:14px">${esc(org)}</span>` : ''}</a>`).join('')}</div>`;
+    if (it.pct != null) h += `<div style="margin:var(--space-4) 0 var(--space-3)"><div class="prog"><i style="width:${it.pct}%"></i></div><span style="font-size:13px">已讀 ${it.pct}%</span></div>`;
+    h += `<div class="body">${it.b.map(p => `<p${p.startsWith('（') ? ' style="font-style:italic"' : ''}>${esc(p)}</p>`).join('')}</div>`;
     h += linkBtns(it.links);
-    h += `<div class="meta">${it.m}</div>`;
+    h += `<div class="meta">${esc(it.m)}</div>`;
     const rel = related(st.cur);
-    if (rel.length) h += `<div class="rel"><span class="lab card-kicker">順手再翻 →</span>${rel.map(r => `<button class="btn btn-ghost" data-rel="${r}" style="justify-content:flex-start;margin-left:-6px;text-align:left">${where(r)}：${ITEMS[r].t}</button>`).join('')}</div>`;
+    if (rel.length) h += `<div class="rel"><span class="lab card-kicker">順手再翻 →</span>${rel.map(r => `<button class="btn btn-ghost" data-rel="${r}" style="${ghostBtn}">${where(r)}：${esc(ITEMS[r].t)}</button>`).join('')}</div>`;
   }
   pbody.innerHTML = h; panel.scrollTop = 0; panel.classList.add('open'); document.body.classList.add('reading');
-  if ($('gx')) { newGame(); ['gx','gy'].forEach(i => $(i).addEventListener('input', updGame)); }
-  if ($('hl')) { $('hl').addEventListener('input', e => { st.hl.text = e.target.value; updHl(); }); updHl(); }
 }
-function newGame() { const r = () => (Math.random() < .5 ? -1 : 1) * (12 + Math.floor(Math.random()*22)); st.game = { ox:r(), oy:r() }; $('gx').value = 0; $('gy').value = 0; $('gx').disabled = $('gy').disabled = false; updGame(); }
-function updGame() { const gx = st.game.ox + +$('gx').value, gy = st.game.oy + +$('gy').value, dd = Math.hypot(gx, gy); $('gm').style.transform = `translate(${gx}px,${gy}px)`; const won = dd <= 1.5; $('gmsg').textContent = won ? '完美對位！這張可以上市了。' : dd < 6 ? '很接近了……再一點點。' : `偏差 ${dd.toFixed(0)} 點，師傅在皺眉。`; if (won) $('gx').disabled = $('gy').disabled = true; }
-function updHl() { $('hlo').textContent = HL[st.hl.i % HL.length](st.hl.text.trim() || '一件小事'); }
 panel.addEventListener('click', e => {
   const a = e.target.closest('[data-act],[data-item],[data-rel]'); if (!a) return;
   if (a.dataset.item) return openItem(a.dataset.item);
   if (a.dataset.rel) return openItem(a.dataset.rel);
-  const act = a.dataset.act;
-  if (act === 'close') closePanel(); else if (act === 'list') openList(); else if (act === 'regame') newGame(); else if (act === 'hl') { st.hl.i++; updHl(); }
+  if (a.dataset.act === 'close') closePanel();
 });
 
 /* ================= camera focus ================= */
@@ -609,7 +596,7 @@ addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) 
 const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = $('tip');
 let hoverRoot = null, down = null;
 function tipText(p) {
-  if (p.type === 'item') { const it = ITEMS[p.id]; const lab = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', draft:'草稿', project:'Side Project', play:'Playbox', award:'競賽與演講' }[it.kind]; return `${lab} · ${it.t}`; }
+  if (p.type === 'item') { const it = ITEMS[p.id]; const lab = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', older:'較早的文章', cabinet:'作品櫃', project:'Side Project', play:'Playbox', award:'競賽與演講' }[it.kind]; return `${lab} · ${it.t}`; }
   if (p.type === 'list') return '筆電 · GitHub 活動';
   if (p.type === 'about') return '自畫像 · 關於 Paul';
   if (p.type === 'lamp') return night ? '檯燈 · 點一下天亮' : '檯燈 · 點一下入夜';
@@ -634,7 +621,7 @@ renderer.domElement.addEventListener('pointerup', e => {
 });
 
 /* ================= loop ================= */
-const clock = new THREE.Timer(); let viewOff = 0;
+const clock = new THREE.Timer(); let viewX = 0, viewY = 0;
 const roots = [...new Set(pickables.map(m => m.userData.root))];
 renderChips();
 function loop(ts) {
@@ -648,13 +635,18 @@ function loop(ts) {
   const da = dGeo.attributes.position.array; for (let i = 0; i < DN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009; da[i*3+1] += Math.sin(t*.21 + s0*30) * .0006 - .00012; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
   candleHalo.material.opacity = candleHalo.userData.op * fl * (night ? 1 : .4);
   if (tween) { tween.t = Math.min(1, tween.t + dt / tween.d); const k = 1 - Math.pow(1 - tween.t, 3); controls.target.lerpVectors(tween.ft, tween.tt, k); camera.position.lerpVectors(tween.fp, tween.tp, k); if (tween.t >= 1) { tween = null; controls.enabled = true; } }
-  const wantOff = panel.classList.contains('open') ? 230 : 0; viewOff += (wantOff - viewOff) * Math.min(1, dt * 6);
-  if (Math.abs(viewOff) > .5) camera.setViewOffset(innerWidth, innerHeight, viewOff, 0, innerWidth, innerHeight); else camera.clearViewOffset();
+  // the panel covers the right 460px, or the bottom 58% on a phone — slide the view so the subject stays in the open part
+  const open = panel.classList.contains('open'), phone = innerWidth <= 760, k = Math.min(1, dt * 6);
+  viewX += ((open && !phone ? 230 : 0) - viewX) * k; viewY += ((open && phone ? innerHeight * .29 : 0) - viewY) * k;
+  if (Math.abs(viewX) > .5 || Math.abs(viewY) > .5) camera.setViewOffset(innerWidth, innerHeight, viewX, viewY, innerWidth, innerHeight); else camera.clearViewOffset();
   controls.update(); renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(loop);
 window.__study = { loop, openItem, openList, openAbout, setNight, setSeason };
 flyTo(HOME.tgt, HOME.pos, 2.2);
 setTimeout(() => $('intro').classList.add('off'), 300);
-addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+// a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
+const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
+addEventListener('resize', fitCamera); fitCamera();
+if (matchMedia('(pointer: coarse)').matches) { const hint = document.querySelector('#dock .hint'); if (hint) hint.textContent = '拖曳環顧 · 雙指縮放 · 點房間裡的東西'; }
 document.fonts && document.fonts.ready.then(() => texts.forEach(t => t.redraw()));

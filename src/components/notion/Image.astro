@@ -11,6 +11,6 @@ const url = isLocal ? `${base}${rawUrl}` : rawUrl;
 const caption = img.caption?.map((t: any) => t.plain_text).join('') ?? '';
 ---
 <figure>
-  <img src={url} alt={caption || 'Article image'} loading="lazy" />
+  <img src={url} alt={caption || 'Article image'} loading="lazy" decoding="async" />
   {caption && <figcaption>{caption}</figcaption>}
 </figure>

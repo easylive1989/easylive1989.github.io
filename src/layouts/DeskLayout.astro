@@ -1,0 +1,83 @@
+---
+import SiteHead from '../components/SiteHead.astro';
+import '../styles/broadsheet.css';
+import '../styles/desk.css';
+
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  /** Trail shown in the HUD next to the "back to the study" button. */
+  crumbs?: Crumb[];
+  /** `wide` gives shelf-style pages more room than a reading column. */
+  width?: 'reading' | 'wide';
+  bodyClass?: string;
+}
+
+const BASE = import.meta.env.BASE_URL;
+const { title, description, ogImage, crumbs = [], width = 'reading', bodyClass } = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <SiteHead title={title} description={description} ogImage={ogImage} />
+  </head>
+  <body class:list={['desk-body', bodyClass]}>
+    <div class="desk-light" aria-hidden="true"></div>
+    <div id="vig" aria-hidden="true"></div>
+    <div id="grain" aria-hidden="true"></div>
+
+    <!-- The one fixture on every page: the way back into the room -->
+    <nav class="desk-hud" aria-label="站內導覽">
+      <div class="hud-cluster sheet">
+        <a class="btn btn-primary" href={BASE}>← 回書房</a>
+        {crumbs.length > 0 && (
+          <ol class="crumbs">
+            {crumbs.map((c) => (
+              <li>{c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}</li>
+            ))}
+          </ol>
+        )}
+      </div>
+      <div class="hud-cluster hud-links sheet">
+        <a class="btn btn-ghost" href={`${BASE}reading/`}>書單</a>
+        <a class="btn btn-ghost" href={`${BASE}archive/`}>文章</a>
+        <a class="btn btn-ghost" href="/rss.xml">RSS</a>
+      </div>
+    </nav>
+
+    <main class:list={['desk-main', `desk-${width}`]}>
+      <slot />
+    </main>
+
+    <!-- Film grain, the same jittering noise canvas the room uses -->
+    <script is:inline>
+      (() => {
+        const c = document.createElement('canvas');
+        c.width = c.height = 160;
+        const x = c.getContext('2d');
+        const d = x.createImageData(160, 160);
+        for (let i = 0; i < d.data.length; i += 4) {
+          const v = Math.random() * 255;
+          d.data[i] = d.data[i + 1] = d.data[i + 2] = v;
+          d.data[i + 3] = 255;
+        }
+        x.putImageData(d, 0, 0);
+        const g = document.getElementById('grain');
+        g.style.backgroundImage = 'url(' + c.toDataURL() + ')';
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        let k = 0;
+        setInterval(() => {
+          k = (k + 1) % 8;
+          g.style.transform = 'translate(' + ((k * 37) % 50) + 'px,' + ((k * 53) % 50) + 'px)';
+        }, 90);
+      })();
+    </script>
+  </body>
+</html>

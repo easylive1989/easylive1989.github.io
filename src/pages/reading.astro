@@ -1,5 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import DeskLayout from '../layouts/DeskLayout.astro';
+import '../styles/reading.css';
 import { getAllBooks } from '../lib/data';
 import {
   bookStatus,
@@ -11,7 +12,6 @@ import {
 } from '../lib/bookCover';
 import type { Book } from '../lib/notion';
 
-const BASE = import.meta.env.BASE_URL;
 const allBooks = await getAllBooks();
 
 const totalCount = allBooks.length;
@@ -21,12 +21,21 @@ const wishlistCount = allBooks.filter((b) => bookStatus(b) === 'unstarted').leng
 const currentBooks = allBooks.filter((b) => bookStatus(b) === 'reading');
 const hasCurrent = currentBooks.length > 0;
 
-interface ShelfYear {
-  year: number;
+interface Shelf {
+  /** Stable key: the year, or "wish". */
+  id: string;
+  year?: number;
+  /** Big line on the brass plate. */
+  label: string;
   count: number;
   books: Book[];
-  peak: boolean;
+  peak?: boolean;
+  note?: string;
+  wish?: boolean;
 }
+
+// Newest first; a book still being read counts as the newest of its year.
+const finishedKey = (b: Book) => b.finishedDate ?? '9999';
 
 const shelfBooks = allBooks.filter((b) => bookStatus(b) !== 'unstarted');
 const wishlistBooks = allBooks
@@ -38,6 +47,9 @@ for (const b of shelfBooks) {
   if (!byYear.has(y)) byYear.set(y, []);
   byYear.get(y)!.push(b);
 }
+for (const items of byYear.values()) {
+  items.sort((a, b) => finishedKey(b).localeCompare(finishedKey(a)));
+}
 let peakYear = 0;
 let peakCount = 0;
 for (const [year, items] of byYear) {
@@ -46,14 +58,6 @@ for (const [year, items] of byYear) {
     peakYear = year;
   }
 }
-const shelves: ShelfYear[] = Array.from(byYear.entries())
-  .sort((a, b) => b[0] - a[0])
-  .map(([year, items]) => ({
-    year,
-    count: items.length,
-    books: items,
-    peak: year === peakYear && items.length > 0,
-  }));
 
 const yearNotes: Record<number, string> = {
   2026: '架構年',
@@ -64,6 +68,28 @@ const yearNotes: Record<number, string> = {
   2021: '起點',
   2020: '前夜',
 };
+
+const yearShelves: Shelf[] = Array.from(byYear.entries())
+  .sort((a, b) => b[0] - a[0])
+  .map(([year, items]) => ({
+    id: String(year),
+    year,
+    label: String(year),
+    count: items.length,
+    books: items,
+    peak: year === peakYear && items.length > 0,
+    note: yearNotes[year],
+  }));
+
+const wishShelf: Shelf | null =
+  wishlistBooks.length > 0
+    ? { id: 'wish', label: '想讀', count: wishlistBooks.length, books: wishlistBooks, wish: true, note: '等著翻開' }
+    : null;
+
+const views = [
+  { id: 'read', shelves: yearShelves, emptyText: '書架還是空的。' },
+  { id: 'wish', shelves: wishShelf ? [wishShelf] : [], emptyText: '還沒加任何想讀的書。' },
+];
 
 // Heatmap data
 const heatYears = Array.from(byYear.keys()).filter((y) => y > 0).sort();
@@ -110,124 +136,136 @@ const chipsData = Array.from(rawCatCounts.entries())
     count,
     dotClass: kindMeta[normaliseKind(name)].dotClass,
   }));
+
+// Books on a real shelf are never quite the same height. Every cover keeps the
+// column width but takes one of a few aspect ratios (3:4 is the tallest) and
+// stands on the plank, so the skyline wavers a little.
+const COVER_RATIOS = [0.75, 0.78, 0.8, 0.765, 0.82, 0.77];
+function coverRatio(title: string): number {
+  let h = 0;
+  for (let i = 0; i < title.length; i++) h = (h * 31 + title.charCodeAt(i)) | 0;
+  return COVER_RATIOS[Math.abs(h) % COVER_RATIOS.length];
+}
+
+const heatLabel = (y: number, v: number) => `${y} · ${v} 本`;
+const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
 ---
 
-<BaseLayout title="書單" hideFooter bodyClass="reading-page-body">
-  <div class="reading-page" id="top">
+<DeskLayout title="書單" width="wide" crumbs={[{ label: '書單' }]}>
+  <div class="reading" id="top">
 
-    <!-- Top nav -->
-    <header class="tile reading-topnav">
-      <div class="topnav-left">
-        <a class="back" href={BASE}>
-          <span>←</span><span>保羅的學習筆記</span>
-        </a>
-        <span class="topnav-sep">/</span>
-        <span style="font-weight:500">書單</span>
-      </div>
-      <div class="topnav-right">
-        <span class="mono">{totalCount} books · since {oldestYear}</span>
-      </div>
-    </header>
+    <!-- 1 · masthead sheet (+ the card for whatever is being read right now) -->
+    <div class:list={['rd-top', { 'has-current': hasCurrent }]}>
+      <section class="paper masthead rd-masthead" aria-labelledby="rd-h1">
+        <div class="rules" aria-hidden="true"><i></i><i></i></div>
+        <div class="rd-mast-grid">
+          <div class="rd-mast-main">
+            <div class="card-kicker kicker">Reading list · 書單</div>
+            <h1 id="rd-h1">讀過的<em>書</em></h1>
+            <p class="lede">隨手記錄看過的書。技術書幫我換腦袋、非虛構幫我換視角、小說幫我換情緒。</p>
+            <dl class="rd-stats">
+              <div class="rd-stat"><dt class="l">total</dt><dd class="n num">{totalCount}</dd></div>
+              <div class="rd-stat"><dt class="l">read</dt><dd class="n num">{readCount}</dd></div>
+              <div class="rd-stat"><dt class="l">wishlist</dt><dd class="n num">{wishlistCount}</dd></div>
+              <div class="rd-stat"><dt class="l">years</dt><dd class="n num">{yearsSpan}</dd></div>
+            </dl>
+          </div>
 
-    <!-- Hero + currently reading (side by side) -->
-    <div class="grid cols-6 top-row">
-      <section class:list={['tile', 'hero', hasCurrent ? 'span-4' : 'span-6']}>
-        <div class="hero-left">
-          <div class="label">Reading list · 書單</div>
-          <h1 class="hero-h1">讀過的<span class="hi-em">書</span>。</h1>
-          <p class="hero-desc">隨手記錄看過的書。技術書幫我換腦袋、非虛構幫我換視角、小說幫我換情緒。</p>
-          <div class="stats-row">
-            <div><div class="stat-n" style="color:var(--bento-accent)">{totalCount}</div><div class="stat-l">total</div></div>
-            <div><div class="stat-n" style="color:var(--bento-accent-2)">{readCount}</div><div class="stat-l">read</div></div>
-            <div><div class="stat-n" style="color:var(--bento-accent-3)">{wishlistCount}</div><div class="stat-l">wishlist</div></div>
-            <div><div class="stat-n" style="color:var(--bento-pink)">{Math.max(0, newestYear - oldestYear + 1)}</div><div class="stat-l">years</div></div>
-          </div>
-        </div>
-        <div class="hero-right">
-          <div class="heatmap-head">
-            <div class="label">每季讀完的書</div>
-          </div>
-          <div class="heatmap">
-            <div class="heatmap-row">
-              <span class="yr"></span>
-              <div class="heatmap-cells">
-                {['Q1', 'Q2', 'Q3', 'Q4'].map((q) => (
-                  <span class="qhead">{q}</span>
-                ))}
-              </div>
-            </div>
-            {heatRange.map((y) => {
-              const row = heatBucket[y] ?? [0, 0, 0, 0];
-              return (
-                <div class="heatmap-row">
-                  <span class="yr">{y}</span>
-                  <div class="heatmap-cells">
+          <div class="rd-heat">
+            <div class="rd-heat-title">每季讀完的書</div>
+            <div class="heat-grid" role="img" aria-label="每年每季讀完的書數量熱度圖">
+              <span></span>
+              {['Q1', 'Q2', 'Q3', 'Q4'].map((q) => <span class="heat-q">{q}</span>)}
+              {heatRange.map((y) => {
+                const row = heatBucket[y] ?? [0, 0, 0, 0];
+                return (
+                  <>
+                    <span class="heat-y num">{y}</span>
                     {row.map((v) => (
-                      <span class="cell" data-v={heatLevel(v)} title={`${y} · ${v} 本`}></span>
+                      <span class="heat-cell num" data-v={heatLevel(v)} title={heatLabel(y, v)}>
+                        {v > 0 ? v : ''}
+                      </span>
                     ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div class="heatmap-legend">
-            <span>少</span>
-            <span class="cell" data-v="0"></span>
-            <span class="cell" data-v="1"></span>
-            <span class="cell" data-v="2"></span>
-            <span class="cell" data-v="3"></span>
-            <span class="cell" data-v="4"></span>
-            <span>多</span>
+                  </>
+                );
+              })}
+            </div>
+            <div class="heat-legend" aria-hidden="true">
+              <span>少</span>
+              <i class="heat-cell" data-v="0"></i>
+              <i class="heat-cell" data-v="1"></i>
+              <i class="heat-cell" data-v="2"></i>
+              <i class="heat-cell" data-v="3"></i>
+              <i class="heat-cell" data-v="4"></i>
+              <span>多</span>
+            </div>
           </div>
         </div>
       </section>
 
       {hasCurrent && (
-        <section class="tile current span-2" id="current-tile">
-          <span class="current-chip">
+        <aside class="paper rd-current" id="current-tile" aria-label="正在讀">
+          <div class="cur-kicker">
             ● 正在讀{currentBooks.length > 1 ? ` · ${currentBooks.length} 本` : ''}
-          </span>
-          <div class="current-slides">
-            <div class="current-track">
-              {currentBooks.map((book, i) => (
-                <div class="current-slide" data-slide-index={i}>
-                  <div class="current-book">
-                    {book.coverUrl ? (
-                      <div class="book-spine book-spine--image" aria-hidden="true">
-                        <img src={book.coverUrl} alt="" loading="lazy" />
-                      </div>
-                    ) : (
-                      <div class="book-spine" aria-hidden="true">
-                        <span class="br">{book.categories[0] ?? ''}</span>
-                        <strong>{book.title}</strong>
-                      </div>
-                    )}
-                    <div class="current-meta">
-                      <h2>{book.title}</h2>
-                      {book.categories[0] && (
-                        <div class="subtopic">{book.categories[0]}</div>
-                      )}
-                      <div class="current-progress">
-                        <div class="current-progress-head">
-                          <span>進度</span>
-                          <span class="pct">{book.progress}%</span>
+          </div>
+          <div class="cur-slides">
+            <div class="cur-track">
+              {currentBooks.map((book, i) => {
+                const cv = coverGradient(book);
+                return (
+                  <div class="cur-slide" data-slide-index={i}>
+                    <div class="cur-book">
+                      {book.coverUrl ? (
+                        <div class="cur-cover cover--img" aria-hidden="true">
+                          <img src={book.coverUrl} alt="" loading="lazy" draggable="false" />
                         </div>
-                        <div class="current-progress-bar">
-                          <div class="current-progress-fill" style={`width:${book.progress}%`}></div>
+                      ) : (
+                        <div
+                          class="cur-cover"
+                          style={`background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
+                          aria-hidden="true"
+                        >
+                          <span class="pub">{book.categories[0] ?? ''}</span>
+                          <span class="ttl">{book.title}</span>
+                        </div>
+                      )}
+                      <div class="cur-meta">
+                        <h2>{book.title}</h2>
+                        {book.categories[0] && (
+                          <div class="cur-cat">
+                            <i class={`dot ${kindMeta[cv.kind].dotClass}`}></i>
+                            {book.categories[0]}
+                          </div>
+                        )}
+                        <div class="cur-progress">
+                          <div class="cur-progress-head">
+                            <span class="card-kicker">進度</span>
+                            <span class="pct num">{book.progress}%</span>
+                          </div>
+                          <div
+                            class="cur-bar"
+                            role="progressbar"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow={book.progress}
+                            aria-label={`${book.title} 閱讀進度`}
+                          >
+                            <div class="cur-fill" style={`width:${book.progress}%`}></div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           {currentBooks.length > 1 && (
-            <div class="current-dots" role="tablist" aria-label="切換正在讀的書">
+            <div class="cur-dots" role="tablist" aria-label="切換正在讀的書">
               {currentBooks.map((_, i) => (
                 <button
                   type="button"
-                  class="current-dot"
+                  class="cur-dot"
                   data-dot-index={i}
                   aria-current={i === 0 ? 'true' : undefined}
                   aria-label={`第 ${i + 1} 本`}
@@ -235,766 +273,340 @@ const chipsData = Array.from(rawCatCounts.entries())
               ))}
             </div>
           )}
-        </section>
+        </aside>
       )}
     </div>
 
-    <!-- Filter bar -->
-    <section class="tile filterbar">
-      <div class="filter-row">
-        <div class="search">
-          <span class="search-icon">⌕</span>
-          <input id="reading-q" type="search" placeholder="搜尋書名 / 類型..." autocomplete="off" />
-          <span class="kbd">⌘K</span>
-        </div>
-        <button class="sort-pill" id="reading-sort" type="button" data-dir="desc">
-          <span style="color:var(--bento-sub)">排序：</span>
-          <span class="sort-label">↓ 最近讀完</span>
+    <!-- 2 · filter strip -->
+    <section class="paper rd-filter" aria-label="篩選書單">
+      <div class="rd-frow">
+        <label class="rd-search">
+          <span class="ico" aria-hidden="true">⌕</span>
+          <input id="reading-q" class="input" type="search" placeholder="搜尋書名 / 類型…" autocomplete="off" />
+          <kbd class="kbd" id="reading-kbd">⌘K</kbd>
+        </label>
+        <button class="btn btn-secondary rd-sort" id="reading-sort" type="button" data-dir="desc">
+          <span class="sort-pre">排序：</span><span class="sort-label">↓ 最近讀完</span>
         </button>
-        <div class="view-toggle" role="tablist" id="reading-view">
-          <button type="button" data-view="read" aria-current="true">已讀</button>
-          <button type="button" data-view="wish">想讀 <span class="view-count">{wishlistBooks.length}</span></button>
+        <div class="seg" role="tablist" aria-label="已讀或想讀" id="reading-view">
+          <button type="button" role="tab" data-view="read" aria-current="true">
+            已讀 <span class="seg-ct num">{shelfBooks.length}</span>
+          </button>
+          <button type="button" role="tab" data-view="wish" aria-current="false">
+            想讀 <span class="seg-ct num">{wishlistBooks.length}</span>
+          </button>
         </div>
       </div>
-      <div class="filter-row chips" id="reading-chips">
-        <button class="chip" data-cat="*" aria-current="true">全部 <span class="ct">{totalCount}</span></button>
+      <div class="rd-frow rd-chips" id="reading-chips" role="group" aria-label="類型">
+        <button type="button" class="chip tag tag-accent" data-cat="*" aria-current="true">
+          全部 <span class="ct num">{totalCount}</span>
+        </button>
         {chipsData.map((c) => (
-          <button class="chip" data-cat={c.name}>
-            <span class={`dot-cat ${c.dotClass}`}></span>
+          <button type="button" class="chip tag tag-outline" data-cat={c.name} aria-current="false">
+            <i class={`dot ${c.dotClass}`}></i>
             {c.name}
-            <span class="ct">{c.count}</span>
+            <span class="ct num">{c.count}</span>
           </button>
         ))}
       </div>
     </section>
 
-    <!-- Shelves -->
-    <section class="tile tile--flush" id="reading-shelves" data-view="read">
-      <div class="shelves-read" data-view-content="read">
-        {shelves.map((s) => (
-          <div class="year-section" data-year={s.year}>
-            <div class="year-side">
-              <div>
-                <div class="yr-n">{s.year}</div>
-                <div class="yr-l">{s.count} 本</div>
-                {s.peak ? (
-                  <div class="yr-badge peak">★ 高峰年</div>
-                ) : (
-                  yearNotes[s.year] && <div class="yr-badge">{yearNotes[s.year]}</div>
-                )}
+    <!-- 3 · the bookcase -->
+    <section class="bookcase" id="reading-shelves" data-view="read" aria-label="書架">
+      <div class="bc-back">
+        {views.map((v) => (
+          <div class="rd-view" data-view-content={v.id} hidden={v.id !== 'read'}>
+            {v.shelves.length === 0 && (
+              <div class="rd-shelf rd-shelf--empty">
+                <p class="rd-empty">{v.emptyText}</p>
               </div>
-            </div>
-            <div class="shelf">
-              {s.books.map((b) => {
-                const cv = coverGradient(b);
-                const status = bookStatus(b);
-                const cat = kindMeta[cv.kind];
-                const rawCat = b.categories[0] ?? '';
-                return (
-                  <div
-                    class={`book is-${status}`}
-                    data-title={b.title}
-                    data-cats={b.categories.join('|')}
-                    data-date={b.finishedDate ?? ''}
-                    data-progress={b.progress}
-                    title={b.title}
-                  >
-                    {b.coverUrl ? (
-                      <div class="book-cover book-cover--image">
-                        <img src={b.coverUrl} alt={b.title} loading="lazy" />
-                      </div>
-                    ) : (
+            )}
+            {v.shelves.map((s) => (
+              <section
+                class:list={['year-section', { 'is-wish': s.wish }]}
+                data-year={s.year ?? ''}
+                data-shelf={s.id}
+              >
+                <h2 class="shelf-plate plate-brass">
+                  <span class="pl-main num">{s.label}</span>
+                  <span class="pl-count num" data-total={s.count}>{s.count} 本</span>
+                  {(s.peak || s.note) && <span class="pl-note">{s.peak ? '★ 高峰年' : s.note}</span>}
+                </h2>
+                <div class="rd-shelf">
+                  {s.books.map((b) => {
+                    const cv = coverGradient(b);
+                    const status = bookStatus(b);
+                    const rawCats = b.categories.filter(Boolean);
+                    const rawCat = rawCats[0] ?? '';
+                    const ar = coverRatio(b.title);
+                    return (
                       <div
-                        class="book-cover"
-                        style={`background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
+                        class={`book is-${status}`}
+                        data-title={b.title}
+                        data-cats={b.categories.join('|')}
+                        data-date={b.finishedDate ?? ''}
+                        data-progress={b.progress}
+                        title={b.title}
                       >
-                        <span class="pub">{rawCat}</span>
-                        <span class="title">{b.title}</span>
-                      </div>
-                    )}
-                    <div class="book-meta">
-                      <span class="book-title">{b.title}</span>
-                      {rawCat && (
-                        <div class="book-stats">
-                          <span class="book-tag">
-                            <span class={`dot-cat ${cat.dotClass}`}></span>
-                            {rawCat}
-                          </span>
+                        <div class="slot">
+                          {b.coverUrl ? (
+                            <div class="cover cover--img" style={`--ar:${ar}`}>
+                              <img src={b.coverUrl} alt={b.title} loading="lazy" draggable="false" />
+                            </div>
+                          ) : (
+                            <div
+                              class="cover"
+                              style={`--ar:${ar};background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
+                            >
+                              <span class="pub">{rawCat}</span>
+                              <span class="ttl">{b.title}</span>
+                            </div>
+                          )}
+                          {status === 'reading' && <i class="ribbon" aria-hidden="true"></i>}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                        <div class="cap">
+                          {status === 'reading' && <span class="now">● 閱讀中</span>}
+                          <span class="t">{b.title}</span>
+                          {rawCats.length > 0 && (
+                            <span class="ks">
+                              {rawCats.slice(0, 2).map((c) => (
+                                <span class="k">
+                                  <i class={`dot ${kindMeta[normaliseKind(c)].dotClass}`}></i>
+                                  {c}
+                                </span>
+                              ))}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         ))}
-      </div>
 
-      <div class="shelves-wish wishlist-shelf" data-view-content="wish" hidden>
-        {wishlistBooks.length > 0 ? (
-          <div class="shelf">
-            {wishlistBooks.map((b) => {
-              const cv = coverGradient(b);
-              const cat = kindMeta[cv.kind];
-              const rawCat = b.categories[0] ?? '';
-              return (
-                <div
-                  class="book is-wish"
-                  data-title={b.title}
-                  data-cats={b.categories.join('|')}
-                  data-date=""
-                  data-progress={b.progress}
-                  title={b.title}
-                >
-                  {b.coverUrl ? (
-                    <div class="book-cover book-cover--image">
-                      <img src={b.coverUrl} alt={b.title} loading="lazy" />
-                    </div>
-                  ) : (
-                    <div
-                      class="book-cover"
-                      style={`background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
-                    >
-                      <span class="pub">{rawCat}</span>
-                      <span class="title">{b.title}</span>
-                    </div>
-                  )}
-                  <div class="book-meta">
-                    <span class="book-title">{b.title}</span>
-                    {rawCat && (
-                      <div class="book-stats">
-                        <span class="book-tag">
-                          <span class={`dot-cat ${cat.dotClass}`}></span>
-                          {rawCat}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div class="shelves-empty">還沒加任何想讀的書。</div>
-        )}
+        <div class="rd-shelf rd-shelf--empty" id="reading-empty" hidden>
+          <p class="rd-empty">沒有符合的書。</p>
+        </div>
       </div>
-
-      <div class="shelves-empty" id="reading-empty" hidden>沒有符合的書。</div>
     </section>
 
-    <!-- Footer -->
-    <footer class="tile reading-footer">
-      <span>paul-learning.dev · © {new Date().getFullYear()} Paul Wu · built with Astro</span>
-      <a href="#top" class="mono back-top">↑ back to top</a>
-    </footer>
+    <!-- 4 · the way back up -->
+    <p class="rd-foot"><a href="#top">↑ 回到頂部</a></p>
   </div>
 
   <script is:inline>
     (function () {
-      if (window.__readingAbort) window.__readingAbort.abort();
+      var host = document.getElementById('reading-shelves');
+      if (!host) return;
+      var q = document.getElementById('reading-q');
+      var kbd = document.getElementById('reading-kbd');
+      var chips = document.getElementById('reading-chips');
+      var sortBtn = document.getElementById('reading-sort');
+      var view = document.getElementById('reading-view');
+      var emptyEl = document.getElementById('reading-empty');
+      var readContainer = host.querySelector('[data-view-content="read"]');
+      var wishContainer = host.querySelector('[data-view-content="wish"]');
+      var sections = readContainer ? Array.from(readContainer.querySelectorAll('.year-section')) : [];
+      var wishSections = wishContainer ? Array.from(wishContainer.querySelectorAll('.year-section')) : [];
+      var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      function setupReading() {
-        if (window.__readingAbort) window.__readingAbort.abort();
-        const ctrl = new AbortController();
-        window.__readingAbort = ctrl;
-        const signal = ctrl.signal;
+      var activeCat = '*';
+      var kw = '';
+      var currentView = 'read';
 
-        const host = document.getElementById('reading-shelves');
-        if (!host) return;
-        const q = document.getElementById('reading-q');
-        const chips = document.getElementById('reading-chips');
-        const sortBtn = document.getElementById('reading-sort');
-        const view = document.getElementById('reading-view');
-        const emptyEl = document.getElementById('reading-empty');
-        const readContainer = host.querySelector('[data-view-content="read"]');
-        const wishContainer = host.querySelector('[data-view-content="wish"]');
-        const sections = readContainer ? Array.from(readContainer.querySelectorAll('.year-section')) : [];
+      // The shortcut hint should match the keyboard in front of you.
+      if (kbd && !/Mac|iPhone|iPad/.test(navigator.platform || '')) kbd.textContent = 'Ctrl K';
 
-        let activeCat = '*';
-        let kw = '';
-        let currentView = 'read';
-
-        function bookMatches(book) {
-          const catsRaw = book.getAttribute('data-cats') || '';
-          const cats = catsRaw ? catsRaw.split('|') : [];
-          const title = (book.getAttribute('data-title') || '').toLowerCase();
-          const catsLower = catsRaw.toLowerCase();
-          const catOk = activeCat === '*' || cats.indexOf(activeCat) >= 0;
-          const kwOk = !kw || title.indexOf(kw) >= 0 || catsLower.indexOf(kw) >= 0;
-          return catOk && kwOk;
-        }
-
-        function apply() {
-          let anyVisible = false;
-          if (currentView === 'read') {
-            for (const sec of sections) {
-              const books = Array.from(sec.querySelectorAll('.book'));
-              let visible = 0;
-              for (const book of books) {
-                const show = bookMatches(book);
-                book.style.display = show ? '' : 'none';
-                if (show) visible++;
-              }
-              sec.style.display = visible > 0 ? '' : 'none';
-              if (visible > 0) anyVisible = true;
-            }
-          } else if (wishContainer) {
-            const books = Array.from(wishContainer.querySelectorAll('.book'));
-            for (const book of books) {
-              const show = bookMatches(book);
-              book.style.display = show ? '' : 'none';
-              if (show) anyVisible = true;
-            }
-          }
-          if (emptyEl) emptyEl.hidden = anyVisible;
-        }
-
-        if (q) {
-          q.addEventListener('input', () => {
-            kw = q.value.trim().toLowerCase();
-            apply();
-          }, { signal });
-        }
-
-        if (chips) {
-          chips.querySelectorAll('.chip').forEach((c) => {
-            c.addEventListener('click', () => {
-              chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-current', 'false'));
-              c.setAttribute('aria-current', 'true');
-              activeCat = c.getAttribute('data-cat') || '*';
-              apply();
-            }, { signal });
-          });
-        }
-
-        if (sortBtn) {
-          sortBtn.addEventListener('click', () => {
-            if (currentView !== 'read' || !readContainer) return;
-            const cur = sortBtn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
-            const next = cur === 'asc' ? 'desc' : 'asc';
-            sortBtn.setAttribute('data-dir', next);
-            const label = sortBtn.querySelector('.sort-label');
-            if (label) label.textContent = next === 'desc' ? '↓ 最近讀完' : '↑ 最舊讀完';
-            const ordered = [...sections].sort((a, b) => {
-              const ya = parseInt(a.getAttribute('data-year') || '0', 10);
-              const yb = parseInt(b.getAttribute('data-year') || '0', 10);
-              return next === 'desc' ? yb - ya : ya - yb;
-            });
-            for (const sec of ordered) readContainer.appendChild(sec);
-            for (const sec of ordered) {
-              const shelf = sec.querySelector('.shelf');
-              if (!shelf) continue;
-              const books = Array.from(shelf.querySelectorAll('.book'));
-              books.sort((a, b) => {
-                const da = a.getAttribute('data-date') || '';
-                const db = b.getAttribute('data-date') || '';
-                return next === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
-              });
-              for (const bk of books) shelf.appendChild(bk);
-            }
-          }, { signal });
-        }
-
-        if (view) {
-          view.querySelectorAll('button[data-view]').forEach((b) => {
-            b.addEventListener('click', () => {
-              const v = b.getAttribute('data-view') || 'read';
-              if (v === currentView) return;
-              view.querySelectorAll('button[data-view]').forEach((x) => x.setAttribute('aria-current', 'false'));
-              b.setAttribute('aria-current', 'true');
-              currentView = v;
-              host.setAttribute('data-view', v);
-              if (readContainer) readContainer.hidden = v !== 'read';
-              if (wishContainer) wishContainer.hidden = v !== 'wish';
-              if (sortBtn) sortBtn.hidden = v !== 'read';
-              apply();
-            }, { signal });
-          });
-        }
-
-        document.addEventListener('keydown', (e) => {
-          if ((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === 'k') {
-            e.preventDefault();
-            if (q) q.focus();
-          }
-        }, { signal });
-
-        // Currently-reading carousel
-        const currentTile = document.getElementById('current-tile');
-        if (currentTile) {
-          const track = currentTile.querySelector('.current-track');
-          const slides = Array.from(currentTile.querySelectorAll('.current-slide'));
-          const dots = Array.from(currentTile.querySelectorAll('.current-dot'));
-          if (track && slides.length > 1) {
-            let active = 0;
-            let timer = null;
-            let dragging = false;
-            let startX = 0;
-            let pointerId = null;
-            const INTERVAL_MS = 6000;
-            const SWIPE_RATIO = 0.18; // 18% of slide width to commit
-
-            function applyTransform(offsetPx, animate) {
-              track.style.transition = animate ? '' : 'none';
-              track.style.transform = `translateX(calc(${-active * 100}% + ${offsetPx}px))`;
-            }
-            function show(idx) {
-              active = (idx + slides.length) % slides.length;
-              applyTransform(0, true);
-              dots.forEach((d, i) => {
-                if (i === active) d.setAttribute('aria-current', 'true');
-                else d.removeAttribute('aria-current');
-              });
-            }
-            function start() { stop(); timer = setInterval(() => show(active + 1), INTERVAL_MS); }
-            function stop() { if (timer) { clearInterval(timer); timer = null; } }
-
-            dots.forEach((d, i) => {
-              d.addEventListener('click', () => { show(i); start(); }, { signal });
-            });
-            currentTile.addEventListener('mouseenter', stop, { signal });
-            currentTile.addEventListener('mouseleave', start, { signal });
-
-            // Pointer-based swipe (covers mouse + touch + pen)
-            track.addEventListener('pointerdown', (e) => {
-              if (e.button !== undefined && e.button !== 0) return;
-              dragging = true;
-              startX = e.clientX;
-              pointerId = e.pointerId;
-              try { track.setPointerCapture(pointerId); } catch {}
-              stop();
-            }, { signal });
-            track.addEventListener('pointermove', (e) => {
-              if (!dragging) return;
-              const delta = e.clientX - startX;
-              applyTransform(delta, false);
-            }, { signal });
-            const release = (e) => {
-              if (!dragging) return;
-              dragging = false;
-              const delta = e.clientX - startX;
-              const w = track.offsetWidth || 1;
-              if (Math.abs(delta) > w * SWIPE_RATIO) {
-                show(active + (delta < 0 ? 1 : -1));
-              } else {
-                applyTransform(0, true);
-              }
-              if (pointerId != null) {
-                try { track.releasePointerCapture(pointerId); } catch {}
-                pointerId = null;
-              }
-              start();
-            };
-            track.addEventListener('pointerup', release, { signal });
-            track.addEventListener('pointercancel', release, { signal });
-
-            signal.addEventListener('abort', stop);
-            applyTransform(0, false);
-            start();
-          }
-        }
+      function bookMatches(book) {
+        var catsRaw = book.getAttribute('data-cats') || '';
+        var cats = catsRaw ? catsRaw.split('|') : [];
+        var title = (book.getAttribute('data-title') || '').toLowerCase();
+        var catsLower = catsRaw.toLowerCase();
+        var catOk = activeCat === '*' || cats.indexOf(activeCat) >= 0;
+        var kwOk = !kw || title.indexOf(kw) >= 0 || catsLower.indexOf(kw) >= 0;
+        return catOk && kwOk;
       }
 
-      document.addEventListener('astro:page-load', setupReading);
+      function apply() {
+        var anyVisible = false;
+        var list = currentView === 'read' ? sections : wishSections;
+        list.forEach(function (sec) {
+          var books = Array.from(sec.querySelectorAll('.book'));
+          var visible = 0;
+          books.forEach(function (book) {
+            var show = bookMatches(book);
+            book.hidden = !show;
+            if (show) visible++;
+          });
+          sec.hidden = visible === 0;
+          if (visible > 0) anyVisible = true;
+          var ct = sec.querySelector('.pl-count');
+          if (ct) {
+            var total = books.length;
+            ct.textContent = visible === total ? total + ' 本' : visible + ' / ' + total + ' 本';
+          }
+        });
+        // A view with no shelves at all already says so itself.
+        if (emptyEl) emptyEl.hidden = anyVisible || list.length === 0;
+      }
+
+      if (q) {
+        q.addEventListener('input', function () {
+          kw = q.value.trim().toLowerCase();
+          apply();
+        });
+      }
+
+      if (chips) {
+        var chipEls = Array.from(chips.querySelectorAll('.chip'));
+        chipEls.forEach(function (c) {
+          c.addEventListener('click', function () {
+            chipEls.forEach(function (x) {
+              x.setAttribute('aria-current', 'false');
+              x.classList.remove('tag-accent');
+              x.classList.add('tag-outline');
+            });
+            c.setAttribute('aria-current', 'true');
+            c.classList.remove('tag-outline');
+            c.classList.add('tag-accent');
+            activeCat = c.getAttribute('data-cat') || '*';
+            apply();
+          });
+        });
+      }
+
+      if (sortBtn) {
+        sortBtn.addEventListener('click', function () {
+          if (currentView !== 'read' || !readContainer) return;
+          var cur = sortBtn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
+          var next = cur === 'asc' ? 'desc' : 'asc';
+          sortBtn.setAttribute('data-dir', next);
+          var label = sortBtn.querySelector('.sort-label');
+          if (label) label.textContent = next === 'desc' ? '↓ 最近讀完' : '↑ 最舊讀完';
+          var ordered = sections.slice().sort(function (a, b) {
+            var ya = parseInt(a.getAttribute('data-year') || '0', 10);
+            var yb = parseInt(b.getAttribute('data-year') || '0', 10);
+            return next === 'desc' ? yb - ya : ya - yb;
+          });
+          ordered.forEach(function (sec) { readContainer.appendChild(sec); });
+          // A book still being read has no date yet: it is the newest.
+          var key = function (el) { return el.getAttribute('data-date') || '9999'; };
+          ordered.forEach(function (sec) {
+            var shelf = sec.querySelector('.rd-shelf');
+            if (!shelf) return;
+            var books = Array.from(shelf.querySelectorAll('.book'));
+            books.sort(function (a, b) {
+              return next === 'desc' ? key(b).localeCompare(key(a)) : key(a).localeCompare(key(b));
+            });
+            books.forEach(function (bk) { shelf.appendChild(bk); });
+          });
+        });
+      }
+
+      if (view) {
+        var viewBtns = Array.from(view.querySelectorAll('button[data-view]'));
+        viewBtns.forEach(function (b) {
+          b.addEventListener('click', function () {
+            var v = b.getAttribute('data-view') || 'read';
+            if (v === currentView) return;
+            viewBtns.forEach(function (x) { x.setAttribute('aria-current', 'false'); });
+            b.setAttribute('aria-current', 'true');
+            currentView = v;
+            host.setAttribute('data-view', v);
+            if (readContainer) readContainer.hidden = v !== 'read';
+            if (wishContainer) wishContainer.hidden = v !== 'wish';
+            if (sortBtn) sortBtn.hidden = v !== 'read';
+            apply();
+          });
+        });
+      }
+
+      document.addEventListener('keydown', function (e) {
+        if ((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          if (q) q.focus();
+        }
+      });
+
+      // Currently-reading carousel
+      var currentTile = document.getElementById('current-tile');
+      if (currentTile) {
+        var track = currentTile.querySelector('.cur-track');
+        var slides = Array.from(currentTile.querySelectorAll('.cur-slide'));
+        var dots = Array.from(currentTile.querySelectorAll('.cur-dot'));
+        if (track && slides.length > 1) {
+          var active = 0;
+          var timer = null;
+          var dragging = false;
+          var startX = 0;
+          var pointerId = null;
+          var INTERVAL_MS = 6000;
+          var SWIPE_RATIO = 0.18; // 18% of slide width to commit
+
+          var applyTransform = function (offsetPx, animate) {
+            track.style.transition = animate && !reduceMotion ? '' : 'none';
+            track.style.transform = 'translateX(calc(' + (-active * 100) + '% + ' + offsetPx + 'px))';
+          };
+          var show = function (idx) {
+            active = (idx + slides.length) % slides.length;
+            applyTransform(0, true);
+            dots.forEach(function (d, i) {
+              if (i === active) d.setAttribute('aria-current', 'true');
+              else d.removeAttribute('aria-current');
+            });
+          };
+          var stop = function () { if (timer) { clearInterval(timer); timer = null; } };
+          var start = function () {
+            stop();
+            if (reduceMotion) return; // no unprompted movement
+            timer = setInterval(function () { show(active + 1); }, INTERVAL_MS);
+          };
+
+          dots.forEach(function (d, i) {
+            d.addEventListener('click', function () { show(i); start(); });
+          });
+          currentTile.addEventListener('mouseenter', stop);
+          currentTile.addEventListener('mouseleave', start);
+
+          // Pointer-based swipe (covers mouse + touch + pen)
+          track.addEventListener('pointerdown', function (e) {
+            if (e.button !== undefined && e.button !== 0) return;
+            dragging = true;
+            startX = e.clientX;
+            pointerId = e.pointerId;
+            try { track.setPointerCapture(pointerId); } catch (err) {}
+            stop();
+          });
+          track.addEventListener('pointermove', function (e) {
+            if (!dragging) return;
+            applyTransform(e.clientX - startX, false);
+          });
+          var release = function (e) {
+            if (!dragging) return;
+            dragging = false;
+            var delta = e.clientX - startX;
+            var w = track.offsetWidth || 1;
+            if (Math.abs(delta) > w * SWIPE_RATIO) {
+              show(active + (delta < 0 ? 1 : -1));
+            } else {
+              applyTransform(0, true);
+            }
+            if (pointerId != null) {
+              try { track.releasePointerCapture(pointerId); } catch (err) {}
+              pointerId = null;
+            }
+            start();
+          };
+          track.addEventListener('pointerup', release);
+          track.addEventListener('pointercancel', release);
+
+          applyTransform(0, false);
+          start();
+        }
+      }
     })();
   </script>
-</BaseLayout>
-
-<style is:global>
-  body.reading-page-body {
-    background: var(--bento-bg);
-    color: var(--bento-ink);
-    font-family: var(--bento-font-sans);
-    line-height: 1.55;
-  }
-  body.reading-page-body main {
-    max-width: 1100px;
-    padding: 20px;
-  }
-  body.reading-page-body a { color: inherit; text-decoration: none; }
-  body.reading-page-body h1,
-  body.reading-page-body h2,
-  body.reading-page-body h3,
-  body.reading-page-body h4 {
-    margin: 0; letter-spacing: -0.025em; font-weight: 600;
-  }
-  body.reading-page-body p { margin: 0; }
-</style>
-
-<style>
-  .reading-page {
-    color: var(--bento-ink);
-    font-family: var(--bento-font-sans);
-    display: grid;
-    gap: var(--bento-gap);
-  }
-
-  /* Grid + span utilities (scoped to reading page; mirror index.astro's tokens) */
-  .grid { display: grid; gap: var(--bento-gap); }
-  .cols-6 { grid-template-columns: repeat(6, 1fr); }
-  .span-2 { grid-column: span 2; }
-  .span-4 { grid-column: span 4; }
-  .span-6 { grid-column: span 6; }
-
-  .tile {
-    background: var(--bento-surface);
-    border-radius: var(--bento-r-lg);
-    padding: 24px;
-    box-shadow: var(--bento-shadow);
-    position: relative;
-    overflow: hidden;
-  }
-  .tile--flush { padding: 0; }
-
-  .label {
-    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--bento-sub); font-weight: 500;
-  }
-  .mono { font-family: var(--bento-font-mono); font-feature-settings: 'zero' on; }
-
-  /* Top nav */
-  .reading-topnav {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 22px;
-  }
-  .topnav-left { display: flex; align-items: center; gap: 14px; font-size: 13px; flex-wrap: wrap; }
-  .topnav-sep { color: var(--bento-sub); opacity: .55; }
-  .back {
-    display: inline-flex; align-items: center; gap: 6px;
-    color: var(--bento-sub); padding: 4px 10px; border-radius: var(--bento-r-chip);
-    transition: background .15s, color .15s;
-  }
-  .back:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
-  .topnav-right { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--bento-sub); }
-
-  /* Hero */
-  .top-row { align-items: stretch; }
-
-  .hero {
-    display: grid; grid-template-columns: 1fr auto;
-    gap: 28px; align-items: end; padding: 28px 30px 26px;
-  }
-  .hero-h1 { font-size: 50px; line-height: 0.95; letter-spacing: -0.03em; margin-top: 6px; }
-  .hi-em {
-    color: var(--bento-accent);
-    font-family: 'Newsreader', 'Noto Serif TC', Georgia, serif;
-    font-style: italic; font-weight: 400;
-  }
-  .hero-desc { font-size: 15px; color: var(--bento-sub); margin-top: 14px; max-width: 460px; }
-  .stats-row { display: flex; gap: 28px; margin-top: 20px; flex-wrap: wrap; }
-  .stat-n { font-size: 28px; font-weight: 600; line-height: 1; }
-  .stat-l { font-size: 11px; color: var(--bento-sub); letter-spacing: .1em; text-transform: uppercase; margin-top: 4px; }
-
-  .heatmap-head { display: flex; justify-content: flex-end; align-items: baseline; margin-bottom: 8px; }
-  .heatmap { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
-  .heatmap-row { display: flex; align-items: center; gap: 5px; font-family: var(--bento-font-mono); font-size: 9px; color: var(--bento-sub); }
-  .yr { width: 30px; color: var(--bento-ink); font-weight: 500; text-align: right; }
-  .heatmap-cells { display: flex; gap: 2px; }
-  .cell {
-    width: 18px; height: 14px; border-radius: 2px;
-    background: var(--bento-surface-2);
-  }
-  .cell[data-v="1"] { background: color-mix(in oklab, var(--bento-accent) 25%, var(--bento-surface)); }
-  .cell[data-v="2"] { background: color-mix(in oklab, var(--bento-accent) 50%, var(--bento-surface)); }
-  .cell[data-v="3"] { background: color-mix(in oklab, var(--bento-accent) 75%, var(--bento-surface)); }
-  .cell[data-v="4"] { background: var(--bento-accent); }
-  .heatmap-cells .qhead { width: 18px; text-align: center; color: var(--bento-sub); }
-  .heatmap-legend {
-    display: flex; gap: 6px; align-items: center; justify-content: flex-end;
-    font-size: 9px; color: var(--bento-sub); margin-top: 6px;
-  }
-  .heatmap-legend .cell { width: 11px; height: 11px; }
-
-  /* Currently reading — right column, dark, minimal */
-  .current {
-    background: linear-gradient(160deg, #243240 0%, #0e1418 100%);
-    color: #fff;
-    padding: 28px 28px 32px;
-    display: flex; flex-direction: column; gap: 18px;
-  }
-  :global([data-theme="dark"]) .reading-page .current {
-    background: linear-gradient(160deg, #1c2530 0%, #0a0d12 100%);
-  }
-  .current-chip {
-    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--bento-accent-2); font-weight: 500;
-  }
-  .current-book {
-    flex: 1;
-    display: grid; grid-template-columns: 130px 1fr; gap: 22px;
-    align-items: center;
-    min-height: 0;
-  }
-  .book-spine {
-    width: 130px; aspect-ratio: 3 / 4;
-    align-self: center;
-    border-radius: 4px 6px 6px 4px;
-    background: linear-gradient(135deg, #2a2a2a 0%, #0e0e0e 100%);
-    box-shadow: inset 4px 0 0 rgba(0, 0, 0, .35), 0 14px 28px -10px rgba(0, 0, 0, .55);
-    display: flex; flex-direction: column; justify-content: space-between;
-    padding: 12px 10px 10px; font-family: var(--bento-font-sans);
-    position: relative; overflow: hidden;
-    color: #fff;
-  }
-  .book-spine--image { padding: 0; background: #1a1a1a; }
-  .book-spine--image img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .book-spine .br { font-size: 9px; letter-spacing: .22em; opacity: .55; }
-  .book-spine strong {
-    font-size: 15px; line-height: 1.25; font-weight: 600;
-    align-self: center; text-align: center;
-    flex: 1; display: flex; align-items: center; justify-content: center;
-  }
-
-  .current-meta {
-    display: flex; flex-direction: column; justify-content: center;
-    min-width: 0;
-  }
-  .current-meta h2 {
-    font-family: var(--bento-font-sans);
-    font-size: 22px; line-height: 1.15; margin: 0;
-    letter-spacing: -0.02em; font-weight: 700;
-  }
-  .current-meta .subtopic {
-    font-size: 13px; color: rgba(255, 255, 255, .55);
-    margin-top: 6px;
-  }
-  .current-progress { display: grid; gap: 6px; margin-top: 16px; }
-  .current-progress-head {
-    display: flex; justify-content: space-between; align-items: baseline;
-    font-size: 12px; color: rgba(255, 255, 255, .65);
-    font-family: var(--bento-font-sans);
-  }
-  .current-progress-head .pct {
-    color: var(--bento-accent-2); font-weight: 500;
-    font-family: var(--bento-font-mono); font-size: 12px;
-  }
-  .current-progress-bar { height: 4px; background: rgba(255, 255, 255, .12); border-radius: 3px; overflow: hidden; }
-  .current-progress-fill { height: 100%; background: var(--bento-accent-2); border-radius: 3px; }
-
-  .current-slides {
-    flex: 1; min-height: 0;
-    overflow: hidden;
-    position: relative;
-  }
-  .current-track {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    transform: translateX(0);
-    transition: transform .4s cubic-bezier(.4, 0, .2, 1);
-    touch-action: pan-y;
-    cursor: grab;
-  }
-  .current-track:active { cursor: grabbing; }
-  .current-slide {
-    flex: 0 0 100%;
-    width: 100%;
-    height: 100%;
-    user-select: none;
-  }
-  .current-slide .current-book {
-    height: 100%;
-  }
-  .current-slide img,
-  .current-slide .book-spine { pointer-events: none; }
-  .current-dots {
-    display: flex; justify-content: center; gap: 6px; margin-top: 4px;
-  }
-  .current-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    border: 0; padding: 0;
-    background: rgba(255, 255, 255, .22);
-    cursor: pointer;
-    transition: background .15s, transform .15s;
-  }
-  .current-dot:hover { background: rgba(255, 255, 255, .45); }
-  .current-dot[aria-current="true"] {
-    background: var(--bento-accent-2);
-    transform: scale(1.25);
-  }
-
-  /* Filter bar */
-  .filterbar { padding: 16px 22px; display: flex; flex-direction: column; gap: 12px; }
-  .filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .search {
-    flex: 1; display: flex; align-items: center; gap: 8px;
-    background: var(--bento-surface-2); padding: 9px 14px;
-    border-radius: var(--bento-r-md); min-width: 240px;
-  }
-  .search-icon { color: var(--bento-sub); font-size: 14px; }
-  .search input {
-    flex: 1; border: 0; background: transparent; color: var(--bento-ink);
-    font-size: 14px; outline: none; font-family: inherit;
-  }
-  .search input::placeholder { color: var(--bento-sub); opacity: .7; }
-  .kbd {
-    font-family: var(--bento-font-mono); font-size: 10px;
-    color: var(--bento-sub); opacity: .75;
-    padding: 2px 6px; border: 1px solid var(--bento-rule); border-radius: 4px;
-  }
-  .sort-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--bento-surface-2); padding: 9px 13px;
-    border-radius: var(--bento-r-md); font-size: 13px;
-    color: var(--bento-ink); border: 0; cursor: pointer;
-    font-family: inherit;
-  }
-  .sort-pill:hover { background: var(--bento-rule); }
-  .view-toggle { display: inline-flex; background: var(--bento-surface-2); border-radius: var(--bento-r-md); padding: 3px; }
-  .view-toggle button {
-    border: 0; background: transparent; padding: 6px 12px; font-size: 13px;
-    color: var(--bento-sub); border-radius: 8px; cursor: pointer; font-family: inherit;
-    transition: background .15s, color .15s;
-  }
-  .view-toggle button[aria-current="true"] {
-    background: var(--bento-surface); color: var(--bento-ink);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
-  }
-  :global([data-theme="dark"]) .reading-page .view-toggle button[aria-current="true"] {
-    background: var(--bento-ink);
-  }
-  .view-count {
-    font-family: var(--bento-font-mono);
-    font-size: 10px;
-    opacity: .65;
-    margin-left: 4px;
-  }
-
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 12px; border-radius: var(--bento-r-chip);
-    font-size: 12px; font-weight: 500; color: var(--bento-sub);
-    background: transparent; border: 1px solid var(--bento-rule);
-    cursor: pointer; font-family: inherit;
-    transition: background .15s, color .15s, border-color .15s;
-  }
-  .chip:hover { background: var(--bento-surface-2); color: var(--bento-ink); }
-  .chip[aria-current="true"] {
-    background: var(--bento-ink); color: var(--bento-ink-on); border-color: var(--bento-ink);
-  }
-  :global([data-theme="dark"]) .reading-page .chip[aria-current="true"] {
-    background: var(--bento-accent); border-color: var(--bento-accent); color: #07151a;
-  }
-  .chip .ct { font-size: 11px; opacity: .7; }
-  .dot-cat { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-  .dot-tech   { background: var(--bento-accent); }
-  .dot-design { background: var(--bento-accent-2); }
-  .dot-non    { background: var(--bento-accent-3); }
-  .dot-fic    { background: var(--bento-pink); }
-  .dot-other  { background: var(--bento-sub); }
-
-  /* Year section */
-  .year-section {
-    display: grid; grid-template-columns: 100px 1fr; gap: 40px;
-    padding: 28px 22px; border-top: 1px solid var(--bento-rule);
-  }
-  .year-section:first-of-type { border-top: 0; }
-  .yr-n {
-    font-size: 48px; font-weight: 600; letter-spacing: -0.025em;
-    line-height: 1; color: var(--bento-ink);
-  }
-  .yr-l { font-size: 11px; color: var(--bento-sub); margin-top: 4px; letter-spacing: .12em; text-transform: uppercase; }
-  .yr-badge {
-    display: inline-block; padding: 2px 8px; border-radius: var(--bento-r-chip);
-    background: var(--bento-surface-2); color: var(--bento-ink);
-    font-size: 10px; font-weight: 500; margin-top: 10px; letter-spacing: .03em;
-  }
-  .yr-badge.peak { background: var(--bento-accent-2); color: #0a3a26; }
-
-  /* Shelf grid */
-  .shelf {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 18px;
-  }
-  .wishlist-shelf { padding: 28px 22px; }
-
-  .book {
-    display: flex; flex-direction: column; gap: 8px;
-    color: inherit; transition: transform .15s;
-  }
-  .book:hover { transform: translateY(-3px); }
-  .book:hover .book-cover { box-shadow: 0 14px 28px -10px rgba(0, 0, 0, .32); }
-  .book-cover {
-    aspect-ratio: 3 / 4; border-radius: 3px 6px 6px 3px;
-    box-shadow: inset 3px 0 0 rgba(0, 0, 0, .18), 0 6px 14px -6px rgba(0, 0, 0, .18);
-    display: flex; flex-direction: column; justify-content: space-between;
-    padding: 12px 10px 10px; color: #fff;
-    font-family: var(--bento-font-sans); position: relative; overflow: hidden;
-    transition: box-shadow .2s;
-  }
-  .book-cover::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(160deg, rgba(255, 255, 255, .18) 0%, transparent 35%, transparent 75%, rgba(0, 0, 0, .15) 100%);
-    pointer-events: none;
-  }
-  .book-cover--image {
-    padding: 0;
-    background: var(--bento-surface-2);
-  }
-  .book-cover--image::after { display: none; }
-  .book-cover--image img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-  }
-  .book-cover .pub { font-size: 7px; letter-spacing: .2em; opacity: .55; }
-  .book-cover .title {
-    font-size: 14px; font-weight: 600; line-height: 1.2;
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .book-meta {
-    padding: 0 2px;
-    display: flex; flex-direction: column; gap: 3px;
-  }
-  .book-title { font-size: 13px; font-weight: 500; line-height: 1.3; color: var(--bento-ink); }
-  .book-stats {
-    display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 10px;
-  }
-  .book-tag {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-family: var(--bento-font-mono); font-size: 9px; color: var(--bento-sub);
-    letter-spacing: .05em;
-  }
-  .book-tag .dot-cat { width: 5px; height: 5px; border-radius: 50%; }
-
-  .book.is-reading .book-cover { outline: 2px solid var(--bento-accent-2); outline-offset: 3px; }
-  .book.is-reading .book-title::before {
-    content: '● 閱讀中  ';
-    color: var(--bento-accent-2); font-size: 10px; letter-spacing: .05em; font-weight: 600;
-  }
-  .book.is-unstarted { opacity: .65; }
-  .book.is-unstarted .book-cover { filter: grayscale(.5); }
-
-  .shelves-empty {
-    padding: 60px 22px; text-align: center; color: var(--bento-sub); font-size: 14px;
-  }
-
-  .reading-footer {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 22px; font-size: 13px; color: var(--bento-sub);
-  }
-  .back-top { font-size: 11px; letter-spacing: .1em; color: var(--bento-sub); }
-  .back-top:hover { color: var(--bento-accent); }
-
-  @media (max-width: 860px) {
-    .cols-6 { grid-template-columns: 1fr; }
-    .span-2, .span-4, .span-6 { grid-column: auto; }
-    .hero { grid-template-columns: 1fr; gap: 22px; padding: 22px; }
-    .hero-h1 { font-size: 38px; }
-    .current { padding: 22px; }
-    .current-book { grid-template-columns: 96px 1fr; gap: 18px; }
-    .book-spine { width: 96px; }
-    .current-meta h2 { font-size: 20px; }
-    .year-section { grid-template-columns: 1fr; gap: 14px; padding: 22px 18px; }
-    .year-side { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-    .yr-n { font-size: 32px; }
-    .yr-badge { margin-top: 0; }
-    .shelf { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 14px; }
-    .heatmap-cells { gap: 2px; }
-    .cell { width: 18px; height: 16px; }
-  }
-</style>
+</DeskLayout>
