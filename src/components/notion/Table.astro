@@ -7,22 +7,28 @@ const { block } = Astro.props;
 const table = (block as any).table;
 const hasHeader = table.has_column_header;
 const rows = block.children ?? [];
+const headRow = hasHeader ? rows[0] : null;
+const bodyRows = hasHeader ? rows.slice(1) : rows;
 ---
 <div class="table-wrapper">
   <table>
-    {rows.map((row: any, i: number) => {
-      const cells = row.table_row.cells;
-      const isHeader = hasHeader && i === 0;
-      return (
+    {headRow && (
+      <thead>
         <tr>
-          {cells.map((cell: any) => {
-            const content = renderRichText(cell);
-            return isHeader
-              ? <th set:html={content} />
-              : <td set:html={content} />;
-          })}
+          {(headRow as any).table_row.cells.map((cell: any) => (
+            <th scope="col" set:html={renderRichText(cell)} />
+          ))}
         </tr>
-      );
-    })}
+      </thead>
+    )}
+    <tbody>
+      {bodyRows.map((row: any) => (
+        <tr>
+          {row.table_row.cells.map((cell: any) => (
+            <td set:html={renderRichText(cell)} />
+          ))}
+        </tr>
+      ))}
+    </tbody>
   </table>
 </div>

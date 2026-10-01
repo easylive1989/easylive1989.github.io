@@ -7,18 +7,24 @@ const bookmark = (block as any).bookmark;
 const url = bookmark.url;
 const caption = bookmark.caption?.map((t: any) => t.plain_text).join('') ?? '';
 const isDartPad = url.includes('dartpad.dev');
+const shownUrl = url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
 ---
 {isDartPad ? (
   <div class="dartpad-container">
     <iframe
       src={url}
+      title={caption || 'DartPad'}
       loading="lazy"
     />
   </div>
 ) : (
   <div class="bookmark">
     <a href={url} target="_blank" rel="noopener noreferrer">
-      {caption || url}
+      <span class="bookmark-text">
+        <span class="bookmark-title">{caption || shownUrl}</span>
+        {caption && <span class="bookmark-url">{shownUrl}</span>}
+      </span>
+      <span class="bookmark-arrow" aria-hidden="true">↗</span>
     </a>
   </div>
 )}

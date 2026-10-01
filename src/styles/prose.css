@@ -1,0 +1,363 @@
+/* Prose — what an article reads like once you have walked up to it.
+   Reading typography plus every Notion block the renderer can emit, all under
+   `.prose` so nothing leaks into the chrome. Tokens come from broadsheet.css and
+   desk.css; the only literals are the ink plate's warm near-black. */
+
+.prose {
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --paper-edge: 0 0 0 1px color-mix(in srgb, var(--color-text) 12%, transparent), 0 2px 8px color-mix(in srgb, var(--color-text) 14%, transparent);
+  --anchor-offset: 92px; /* clears the HUD when jumping to a heading */
+
+  max-width: 660px;
+  font-family: var(--font-reading);
+  font-size: 18px;
+  line-height: 1.85;
+  color: var(--color-text);
+  overflow-wrap: break-word;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* — flow: one rhythm for siblings, blocks that need air ask for more — */
+.prose :where(p, ul, ol, blockquote, h2, h3, h4) { margin: 0; }
+.prose > * + *,
+.prose details > * + *,
+.prose li > * + * { margin-top: 1.15em; }
+.prose li > ul,
+.prose li > ol { margin-top: 0.35em; }
+.prose > :is(h2, h3, h4) + *,
+.prose details > summary + * { margin-top: 0.75em; }
+
+/* — headings — */
+.prose :is(h2, h3, h4) {
+  position: relative;
+  font-family: var(--font-reading);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.32;
+  color: var(--color-text);
+  scroll-margin-top: var(--anchor-offset);
+}
+.prose h2 {
+  font-size: 28px;
+  margin-top: 2.1em;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-divider);
+}
+.prose h3 { font-size: 22px; margin-top: 1.7em; }
+.prose h4 { font-size: 18px; margin-top: 1.6em; }
+.prose > :is(h2, h3, h4):first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+.prose .anchor-link {
+  position: absolute;
+  left: -1.4em;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 400;
+  font-size: 0.8em;
+  text-decoration: none;
+  color: var(--color-neutral-500);
+  opacity: 0;
+  user-select: none;
+  transition: opacity 0.15s, color 0.15s;
+}
+.prose h2 .anchor-link { top: calc(50% + 9px); }
+.prose .heading-anchor-target:hover .anchor-link,
+.prose .anchor-link:focus-visible { opacity: 1; }
+.prose .anchor-link:hover { color: var(--color-accent); }
+
+/* — inline — */
+.prose a {
+  color: var(--color-accent-700);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  transition: text-decoration-color 0.15s;
+}
+.prose a:hover { text-decoration-color: var(--color-accent-700); }
+.prose strong { font-weight: 700; }
+.prose :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  line-height: 1;
+  padding: 0.16em 0.4em;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text) 8%, transparent);
+  overflow-wrap: anywhere;
+}
+
+/* — lists — */
+.prose :is(ul, ol) { padding-left: 1.5em; }
+.prose li { padding-left: 0.2em; }
+.prose li + li { margin-top: 0.25em; }
+.prose li::marker { color: var(--color-accent); font-weight: 600; }
+.prose ol > li::marker { font-variant-numeric: tabular-nums lining-nums; }
+.prose ul ul { list-style-type: circle; }
+.prose ul ul ul { list-style-type: square; }
+
+/* — quote — */
+.prose blockquote {
+  margin: 1.7em 0;
+  padding: 2px 0 2px 22px;
+  border-left: 3px solid var(--color-accent);
+  font-style: italic;
+  color: color-mix(in srgb, var(--color-text) 78%, transparent);
+}
+
+/* — divider: three dots, a section break rather than a rule — */
+.prose hr {
+  width: 52px;
+  height: 6px;
+  margin: 2.6em auto;
+  border: 0;
+  background: radial-gradient(circle, var(--color-neutral-500) 1.6px, transparent 2.1px) 0 0 / 17.34px 6px repeat-x;
+}
+
+/* — code: an ink plate lying on the paper — */
+.prose .code-block {
+  margin: 1.7em 0;
+  background: #1c1511;
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(217, 181, 115, 0.14),
+    var(--shadow-md);
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.7;
+  overflow: hidden;
+}
+.prose .code-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 18px;
+  background: rgba(217, 181, 115, 0.06);
+  border-bottom: 1px solid rgba(217, 181, 115, 0.18);
+}
+.prose .code-header::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brass);
+  box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--brass-dark);
+}
+.prose .code-language {
+  font-family: var(--font-heading);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--brass-light);
+}
+.prose .code-block pre {
+  margin: 0;
+  padding: 16px 20px;
+  overflow-x: auto;
+  tab-size: 2;
+  background: transparent !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(217, 181, 115, 0.35) transparent;
+}
+.prose .code-block pre code {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  line-height: inherit;
+}
+.prose .code-caption {
+  margin: 0;
+  padding: 8px 18px;
+  border-top: 1px solid rgba(217, 181, 115, 0.18);
+  background: rgba(217, 181, 115, 0.06);
+  font-family: var(--font-reading);
+  font-size: 13px;
+  line-height: 1.6;
+  color: #a99a86;
+}
+
+/* — callout: a surface card with the cyan rule — */
+.prose .callout {
+  display: flex;
+  gap: 12px;
+  margin: 1.7em 0;
+  padding: 16px 20px 16px 18px;
+  background: var(--color-surface);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.prose .callout-icon { flex: none; width: 1.5em; font-size: 20px; line-height: 1.55; }
+.prose .callout-content { flex: 1; min-width: 0; font-size: 16px; line-height: 1.75; }
+
+/* — image — */
+.prose figure { margin: 2em 0; }
+.prose figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--paper-edge);
+}
+.prose figcaption {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  letter-spacing: 0.03em;
+  text-align: center;
+  color: var(--color-neutral-700);
+}
+
+/* — table: hairline rules, small-caps headers — */
+.prose .table-wrapper { margin: 1.9em 0; overflow-x: auto; }
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 1px solid var(--color-text);
+  border-bottom: 1px solid var(--color-text);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.prose th,
+.prose td {
+  padding: 9px 14px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-divider);
+}
+.prose th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-neutral-700);
+  border-bottom-color: var(--color-text);
+}
+.prose tbody tr:last-child td { border-bottom: 0; }
+.prose :is(th, td):first-child { padding-left: 4px; }
+.prose :is(th, td):last-child { padding-right: 4px; }
+
+/* — toggle — */
+.prose details {
+  padding: 12px 18px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+}
+.prose details[open] > summary { margin-bottom: 0.4em; }
+.prose summary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.prose summary::-webkit-details-marker { display: none; }
+.prose summary::before {
+  content: "▸";
+  flex: none;
+  font-size: 0.8em;
+  color: var(--color-accent);
+  transition: transform 0.15s;
+}
+.prose details[open] > summary::before { transform: rotate(90deg); }
+
+/* — embeds: video keeps 16:9, DartPad keeps its 500px — */
+.prose .video-container {
+  position: relative;
+  height: 0;
+  margin: 1.9em 0;
+  padding-bottom: 56.25%;
+  background: #1c1511;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--paper-edge);
+  overflow: hidden;
+}
+.prose .video-container :is(iframe, video) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.prose .dartpad-container {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  margin: 1.9em 0;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--paper-edge);
+  overflow: hidden;
+}
+.prose .dartpad-container iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* — bookmark: a bordered paper card — */
+.prose .bookmark { margin: 1.5em 0; }
+.prose .bookmark a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 14px 18px;
+  color: var(--color-text);
+  text-decoration: none;
+  background: var(--color-neutral-100);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.prose .bookmark a:hover { border-color: var(--color-accent); box-shadow: var(--shadow-md); }
+.prose .bookmark-text { display: grid; gap: 2px; min-width: 0; }
+.prose .bookmark-title { font-size: 16px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.prose .bookmark-url {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--color-neutral-700);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prose .bookmark-arrow { flex: none; font-family: var(--font-heading); font-size: 16px; color: var(--color-accent); }
+
+@media (max-width: 760px) {
+  .prose { font-size: 17px; line-height: 1.8; }
+  .prose h2 { font-size: 24px; padding-top: 14px; }
+  .prose h3 { font-size: 20px; }
+  .prose h4 { font-size: 17px; }
+  .prose .anchor-link { display: none; }
+  .prose blockquote { padding-left: 16px; }
+  .prose .callout { padding: 14px 16px 14px 14px; }
+  .prose .dartpad-container { height: 460px; }
+  /* top-level plates run to the paper edge on a phone; the page sets --prose-bleed to its side padding */
+  .prose > .code-block {
+    margin-inline: calc(var(--prose-bleed, 0px) * -1);
+    border-radius: 0;
+  }
+}
+
+@media print {
+  .prose .code-block { box-shadow: none; border: 1px solid #000; }
+  .prose a { color: inherit; }
+}

@@ -9,6 +9,6 @@ const icon = callout.icon?.emoji ?? '';
 const text = renderRichText(callout.rich_text);
 ---
 <div class="callout">
-  {icon && <span class="callout-icon">{icon}</span>}
+  {icon && <span class="callout-icon" aria-hidden="true">{icon}</span>}
   <div class="callout-content" set:html={text} />
 </div>

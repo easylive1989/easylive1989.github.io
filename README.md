@@ -10,25 +10,30 @@ https://paul-learning.dev
 
 - **框架**: Astro (靜態網站生成)
 - **內容來源**: Notion API (`@notionhq/client`)
+- **首頁**: three.js 做的 3D 書房（互動式，內容在建置時從 Notion 抓好）
 - **部署**: GitHub Pages
 
 ## 專案結構
 
 ```
 src/
-├── components/       # Astro 元件
+├── components/       # SiteHead、ArchiveView、Notion block 渲染元件
 │   └── notion/       # Notion block 渲染元件
-├── layouts/          # 頁面佈局
+├── layouts/          # DeskLayout：內容頁共用（木桌底、紙張、「回書房」HUD）
 ├── lib/              # 工具函式 (Notion API、資料處理、圖片等)
+│   └── study.ts      # 把 Notion 資料對應到書房裡的物件（書架、展示架、書桌）
 ├── pages/            # 頁面路由
-│   ├── index.astro          # 首頁
+│   ├── index.astro          # 首頁：3D 書房
 │   ├── archive.astro        # 文章彙整
-│   ├── reading.astro        # 閱讀清單
+│   ├── reading.astro        # 書單（書架）
 │   ├── rss.xml.ts           # RSS feed
 │   └── [category]/
 │       ├── index.astro      # 分類文章列表
 │       └── [slug].astro     # 文章內頁
-└── styles/           # 全域樣式
+├── scripts/
+│   └── study.js      # 書房場景與互動 (three.js)
+└── styles/           # broadsheet.css (設計系統)、desk.css (內容頁共用)、
+                      # 各頁樣式 (prose / reading / archive)
 ```
 
 ## 開發
