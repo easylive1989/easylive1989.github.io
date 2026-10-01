@@ -61,7 +61,7 @@ controls.minAzimuthAngle = az0 - .62; controls.maxAzimuthAngle = az0 + .42;
 /* ================= helpers ================= */
 const std = (name, c, o = {}) => new THREE.MeshStandardMaterial({ name, color:col(c), roughness:.8, metalness:0, ...o });
 const M = {
-  wall:std('wall', C.wall, { roughness:.95 }), wallL:std('wall-light', C.wallL, { roughness:.95 }), ceil:std('ceiling', '#2c2621', { roughness:1 }),
+  wall:std('wall', C.wall, { roughness:.95 }), wallL:std('wall-light', C.wallL, { roughness:.95 }),
   wood:std('wood', C.wood, { roughness:.55 }), woodD:std('wood-dark', C.woodD, { roughness:.6 }), woodL:std('wood-light', C.woodL, { roughness:.5 }),
   fabric:std('fabric', C.fabric, { roughness:1 }), fabricD:std('fabric-dark', C.fabricD, { roughness:1 }),
   cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
@@ -123,7 +123,6 @@ Object.assign(M, {
   woodL: pbr('wood-light', '#b07a50', { map:woodMap, bumpMap:woodBump, bumpScale:1.2, roughness:.38, clearcoat:.5, clearcoatRoughness:.25 }),
   wall: std('wall', '#544739', { map:plasterMap, bumpMap:plasterBump, bumpScale:2, roughness:.93 }),
   wallL: std('wall-light', '#665645', { map:plasterMap, bumpMap:plasterBump, bumpScale:2, roughness:.93 }),
-  ceil: std('ceiling', '#4a4038', { map:plasterMap, bumpMap:plasterBump, bumpScale:1, roughness:1 }),
   fabric: std('fabric', '#9a917a', { map:fabricMap, bumpMap:fabricBump, bumpScale:3, roughness:1 }),
   fabricD: std('fabric-dark', '#7a7262', { map:fabricMap, bumpMap:fabricBump, bumpScale:3, roughness:1 }),
   brass: pbr('brass', '#d2a868', { metalness:1, roughness:.26 }), bronze: pbr('bronze', '#6a442a', { metalness:.9, roughness:.38 }),
@@ -144,7 +143,6 @@ floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(4.5,
 room.add(mk(new THREE.PlaneGeometry(6, 6), new THREE.MeshPhysicalMaterial({ name:'floor', map:floorTex, bumpMap:floorTex, bumpScale:1.5, roughness:.5, clearcoat:.35, clearcoatRoughness:.32 }), 'floor', [0,0,0], [-Math.PI/2,0,0]));
 room.add(box(.1, 2.8, 6, M.wall, 'wall-left', [-3.05,1.4,0]));
 room.add(box(.1, 2.8, 6, M.wall, 'wall-right', [3.05,1.4,0]));
-room.add(box(6.2, .1, 6, M.ceil, 'ceiling', [0,2.85,0]));
 // back wall with niche + window openings
 room.add(box(.7, 2.8, .1, M.wall, 'wall-back', [-2.7,1.4,-2.55]));
 room.add(box(.6, 2.8, .1, M.wall, 'wall-back', [-.25,1.4,-2.55]));
@@ -295,7 +293,18 @@ place(frame(.38, .3, glyph('g3'), C.ink, 'frame-landscape'), 'g3', -1.05, .88 + 
 /* ================= window + outside ================= */
 const WIN = { x0:.05, x1:2.65, y0:1.0, y1:2.5 };
 const outsideTex = ctex(1024, 600, () => {}, false);
-const outside = mk(new THREE.PlaneGeometry(7, 4.2), new THREE.MeshBasicMaterial({ name:'garden', map:outsideTex }), 'garden', [1.35, 1.75, -4.6]); outside.castShadow = false; outside.receiveShadow = false; room.add(outside);
+// The garden is a flat backdrop that belongs behind the window. With no roof, a camera that climbs above the walls would see it
+// as a billboard standing behind them, so it is only drawn where the line of sight leaves the room below the wall tops.
+const gardenMat = new THREE.MeshBasicMaterial({ name:'garden', map:outsideTex });
+gardenMat.onBeforeCompile = sh => {
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('void main() {', `void main() {
+    vec3 d = vWP - cameraPosition;
+    float tb = (-2.55 - cameraPosition.z) / d.z, tr = (3.05 - cameraPosition.x) / d.x; // where the sight line crosses the back / right wall
+    if (tb > 0.0 && tb < 1.0 && cameraPosition.y + d.y * tb > 2.8) discard;
+    if (tr > 0.0 && tr < 1.0 && cameraPosition.z + d.z * tr > -2.55 && cameraPosition.y + d.y * tr > 2.8) discard;`);
+};
+const outside = mk(new THREE.PlaneGeometry(7, 4.2), gardenMat, 'garden', [1.35, 1.75, -4.6]); outside.castShadow = false; outside.receiveShadow = false; room.add(outside);
 const wf = new THREE.Group(); wf.name = 'window'; room.add(wf);
 const WZ = -2.55;
 wf.add(box(WIN.x1 - WIN.x0 + .1, .08, .14, M.woodD, 'window-frame', [1.35, WIN.y1 + .02, WZ]));
@@ -439,6 +448,7 @@ function buildEnv(isNight) {
   add(new THREE.SphereGeometry(.14, 12, 8), '#ffb066', isNight ? 10 : 3, [2.42, -.45, -2.25]);
   add(new THREE.BoxGeometry(.05, 2.4, 3.8), '#ffbe78', isNight ? 2.2 : .8, [-2.7, .1, -.4]);
   add(new THREE.BoxGeometry(1.6, .05, .3), '#ffd8a0', isNight ? 3 : 1, [-1.45, 1.1, -2.7]);
+  add(new THREE.PlaneGeometry(5.6, 5.6).rotateX(Math.PI/2), isNight ? '#1b2a3c' : '#dfeaf0', isNight ? 1.2 : 2.2, [0, 1.38, 0]); // the open roof: sky light from above
   if (envRT) envRT.dispose(); envRT = pmrem.fromScene(es, .03); scene.environment = envRT.texture; scene.environmentIntensity = isNight ? .9 : .7;
 }
 
@@ -471,8 +481,6 @@ decal(aoLin, 4.2, .5, [-2.33, .005, -.43], [-Math.PI/2, 0, -Math.PI/2], .85);
 decal(aoLin, 6, .5, [2.77, .005, 0], [-Math.PI/2, 0, Math.PI/2], .7);
 decal(aoLin, 6, .55, [0, .28, -2.494], [0, 0, Math.PI], .6);
 decal(aoLin, 6, .55, [2.995, .28, 0], [0, -Math.PI/2, Math.PI], .6);
-decal(aoLin, 6, .5, [0, 2.54, -2.494], [0, 0, 0], .5);
-decal(aoLin, 6, .5, [2.995, 2.54, 0], [0, -Math.PI/2, 0], .5);
 const DT = DY + .0265;
 [[1.62, -2.08, .62, .46], [.38, -2.25, .26, .26], [.78, -2.28, .26, .26], [2.56, -2.33, .22, .22], [1.08, -2.3, .26, .18], [.95, -1.75, .12, .12]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
 LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - SZ0, .12, [-2.788, y - .02, (SZ0 + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
@@ -488,7 +496,8 @@ const SKY = {
 let season = (() => { const mo = new Date().getMonth() + 1; return mo >= 3 && mo <= 5 ? '春' : mo >= 6 && mo <= 8 ? '夏' : mo >= 9 && mo <= 11 ? '秋' : '冬'; })();
 let night = true;
 function paintOutside() {
-  const s = SKY[season], c = outsideTex.image, x = c.getContext('2d'), w = c.width, h = c.height;
+  const s = SKY[season]; scene.background.set(night ? '#0e151e' : s.day[0]);
+  const c = outsideTex.image, x = c.getContext('2d'), w = c.width, h = c.height;
   let r = 11; const R = () => (r = (r * 16807) % 2147483647) / 2147483647;
   const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, s.day[0]); g.addColorStop(1, s.day[1]); x.fillStyle = g; x.fillRect(0,0,w,h);
   x.fillStyle = s.day[1]; x.fillRect(0, h*.68, w, h*.32);
@@ -517,13 +526,18 @@ function setSeason(s) {
 }
 function setNight(n) {
   night = n; paintOutside(); buildEnv(n); halos.forEach(h => h.material.opacity = n ? h.userData.op : h.userData.op * .35); dustMat.opacity = n ? .55 : .25;
-  moon.visible = n;
+  moon.visible = n; stars.visible = n;
   lampLight.intensity = n ? 3.2 : 1.2; lampLight2.intensity = n ? 2.4 : .8; shelfLights.forEach(l => l.intensity = n ? 1.6 : .6); nicheLights.forEach(l => l.intensity = n ? 1.1 : .5); shelfLow.intensity = n ? .9 : .3;
   hemi.intensity = n ? .16 : .7; amb.intensity = n ? .22 : .4; moonLight.intensity = n ? .35 : 0; sunLight.intensity = n ? 0 : 2.6; roomFill.intensity = n ? .5 : 1.6;
   renderer.toneMappingExposure = n ? 1.3 : 1.05;
   document.getElementById('bLight').textContent = n ? '天亮' : '入夜';
   (document.getElementById('wxline') || {}).textContent = SKY[season].line + (n ? ' · 夜' : ' · 白天');
 }
+/* stars for the open roof — a far dome, on at night only */
+const SN = 240, sPos = new Float32Array(SN*3);
+for (let i = 0; i < SN; i++) { const th = Math.random()*Math.PI*2, ph = Math.acos(.15 + Math.random()*.83); sPos[i*3] = Math.sin(ph)*Math.cos(th)*40; sPos[i*3+1] = Math.cos(ph)*40; sPos[i*3+2] = Math.sin(ph)*Math.sin(th)*40; }
+const sGeo = new THREE.BufferGeometry(); sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+const stars = new THREE.Points(sGeo, new THREE.PointsMaterial({ size:2, sizeAttenuation:false, color:col('#dfe8ff'), transparent:true, opacity:.8, depthWrite:false })); stars.frustumCulled = false; scene.add(stars);
 setSeason(season); setNight(night);
 
 /* ================= UI ================= */
