@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rng, cnv, texOf, plankFloor, woodGrain, plaster } from './studyTextures.js';
+import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur } from './studyTextures.js';
 
 /* ================= content ================= */
 // Filled at build time from Notion (src/lib/study.ts). Ids are the room's physical
@@ -125,9 +125,6 @@ function rboxGeo(w, h, d, r, ax) {
   }
   grainUV(g, [w, h, d], ax); return geoCache[key] = g;
 }
-const fabricC = cnv(128, 128, (x, w, h) => { x.fillStyle = '#bbb'; x.fillRect(0,0,w,h); for (let i = 0; i < w; i += 4) { x.fillStyle = 'rgba(255,255,255,.25)'; x.fillRect(i, 0, 2, h); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, i + 2, w, 2); } for (let i = 0; i < 900; i++) { x.fillStyle = 'rgba(0,0,0,' + RN()*.15 + ')'; x.fillRect(RN()*w, RN()*h, 1 + RN()*2, 1); } });
-const tabbyC = cnv(256, 128, (x, w, h) => { x.fillStyle = '#f0a663'; x.fillRect(0,0,w,h); for (let i = 0; i < 26; i++) { const xx = i/26*w + RN()*4; x.fillStyle = 'rgba(150,70,25,' + (.35 + RN()*.3) + ')'; x.beginPath(); x.moveTo(xx, 0); for (let y = 0; y <= h; y += 8) x.lineTo(xx + Math.sin(y*.08 + i)*3 + (RN()-.5)*2, y); x.lineTo(xx + 4 + RN()*3, h); for (let y = h; y >= 0; y -= 8) x.lineTo(xx + 4 + Math.sin(y*.08 + i)*3, y); x.fill(); }
-  const g = x.createLinearGradient(0, h*.6, 0, h); g.addColorStop(0, 'rgba(250,225,190,0)'); g.addColorStop(1, 'rgba(250,225,190,.9)'); x.fillStyle = g; x.fillRect(0, 0, w, h); });
 const spineC = cnv(256, 32, (x, w, h) => { x.fillStyle = '#a8a8a8'; x.fillRect(0,0,w,h); x.fillStyle = '#f2e3b5'; [[.08,.012],[.115,.006],[.885,.006],[.91,.012]].forEach(([p, t]) => x.fillRect(p*w, 0, t*w, h)); x.fillStyle = 'rgba(0,0,0,.28)'; x.fillRect(.62*w, 4, .16*w, h - 8); x.fillStyle = 'rgba(255,240,200,.35)'; x.fillRect(.65*w, 12, .1*w, 2); x.fillRect(.65*w, 18, .07*w, 2);
   for (let i = 0; i < 300; i++) { x.fillStyle = 'rgba(0,0,0,' + RN()*.08 + ')'; x.fillRect(RN()*w, RN()*h, 2, 1); } });
 const LOW = matchMedia('(pointer: coarse)').matches; // phones get half-size canvases
@@ -135,7 +132,9 @@ const LOW = matchMedia('(pointer: coarse)').matches; // phones get half-size can
 const woodC = woodGrain({ size:LOW ? 512 : 1024 }), woodTex = { map:texOf(woodC.color, [.5, 1]), normalMap:texOf(woodC.normal, [.5, 1], false), roughnessMap:texOf(woodC.rough, [.5, 1], false), normalScale:new THREE.Vector2(.35, .35) };
 // one 2.5 m sheet of plaster, painted two shades by the material colours
 const plasterC = plaster({ size:LOW ? 512 : 1024 }), plasterTex = { map:texOf(plasterC.color, [.4, .4]), normalMap:texOf(plasterC.normal, [.4, .4], false), roughnessMap:texOf(plasterC.rough, [.4, .4], false), normalScale:new THREE.Vector2(.55, .55) };
-const fabricMap = texOf(fabricC, [18, 18]), fabricBump = texOf(fabricC, [18, 18], false);
+// upholstery: one 12.5 cm swatch of 4 mm threads
+const fabricC = weave({ size:LOW ? 256 : 512 }), fabricTex = { map:texOf(fabricC.color, [8, 8]), normalMap:texOf(fabricC.normal, [8, 8], false), normalScale:new THREE.Vector2(.8, .8), roughness:1, sheen:.4, sheenRoughness:.75 };
+const tabbyC = tabbyFur({ size:LOW ? 256 : 512 }), coatTex = { normalMap:texOf(tabbyC.normal, [1, 1], false), normalScale:new THREE.Vector2(.6, .6), roughness:1, sheen:.6, sheenRoughness:.6, sheenColor:col('#ffd9b0') };
 const pbr = (name, c, o = {}) => new THREE.MeshPhysicalMaterial({ name, color:col(c), roughness:.6, ...o });
 Object.assign(M, {
   wood: pbr('wood', '#9a5f3c', { ...woodTex, roughness:.52, clearcoat:.45, clearcoatRoughness:.28 }),
@@ -143,11 +142,11 @@ Object.assign(M, {
   woodL: pbr('wood-light', '#b07a50', { ...woodTex, roughness:.47, clearcoat:.5, clearcoatRoughness:.25 }),
   wall: std('wall', '#544739', { ...plasterTex, roughness:1 }),
   wallL: std('wall-light', '#665645', { ...plasterTex, roughness:1 }),
-  fabric: std('fabric', '#9a917a', { map:fabricMap, bumpMap:fabricBump, bumpScale:3, roughness:1 }),
-  fabricD: std('fabric-dark', '#7a7262', { map:fabricMap, bumpMap:fabricBump, bumpScale:3, roughness:1 }),
+  fabric: pbr('fabric', '#9a917a', { ...fabricTex, sheenColor:col('#cfc7ae') }),
+  fabricD: pbr('fabric-dark', '#7a7262', { ...fabricTex, sheenColor:col('#aaa290') }),
   brass: pbr('brass', '#d2a868', { metalness:1, roughness:.26 }), bronze: pbr('bronze', '#6a442a', { metalness:.9, roughness:.38 }),
   alu: pbr('aluminium', '#b4b2ad', { metalness:1, roughness:.32 }),
-  cat: std('cat', '#ffffff', { map:texOf(tabbyC), roughness:1 }), catL: std('cat-light', '#f7dcb8', { roughness:1 }),
+  cat: pbr('cat', '#ffffff', { map:texOf(tabbyC.color), ...coatTex }), catL: pbr('cat-light', '#f7dcb8', coatTex),
   cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }), terracotta: std('terracotta', '#b8653c', { normalMap:texOf(plasterC.normal, [1, 1], false), normalScale:new THREE.Vector2(.6, .6), roughness:.95 }),
   glass: new THREE.MeshPhysicalMaterial({ name:'glass', color:col('#c8d8d4'), transparent:true, opacity:.14, roughness:.04, metalness:0, depthWrite:false, clearcoat:1 }),
 });

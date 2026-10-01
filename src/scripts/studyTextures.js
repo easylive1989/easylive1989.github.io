@@ -157,3 +157,46 @@ export function plaster({ size = 1024, seed = 4 } = {}) {
   all.forEach(x => { for (const ox of [0, S / 2]) for (const oy of [0, S / 2]) x.drawImage(tooth, ox, oy, S / 2, S / 2); });
   return { color, normal:normalFromHeight(height, 2.5 * u), rough };
 }
+
+// A tileable plain weave: warp and weft threads passing over and under each other, no two spun quite alike.
+// Neutral in colour so the material can dye it. Returns colour and normal canvases.
+export function weave({ size = 512, threads = 32, seed = 12 } = {}) {
+  const S = size, p = S / threads, R = rng(seed), fuzz = noiseField(S, S, { octaves:2, base:96, seed:seed + 1 });
+  const warp = Array.from({ length:threads }, () => .95 + R() * .08), weft = Array.from({ length:threads }, () => .88 + R() * .08);
+  // a thread is round across its width, and humped where it rides over the one beneath
+  const round = Array.from({ length:p }, (_, k) => Math.sin((k + .5) / p * Math.PI) ** .7), hump = Array.from({ length:p }, (_, k) => .55 + .45 * Math.sin((k + .5) / p * Math.PI));
+  const [color, height] = [0, 1].map(() => new ImageData(S, S)), cd = color.data, hd = height.data;
+  for (let y = 0, k = 0; y < S; y++) for (let x = 0; x < S; x++, k++) {
+    const i = Math.floor(x / p), j = Math.floor(y / p), xk = x - i * p, yk = y - j * p, over = (i + j) & 1;
+    const lift = over ? round[xk] * hump[yk] : round[yk] * hump[xk], f = fuzz[k] - .5, o = k * 4;
+    cd[o] = cd[o+1] = cd[o+2] = 255 * (over ? warp[i] : weft[j]) * (.6 + .4 * lift) * (1 + f * .3);
+    hd[o] = hd[o+1] = hd[o+2] = 255 * lift * (.85 + f * .3); cd[o+3] = hd[o+3] = 255;
+  }
+  const [c, hgt] = [color, height].map(img => cnv(S, S, x => x.putImageData(img, 0, 0)));
+  return { color:c, normal:normalFromHeight(hgt, 1.2 * S / 512) };
+}
+
+const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+// A ginger tabby's coat, laid out for a sphere whose long axis is x: bands across the body, a dark line down the spine, a pale belly.
+// Returns colour and normal canvases.
+export function tabbyFur({ size = 512, seed = 8 } = {}) {
+  const W = size, H = size / 2, u = W / 512, R = rng(seed), waver = noiseField(W, H, { octaves:3, base:[4, 2], seed:seed + 1 }), patch = noiseField(W, H, { octaves:4, base:[6, 3], seed:seed + 2 });
+  const coat = new ImageData(W, H), d = coat.data;
+  for (let y = 0, k = 0; y < H; y++) { const pol = (y + .5) / H * Math.PI, sp = Math.sin(pol), sy = Math.cos(pol);
+    for (let x = 0; x < W; x++, k++) { const lon = x / W * 6.2832, sx = sp * Math.cos(lon), sz = sp * Math.sin(lon), o = k * 4;
+      // where this texel sits on the sphere decides its marking, so the bands stay parallel instead of fanning out from the pole
+      const band = sstep(.2, .65, Math.sin((sx * 6 + (waver[k] - .5) * 1.8) * Math.PI)) * sstep(-.5, .1, sy), spine = sstep(.14, .03, Math.abs(sz)) * sstep(.15, .7, sy);
+      const dark = Math.max(band, spine) * .78, belly = sstep(-.2, -.75, sy), lum = 1 + (patch[k] - .5) * .22;
+      d[o] = ((238 - 106 * dark) * lum) * (1 - belly) + 250 * belly; d[o+1] = ((159 - 97 * dark) * lum) * (1 - belly) + 229 * belly; d[o+2] = ((90 - 68 * dark) * lum) * (1 - belly) + 198 * belly; d[o+3] = 255; } }
+  const color = cnv(W, H, x => x.putImageData(coat, 0, 0)), height = cnv(W, H), c = color.getContext('2d'), hx = height.getContext('2d');
+  hx.fillStyle = '#808080'; hx.fillRect(0, 0, W, H);
+  // the fur itself: short hairs lying roughly downwards, some catching the light and some in shadow
+  [c, hx].forEach(x => { x.lineCap = 'round'; });
+  for (let i = 0; i < 9000; i++) {
+    const x0 = R() * W, y0 = R() * H, a = (R() - .5) * .8, L = (5 + R() * 9) * u, pale = R() < .5, al = .05 + R() * .16;
+    c.strokeStyle = (pale ? 'rgba(255,236,204,' : 'rgba(96,42,12,') + al + ')'; hx.strokeStyle = (pale ? 'rgba(255,255,255,' : 'rgba(0,0,0,') + al * 2 + ')'; c.lineWidth = hx.lineWidth = (.7 + R() * .8) * u;
+    for (const ox of x0 < 16 * u ? [0, W] : x0 > W - 16 * u ? [0, -W] : [0]) [c, hx].forEach(x => { x.beginPath(); x.moveTo(x0 + ox, y0); x.lineTo(x0 + ox + Math.sin(a) * L, y0 + Math.cos(a) * L); x.stroke(); });
+  }
+  return { color, normal:normalFromHeight(height, 1.6 * u) };
+}
