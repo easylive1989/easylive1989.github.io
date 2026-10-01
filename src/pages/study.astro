@@ -1,0 +1,167 @@
+---
+import { loadConfig } from '../lib/config';
+import '../styles/broadsheet.css';
+
+// A full-viewport WebGL scene: it deliberately skips BaseLayout (footer, <main>
+// wrapper, view transitions, back-to-top) and owns the whole document.
+const config = loadConfig();
+const BASE = import.meta.env.BASE_URL;
+const title = `書房 | ${config.site.title}`;
+const description = '推開書房的門：書架上是書單與文章，展示架擺著 side project 與小遊戲，書桌上還有寫到一半的草稿。';
+const canonicalUrl = new URL(Astro.url.pathname, config.site.url);
+const ogImage = new URL(`${BASE}${config.author.avatar}`, config.site.url).href;
+---
+
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/x-icon" href={`${BASE}favicon.ico`} />
+    <link rel="icon" type="image/png" sizes="32x32" href={`${BASE}favicon-32x32.png`} />
+    <link rel="icon" type="image/png" sizes="16x16" href={`${BASE}favicon-16x16.png`} />
+    <link rel="canonical" href={canonicalUrl.href} />
+
+    <!-- Broadsheet design-system font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl.href} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- Cloudflare Web Analytics -->
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3c65582aa3704510be97c0638201eaa0"}'></script>
+  </head>
+  <body class="study-body">
+    <div id="stage"></div>
+    <div id="vig"></div>
+    <div id="grain"></div>
+    <div id="intro"><div>推開書房的門……</div></div>
+    <div id="chips" class="hud sheet"></div>
+    <div id="dock" class="hud">
+      <div class="row sheet">
+        <button class="btn btn-primary" id="bRandom">隨手翻一樣</button>
+        <button class="btn btn-secondary" id="bLight">關燈</button>
+        <button class="btn btn-secondary" id="bSeason">窗外：秋</button>
+      </div>
+      <span class="hint">拖曳環顧 · 滾輪靠近 · 點房間裡的東西 · Esc 退回</span>
+    </div>
+    <div id="toast" class="hud"></div>
+    <div id="tip"></div>
+    <aside id="panel" aria-live="polite">
+      <button class="btn btn-ghost close" data-act="close">收起 ✕</button>
+      <div id="pbody"></div>
+    </aside>
+
+    <!-- Film grain: a tiny noise canvas, jittered every 90ms -->
+    <script is:inline>
+      (() => {
+        const c = document.createElement('canvas');
+        c.width = c.height = 160;
+        const x = c.getContext('2d');
+        const d = x.createImageData(160, 160);
+        for (let i = 0; i < d.data.length; i += 4) {
+          const v = Math.random() * 255;
+          d.data[i] = d.data[i + 1] = d.data[i + 2] = v;
+          d.data[i + 3] = 255;
+        }
+        x.putImageData(d, 0, 0);
+        const g = document.getElementById('grain');
+        g.style.backgroundImage = 'url(' + c.toDataURL() + ')';
+        let k = 0;
+        setInterval(() => {
+          k = (k + 1) % 8;
+          g.style.transform = 'translate(' + ((k * 37) % 50) + 'px,' + ((k * 53) % 50) + 'px)';
+        }, 90);
+      })();
+    </script>
+
+    <script>
+      import '../scripts/study.js';
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  html, body.study-body { margin: 0; height: 100%; overflow: hidden; background: #140e0a; font-family: var(--font-body); color: var(--color-text); }
+  body.study-body a { color: var(--color-accent-700); }
+  body.study-body a:hover { color: var(--color-accent-800); }
+  body.study-body button { font-family: inherit; }
+
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; outline: none; }
+
+  #vig { position: fixed; inset: 0; pointer-events: none; z-index: 4; background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,.5) 100%); }
+  #grain { position: fixed; inset: -50px; pointer-events: none; z-index: 4; opacity: .06; mix-blend-mode: overlay; }
+
+  .hud { position: fixed; z-index: 10; }
+  .sheet { background: var(--color-bg); box-shadow: var(--shadow-sm); border-radius: var(--radius-md); }
+
+  #chips { right: var(--space-6); top: var(--space-6); padding: var(--space-2); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 560px; justify-content: flex-end; }
+  #chips button { all: unset; cursor: pointer; }
+  #chips .count { font-size: 12px; padding: 0 6px; }
+
+  #dock { left: var(--space-6); bottom: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; transition: opacity .4s; }
+  #dock .row { display: flex; gap: 6px; padding: 6px; }
+  #dock .hint { font-size: 12px; font-style: italic; color: var(--color-bg); }
+  body.reading #dock { opacity: 0; pointer-events: none; }
+
+  #tip { position: fixed; z-index: 30; pointer-events: none; font-size: 13px; padding: 6px 10px; background: var(--color-text); color: var(--color-bg); border-radius: var(--radius-md); opacity: 0; transition: opacity .15s; white-space: nowrap; }
+
+  #toast { left: 50%; top: var(--space-8); transform: translate(-50%, -8px); padding: var(--space-2) var(--space-4); background: var(--color-text); color: var(--color-bg); font-size: 16px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); }
+  body.reading #toast { left: calc(50% - 230px); }
+
+  #intro { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: #140e0a; transition: opacity 1.2s; pointer-events: none; }
+  #intro.off { opacity: 0; }
+  #intro div { color: var(--color-bg); font-family: var(--font-heading); font-size: 20px; font-style: italic; letter-spacing: .04em; }
+
+  /* Reading panel */
+  #panel { position: fixed; top: 0; right: 0; bottom: 0; width: 460px; z-index: 20; background: var(--color-bg); box-shadow: var(--shadow-lg); transform: translateX(105%); transition: transform .45s cubic-bezier(.2,.7,.2,1); overflow: auto; box-sizing: border-box; padding: var(--space-8) var(--space-6) var(--space-8) var(--space-8); }
+  #panel.open { transform: none; }
+  #panel .close { position: absolute; right: var(--space-4); top: var(--space-4); }
+  #panel h2 { margin: 6px 0 var(--space-3); font-family: var(--font-heading); font-weight: 600; font-size: 44px; line-height: 1.08; text-wrap: pretty; }
+  #panel h3 { margin: 6px 0 var(--space-3); font-family: var(--font-heading); font-weight: 600; font-size: 34px; line-height: 1.15; text-wrap: pretty; }
+  #panel .intro { font-size: 17px; font-style: italic; line-height: 1.55; margin: 0 0 var(--space-6); }
+  #panel .list { display: flex; flex-direction: column; gap: var(--space-6); }
+  #panel .it { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
+  #panel .it:hover .t { color: var(--color-accent-700); }
+  #panel .it:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+  #panel .it .t { font-family: var(--font-heading); font-weight: 600; font-size: 24px; line-height: 1.25; }
+  #panel .it .x { font-size: 15px; line-height: 1.55; }
+  #panel .it .m { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+  #panel .body p { font-size: 17px; line-height: 1.7; margin: 0 0 var(--space-3); text-wrap: pretty; }
+  #panel .meta { font-size: 13px; margin: var(--space-4) 0; }
+  #panel .rel { display: flex; flex-direction: column; gap: 4px; margin-top: var(--space-6); }
+  #panel .rel .lab { font-size: 12px; letter-spacing: .08em; }
+
+  /* Misregistered-plate mini game */
+  #panel .game { display: flex; flex-direction: column; gap: var(--space-3); align-items: center; margin: var(--space-4) 0; }
+  #panel .plate { position: relative; width: 200px; height: 200px; display: grid; place-items: center; }
+  #panel .plate span { position: absolute; font-family: var(--font-heading); font-weight: 700; font-size: 150px; line-height: 1; mix-blend-mode: multiply; }
+  #panel .game label { width: 100%; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  #panel .game input { width: 100%; accent-color: var(--color-accent); }
+
+  /* Headline generator */
+  #panel .hlout { display: flex; flex-direction: column; gap: 4px; margin: var(--space-4) 0; }
+  #panel .hlout .big { font-family: var(--font-heading); font-weight: 700; font-size: 30px; line-height: 1.2; padding: var(--space-2) 0; text-wrap: pretty; }
+
+  /* Reading progress bar */
+  .prog { height: 4px; background: var(--color-neutral-200); margin: var(--space-2) 0 var(--space-1); }
+  .prog i { display: block; height: 4px; background: var(--color-accent); }
+</style>

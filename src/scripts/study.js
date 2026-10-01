@@ -1,0 +1,660 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ================= content ================= */
+const ITEMS = {
+  r1:{cat:'shelf',kind:'reading',sp:'聖盃',k:'最近讀完 · 投資理財',t:'交易．創造自己的聖盃（第二版）',b:['書架上最近讀完的兩本之一。'],m:'書單 · 最近讀完 02',links:[{l:'看完整書單 ↗',u:'https://paul-learning.dev/reading/',p:1}]},
+  r2:{cat:'shelf',kind:'reading',sp:'系統思考',k:'最近讀完 · 思維邏輯',t:'系統思考實作篇',by:'一眼看清規律背後的結構和邏輯，解決現實世界中的複雜問題',b:['書架上最近讀完的兩本之一。'],m:'書單 · 最近讀完 01',links:[{l:'看完整書單 ↗',u:'https://paul-learning.dev/reading/',p:1}]},
+  r3:{cat:'shelf',kind:'mybook',sp:'Flutter 測試',k:'我出的書 · Book',t:'30 天輕鬆學會 Flutter 測試',b:['由 2023 iThome 鐵人賽佳作改寫成書，從基礎到進階一次到位。'],m:'出版書籍',links:[{l:'看書 ↗',u:'https://www.tenlong.com.tw/products/9786264140010?list_name=srh',p:1}]},
+  r4:{cat:'shelf',kind:'reading',sp:'下一本？',k:'書架空著 · /reading',t:'目前沒在讀什麼',b:['上一本讀完已經 30 天了，正在挑下一本。','想讀 29 本 · 今年讀了 13 本。'],m:'書單',links:[{l:'看完整書單 ↗',u:'https://paul-learning.dev/reading/',p:1}]},
+  w1:{cat:'shelf',kind:'writing',sp:'動畫拆小',k:'★ 最新文章 · 開發日常 · 2026.06.19',t:'開發筆記 - 把複雜的動畫任務變拆小',b:['探討軟體開發中的 Baby Step 原則如何應用在動畫實作上。透過將複雜的動畫任務拆解為獨立的、簡單的步驟（例如單一圓圈動畫、疊加多個圓圈、再實作滑動軌跡），減輕開發負擔，並分享實作心得。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/3848303f-78f7-8121-bcda-e646d955f0e9/',p:1}]},
+  w2:{cat:'shelf',kind:'writing',sp:'AI 找碴',k:'開發日常 · 2026.03.14',t:'請 AI 來找碴！我的 Heptabase 筆記活化實驗',b:['開發日常系列文章。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/3238303f-78f7-80ff-be85-d8438e337a89/',p:1}]},
+  w3:{cat:'shelf',kind:'writing',sp:'看懂測試',k:'開發日常 · 2025.10.05',t:'這個 Flutter 小技巧，讓你看懂 Widget Test 到底哪裡壞了',b:['開發日常系列文章。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/2838303f-78f7-80a1-9f9e-ed48ccc9f2c6/',p:1}]},
+  w4:{cat:'shelf',kind:'writing',sp:'tap 祕密',k:'開發日常 · 2025.08.23',t:'Widget Test 的 tap 原來這樣運作？一探 Flutter 測試點擊的祕密',b:['開發日常系列文章。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/2588303f-78f7-80b3-a789-ccdae073e04a/',p:1}]},
+  w5:{cat:'shelf',kind:'writing',sp:'Vibe 回顧',k:'開發日常 · 2025.08.07',t:'Vibe Coding 回顧',b:['開發日常系列文章。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/2488303f-78f7-804e-b849-e2bb796fa8ca/',p:1}]},
+  w6:{cat:'shelf',kind:'writing',sp:'隱晦邏輯',k:'開發日常 · 2025.07.07',t:'避免隱晦的程式邏輯 - 避免把細節當狀態',b:['「避免隱晦的程式邏輯」系列的一篇。系列索引寫於 2025.03.09。'],m:'開發日常',links:[{l:'閱讀全文 ↗',u:'https://paul-learning.dev/4b3ce25e/2298303f-78f7-807f-b25f-f4f4fad22b5b/',p:1},{l:'系列 Index ↗',u:'https://paul-learning.dev/4b3ce25e/1b18303f-78f7-8071-9e3a-f619d44bc33f/'}]},
+  s1:{cat:'shelf',kind:'series',sp:'開發日常',k:'系列 · Active · 51 篇',t:'開發日常',b:['從 2020 寫到現在，記錄日常開發遇到的問題與想法。'],m:'共 111 篇文章 · 3 個系列',links:[{l:'看全部文章 ↗',u:'https://paul-learning.dev/4b3ce25e/',p:1}]},
+  s2:{cat:'shelf',kind:'series',sp:'Flutter 測試',k:'系列 · 30 篇',t:'30 天輕鬆學會 Flutter 測試',b:['2023 iThome 鐵人賽佳作，後來改寫成書。'],m:'iThome 鐵人賽',links:[{l:'鐵人賽系列 ↗',u:'https://ithelp.ithome.com.tw/users/20129825/ironman/5974',p:1}]},
+  s3:{cat:'shelf',kind:'series',sp:'設計雜談',k:'系列 · 30 篇',t:'Flutter 開發設計雜談',b:['2022 iThome 鐵人賽佳作。'],m:'iThome 鐵人賽',links:[{l:'鐵人賽系列 ↗',u:'https://ithelp.ithome.com.tw/users/20129825/ironman/4992',p:1}]},
+  p1:{cat:'display',kind:'project',k:'Side Project · iOS · Android · 活著',t:'Lorescape · 沉浸式歷史探索',b:['用 AI 當你的隨身歷史導覽，把眼前的石頭、巷弄、廟宇的故事娓娓道來。從 0 完整流程上架 iOS / Android。'],tech:['Flutter','Dart','Supabase'],m:'展示架 · 大相框',links:[{l:'玩玩看 ↗',u:'https://lorescape.app/',p:1},{l:'GitHub ↗',u:'https://github.com/easylive1989/instant_explore'}]},
+  p3:{cat:'display',kind:'project',k:'Side Project · Web · 活著',t:'YouTube 運動計時器',b:['看 YouTube 運動影片時疊加的區間計時器，幫忙在固定秒數提醒換動作。'],tech:['Vanilla JS'],m:'展示架 · 座鐘',links:[{l:'玩玩看 ↗',u:'https://paul-learning.dev/youtube-sport-timer/',p:1},{l:'GitHub ↗',u:'https://github.com/easylive1989/youtube-sport-timer'}]},
+  g2:{cat:'display',kind:'project',k:'Side Project · Line Bot · 活著',t:'小遊戲機器人',b:['用 Line 跟朋友 / 群組玩五子棋、象棋、井字遊戲、海戰棋、猜數字的機器人。輸入「玩五子棋」就開戰。'],tech:['.NET','MongoDB'],m:'展示架 · 棋子',links:[{l:'怎麼玩 ↗',u:'https://github.com/easylive1989/LittleFlowerBot/blob/master/HOW%20TO%20PLAY.md',p:1},{l:'GitHub ↗',u:'https://github.com/easylive1989/LittleFlowerBot'}]},
+  g3:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Tiny Swords RTS',b:['Playbox 裡的即時戰略小遊戲。'],m:'展示架 · 戰場畫',links:[{l:'▶ 玩',u:'https://easylive1989.github.io/paul-playbox/tiny_swords/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
+  t2:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Stock Trading',b:['Playbox 裡的股票交易小遊戲。'],m:'展示架 · 小相框',links:[{l:'▶ 玩',u:'https://easylive1989.github.io/paul-playbox/stock_trading_game/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
+  g4:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Water Bottle Flip',b:['Playbox 裡的翻水瓶小遊戲。'],m:'展示架 · 水瓶',links:[{l:'▶ 玩',u:'https://easylive1989.github.io/paul-playbox/water_bottle_flip/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
+  g1:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Sokoban',b:['Playbox 裡的推箱子。'],m:'展示架 · 木箱',links:[{l:'▶ 玩',u:'https://easylive1989.github.io/paul-playbox/sokoban/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
+  p2:{cat:'display',kind:'play',k:'Playbox · 小遊戲',t:'Moonbeast',b:['Playbox 裡的月獸小遊戲。'],m:'展示架 · 銅像',links:[{l:'▶ 玩',u:'https://paul-learning.dev/moonbeast-game/',p:1},{l:'Playbox ↗',u:'https://github.com/easylive1989/paul-playbox'}]},
+  aw:{cat:'display',kind:'award',k:'競賽與演講 · Awards & Talks',t:'獎狀與講稿',b:[],list:[['2025','演講','實踐 Flutter 測試的眉眉角角','Agile.Taichung','https://www.accupass.com/event/2503031416141112169743'],['2024','演講','Flutter Widget Test 深度探索','iThome 鐵人講堂','https://itplus.ithome.com.tw/webinar-page/237'],['2023','鐵人賽佳作','30 天輕鬆學會 Flutter 測試','iThome','https://ithelp.ithome.com.tw/users/20129825/ironman/5974'],['2022','鐵人賽佳作','Flutter 開發設計雜談','iThome','https://ithelp.ithome.com.tw/users/20129825/ironman/4992'],['2020','鐵人賽完賽','在 Kata 中尋找 Clean Code','iThome','https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1']],m:'展示架 · 獎狀'},
+  d1:{cat:'desk',kind:'draft',k:'草稿 · 寫到一半',t:'AI 寫的測試，算不算測試？',b:['最近越來越常讓 AI 幫忙補 widget test。補得很快，但有一次它把一個壞掉的行為寫成了「預期結果」，測試全綠——','（草稿到這裡就斷了。）'],m:'範例草稿 · 之後換成真的'},
+  d2:{cat:'desk',kind:'draft',k:'草稿 · 寫到一半',t:'Lorescape 上架後記',b:['從 0 到 App Store 和 Google Play 都上架，最花時間的不是寫 code，而是','（草稿到這裡就斷了。）'],m:'範例草稿 · 之後換成真的'},
+  d3:{cat:'desk',kind:'draft',k:'草稿 · 寫到一半',t:'Baby Step 動畫，續',b:['上一篇把動畫拆成三步。這次想試試看：如果連「滑動軌跡」都再拆一次，會不會','（草稿到這裡就斷了。）'],m:'範例草稿 · 之後換成真的'},
+};
+const ABOUT_LINKS = [['GitHub','easylive1989','https://github.com/easylive1989'],['Threads','@paul.ch.wu','https://www.threads.com/@paul.ch.wu'],['LinkedIn','Paul Wu','https://www.linkedin.com/in/paul-wu-810280135/'],['Email','easylive1989@gmail.com','mailto:easylive1989@gmail.com']];
+const EGGS = {
+  e1:{t:'椅子上的貓',b:['這張椅子已經不是我的了。']},
+  e2:{t:'窗外的月亮',b:['寫不出來的時候，我會盯著它看。它從來不催稿。']},
+  e3:{t:'書架頂上的橡皮鴨',b:['Rubber duck debugging 的那隻。所有 bug 都是先講給它聽的。']},
+};
+const LINKS = [['w2','s1'],['w3','s2'],['w4','s2'],['r3','s2'],['w1','s1'],['p1','d2'],['g1','g3'],['w5','w2'],['w6','s1'],['r2','w6'],['aw','r3'],['d1','w3'],['d3','w1'],['g2','g1'],['t2','r1'],['g4','p2'],['p3','w5'],['s3','aw']];
+const related = id => LINKS.filter(l => l.includes(id)).map(l => l[0] === id ? l[1] : l[0]);
+const IDS = Object.keys(ITEMS);
+const CATS = [{ id:'shelf', name:'書架' }, { id:'display', name:'展示架' }, { id:'desk', name:'書桌' }];
+
+/* ================= palette ================= */
+const css = getComputedStyle(document.documentElement);
+const tok = (n, f) => css.getPropertyValue(n).trim() || f;
+const cv1 = document.createElement('canvas'); cv1.width = cv1.height = 1; const cx1 = cv1.getContext('2d', { willReadFrequently:true });
+const rgb = s => { cx1.clearRect(0,0,1,1); cx1.fillStyle = '#000'; cx1.fillStyle = s; cx1.fillRect(0,0,1,1); const d = cx1.getImageData(0,0,1,1).data; return '#' + [d[0],d[1],d[2]].map(v => v.toString(16).padStart(2,'0')).join(''); };
+const T = n => rgb(tok(n, '#888'));
+const C = {
+  paper:T('--color-bg'), ink:T('--color-text'), cyan:T('--color-accent'), mag:T('--color-accent-2'), yel:rgb(tok('--color-process-yellow','#edbb00')),
+  c700:T('--color-accent-700'), c800:T('--color-accent-800'), c900:T('--color-accent-900'), m700:T('--color-accent-2-700'), m800:T('--color-accent-2-800'), m900:T('--color-accent-2-900'),
+  n200:T('--color-neutral-200'), n600:T('--color-neutral-600'), n800:T('--color-neutral-800'),
+  wood:'#5b3522', woodD:'#3b2216', woodL:'#7a4a2c', wall:'#3a322b', wallL:'#4a4038', fabric:'#776f5c', fabricD:'#5e5747', cream:'#eadfc6', brass:'#b38b4b', terracotta:'#b4643c', cat:'#d98a46', leaf:'#5e9a3a', fur:'#3a3633',
+};
+const col = h => new THREE.Color(h);
+
+/* ================= renderer ================= */
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = col('#140e0a');
+const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .02, 60);
+const HOME = { pos:new THREE.Vector3(1.05, 1.72, 2.1), tgt:new THREE.Vector3(-0.2, 1.22, -1.7) };
+camera.position.set(1.6, 1.9, 3.6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.tgt); controls.enableDamping = true; controls.enablePan = false; controls.rotateSpeed = .45;
+controls.minDistance = .35; controls.maxDistance = 4.4; controls.minPolarAngle = .95; controls.maxPolarAngle = 1.8;
+const az0 = Math.atan2(HOME.pos.x - HOME.tgt.x, HOME.pos.z - HOME.tgt.z);
+controls.minAzimuthAngle = az0 - .62; controls.maxAzimuthAngle = az0 + .42;
+
+/* ================= helpers ================= */
+const std = (name, c, o = {}) => new THREE.MeshStandardMaterial({ name, color:col(c), roughness:.8, metalness:0, ...o });
+const M = {
+  wall:std('wall', C.wall, { roughness:.95 }), wallL:std('wall-light', C.wallL, { roughness:.95 }), ceil:std('ceiling', '#2c2621', { roughness:1 }),
+  wood:std('wood', C.wood, { roughness:.55 }), woodD:std('wood-dark', C.woodD, { roughness:.6 }), woodL:std('wood-light', C.woodL, { roughness:.5 }),
+  fabric:std('fabric', C.fabric, { roughness:1 }), fabricD:std('fabric-dark', C.fabricD, { roughness:1 }),
+  cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
+  terracotta:std('terracotta', C.terracotta), leaf:std('leaf', C.leaf, { roughness:.7, side:THREE.DoubleSide }), cat:std('cat', C.cat, { roughness:.95 }), catL:std('cat-light', '#efc394', { roughness:.95 }),
+  fur:std('fur-rug', C.fur, { roughness:1 }), glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
+  alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }), bronze:std('bronze', '#5a3a24', { roughness:.4, metalness:.6 }),
+};
+const mk = (geo, m, name, p, r) => { const o = new THREE.Mesh(geo, m); o.name = name; if (p) o.position.set(...p); if (r) o.rotation.set(...r); o.castShadow = true; o.receiveShadow = true; return o; };
+let rboxGeo2; const box = (w, h, d, m, name, p, r) => mk((rboxGeo2 || (rboxGeo2 = rboxGeo))(w, h, d, Math.min(.012, Math.min(w, h, d) * .2)), m, name, p, r);
+const cyl = (rt, rb, h, seg, m, name, p, r, open) => mk(new THREE.CylinderGeometry(rt, rb, h, seg, 1, !!open), m, name, p, r);
+const UP = new THREE.Vector3(0,1,0);
+const rod = (a, b, rad, m, name) => { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A); const o = mk(new THREE.CylinderGeometry(rad, rad, d.length(), 10), m, name); o.position.copy(A).addScaledVector(d, .5); o.quaternion.setFromUnitVectors(UP, d.normalize()); return o; };
+const texts = [];
+const ctex = (w, h, draw, keep = true) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); draw(x, w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.redraw = () => { draw(x, w, h); t.needsUpdate = true; }; if (keep) texts.push(t); return t; };
+const SERIF = '"Source Serif 4", serif';
+const room = new THREE.Group(); scene.add(room);
+const pickables = [];
+const tag = (root, data, pull = [0,.025,0]) => { root.userData.pick = data; root.userData.pull = new THREE.Vector3(...pull); root.userData.base = root.position.clone(); root.traverse(o => { if (o.isMesh) { o.userData.root = root; pickables.push(o); } }); };
+
+/* ================= realism kit ================= */
+let sd = 3; const RN = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+const cnv = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); return c; };
+const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
+function smoothNormals(g, ang = .62) {
+  const p = g.attributes.position, n = g.attributes.normal, map = new Map();
+  for (let i = 0; i < p.count; i++) { const k = p.getX(i).toFixed(4) + ',' + p.getY(i).toFixed(4) + ',' + p.getZ(i).toFixed(4); let a = map.get(k); if (!a) map.set(k, a = []); a.push(i); }
+  const out = new Float32Array(n.count * 3), c = Math.cos(ang), a = new THREE.Vector3(), b = new THREE.Vector3(), acc = new THREE.Vector3();
+  map.forEach(ids => ids.forEach(i => { a.fromBufferAttribute(n, i); acc.set(0,0,0); ids.forEach(j => { b.fromBufferAttribute(n, j); if (a.dot(b) > c) acc.add(b); }); acc.normalize(); out[i*3] = acc.x; out[i*3+1] = acc.y; out[i*3+2] = acc.z; }));
+  g.setAttribute('normal', new THREE.BufferAttribute(out, 3));
+}
+const geoCache = {};
+function rboxGeo(w, h, d, r) {
+  r = Math.min(r, w/2 - 1e-4, h/2 - 1e-4, d/2 - 1e-4); if (r < .0015) return new THREE.BoxGeometry(w, h, d);
+  const key = [w,h,d,r].map(v => v.toFixed(4)).join(); if (geoCache[key]) return geoCache[key];
+  const iw = w - 2*r, ih = h - 2*r, rc = Math.min(r*.6, iw/2, ih/2), x0 = -iw/2, y0 = -ih/2, sh = new THREE.Shape();
+  sh.moveTo(x0+rc, y0); sh.lineTo(x0+iw-rc, y0); sh.quadraticCurveTo(x0+iw, y0, x0+iw, y0+rc); sh.lineTo(x0+iw, y0+ih-rc); sh.quadraticCurveTo(x0+iw, y0+ih, x0+iw-rc, y0+ih);
+  sh.lineTo(x0+rc, y0+ih); sh.quadraticCurveTo(x0, y0+ih, x0, y0+ih-rc); sh.lineTo(x0, y0+rc); sh.quadraticCurveTo(x0, y0, x0+rc, y0);
+  const g = new THREE.ExtrudeGeometry(sh, { depth:d - 2*r, bevelEnabled:true, bevelThickness:r, bevelSize:r, bevelSegments:3, curveSegments:3 });
+  g.translate(0, 0, -(d - 2*r)/2); smoothNormals(g); return geoCache[key] = g;
+}
+const woodC = cnv(512, 512, (x, w, h) => { x.fillStyle = '#c4c4c4'; x.fillRect(0,0,w,h);
+  for (let i = 0; i < 260; i++) { const y = RN()*h, amp = 2 + RN()*9, k = 1 + Math.floor(RN()*3), ph = RN()*6.28; const dark = RN() < .62;
+    x.strokeStyle = dark ? 'rgba(60,30,15,' + (.05 + RN()*.2) + ')' : 'rgba(255,245,230,' + (.04 + RN()*.12) + ')'; x.lineWidth = .5 + RN()*2.6; x.beginPath();
+    for (let xx = 0; xx <= w; xx += 8) { const yy = y + Math.sin(xx/w*6.283*k + ph)*amp + Math.sin(xx/w*6.283*k*3 + ph)*amp*.25; xx ? x.lineTo(xx, yy) : x.moveTo(xx, yy); } x.stroke(); }
+  for (let i = 0; i < 2; i++) { const cx = RN()*w, cy = RN()*h; for (let r = 3; r < 26; r += 3) { x.strokeStyle = 'rgba(50,25,10,' + (.25 - r*.008) + ')'; x.lineWidth = 1.4; x.beginPath(); x.ellipse(cx, cy, r*2.6, r*.7, 0, 0, 6.283); x.stroke(); } } });
+const plasterC = cnv(256, 256, (x, w, h) => { x.fillStyle = '#bdbdbd'; x.fillRect(0,0,w,h); for (let i = 0; i < 2600; i++) { const v = Math.floor(150 + RN()*90); x.fillStyle = 'rgba(' + v + ',' + v + ',' + v + ',' + (.08 + RN()*.12) + ')'; const r = .6 + RN()*3.5; x.beginPath(); x.arc(RN()*w, RN()*h, r, 0, 6.283); x.fill(); } });
+const fabricC = cnv(128, 128, (x, w, h) => { x.fillStyle = '#bbb'; x.fillRect(0,0,w,h); for (let i = 0; i < w; i += 4) { x.fillStyle = 'rgba(255,255,255,.25)'; x.fillRect(i, 0, 2, h); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, i + 2, w, 2); } for (let i = 0; i < 900; i++) { x.fillStyle = 'rgba(0,0,0,' + RN()*.15 + ')'; x.fillRect(RN()*w, RN()*h, 1 + RN()*2, 1); } });
+const tabbyC = cnv(256, 128, (x, w, h) => { x.fillStyle = '#f0a663'; x.fillRect(0,0,w,h); for (let i = 0; i < 26; i++) { const xx = i/26*w + RN()*4; x.fillStyle = 'rgba(150,70,25,' + (.35 + RN()*.3) + ')'; x.beginPath(); x.moveTo(xx, 0); for (let y = 0; y <= h; y += 8) x.lineTo(xx + Math.sin(y*.08 + i)*3 + (RN()-.5)*2, y); x.lineTo(xx + 4 + RN()*3, h); for (let y = h; y >= 0; y -= 8) x.lineTo(xx + 4 + Math.sin(y*.08 + i)*3, y); x.fill(); }
+  const g = x.createLinearGradient(0, h*.6, 0, h); g.addColorStop(0, 'rgba(250,225,190,0)'); g.addColorStop(1, 'rgba(250,225,190,.9)'); x.fillStyle = g; x.fillRect(0, 0, w, h); });
+const spineC = cnv(256, 32, (x, w, h) => { x.fillStyle = '#a8a8a8'; x.fillRect(0,0,w,h); x.fillStyle = '#f2e3b5'; [[.08,.012],[.115,.006],[.885,.006],[.91,.012]].forEach(([p, t]) => x.fillRect(p*w, 0, t*w, h)); x.fillStyle = 'rgba(0,0,0,.28)'; x.fillRect(.62*w, 4, .16*w, h - 8); x.fillStyle = 'rgba(255,240,200,.35)'; x.fillRect(.65*w, 12, .1*w, 2); x.fillRect(.65*w, 18, .07*w, 2);
+  for (let i = 0; i < 300; i++) { x.fillStyle = 'rgba(0,0,0,' + RN()*.08 + ')'; x.fillRect(RN()*w, RN()*h, 2, 1); } });
+const woodMap = texOf(woodC, [1.4, 1.4]), woodBump = texOf(woodC, [1.4, 1.4], false);
+const plasterMap = texOf(plasterC, [1.5, 1.5]), plasterBump = texOf(plasterC, [1.5, 1.5], false);
+const fabricMap = texOf(fabricC, [18, 18]), fabricBump = texOf(fabricC, [18, 18], false);
+const pbr = (name, c, o = {}) => new THREE.MeshPhysicalMaterial({ name, color:col(c), roughness:.6, ...o });
+Object.assign(M, {
+  wood: pbr('wood', '#9a5f3c', { map:woodMap, bumpMap:woodBump, bumpScale:1.2, roughness:.42, clearcoat:.45, clearcoatRoughness:.28 }),
+  woodD: pbr('wood-dark', '#6a3f29', { map:woodMap, bumpMap:woodBump, bumpScale:1.2, roughness:.5, clearcoat:.3, clearcoatRoughness:.35 }),
+  woodL: pbr('wood-light', '#b07a50', { map:woodMap, bumpMap:woodBump, bumpScale:1.2, roughness:.38, clearcoat:.5, clearcoatRoughness:.25 }),
+  wall: std('wall', '#544739', { map:plasterMap, bumpMap:plasterBump, bumpScale:2, roughness:.93 }),
+  wallL: std('wall-light', '#665645', { map:plasterMap, bumpMap:plasterBump, bumpScale:2, roughness:.93 }),
+  ceil: std('ceiling', '#4a4038', { map:plasterMap, bumpMap:plasterBump, bumpScale:1, roughness:1 }),
+  fabric: std('fabric', '#9a917a', { map:fabricMap, bumpMap:fabricBump, bumpScale:3, roughness:1 }),
+  fabricD: std('fabric-dark', '#7a7262', { map:fabricMap, bumpMap:fabricBump, bumpScale:3, roughness:1 }),
+  brass: pbr('brass', '#d2a868', { metalness:1, roughness:.26 }), bronze: pbr('bronze', '#6a442a', { metalness:.9, roughness:.38 }),
+  alu: pbr('aluminium', '#b4b2ad', { metalness:1, roughness:.32 }),
+  cat: std('cat', '#ffffff', { map:texOf(tabbyC), roughness:1 }), catL: std('cat-light', '#f7dcb8', { roughness:1 }),
+  cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }), terracotta: std('terracotta', '#b8653c', { bumpMap:plasterBump, bumpScale:1.5, roughness:.95 }),
+  glass: new THREE.MeshPhysicalMaterial({ name:'glass', color:col('#c8d8d4'), transparent:true, opacity:.14, roughness:.04, metalness:0, depthWrite:false, clearcoat:1 }),
+});
+
+/* ================= room shell ================= */
+const floorTex = ctex(1024, 1024, (x, w, h) => {
+  const n = 12, pw = w / n; for (let i = 0; i < n; i++) { let y = (i * 397) % h; const shade = ['#4a2b1b','#55321f','#3f2416','#5d3823','#4d2d1c'][i % 5];
+    for (let k = 0; k < 3; k++) { const L = 300 + ((i*7+k*13) % 5) * 80; x.fillStyle = shade; x.fillRect(i*pw, y, pw - 2, L - 3); x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(i*pw, y + L - 3, pw, 3); y = (y + L) % h; }
+    x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect(i*pw + pw - 2, 0, 2, h);
+    x.strokeStyle = 'rgba(20,10,5,.25)'; x.lineWidth = 1; for (let g = 0; g < 6; g++) { x.beginPath(); const gx = i*pw + 8 + g*12; x.moveTo(gx, 0); for (let yy = 0; yy < h; yy += 40) x.lineTo(gx + Math.sin(yy*.02 + i + g)*4, yy); x.stroke(); } }
+}, false);
+floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(4.5, 3.2);
+room.add(mk(new THREE.PlaneGeometry(6, 6), new THREE.MeshPhysicalMaterial({ name:'floor', map:floorTex, bumpMap:floorTex, bumpScale:1.5, roughness:.5, clearcoat:.35, clearcoatRoughness:.32 }), 'floor', [0,0,0], [-Math.PI/2,0,0]));
+room.add(box(.1, 2.8, 6, M.wall, 'wall-left', [-3.05,1.4,0]));
+room.add(box(.1, 2.8, 6, M.wall, 'wall-right', [3.05,1.4,0]));
+room.add(box(6.2, .1, 6, M.ceil, 'ceiling', [0,2.85,0]));
+// back wall with niche + window openings
+room.add(box(.7, 2.8, .1, M.wall, 'wall-back', [-2.7,1.4,-2.55]));
+room.add(box(.6, 2.8, .1, M.wall, 'wall-back', [-.25,1.4,-2.55]));
+room.add(box(.4, 2.8, .1, M.wall, 'wall-back', [2.85,1.4,-2.55]));
+room.add(box(1.8, .25, .1, M.wall, 'wall-back', [-1.45,2.68,-2.55]));
+room.add(box(2.6, 1.0, .1, M.wall, 'wall-back', [1.35,.5,-2.55]));
+room.add(box(2.6, .3, .1, M.wall, 'wall-back', [1.35,2.65,-2.55]));
+// crown + skirting
+[[-3,0,'x'],[3,0,'x']].forEach(([x]) => { room.add(box(.08, .12, 6, M.cream, 'crown', [x*.985,2.74,0])); room.add(box(.05, .14, 6, M.woodD, 'skirting', [x*.99,.07,0])); });
+room.add(box(6, .12, .08, M.cream, 'crown', [0,2.74,-2.48]));
+room.add(box(6, .14, .05, M.woodD, 'skirting', [0,.07,-2.48]));
+
+/* ================= bookshelf (left wall) ================= */
+const shelf = new THREE.Group(); shelf.name = 'bookshelf'; room.add(shelf);
+const SX = -2.62, SZ0 = -2.47, SZ1 = 1.6, LV = [.1, .45, .8, 1.15, 1.5, 1.85, 2.2, 2.55];
+shelf.add(box(.4, 2.72, 4.1, M.woodD, 'shelf-carcass-back', [-2.98,1.36,(SZ0+SZ1)/2]));
+const bays = [SZ0, -1.13, .23, SZ1];
+bays.forEach(z => shelf.add(box(.4, 2.72, .05, M.wood, 'shelf-divider', [-2.81,1.36,z])));
+LV.forEach(y => shelf.add(box(.4, .035, SZ1 - SZ0, M.wood, 'shelf-board', [-2.81,y,(SZ0+SZ1)/2])));
+shelf.add(box(.42, .18, SZ1 - SZ0 + .05, M.wood, 'shelf-cornice', [-2.8,2.68,(SZ0+SZ1)/2]));
+LV.slice(1).forEach(y => { const s = mk(new THREE.BoxGeometry(.02, .01, SZ1 - SZ0), new THREE.MeshBasicMaterial({ name:'led', color:col('#b98450') }), 'led-strip', [-2.63, y - .025, (SZ0+SZ1)/2]); s.castShadow = false; shelf.add(s); });
+const spineCols = [C.c900, C.m900, C.m800, '#24402f', '#2e4a3a', '#1f2c3d', C.cream, '#6b3a26', '#8a6b45', C.n800, '#3d2a1e', C.c800, '#c9b88f', '#5a1f1f'];
+const featured = { 2:{ bay:1, ids:['s1','s2','s3'], label:'系列', th:.12 }, 3:{ bay:1, ids:['w1','w2','w3','w4','w5','w6'], label:'最近寫的', th:.07 }, 4:{ bay:1, ids:['r1','r2','r3','r4'], label:'書單', th:.07 } };
+const bookGeo = rboxGeo(1, 1, 1, .09);
+const spineMap = texOf(spineC); spineMap.offset.set(.5, 0);
+const inst = new THREE.InstancedMesh(bookGeo, new THREE.MeshStandardMaterial({ name:'books', map:spineMap, roughness:.68 }), 900); inst.castShadow = true; inst.receiveShadow = true;
+let ni = 0; const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
+const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+const featPos = {};
+for (let lv = 0; lv < 7; lv++) for (let b = 0; b < 3; b++) {
+  let z = bays[b] + .04; const zEnd = bays[b+1] - .04; const f = featured[lv] && featured[lv].bay === b ? featured[lv] : null;
+  const fStart = f ? bays[b] + .32 : 99, fEnd = f ? fStart + f.ids.length * (f.th + .015) + .02 : 99;
+  if (f) f.ids.forEach((id, i) => featPos[id] = { y:LV[lv], z:fStart + .02 + i*(f.th + .015) + f.th/2, th:f.th });
+  while (z < zEnd - .02) {
+    if (z >= fStart && z < fEnd) { z = fEnd; continue; }
+    if (rnd() < .025) { z += .12; continue; }
+    const t = .025 + rnd()*.045, h = .22 + rnd()*.1, d = .2 + rnd()*.06;
+    if (z + t > zEnd) break;
+    const lean = rnd() < .04 && z + .2 < zEnd ? .22 : 0;
+    q.setFromEuler(new THREE.Euler(lean, 0, 0)); sc.set(d, h, t); ps.set(-2.78 + (.26 - d)/2 + .02, LV[lv] + .018 + h/2, z + t/2 + (lean ? .03 : 0));
+    m4.compose(ps, q, sc); inst.setMatrixAt(ni, m4); const c = col(spineCols[Math.floor(rnd()*spineCols.length)]); c.multiplyScalar(.8 + rnd()*.35); inst.setColorAt(ni, c); ni++;
+    z += t + .003 + (lean ? .05 : 0);
+  }
+}
+inst.count = ni; shelf.add(inst);
+// featured books with real spines
+const hasCJK = s => /[\u3400-\u9fff]/.test(s);
+const spineTex = (title, bg, fg) => ctex(96, 512, (x, w, h) => {
+  x.fillStyle = bg; x.fillRect(0,0,w,h); x.fillStyle = fg; x.fillRect(0, 26, w, 4); x.fillRect(0, h-30, w, 4);
+  const t = title.replace(/[《》]/g, ''); x.textAlign = 'center'; x.textBaseline = 'middle';
+  if (hasCJK(t)) { const n = t.length, fs = Math.min(58, 400 / n); x.font = `600 ${fs}px ${SERIF}`; [...t].forEach((ch, i) => x.fillText(ch, w/2, 60 + fs/2 + i*fs*1.05)); }
+  else { x.save(); x.translate(w/2, h/2); x.rotate(Math.PI/2); x.font = `600 40px ${SERIF}`; x.fillText(t, 0, 2, h - 80); x.restore(); }
+});
+const fPal = [[C.c800,C.cream],[C.m800,C.cream],['#2e4a3a',C.cream],[C.cream,C.ink],['#6b3a26',C.cream],[C.c900,C.yel],[C.cream,C.m700],['#1f2c3d',C.cream]];
+const fCols = {}; Object.keys(featPos).forEach((id, i) => fCols[id] = id === 'r3' ? [C.cyan, C.paper] : fPal[i % fPal.length]);
+const books = {};
+Object.entries(featPos).forEach(([id, p]) => {
+  const [bg, fg] = fCols[id]; const h = id[0] === 's' ? .32 : id[0] === 'r' ? .29 : .3;
+  const sm = new THREE.MeshStandardMaterial({ name:'spine-' + id, map:spineTex(ITEMS[id].sp || ITEMS[id].t, bg, fg), roughness:.7 });
+  const cm = std('cover-' + id, bg, { roughness:.7 }), pm = std('pages', C.cream, { roughness:.9 });
+  const g = new THREE.Group(); g.position.set(-2.78 + .13 - .01, p.y + .018 + h/2, p.z);
+  g.add(mk(new THREE.BoxGeometry(.24, h, p.th), [sm, pm, pm, pm, cm, cm], 'book-' + id)); shelf.add(g); books[id] = g;
+  tag(g, { type:'item', id, view:'shelf' }, [.1, 0, 0]);
+});
+const plateTex = s => ctex(256, 64, (x, w, h) => { x.fillStyle = C.brass; x.fillRect(0,0,w,h); x.strokeStyle = '#6e5228'; x.lineWidth = 4; x.strokeRect(4,4,w-8,h-8); x.fillStyle = '#2a1d0e'; x.font = `600 34px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(s, w/2, h/2+2); });
+[2, 3, 4].forEach(lv => { const f = featured[lv]; const zc = bays[f.bay] + .32 + .02 + f.ids.length*(f.th + .015)/2;
+  const pm = new THREE.MeshStandardMaterial({ name:'brass-plate', map:plateTex(f.label), roughness:.4, metalness:.6 });
+  shelf.add(mk(new THREE.BoxGeometry(.005, .045, .18), [pm, M.brass, M.brass, M.brass, M.brass, M.brass], 'brass-plate', [-2.605, LV[lv] - .005, zc])); });
+// rubber duck (egg 3) on top of shelf
+const duck = new THREE.Group(); duck.name = 'rubber-duck'; duck.position.set(-2.75, 2.785, .9); duck.rotation.y = 1.2;
+const dkM = std('duck', C.yel, { roughness:.4 });
+const dkb = mk(new THREE.SphereGeometry(.05, 20, 14), dkM, 'duck-body'); dkb.scale.set(1, .75, 1.3); duck.add(dkb);
+duck.add(mk(new THREE.SphereGeometry(.032, 16, 12), dkM, 'duck-head', [0,.045,.04]));
+duck.add(mk(new THREE.ConeGeometry(.012, .03, 8), std('beak', '#e0742c'), 'duck-beak', [0,.042,.077], [Math.PI/2,0,0]));
+room.add(duck); tag(duck, { type:'egg', id:'e3', view:'duck' });
+
+/* ================= display niche ================= */
+const niche = new THREE.Group(); niche.name = 'display-niche'; room.add(niche);
+const NX0 = -2.35, NX1 = -.55, NZB = -2.92, NZF = -2.5;
+niche.add(box(NX1 - NX0, 1.75, .04, M.wallL, 'niche-back', [(NX0+NX1)/2, 1.725, NZB]));
+[NX0, NX1].forEach(x => niche.add(box(.06, 1.75, NZF - NZB, M.wood, 'niche-side', [x, 1.725, (NZB+NZF)/2])));
+niche.add(box(NX1 - NX0 + .06, .06, NZF - NZB, M.wood, 'niche-top', [(NX0+NX1)/2, 2.58, (NZB+NZF)/2]));
+const NL = [.86, 1.3, 1.75, 2.2];
+NL.forEach(y => niche.add(box(NX1 - NX0, .04, NZF - NZB + .02, M.woodL, 'niche-shelf', [(NX0+NX1)/2, y, (NZB+NZF)/2])));
+niche.add(box(NX1 - NX0 + .12, .84, .5, M.wood, 'niche-cabinet', [(NX0+NX1)/2, .42, -2.67]));
+[-1.9, -1.0].forEach(x => niche.add(box(.8, .66, .01, M.woodD, 'cabinet-door', [x, .45, -2.415])));
+[-1.52, -1.38].forEach(x => niche.add(cyl(.012, .012, .05, 8, M.brass, 'knob', [x, .5, -2.4], [Math.PI/2,0,0])));
+[[-1.9, 2.55], [-1.0, 2.55]].forEach(([x, y]) => { const s = mk(new THREE.CircleGeometry(.03, 16), new THREE.MeshBasicMaterial({ color:col('#ffe2b0') }), 'downlight', [x, y - .001, -2.72], [Math.PI/2,0,0]); niche.add(s); });
+// picture textures (typographic prints)
+const printTex = (ch, ink, bg = C.cream) => ctex(256, 320, (x, w, h) => { x.fillStyle = bg; x.fillRect(0,0,w,h); x.fillStyle = '#d9ccad'; x.fillRect(24,24,w-48,h-48); x.fillStyle = bg; x.fillRect(30,30,w-60,h-60);
+  x.globalCompositeOperation = 'multiply'; x.font = `700 170px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = C.yel; x.fillText(ch, w/2 - 4, h/2 + 12); x.fillStyle = C.mag; x.fillText(ch, w/2 + 5, h/2 + 9); x.fillStyle = ink; x.fillText(ch, w/2, h/2 + 6); x.globalCompositeOperation = 'source-over'; });
+const frame = (w, h, ch, ink, name) => { const g = new THREE.Group(); g.name = name;
+  const pm = new THREE.MeshStandardMaterial({ name:'print', map:printTex(ch, ink), roughness:.9 });
+  g.add(mk(new THREE.BoxGeometry(w, h, .03), [M.woodD, M.woodD, M.woodD, M.woodD, pm, M.woodD], 'frame'));
+  g.add(box(w, .02, .035, M.woodD, 'frame-edge', [0, h/2, .005])); g.add(box(w, .02, .035, M.woodD, 'frame-edge', [0, -h/2, .005]));
+  g.add(box(.02, h, .035, M.woodD, 'frame-edge', [w/2, 0, .005])); g.add(box(.02, h, .035, M.woodD, 'frame-edge', [-w/2, 0, .005]));
+  return g; };
+const exh = {};
+const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); niche.add(g); exh[id] = g; tag(g, { type:'item', id, view:'niche' }); };
+place(frame(.5, .32, '史', C.c800, 'frame-large'), 'p1', -1.65, 2.24 + .17, -2.8, 0, -.05);
+const statue = new THREE.Group(); statue.name = 'statue';
+const sPts = [[0,0],[.06,0],[.06,.02],[.035,.04],[.04,.12],[.05,.2],[.035,.27],[.045,.31],[.03,.36],[0,.38]].map(([a,b]) => new THREE.Vector2(a, b));
+statue.add(mk(new THREE.LatheGeometry(sPts, 32), M.bronze, 'statue-body'));
+statue.add(mk(new THREE.SphereGeometry(.03, 16, 12), M.bronze, 'statue-head', [0,.41,0]));
+place(statue, 'p2', -.85, 2.22, -2.72, 0, 0);
+place(frame(.4, .32, '獎', C.m800, 'frame-mid'), 'aw', -1.85, 1.77 + .16, -2.82, .08, -.08);
+const deskClock = new THREE.Group(); deskClock.name = 'clock';
+const clockTex = ctex(256, 256, (x, w, h) => { const d = new Date(); x.fillStyle = C.cream; x.fillRect(0,0,w,h); x.strokeStyle = '#3a2a18'; x.lineWidth = 8; x.beginPath(); x.arc(128,128,118,0,Math.PI*2); x.stroke();
+  for (let i = 0; i < 12; i++) { const a = i/12*Math.PI*2; x.lineWidth = i % 3 ? 3 : 7; x.beginPath(); x.moveTo(128 + Math.sin(a)*96, 128 - Math.cos(a)*96); x.lineTo(128 + Math.sin(a)*110, 128 - Math.cos(a)*110); x.stroke(); }
+  const hA = ((d.getHours() % 12) + d.getMinutes()/60)/12*Math.PI*2, mA = d.getMinutes()/60*Math.PI*2;
+  x.lineCap = 'round'; x.lineWidth = 9; x.beginPath(); x.moveTo(128,128); x.lineTo(128 + Math.sin(hA)*58, 128 - Math.cos(hA)*58); x.stroke();
+  x.lineWidth = 5; x.beginPath(); x.moveTo(128,128); x.lineTo(128 + Math.sin(mA)*88, 128 - Math.cos(mA)*88); x.stroke(); x.fillStyle = C.m700; x.beginPath(); x.arc(128,128,8,0,Math.PI*2); x.fill(); });
+setInterval(() => clockTex.redraw(), 30000);
+deskClock.add(box(.22, .06, .12, M.woodD, 'clock-base', [0,.03,0]));
+deskClock.add(cyl(.075, .075, .05, 32, M.brass, 'clock-case', [0,.14,0], [Math.PI/2,0,0]));
+deskClock.add(mk(new THREE.CircleGeometry(.066, 32), new THREE.MeshStandardMaterial({ name:'clock-face', map:clockTex, roughness:.5 }), 'clock-face', [0,.14,.026]));
+place(deskClock, 'p3', -1.35, 1.77, -2.68, 0, 0);
+const fig = new THREE.Group(); fig.name = 'figurine';
+const fPts = [[0,0],[.04,0],[.04,.03],[.02,.05],[.025,.14],[.03,.2],[.018,.24],[0,.25]].map(([a,b]) => new THREE.Vector2(a, b));
+fig.add(mk(new THREE.LatheGeometry(fPts, 24), std('figurine-wood', '#8a5a34', { roughness:.5 }), 'figurine'));
+fig.add(mk(new THREE.SphereGeometry(.022, 12, 10), std('figurine-wood', '#8a5a34'), 'figurine-head', [0,.27,0]));
+place(fig, 'g2', -.82, 1.77, -2.72, 0, 0);
+const candle = new THREE.Group(); candle.name = 'candle';
+candle.add(cyl(.05, .06, .015, 24, M.brass, 'candle-dish', [0,.008,0])); candle.add(cyl(.012, .016, .07, 12, M.brass, 'candle-stem', [0,.05,0]));
+candle.add(cyl(.018, .018, .14, 16, M.cream, 'candle-wax', [0,.155,0]));
+const flame = mk(new THREE.SphereGeometry(.012, 12, 8), new THREE.MeshBasicMaterial({ name:'flame', color:col('#ffd27a') }), 'flame', [0,.24,0]); flame.scale.set(1, 2.2, 1); flame.castShadow = false; candle.add(flame);
+candle.position.set(-2.1, 1.32, -2.7); niche.add(candle);
+const candleLight = new THREE.PointLight(0xffb45a, .5, 1.6, 2); candleLight.position.set(-2.1, 1.6, -2.62); room.add(candleLight);
+place(frame(.2, .25, '股', C.c700, 'frame-small'), 't2', -1.55, 1.32 + .125, -2.78, .15, -.12);
+const bottle = new THREE.Group(); bottle.name = 'water-bottle';
+const btPts = [[0,0],[.032,0],[.034,.01],[.034,.12],[.026,.15],[.013,.17],[.013,.19],[0,.19]].map(([a,b]) => new THREE.Vector2(a, b));
+bottle.add(mk(new THREE.LatheGeometry(btPts, 32), new THREE.MeshStandardMaterial({ name:'bottle-plastic', color:col('#b9d8e6'), transparent:true, opacity:.55, roughness:.1 }), 'bottle'));
+bottle.add(cyl(.031, .031, .06, 24, std('bottle-water', '#5aa8cc', { transparent:true, opacity:.6, roughness:.1 }), 'bottle-water', [0,.04,0]));
+bottle.add(cyl(.015, .015, .025, 16, std('bottle-cap', C.cyan, { roughness:.4 }), 'bottle-cap', [0,.2,0]));
+bottle.add(cyl(.0345, .0345, .035, 32, std('bottle-label', C.cream), 'bottle-label', [0,.09,0], null, true));
+place(bottle, 'g4', -1.1, 1.32, -2.66, 0, 0);
+const woodBox = new THREE.Group(); woodBox.name = 'wooden-box';
+woodBox.add(box(.3, .14, .2, M.woodD, 'box-body', [0,.07,0])); woodBox.add(box(.31, .035, .21, M.wood, 'box-lid', [0,.155,0]));
+woodBox.add(box(.04, .03, .01, M.brass, 'box-latch', [0,.12,.105]));
+place(woodBox, 'g1', -1.95, .88, -2.7, .1, 0);
+place(frame(.38, .3, '劍', C.ink, 'frame-landscape'), 'g3', -1.05, .88 + .15, -2.8, -.05, -.1);
+
+/* ================= window + outside ================= */
+const WIN = { x0:.05, x1:2.65, y0:1.0, y1:2.5 };
+const outsideTex = ctex(1024, 600, () => {}, false);
+const outside = mk(new THREE.PlaneGeometry(7, 4.2), new THREE.MeshBasicMaterial({ name:'garden', map:outsideTex }), 'garden', [1.35, 1.75, -4.6]); outside.castShadow = false; outside.receiveShadow = false; room.add(outside);
+const wf = new THREE.Group(); wf.name = 'window'; room.add(wf);
+const WZ = -2.55;
+wf.add(box(WIN.x1 - WIN.x0 + .1, .08, .14, M.woodD, 'window-frame', [1.35, WIN.y1 + .02, WZ]));
+wf.add(box(WIN.x1 - WIN.x0 + .1, .08, .14, M.woodD, 'window-frame', [1.35, WIN.y0, WZ]));
+[WIN.x0, WIN.x1].forEach(x => wf.add(box(.08, WIN.y1 - WIN.y0, .14, M.woodD, 'window-frame', [x, (WIN.y0+WIN.y1)/2, WZ])));
+[.917, 1.783].forEach(x => wf.add(box(.05, WIN.y1 - WIN.y0, .08, M.woodD, 'mullion', [x, (WIN.y0+WIN.y1)/2, WZ])));
+[1.55, 2.08].forEach(y => wf.add(box(WIN.x1 - WIN.x0, .045, .08, M.woodD, 'transom', [1.35, y, WZ])));
+const glass = mk(new THREE.PlaneGeometry(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0), M.glass, 'glass', [1.35, (WIN.y0+WIN.y1)/2, WZ - .02]); glass.castShadow = false; wf.add(glass);
+wf.add(box(WIN.x1 - WIN.x0 + .4, .04, .1, M.cream, 'sill', [1.35, WIN.y0 - .02, -2.5]));
+[WIN.x0 - .1, WIN.x1 + .1].forEach(x => wf.add(box(.12, WIN.y1 - WIN.y0 + .3, .12, M.wallL, 'reveal', [x, (WIN.y0+WIN.y1)/2, -2.5])));
+const moon = mk(new THREE.SphereGeometry(.16, 32, 20), new THREE.MeshBasicMaterial({ name:'moon', color:col('#f3ead2') }), 'moon', [2.15, 2.35, -4.4]); moon.castShadow = false; room.add(moon);
+tag(moon, { type:'egg', id:'e2', view:'window' }, [0,0,0]);
+
+/* ================= desk ================= */
+const desk = new THREE.Group(); desk.name = 'desk'; room.add(desk);
+const DY = .76, DZ = -2.0, DX = 1.4;
+desk.add(box(2.7, .05, .95, M.wood, 'desk-top', [DX, DY, DZ]));
+desk.add(box(2.6, .14, .05, M.woodD, 'desk-apron', [DX, DY - .1, DZ + .44]));
+[[.16,-2.42],[2.64,-2.42],[.16,-1.58],[2.64,-1.58]].forEach(([x,z]) => desk.add(box(.06, DY - .025, .06, M.woodD, 'desk-leg', [x, (DY - .025)/2, z])));
+desk.add(box(2.5, .03, .04, M.woodD, 'stretcher', [DX, .15, -2.4]));
+desk.add(box(.6, .1, .01, M.woodL, 'drawer', [DX, DY - .1, DZ + .468])); desk.add(cyl(.012, .012, .03, 8, M.brass, 'drawer-pull', [DX, DY - .1, DZ + .48], [Math.PI/2,0,0]));
+// banker lamp (left)
+const lampL = new THREE.Group(); lampL.name = 'desk-lamp'; lampL.position.set(.38, DY + .025, -2.25); desk.add(lampL);
+lampL.add(cyl(.09, .1, .02, 32, M.brass, 'lamp-base', [0,.01,0]));
+lampL.add(rod([0,.02,0], [0,.42,0], .012, M.brass, 'lamp-stem')); lampL.add(rod([0,.42,0], [.13,.47,.06], .01, M.brass, 'lamp-arm'));
+const shadeL = mk(new THREE.ConeGeometry(.09, .13, 32, 1, true), std('lamp-shade', '#2d3a2f', { roughness:.4, metalness:.5, side:THREE.DoubleSide }), 'lamp-shade', [.17,.43,.08], [0,0,-.9]); lampL.add(shadeL);
+const bulbL = mk(new THREE.SphereGeometry(.025, 12, 8), new THREE.MeshBasicMaterial({ name:'bulb', color:col('#fff1c9') }), 'bulb', [.19,.39,.08]); bulbL.castShadow = false; lampL.add(bulbL);
+tag(lampL, { type:'lamp' }, [0,0,0]);
+// plant
+const plant = new THREE.Group(); plant.name = 'plant'; plant.position.set(.78, DY + .025, -2.28); desk.add(plant);
+plant.add(cyl(.085, .1, .02, 24, M.terracotta, 'saucer', [0,.01,0])); plant.add(cyl(.075, .055, .12, 24, M.terracotta, 'pot', [0,.08,0]));
+plant.add(cyl(.068, .068, .01, 24, std('soil', '#2a1c12'), 'soil', [0,.135,0]));
+for (let i = 0; i < 11; i++) { const a = i * 2.4, r = .02 + (i % 3) * .02, lg = new THREE.Group(); lg.position.set(Math.cos(a)*r, .14, Math.sin(a)*r); lg.rotation.y = -a;
+  lg.add(rod([0,0,0], [.04, .1 + (i%4)*.03, 0], .004, M.leaf, 'leaf-stem'));
+  const lf = mk(new THREE.SphereGeometry(.045, 12, 8), M.leaf, 'leaf', [.07, .12 + (i%4)*.03, 0]); lf.scale.set(1.3, .15, .6); lf.rotation.z = -.5 + (i%3)*.2; lg.add(lf); plant.add(lg); }
+// laptop (mermer)
+const laptop = new THREE.Group(); laptop.name = 'laptop'; laptop.position.set(1.62, DY + .025, -2.08); laptop.rotation.y = -.05; desk.add(laptop);
+laptop.add(box(.5, .016, .34, M.alu, 'laptop-base', [0,.008,0]));
+const kbTex = ctex(256, 160, (x, w, h) => { x.fillStyle = '#86847f'; x.fillRect(0,0,w,h); x.fillStyle = '#2a2a2a'; for (let r = 0; r < 5; r++) for (let c = 0; c < 13; c++) x.fillRect(10 + c*18.4, 10 + r*16, 15, 13); x.fillStyle = '#7a7873'; x.fillRect(80, 100, 96, 52); }, false);
+laptop.add(mk(new THREE.PlaneGeometry(.44, .27), new THREE.MeshStandardMaterial({ name:'keyboard', map:kbTex, roughness:.5 }), 'keyboard', [0,.0165,.02], [-Math.PI/2,0,0]));
+const screenTex = ctex(512, 320, (x, w, h) => { x.fillStyle = '#0d1117'; x.fillRect(0,0,w,h);
+  x.fillStyle = '#e6edf3'; x.font = '600 24px ' + SERIF; x.fillText('easylive1989', 30, 46); x.fillStyle = '#8b949e'; x.font = '400 16px ' + SERIF; x.fillText('3,782 contributions in 2026', 30, 72);
+  let r = 5; const R = () => (r = (r * 16807) % 2147483647) / 2147483647; const G = ['#161b22','#0e4429','#006d32','#26a641','#39d353'];
+  for (let c = 0; c < 26; c++) for (let d = 0; d < 7; d++) { const v = R(); x.fillStyle = G[v < .12 ? 0 : v < .35 ? 1 : v < .62 ? 2 : v < .85 ? 3 : 4]; x.fillRect(30 + c*17.4, 96 + d*17.4, 14, 14); }
+  x.fillStyle = '#e6edf3'; x.font = '600 20px ' + SERIF; x.fillText('10 天連續 · 最長 97 天', 30, 252); x.fillStyle = '#8b949e'; x.font = '400 15px ' + SERIF; x.fillText('Threads @paul.ch.wu · LinkedIn · Email', 30, 282); });
+const lid = new THREE.Group(); lid.position.set(0, .016, -.17); lid.rotation.x = -.28; laptop.add(lid);
+lid.add(box(.5, .32, .01, M.alu, 'laptop-lid', [0,.16,-.005]));
+lid.add(mk(new THREE.PlaneGeometry(.46, .29), new THREE.MeshBasicMaterial({ name:'screen', map:screenTex }), 'screen', [0,.165,.0015]));
+tag(laptop, { type:'list', view:'desk' }, [0,.02,0]);
+const screenLight = new THREE.PointLight(0xdfe8ff, .25, 1.2, 2); screenLight.position.set(1.62, DY + .25, -1.85); room.add(screenLight);
+// drafts
+const draftTex = (title) => ctex(256, 340, (x, w, h) => { x.fillStyle = '#efe8d8'; x.fillRect(0,0,w,h); x.fillStyle = C.ink; x.font = `600 22px ${SERIF}`; x.fillText(title, 22, 44, w - 44); x.fillStyle = C.m700; x.font = `italic 400 13px ${SERIF}`; x.fillText('草稿', 22, 66);
+  x.strokeStyle = '#6d6a64'; x.lineWidth = 1.6; const n = 9 + title.length % 4; for (let i = 0; i < n; i++) { x.beginPath(); x.moveTo(22, 96 + i*20); const L = i === n-1 ? 70 : 190 + Math.sin(i*3.1)*20; for (let s = 0; s < L; s += 6) x.lineTo(22 + s, 96 + i*20 + Math.sin(s*.5 + i)*1.2); x.stroke(); }
+  x.strokeStyle = C.m700; x.lineWidth = 2; x.beginPath(); x.moveTo(30, 96 + n*20); x.lineTo(80, 96 + n*20 + 4); x.stroke(); });
+const drafts = {};
+[['d1', 2.2, -2.18, .25], ['d2', 2.42, -1.95, -.35], ['d3', 2.05, -1.86, .05]].forEach(([id, x, z, r], i) => {
+  const g = new THREE.Group(); g.name = 'draft-' + id; g.position.set(x, DY + .027 + i*.0025, z); g.rotation.y = r;
+  g.add(mk(new THREE.PlaneGeometry(.21, .28), new THREE.MeshStandardMaterial({ name:'draft-paper', map:draftTex(ITEMS[id].t), roughness:.9 }), 'draft-paper', [0,0,0], [-Math.PI/2,0,0]));
+  desk.add(g); drafts[id] = g; tag(g, { type:'item', id, view:'desk' }, [0,.03,0]);
+});
+const pen = rod([1.95, DY + .033, -1.72], [2.12, DY + .033, -1.78], .006, M.ink, 'pen'); desk.add(pen);
+// right lamp
+const lampR = new THREE.Group(); lampR.name = 'side-lamp'; lampR.position.set(2.56, DY + .025, -2.33); desk.add(lampR);
+lampR.add(cyl(.07, .08, .025, 32, M.brass, 'lamp-base', [0,.012,0])); lampR.add(rod([0,.02,0], [0,.5,0], .009, M.brass, 'lamp-stem'));
+lampR.add(rod([0,.5,0], [-.12,.56,.05], .008, M.brass, 'lamp-gooseneck'));
+const shadeR = mk(new THREE.ConeGeometry(.11, .1, 24, 1, true), std('pleated-shade', '#e8d3a8', { roughness:.9, side:THREE.DoubleSide, emissive:col('#ffb15a'), emissiveIntensity:.35 }), 'pleated-shade', [-.16,.52,.06]); lampR.add(shadeR);
+// portrait (about)
+const portraitTex = ctex(240, 300, (x, w, h) => { x.fillStyle = C.paper; x.fillRect(0,0,w,h);
+  x.globalCompositeOperation = 'multiply'; x.font = `700 200px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = C.yel; x.fillText('P', w/2 - 6, h/2 - 2); x.fillStyle = C.mag; x.fillText('P', w/2 + 6, h/2 - 6); x.fillStyle = C.cyan; x.fillText('P', w/2, h/2 - 10);
+  x.globalCompositeOperation = 'source-over'; x.fillStyle = C.ink; x.font = `italic 400 22px ${SERIF}`; x.fillText('自畫像', w/2, h - 34); });
+const portrait = new THREE.Group(); portrait.name = 'self-portrait'; portrait.position.set(1.08, DY + .025, -2.3); portrait.rotation.set(0, .22, 0); desk.add(portrait);
+const pf = new THREE.Group(); pf.position.y = .135; pf.rotation.x = -.16; portrait.add(pf);
+const portraitMat = new THREE.MeshStandardMaterial({ name:'portrait', map:portraitTex, roughness:.85 });
+pf.add(mk(new THREE.BoxGeometry(.2, .25, .015), [M.brass, M.brass, M.brass, M.brass, portraitMat, M.brass], 'portrait-frame'));
+const AVATAR = import.meta.env.BASE_URL + 'assets/avatar.jpg';
+new THREE.TextureLoader().setCrossOrigin('anonymous').load(AVATAR, t => { t.colorSpace = THREE.SRGBColorSpace; const a = t.image.width / t.image.height, fa = .2 / .25; if (a > fa) { t.repeat.set(fa / a, 1); t.offset.set((1 - fa / a) / 2, 0); } else { t.repeat.set(1, a / fa); t.offset.set(0, (1 - a / fa) / 2); } portraitMat.map = t; portraitMat.needsUpdate = true; }, undefined, () => {});
+[[.1,0],[-.1,0]].forEach(([x]) => pf.add(box(.012, .25, .02, M.brass, 'frame-edge', [x,0,.003]))); [[.125],[-.125]].forEach(([y]) => pf.add(box(.21, .012, .02, M.brass, 'frame-edge', [0,y,.003])));
+portrait.add(rod([0,.01,-.07], [0,.2,-.005], .006, M.brass, 'easel-leg'));
+tag(portrait, { type:'about', view:'desk' }, [0,.03,0]);
+// mug
+const mug = new THREE.Group(); mug.position.set(.95, DY + .025, -1.75); desk.add(mug);
+mug.add(cyl(.035, .032, .085, 24, std('mug', C.mag, { roughness:.4 }), 'mug', [0,.043,0])); mug.add(mk(new THREE.TorusGeometry(.022, .006, 8, 16), std('mug', C.mag), 'mug-handle', [.038,.045,0]));
+mug.add(cyl(.031, .031, .002, 24, std('coffee', '#2a160c', { roughness:.2 }), 'coffee', [0,.075,0]));
+
+/* ================= armchair + cat + rug ================= */
+const chair = new THREE.Group(); chair.name = 'armchair'; chair.position.set(-1.95, 0, -.75); chair.rotation.y = .55; room.add(chair);
+[[-.3,-.28],[.3,-.28],[-.3,.3],[.3,.3]].forEach(([x,z]) => chair.add(box(.05, .32, .05, M.woodD, 'chair-leg', [x,.16,z])));
+chair.add(mk(rboxGeo(.72, .14, .7, .04), M.fabricD, 'chair-frame', [0,.36,0]));
+const seatCushion = mk(rboxGeo(.6, .11, .6, .045), M.fabric, 'seat-cushion', [0,.47,.02]); chair.add(seatCushion);
+chair.add(mk(rboxGeo(.66, .62, .14, .05), M.fabric, 'chair-back', [0,.8,-.31], [-.12,0,0]));
+[-.34, .34].forEach(x => { chair.add(mk(rboxGeo(.09, .22, .62, .035), M.fabricD, 'chair-arm', [x,.55,0])); chair.add(box(.1, .04, .66, M.woodL, 'arm-rest', [x,.66,.01])); });
+const cat = new THREE.Group(); cat.name = 'cat'; cat.position.set(-.02, .52, .03); cat.rotation.y = .4; chair.add(cat);
+const catBody = mk(new THREE.SphereGeometry(.13, 40, 24), M.cat, 'cat-body', [0,.06,0]); catBody.scale.set(1.35, .55, 1); cat.add(catBody);
+const head = mk(new THREE.SphereGeometry(.07, 20, 14), M.cat, 'cat-head', [.15,.06,.08]); head.scale.set(1, .85, 1); cat.add(head);
+[[.02],[-.02]].forEach(([dz], i) => cat.add(mk(new THREE.ConeGeometry(.022, .05, 4), M.cat, 'cat-ear', [.17, .12, .08 + (i ? -.035 : .035)], [0,0,-.3])));
+cat.add(mk(new THREE.SphereGeometry(.035, 12, 10), M.catL, 'cat-muzzle', [.205,.045,.1]));
+const tailCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(-.16,.04,0), new THREE.Vector3(-.17,.03,.12), new THREE.Vector3(-.05,.025,.17), new THREE.Vector3(.08,.025,.16)]);
+cat.add(mk(new THREE.TubeGeometry(tailCurve, 24, .022, 10), M.cat, 'cat-tail'));
+[[.08,.13],[.0,.14]].forEach(([x,z]) => { const p = mk(new THREE.SphereGeometry(.025, 10, 8), M.catL, 'cat-paw', [x,.02,z]); p.scale.set(1.4,.6,1); cat.add(p); });
+tag(cat, { type:'egg', id:'e1', view:'chair' }, [0,.01,0]);
+const rugShape = new THREE.Shape(); for (let i = 0; i <= 64; i++) { const a = i/64*Math.PI*2, r = .75 + Math.sin(a*7)*.05 + Math.sin(a*13)*.03; const x = Math.cos(a)*r*1.25, y = Math.sin(a)*r; i ? rugShape.lineTo(x, y) : rugShape.moveTo(x, y); }
+const rug = mk(new THREE.ShapeGeometry(rugShape), M.fur, 'fur-rug', [-1.75,.006,-.25], [-Math.PI/2,0,.4]); rug.castShadow = false; room.add(rug);
+const furC = cnv(256, 256, (x, w, h) => { x.fillStyle = '#000'; x.fillRect(0,0,w,h); for (let i = 0; i < 9000; i++) { const v = Math.floor(RN()*255); x.fillStyle = 'rgb(' + v + ',' + v + ',' + v + ')'; x.fillRect(RN()*w, RN()*h, 1.5, 1.5); } });
+const furTex = texOf(furC, [9, 9], false);
+for (let i = 1; i <= 9; i++) { const sm = new THREE.MeshStandardMaterial({ name:'fur-shell', color:col('#3a3633').lerp(col('#8a8479'), i/12), alphaMap:furTex, alphaTest:.12 + i*.085, roughness:1, side:THREE.DoubleSide });
+  const shell = new THREE.Mesh(rug.geometry, sm); shell.position.set(-1.75, .006 + i*.0042, -.25); shell.rotation.copy(rug.rotation); shell.scale.setScalar(1 - i*.004); shell.receiveShadow = true; room.add(shell); }
+// side table + books stack front right
+const side = new THREE.Group(); side.position.set(2.6, 0, .9); room.add(side);
+side.add(box(.6, .04, .5, M.wood, 'side-top', [0,.6,0])); [[-.26,-.21],[.26,-.21],[-.26,.21],[.26,.21]].forEach(([x,z]) => side.add(box(.04, .58, .04, M.woodD, 'side-leg', [x,.29,z])));
+side.add(box(.5, .12, .04, M.woodD, 'side-drawer', [0,.52,.23]));
+[[C.c900,.035],[C.m800,.04],[C.cream,.03]].forEach(([c, t], i) => side.add(box(.22 - i*.02, t, .3 - i*.02, std('stack-book', c), 'stack-book', [-.05, .62 + .02 + i*.038, 0], [0, i*.2, 0])));
+
+/* ================= lighting ================= */
+const hemi = new THREE.HemisphereLight(0x8a9bb0, 0x2a1a10, .25); scene.add(hemi);
+const amb = new THREE.AmbientLight(0x3a2a20, .5); scene.add(amb);
+const lampLight = new THREE.PointLight(0xffb066, 3.2, 4.5, 1.6); lampLight.position.set(.56, DY + .36, -2.15); lampLight.castShadow = true; lampLight.shadow.mapSize.set(1024, 1024); lampLight.shadow.bias = -.002; lampLight.shadow.radius = 6; room.add(lampLight);
+const lampLight2 = new THREE.PointLight(0xffa850, 2.4, 3.5, 1.6); lampLight2.position.set(2.42, DY + .5, -2.25); room.add(lampLight2);
+const shelfLights = [-1.8, -.45, .9].map(z => { const l = new THREE.PointLight(0xffc27a, 1.6, 2.4, 1.8); l.position.set(-2.4, 1.95, z); room.add(l); return l; });
+const shelfLow = new THREE.PointLight(0xffb870, .9, 2, 1.8); shelfLow.position.set(-2.4, .8, -.4); room.add(shelfLow);
+const nicheLights = [[-1.45, 2.45], [-1.45, 1.65]].map(([x, y]) => { const l = new THREE.PointLight(0xffd29a, 1.1, 1.4, 1.8); l.position.set(x, y, -2.62); room.add(l); return l; });
+const moonLight = new THREE.DirectionalLight(0x8fb0d8, .35); moonLight.position.set(2, 3, -6); moonLight.target.position.set(0, 0, 0); scene.add(moonLight, moonLight.target);
+const sunLight = new THREE.DirectionalLight(0xfff0d8, 0); sunLight.position.set(2.2, 3.4, -6); sunLight.castShadow = true; sunLight.shadow.mapSize.set(2048, 2048);
+Object.assign(sunLight.shadow.camera, { left:-4, right:4, top:4, bottom:-4, near:1, far:14 }); sunLight.shadow.bias = -.0008; sunLight.target.position.set(0,0,0); scene.add(sunLight, sunLight.target);
+const roomFill = new THREE.PointLight(0xffd8b0, 0, 8, 1.2); roomFill.position.set(.5, 2.4, .5); room.add(roomFill);
+lampLight2.castShadow = true; lampLight2.shadow.mapSize.set(512, 512); lampLight2.shadow.bias = -.002;
+renderer.toneMappingExposure = 1.05;
+
+/* environment reflections */
+const pmrem = new THREE.PMREMGenerator(renderer);
+let envRT = null;
+function buildEnv(isNight) {
+  const es = new THREE.Scene();
+  es.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2.9, 6), new THREE.MeshBasicMaterial({ color: isNight ? 0x1c130d : 0x6e5a48, side:THREE.BackSide })));
+  const add = (geo, c, k, p) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:new THREE.Color(c).multiplyScalar(k) })); m.position.set(...p); es.add(m); };
+  add(new THREE.PlaneGeometry(2.6, 1.5), isNight ? '#1e3442' : '#dfeaf0', isNight ? 1 : 3.5, [1.35, .35, -2.9]);
+  add(new THREE.SphereGeometry(.12, 12, 8), '#ffc27a', isNight ? 14 : 4, [.56, -.6, -2.15]);
+  add(new THREE.SphereGeometry(.14, 12, 8), '#ffb066', isNight ? 10 : 3, [2.42, -.45, -2.25]);
+  add(new THREE.BoxGeometry(.05, 2.4, 3.8), '#ffbe78', isNight ? 2.2 : .8, [-2.7, .1, -.4]);
+  add(new THREE.BoxGeometry(1.6, .05, .3), '#ffd8a0', isNight ? 3 : 1, [-1.45, 1.1, -2.7]);
+  if (envRT) envRT.dispose(); envRT = pmrem.fromScene(es, .03); scene.environment = envRT.texture; scene.environmentIntensity = isNight ? .9 : .7;
+}
+
+/* glow halos */
+const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
+const halos = [];
+const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); sp.userData.op = op; room.add(sp); halos.push(sp); return sp; };
+halo([.57, DY + .4, -2.17], .32, .55); halo([2.4, DY + .52, -2.27], .5, .45);
+const candleHalo = halo([-2.1, 1.56, -2.7], .22, .7);
+[[-1.9, 2.5], [-1.0, 2.5]].forEach(([x, y]) => halo([x, y, -2.72], .16, .5));
+
+/* dust in lamplight */
+const DN = 260, dPos = new Float32Array(DN*3), dSeed = new Float32Array(DN);
+for (let i = 0; i < DN; i++) { dPos[i*3] = -.2 + RN()*3; dPos[i*3+1] = .8 + RN()*1.7; dPos[i*3+2] = -2.4 + RN()*1.8; dSeed[i] = RN(); }
+const dGeo = new THREE.BufferGeometry(); dGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+const dustMat = new THREE.PointsMaterial({ size:.008, color:col('#ffdcaa'), transparent:true, opacity:.55, depthWrite:false, blending:THREE.AdditiveBlending, map:haloTex });
+const dust = new THREE.Points(dGeo, dustMat); dust.frustumCulled = false; room.add(dust);
+
+/* contact shadows / ambient occlusion decals */
+const aoRad = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(0,0,0,.85)'); g.addColorStop(.55, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
+const aoLin = ctex(8, 128, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, 'rgba(0,0,0,.75)'); g.addColorStop(.4, 'rgba(0,0,0,.3)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
+const decal = (tex, w, h, p, r, op = 1) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map:tex, color:0x000000, transparent:true, opacity:op, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2 })); m.position.set(...p); m.rotation.set(...r); m.renderOrder = 1; room.add(m); return m; };
+const FL = [-Math.PI/2, 0, 0];
+decal(aoRad, 1.3, 1.25, [-1.95, .004, -.75], [-Math.PI/2, 0, -.55], .9);
+decal(aoRad, 3.1, 1.4, [1.4, .004, -1.95], FL, .75);
+decal(aoRad, .9, .8, [2.6, .004, .9], FL, .8);
+decal(aoRad, 2.2, .9, [-1.45, .004, -2.42], FL, .8);
+decal(aoLin, 6, .45, [0, .005, -2.27], [-Math.PI/2, 0, Math.PI], .8);
+decal(aoLin, 4.2, .5, [-2.33, .005, -.43], [-Math.PI/2, 0, -Math.PI/2], .85);
+decal(aoLin, 6, .5, [2.77, .005, 0], [-Math.PI/2, 0, Math.PI/2], .7);
+decal(aoLin, 6, .55, [0, .28, -2.494], [0, 0, Math.PI], .6);
+decal(aoLin, 6, .55, [2.995, .28, 0], [0, -Math.PI/2, Math.PI], .6);
+decal(aoLin, 6, .5, [0, 2.54, -2.494], [0, 0, 0], .5);
+decal(aoLin, 6, .5, [2.995, 2.54, 0], [0, -Math.PI/2, 0], .5);
+const DT = DY + .0265;
+[[1.62, -2.08, .62, .46], [.38, -2.25, .26, .26], [.78, -2.28, .26, .26], [2.56, -2.33, .22, .22], [1.08, -2.3, .26, .18], [.95, -1.75, .12, .12]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
+LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - SZ0, .12, [-2.788, y - .02, (SZ0 + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
+
+/* ================= seasons + day/night ================= */
+const SEASONS = ['春','夏','秋','冬'];
+const SKY = {
+  '春': { day:['#cfe2e6','#9cc79a'], trees:['#6aa35a','#87b86b','#e6a3bd','#f1c2d2','#4f8a4a'], line:'春 · 窗外落花', part:'#f1b8cc', shape:'petal', n:140, speed:.35, sway:.5, size:.035 },
+  '夏': { day:['#c8dde6','#6f9f63'], trees:['#3f7a3e','#2f6232','#5c9550','#264f2a','#4b8746'], line:'夏 · 午後雷陣雨', part:'#b8d4e4', shape:'rain', n:500, speed:4.5, sway:0, size:.06 },
+  '秋': { day:['#e6d9c4','#a08a52'], trees:['#c46a2c','#d9932f','#a8432a','#e2b246','#6f6a35'], line:'秋 · 晴時多雲，落葉', part:'#d4782e', shape:'leaf', n:90, speed:.45, sway:.7, size:.05 },
+  '冬': { day:['#dfe5ea','#c9d1d6'], trees:['#e9eef1','#c5cfd5','#8a979e','#f4f6f7','#a7b3b9'], line:'冬 · 初雪', part:'#ffffff', shape:'snow', n:420, speed:.5, sway:.25, size:.03 },
+};
+let season = (() => { const mo = new Date().getMonth() + 1; return mo >= 3 && mo <= 5 ? '春' : mo >= 6 && mo <= 8 ? '夏' : mo >= 9 && mo <= 11 ? '秋' : '冬'; })();
+let night = true;
+function paintOutside() {
+  const s = SKY[season], c = outsideTex.image, x = c.getContext('2d'), w = c.width, h = c.height;
+  let r = 11; const R = () => (r = (r * 16807) % 2147483647) / 2147483647;
+  const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, s.day[0]); g.addColorStop(1, s.day[1]); x.fillStyle = g; x.fillRect(0,0,w,h);
+  x.fillStyle = s.day[1]; x.fillRect(0, h*.68, w, h*.32);
+  x.filter = 'blur(10px)';
+  for (let i = 0; i < 260; i++) { const tx = R()*w, ty = h*.05 + R()*h*.7, rr = 20 + R()*70; x.fillStyle = s.trees[Math.floor(R()*s.trees.length)]; x.globalAlpha = .55 + R()*.4; x.beginPath(); x.arc(tx, ty, rr, 0, Math.PI*2); x.fill(); }
+  x.globalAlpha = 1; x.filter = 'blur(3px)';
+  for (let i = 0; i < 9; i++) { x.fillStyle = '#2a2018'; x.fillRect(60 + i*118 + R()*30, h*.45 + R()*h*.1, 8 + R()*8, h*.35); }
+  x.filter = 'none';
+  if (night) { x.fillStyle = 'rgba(6,14,22,.58)'; x.fillRect(0,0,w,h); x.fillStyle = 'rgba(40,70,60,.25)'; x.fillRect(0, h*.3, w, h*.7); }
+  outsideTex.needsUpdate = true;
+}
+const shapeTex = kind => ctex(64, 64, (x, w, h) => { x.clearRect(0,0,w,h); x.fillStyle = '#fff'; x.beginPath();
+  if (kind === 'rain') x.fillRect(30, 2, 3, 60); else if (kind === 'leaf') { x.ellipse(32,32,26,13,.6,0,Math.PI*2); x.fill(); } else if (kind === 'petal') { x.ellipse(32,32,20,12,0,0,Math.PI*2); x.fill(); } else { x.arc(32,32,18,0,Math.PI*2); x.fill(); } }, false);
+const PN = 500, pPos = new Float32Array(PN*3), pSeed = new Float32Array(PN);
+const OUT = { x0:-.6, x1:3.3, z0:-4.3, z1:-2.75, y0:0, y1:3.2 };
+for (let i = 0; i < PN; i++) { pPos[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); pPos[i*3+1] = Math.random()*OUT.y1; pPos[i*3+2] = OUT.z0 + Math.random()*(OUT.z1-OUT.z0); pSeed[i] = Math.random(); }
+const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({ size:.05, transparent:true, depthWrite:false, alphaTest:.2 });
+const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.add(points);
+const texCache = {};
+function setSeason(s) {
+  season = s; const w = SKY[s]; paintOutside();
+  pMat.map = texCache[w.shape] || (texCache[w.shape] = shapeTex(w.shape)); pMat.color.set(w.part); pMat.size = w.size; pMat.needsUpdate = true; pGeo.setDrawRange(0, w.n);
+  (document.getElementById('wxline') || {}).textContent = w.line + (night ? ' · 夜' : ' · 白天');
+  document.getElementById('bSeason').textContent = '窗外：' + s;
+}
+function setNight(n) {
+  night = n; paintOutside(); buildEnv(n); halos.forEach(h => h.material.opacity = n ? h.userData.op : h.userData.op * .35); dustMat.opacity = n ? .55 : .25;
+  moon.visible = n;
+  lampLight.intensity = n ? 3.2 : 1.2; lampLight2.intensity = n ? 2.4 : .8; shelfLights.forEach(l => l.intensity = n ? 1.6 : .6); nicheLights.forEach(l => l.intensity = n ? 1.1 : .5); shelfLow.intensity = n ? .9 : .3;
+  hemi.intensity = n ? .16 : .7; amb.intensity = n ? .22 : .4; moonLight.intensity = n ? .35 : 0; sunLight.intensity = n ? 0 : 2.6; roomFill.intensity = n ? .5 : 1.6;
+  renderer.toneMappingExposure = n ? 1.3 : 1.05;
+  document.getElementById('bLight').textContent = n ? '天亮' : '入夜';
+  (document.getElementById('wxline') || {}).textContent = SKY[season].line + (n ? ' · 夜' : ' · 白天');
+}
+setSeason(season); setNight(night);
+
+/* ================= UI ================= */
+const st = { seen:{}, eggs:{}, cur:null, list:null, game:null, hl:{ text:'', i:0 }, about:false };
+const $ = id => document.getElementById(id);
+const d0 = new Date(); ($('date') || {}).textContent = `${d0.getFullYear()} 年 ${d0.getMonth()+1} 月 ${d0.getDate()} 日 星期${'日一二三四五六'[d0.getDay()]}`;
+let toastT; const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); };
+function renderChips() {
+  $('chips').innerHTML = CATS.map(c => { const ids = IDS.filter(k => ITEMS[k].cat === c.id), n = ids.filter(k => st.seen[k]).length;
+    return `<span class="tag ${n === ids.length ? 'tag-accent' : n ? 'tag-outline' : 'tag-neutral'}">${n === ids.length ? '✓ ' : ''}${c.name} ${n}/${ids.length}</span>`; }).join('')
+    + `<span class="tag ${st.about ? 'tag-accent' : 'tag-neutral'}">${st.about ? '✓ ' : ''}自畫像</span><span class="count">彩蛋 ${Object.keys(st.eggs).length} / 3</span>`;
+}
+const panel = $('panel'), pbody = $('pbody');
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+const HL = [t => `號外！${t}——專家：「完全沒想到」`, t => `震撼全城：${t}`, t => `獨家｜${t}，知情人士首度證實`, t => `${t}？本報記者連夜追查`];
+const where = id => ({ shelf:'書架', display:'展示架', desk:'書桌' }[ITEMS[id].cat]);
+const linkBtns = ls => ls && ls.length ? `<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-4) 0">${ls.map(l => `<a class="btn ${l.p ? 'btn-primary' : 'btn-secondary'}" href="${l.u}" target="_blank" rel="noopener" style="text-decoration:none">${l.l}</a>`).join('')}</div>` : '';
+function renderPanel(mode) {
+  let h = '';
+  if (mode === 'egg') { const e = EGGS[st.cur]; h = `<span class="card-kicker" style="color:var(--color-accent-2-700)">彩蛋 · ${Object.keys(st.eggs).length} / 3</span><h2>${e.t}</h2><div class="body">${e.b.map(p => `<p>${p}</p>`).join('')}</div>`; }
+  else if (mode === 'about') { h = '<span class="card-kicker">書桌 · 自畫像</span><div style="display:flex;gap:var(--space-4);align-items:center;margin:var(--space-3) 0 var(--space-4)"><img src="' + AVATAR + '" alt="Paul Wu" style="width:88px;height:88px;object-fit:cover;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)"><div><div style="font-size:14px;font-style:italic">Hi, I&#39;m</div><h2 style="margin:0">Paul Wu</h2><div style="font-size:14px;margin-top:4px">台中 · Available for chat</div></div></div>'
+      + '<div class="body"><p>Driven by a love for figuring things out and creating seamless experiences. Always curious, exploring — from fresh concepts to unexpected rabbit holes.</p><p>從 2020 寫到現在：111 篇文章、3 個系列，還出了一本書。</p></div>'
+      + '<div class="rel"><span class="lab card-kicker">Find me at</span>' + ABOUT_LINKS.map(([k, v, u]) => '<a class="btn btn-ghost" href="' + u + '" target="_blank" rel="noopener" style="justify-content:flex-start;margin-left:-6px;text-decoration:none">' + k + '：' + v + '</a>').join('') + '</div>'
+      + '<div class="meta"><a href="https://paul-learning.dev/" target="_blank" rel="noopener">paul-learning.dev</a></div>'; }
+  else if (mode === 'list') { h = '<span class="card-kicker">書桌 · 筆電</span><h2>GitHub 活動</h2><p class="intro">過去 18 週，2026 年共 3,782 次 contributions。目前連續 10 天，最長 97 天。</p>'
+      + linkBtns([{ l:'GitHub · easylive1989 ↗', u:'https://github.com/easylive1989', p:1 }, { l:'Threads ↗', u:'https://www.threads.com/@paul.ch.wu' }])
+      + '<div class="rel"><span class="lab card-kicker">最近 6 篇 →</span>' + ['w1','w2','w3','w4','w5','w6'].map(k => '<button class="btn btn-ghost" data-item="' + k + '" style="justify-content:flex-start;margin-left:-6px;text-align:left">' + ITEMS[k].t + '</button>').join('') + '</div>'; }
+  else { const it = ITEMS[st.cur];
+    const accent2 = it.kind === 'draft';
+    h += `<div style="margin-top:var(--space-2)"><span class="card-kicker"${accent2 ? ' style="color:var(--color-accent-2-700)"' : ''}>${it.k}</span><h3>${it.t}</h3>${it.by ? `<div style="font-size:15px;font-style:italic;margin-top:-6px">${it.by}</div>` : ''}</div>`;
+    if (it.tech) h += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:var(--space-2) 0 var(--space-3)">${it.tech.map(t => `<span class="tag tag-neutral">${t}</span>`).join('')}</div>`;
+    if (it.list) h += `<div class="list" style="gap:var(--space-4)">${it.list.map(([y, kind, t, org, u]) => `<a href="${u}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--color-text)"><span class="card-kicker">${y} · ${kind}</span><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.3">${t} ↗</span><span style="font-size:14px">${org}</span></a>`).join('')}</div>`;
+    if (it.pg) h += `<div style="margin:var(--space-4) 0 var(--space-3)"><div class="prog"><i style="width:${Math.round(it.pg[0]/it.pg[1]*100)}%"></i></div><span style="font-size:13px">讀到第 ${it.pg[0]} 頁，共 ${it.pg[1]} 頁</span></div>`;
+    h += `<div class="body">${it.b.map(p => `<p${p.startsWith('（') ? ' style="font-style:italic"' : ''}>${p}</p>`).join('')}</div>`;
+    if (it.type === 'game') h += `<div class="game"><div class="plate"><span style="color:var(--color-accent)">印</span><span id="gm" style="color:var(--color-accent-2)">印</span></div><label>左右<input id="gx" type="range" min="-40" max="40" value="0"></label><label>上下<input id="gy" type="range" min="-40" max="40" value="0"></label><span id="gmsg" style="font-style:italic"></span><button class="btn btn-secondary" data-act="regame">再印一張</button></div>`;
+    if (it.type === 'headline') h += `<input class="input" id="hl" value="${esc(st.hl.text)}" placeholder="輸入一件小事" style="width:100%;box-sizing:border-box;font-size:16px"><div class="hlout"><span style="height:3px;background:var(--color-text)"></span><span class="big" id="hlo"></span><span style="height:1px;background:var(--color-text)"></span></div><button class="btn btn-secondary" data-act="hl">換個語氣</button>`;
+    h += linkBtns(it.links);
+    h += `<div class="meta">${it.m}</div>`;
+    const rel = related(st.cur);
+    if (rel.length) h += `<div class="rel"><span class="lab card-kicker">順手再翻 →</span>${rel.map(r => `<button class="btn btn-ghost" data-rel="${r}" style="justify-content:flex-start;margin-left:-6px;text-align:left">${where(r)}：${ITEMS[r].t}</button>`).join('')}</div>`;
+  }
+  pbody.innerHTML = h; panel.scrollTop = 0; panel.classList.add('open'); document.body.classList.add('reading');
+  if ($('gx')) { newGame(); ['gx','gy'].forEach(i => $(i).addEventListener('input', updGame)); }
+  if ($('hl')) { $('hl').addEventListener('input', e => { st.hl.text = e.target.value; updHl(); }); updHl(); }
+}
+function newGame() { const r = () => (Math.random() < .5 ? -1 : 1) * (12 + Math.floor(Math.random()*22)); st.game = { ox:r(), oy:r() }; $('gx').value = 0; $('gy').value = 0; $('gx').disabled = $('gy').disabled = false; updGame(); }
+function updGame() { const gx = st.game.ox + +$('gx').value, gy = st.game.oy + +$('gy').value, dd = Math.hypot(gx, gy); $('gm').style.transform = `translate(${gx}px,${gy}px)`; const won = dd <= 1.5; $('gmsg').textContent = won ? '完美對位！這張可以上市了。' : dd < 6 ? '很接近了……再一點點。' : `偏差 ${dd.toFixed(0)} 點，師傅在皺眉。`; if (won) $('gx').disabled = $('gy').disabled = true; }
+function updHl() { $('hlo').textContent = HL[st.hl.i % HL.length](st.hl.text.trim() || '一件小事'); }
+panel.addEventListener('click', e => {
+  const a = e.target.closest('[data-act],[data-item],[data-rel]'); if (!a) return;
+  if (a.dataset.item) return openItem(a.dataset.item);
+  if (a.dataset.rel) return openItem(a.dataset.rel);
+  const act = a.dataset.act;
+  if (act === 'close') closePanel(); else if (act === 'list') openList(); else if (act === 'regame') newGame(); else if (act === 'hl') { st.hl.i++; updHl(); }
+});
+
+/* ================= camera focus ================= */
+const objOf = id => books[id] || exh[id] || drafts[id] || null;
+const VIEWS = { shelf:new THREE.Vector3(1, .12, .25), niche:new THREE.Vector3(.12, .1, 1), desk:new THREE.Vector3(-.1, .75, 1), chair:new THREE.Vector3(.5, .6, 1), window:new THREE.Vector3(-.3, 0, 1), duck:new THREE.Vector3(1, -.3, .3) };
+const DIST = { shelf:1.15, niche:1.55, desk:1.35, chair:1.4, window:2.6, duck:1.1 };
+let tween = null, focused = false;
+function flyTo(tgt, pos, d = 1) { tween = { t:0, d, ft:controls.target.clone(), tt:tgt.clone(), fp:camera.position.clone(), tp:pos.clone() }; controls.enabled = false; }
+function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()); const dir = VIEWS[view].clone(); if (view === 'niche' && c.y < 1.5) dir.y = .55; dir.normalize(); flyTo(c, c.clone().addScaledVector(dir, DIST[view])); focused = true; }
+function goHome() { flyTo(HOME.tgt, HOME.pos, 1.1); focused = false; }
+function mark(id) { if (!st.seen[id]) { st.seen[id] = true; renderChips(); const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。貓表示佩服。'), 2700); } } }
+function openItem(id) { st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, books[id] ? 'shelf' : exh[id] ? 'niche' : 'desk'); renderPanel('item'); }
+function openList() { focus(laptop, 'desk'); renderPanel('list'); }
+function openAbout() { st.about = true; renderChips(); focus(portrait, 'desk'); renderPanel('about'); }
+function openEgg(id, obj, view) { if (!st.eggs[id]) { st.eggs[id] = true; toast(`找到彩蛋 ${Object.keys(st.eggs).length} / 3`); renderChips(); } st.cur = id; focus(obj, view); renderPanel('egg'); }
+function closePanel() { panel.classList.remove('open'); document.body.classList.remove('reading'); goHome(); }
+$('bRandom').onclick = () => { const pool = IDS.filter(k => !st.seen[k]); const p = pool.length ? pool : IDS; openItem(p[Math.floor(Math.random()*p.length)]); };
+$('bLight').onclick = () => { setNight(!night); toast(night ? '入夜了。檯燈亮起來。' : '天亮了。'); };
+$('bSeason').onclick = () => { setSeason(SEASONS[(SEASONS.indexOf(season)+1) % 4]); toast('窗外換季：' + SKY[season].line); };
+addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === 'Escape') closePanel(); });
+
+/* ================= picking ================= */
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = $('tip');
+let hoverRoot = null, down = null;
+function tipText(p) {
+  if (p.type === 'item') { const it = ITEMS[p.id]; const lab = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', draft:'草稿', project:'Side Project', play:'Playbox', award:'競賽與演講' }[it.kind]; return `${lab} · ${it.t}`; }
+  if (p.type === 'list') return '筆電 · GitHub 活動';
+  if (p.type === 'about') return '自畫像 · 關於 Paul';
+  if (p.type === 'lamp') return night ? '檯燈 · 點一下天亮' : '檯燈 · 點一下入夜';
+  if (p.type === 'egg') return st.eggs[p.id] ? EGGS[p.id].t : '……咦？';
+  return '';
+}
+const setMouse = e => { const r = renderer.domElement.getBoundingClientRect(); mouse.set((e.clientX - r.left)/r.width*2-1, -(e.clientY - r.top)/r.height*2+1); ray.setFromCamera(mouse, camera); };
+renderer.domElement.addEventListener('pointerdown', e => { down = { x:e.clientX, y:e.clientY }; });
+renderer.domElement.addEventListener('pointermove', e => {
+  setMouse(e); const hit = ray.intersectObjects(pickables, false)[0]; hoverRoot = hit ? hit.object.userData.root : null;
+  renderer.domElement.style.cursor = hoverRoot ? 'pointer' : 'grab';
+  if (hoverRoot) { tip.textContent = tipText(hoverRoot.userData.pick); tip.style.left = e.clientX + 14 + 'px'; tip.style.top = e.clientY + 14 + 'px'; tip.style.opacity = 1; } else tip.style.opacity = 0;
+});
+renderer.domElement.addEventListener('pointerleave', () => { tip.style.opacity = 0; hoverRoot = null; });
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) { down = null; return; } down = null;
+  setMouse(e); const hit = ray.intersectObjects(pickables, false)[0];
+  if (!hit) { if (panel.classList.contains('open')) closePanel(); return; }
+  const root = hit.object.userData.root, p = root.userData.pick;
+  if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout();
+  else if (p.type === 'lamp') $('bLight').onclick(); else if (p.type === 'egg') openEgg(p.id, root, p.view);
+});
+
+/* ================= loop ================= */
+const clock = new THREE.Timer(); let viewOff = 0;
+const roots = [...new Set(pickables.map(m => m.userData.root))];
+renderChips();
+function loop(ts) {
+  clock.update(ts); const dt = Math.min(clock.getDelta(), .05), t = clock.getElapsed();
+  roots.forEach(r => { const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; r.position.lerp(want, Math.min(1, dt * 10)); });
+  const fl = .85 + Math.sin(t*13) * .06 + Math.sin(t*7.3) * .08 + (Math.random() - .5) * .06; candleLight.intensity = .5 * fl; flame.scale.set(1, 2.2 * fl, 1);
+  catBody.scale.y = .55 + Math.sin(t*1.6) * .02; head.rotation.z = Math.sin(t*.4) * .03;
+  const w = SKY[season], pa = pGeo.attributes.position.array;
+  for (let i = 0; i < w.n; i++) { const s = pSeed[i]; pa[i*3+1] -= w.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * w.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
+  pGeo.attributes.position.needsUpdate = true;
+  const da = dGeo.attributes.position.array; for (let i = 0; i < DN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009; da[i*3+1] += Math.sin(t*.21 + s0*30) * .0006 - .00012; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
+  candleHalo.material.opacity = candleHalo.userData.op * fl * (night ? 1 : .4);
+  if (tween) { tween.t = Math.min(1, tween.t + dt / tween.d); const k = 1 - Math.pow(1 - tween.t, 3); controls.target.lerpVectors(tween.ft, tween.tt, k); camera.position.lerpVectors(tween.fp, tween.tp, k); if (tween.t >= 1) { tween = null; controls.enabled = true; } }
+  const wantOff = panel.classList.contains('open') ? 230 : 0; viewOff += (wantOff - viewOff) * Math.min(1, dt * 6);
+  if (Math.abs(viewOff) > .5) camera.setViewOffset(innerWidth, innerHeight, viewOff, 0, innerWidth, innerHeight); else camera.clearViewOffset();
+  controls.update(); renderer.render(scene, camera);
+}
+renderer.setAnimationLoop(loop);
+window.__study = { loop, openItem, openList, openAbout, setNight, setSeason };
+flyTo(HOME.tgt, HOME.pos, 2.2);
+setTimeout(() => $('intro').classList.add('off'), 300);
+addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+document.fonts && document.fonts.ready.then(() => texts.forEach(t => t.redraw()));
