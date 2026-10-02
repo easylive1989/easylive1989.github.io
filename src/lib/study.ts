@@ -6,7 +6,6 @@ import {
   getAllPlayboxGames,
 } from './data';
 import { getGithubContributions } from './github';
-import { categorySlug } from './category';
 import { bookStatus } from './bookCover';
 import type { Article, Book } from './notion';
 
@@ -15,6 +14,9 @@ import type { Article, Book } from './notion';
  * room's physical slots (a spine position on the shelf, a spot in the display
  * niche, a sheet of paper on the desk), not content ids — the scene is built
  * once and the slots are filled from Notion at build time.
+ *
+ * Nothing here links to another page of this site: a book opens in the room and
+ * its article is fetched from /study/{id}/ (see pages/study/[id].astro).
  *
  *   s1–s3  series spines            w1–w6  newest articles on the shelf
  *   r1–r4  reading shelf            p1 p3 g2  side projects in the niche
@@ -47,6 +49,12 @@ export interface StudyItem {
   pct?: number;
   /** Rows of [kicker-left, kicker-right, title, subtitle, url]. */
   list?: [string, string, string, string, string][];
+  /** The article whose full text this book or page holds. */
+  aid?: string;
+  /** A series' contents: rows of [article id, title, date]. */
+  toc?: [string, string, string][];
+  /** Cover image of a book on the reading list. */
+  cover?: string;
 }
 
 export interface StudyData {
@@ -60,7 +68,7 @@ export interface StudyData {
     avatar: string;
     channels: [string, string, string][];
   };
-  site: { reading: string; archive: string; rss: string; url: string };
+  site: { reading: string; archive: string; rss: string; url: string; study: string };
   github: {
     ok: boolean;
     username: string;
@@ -148,8 +156,6 @@ function dotted(iso: string | null | undefined): string {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
-const articleHref = (a: Article) => `${BASE}${categorySlug(a.category)}/${a.id}/`;
-
 function articleItem(a: Article, kicker: string, kind = 'writing', cat: StudyItem['cat'] = 'shelf'): StudyItem {
   return {
     cat,
@@ -158,8 +164,8 @@ function articleItem(a: Article, kicker: string, kind = 'writing', cat: StudyIte
     k: kicker,
     t: a.title,
     b: [a.summary || `${a.category}系列文章。`],
-    m: a.category,
-    links: [{ l: '閱讀全文 →', u: articleHref(a), p: 1 }],
+    m: `${a.category} · ${dotted(a.createdTime)}`,
+    aid: a.id,
   };
 }
 
@@ -177,7 +183,7 @@ function bookItem(b: Book, kicker: string, meta: string): StudyItem {
     b: lines,
     m: meta,
     ...(done ? {} : { pct: b.progress }),
-    links: [{ l: '看完整書單 →', u: `${BASE}reading/`, p: 1 }],
+    ...(b.coverUrl ? { cover: b.coverUrl } : {}),
   };
 }
 
@@ -217,8 +223,7 @@ export async function buildStudyData(): Promise<StudyData> {
   categories.slice(0, SERIES_SLOTS.length).forEach((name, i) => {
     const slot = SERIES_SLOTS[i];
     const inSeries = articles.filter((a) => a.category === name);
-    const links: StudyLink[] = [{ l: '看全部文章 →', u: `${BASE}${categorySlug(name)}/`, p: 1 }];
-    if (ITHOME_SERIES[name]) links.push({ l: 'iThome 鐵人賽 ↗', u: ITHOME_SERIES[name] });
+    const links: StudyLink[] = ITHOME_SERIES[name] ? [{ l: 'iThome 鐵人賽 ↗', u: ITHOME_SERIES[name], p: 1 }] : [];
     items[slot] = {
       cat: 'shelf',
       kind: 'series',
@@ -228,6 +233,7 @@ export async function buildStudyData(): Promise<StudyData> {
       b: [`最新一篇寫於 ${dotted(inSeries[0]?.createdTime)}：${inSeries[0]?.title ?? ''}`],
       m: `共 ${articles.length} 篇文章 · ${categories.length} 個系列`,
       links,
+      toc: inSeries.map((a) => [a.id, a.title, dotted(a.createdTime)]),
     };
     for (const a of inSeries) owner[a.id] = slot;
   });
@@ -275,7 +281,6 @@ export async function buildStudyData(): Promise<StudyData> {
         `想讀 ${wish} 本 · 今年讀了 ${thisYear} 本。`,
       ],
       m: '書單',
-      links: [{ l: '看完整書單 →', u: `${BASE}reading/`, p: 1 }],
     };
   }
 
@@ -417,6 +422,7 @@ export async function buildStudyData(): Promise<StudyData> {
       reading: `${BASE}reading/`,
       archive: `${BASE}archive/`,
       rss: '/rss.xml',
+      study: `${BASE}study/`,
       url: config.site.url,
     },
     github: {

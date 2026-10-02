@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /study/
 
 Sitemap: https://easylive1989.github.io/sitemap-index.xml

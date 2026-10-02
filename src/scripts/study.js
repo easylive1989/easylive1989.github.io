@@ -678,12 +678,11 @@ function renderPanel(mode) {
   else if (mode === 'about') { h = '<span class="card-kicker">書桌 · 自畫像</span><div style="display:flex;gap:var(--space-4);align-items:center;margin:var(--space-3) 0 var(--space-4)"><img src="' + esc(AVATAR) + '" alt="' + esc(ABOUT.name) + '" style="width:88px;height:88px;object-fit:cover;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)"><div><div style="font-size:14px;font-style:italic">Hi, I&#39;m</div><h2 style="margin:0">' + esc(ABOUT.name) + '</h2><div style="font-size:14px;margin-top:4px">' + esc(ABOUT.tagline) + '</div></div></div>'
       + '<div class="body"><p>' + esc(ABOUT.bio) + '</p><p>' + esc(ABOUT.summary) + '</p></div>'
       + '<div class="rel"><span class="lab card-kicker">Find me at</span>' + ABOUT.channels.map(([k, v, u]) => '<a class="btn btn-ghost" href="' + esc(u) + '"' + linkAttrs(u) + ' style="' + ghostBtn + '">' + esc(k) + '：' + esc(v) + '</a>').join('') + '</div>'
-      + '<div class="rel"><span class="lab card-kicker">站內</span><a class="btn btn-ghost" href="' + esc(SITE.reading) + '" style="' + ghostBtn + '">書單</a><a class="btn btn-ghost" href="' + esc(SITE.archive) + '" style="' + ghostBtn + '">全部文章</a><a class="btn btn-ghost" href="' + esc(SITE.rss) + '" style="' + ghostBtn + '">RSS</a></div>'; }
+; }
   else if (mode === 'list') { const recent = IDS.filter(k => /^w\d$/.test(k));
     h = '<span class="card-kicker">書桌 · 筆電</span><h2>GitHub 活動</h2><p class="intro">' + (GH.ok ? `過去 18 週，${GH.year} 年共 ${GH.total.toLocaleString()} 次 contributions。目前連續 ${GH.current} 天，最長 ${GH.longest} 天。` : '活動統計暫時讀不到，直接去 GitHub 看吧。') + '</p>'
       + linkBtns(ABOUT.channels.filter(c => c[0] === 'GitHub' || c[0] === 'Threads').map(c => c[0] === 'GitHub' ? { l:`GitHub · ${c[1]} ↗`, u:c[2], p:1 } : { l:'Threads ↗', u:c[2] }))
-      + (recent.length ? '<div class="rel"><span class="lab card-kicker">最近 ' + recent.length + ' 篇 →</span>' + recent.map(k => '<button class="btn btn-ghost" data-item="' + k + '" style="' + ghostBtn + '">' + esc(ITEMS[k].t) + '</button>').join('') + '</div>' : '')
-      + '<div class="rel"><a class="btn btn-ghost" href="' + esc(SITE.archive) + '" style="' + ghostBtn + '">全部文章 →</a></div>'; }
+      + (recent.length ? '<div class="rel"><span class="lab card-kicker">最近 ' + recent.length + ' 篇 →</span>' + recent.map(k => '<button class="btn btn-ghost" data-item="' + k + '" style="' + ghostBtn + '">' + esc(ITEMS[k].t) + '</button>').join('') + '</div>' : ''); }
   else { const it = ITEMS[st.cur];
     const accent2 = it.kind === 'older';
     h += `<div style="margin-top:var(--space-2)"><span class="card-kicker"${accent2 ? ' style="color:var(--color-accent-2-700)"' : ''}>${esc(it.k)}</span><h3>${esc(it.t)}</h3>${it.by ? `<div style="font-size:15px;font-style:italic;margin-top:-6px">${esc(it.by)}</div>` : ''}</div>`;
@@ -714,7 +713,11 @@ function flyTo(tgt, pos, d = 1) { tween = { t:0, d, ft:controls.target.clone(), 
 function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()); const dir = VIEWS[view].clone(); if (view === 'niche' && c.y < 1.5) dir.y = .55; dir.normalize(); flyTo(c, c.clone().addScaledVector(dir, DIST[view])); focused = true; }
 function goHome() { flyTo(HOME.tgt, HOME.pos, 1.1); focused = false; }
 function mark(id) { if (!st.seen[id]) { st.seen[id] = true; renderChips(); const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。貓表示佩服。'), 2700); } } }
-function openItem(id) { st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, books[id] ? 'shelf' : exh[id] ? 'niche' : 'desk'); renderPanel('item'); }
+function openItem(id) { const it = ITEMS[id];
+  if (books[id]) return openBook(id);
+  if (drafts[id]) return openDraft(id);
+  if (it.kind === 'play' && GAMES.length) { if (id !== 'tv') mark(id); return openTV(id === 'tv' ? 0 : Math.max(0, gameAt(id))); }
+  st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, exh[id] ? 'niche' : 'desk'); renderPanel('item'); }
 function openList() { focus(laptop, 'desk'); renderPanel('list'); }
 function openAbout() { st.about = true; renderChips(); focus(portrait, 'desk'); renderPanel('about'); }
 function openEgg(id, obj, view) { if (!st.eggs[id]) { st.eggs[id] = true; toast(`找到彩蛋 ${Object.keys(st.eggs).length} / 3`); renderChips(); } st.cur = id; focus(obj, view); renderPanel('egg'); }
@@ -722,13 +725,270 @@ function closePanel() { panel.classList.remove('open'); document.body.classList.
 $('bRandom').onclick = () => { const pool = IDS.filter(k => !st.seen[k]); const p = pool.length ? pool : IDS; openItem(p[Math.floor(Math.random()*p.length)]); };
 $('bLight').onclick = () => { setNight(!night); toast(night ? '入夜了。檯燈亮起來。' : '天亮了。'); };
 $('bSeason').onclick = () => { setSeason(SEASONS[(SEASONS.indexOf(season)+1) % 4]); toast('窗外換季：' + SKY[season].line); };
-addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === 'Escape') closePanel(); });
+addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  if (TV.on) { if (e.key === 'Escape') TV.play ? tvMenu() : exitTV(); else if (!TV.play && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); tvSel((TV.sel + (e.key === 'ArrowDown' ? 1 : -1) + GAMES.length) % GAMES.length); } else if (!TV.play && e.key === 'Enter') tvPlay(); return; }
+  if (RD.mode) { const nx = e.key === 'ArrowRight', pv = e.key === 'ArrowLeft';
+    if (e.key === 'Escape') closeReader(); else if (nx || pv) { e.preventDefault(); RD.mode === 'book' ? flip(nx ? 1 : -1) : stepDraft(nx ? 1 : -1); } return; }
+  if (e.key === 'Escape') closePanel(); });
+
+/* ================= pick-up readers + TV ================= */
+// Books, the pages on the desk and the TV don't open the side panel: the thing itself comes to the camera
+// (or the camera goes to it), and a DOM stand-in takes over from the mesh once it is close enough to read.
+scene.add(camera);
+let lockCam = false;
+const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', older:'較早的文章', cabinet:'作品櫃', project:'Side Project', play:'Playbox', award:'競賽與演講' };
+const DRAFTS = IDS.filter(k => drafts[k]);
+const GAMES = has('tv') ? ITEMS.tv.list : [];
+const gameAt = id => GAMES.findIndex(r => r[4] === ((ITEMS[id].links || [])[0] || {}).u);
+const TV = { on:false, vis:false, play:false, sel:0 };
+const RD = { mode:null, busy:false, id:null }, BK = { pages:[], i:0, single:false, D:null, art:null, ret:null };
+const LF = { obj:null, anim:0, t:0, dur:.8, cb:null };
+const _q = new THREE.Quaternion(), _v = new THREE.Vector3();
+const reader = $('reader'), robj = $('robj'), rnav = $('rnav'), tvui = $('tvui'), crt = $('crt'), tvbar = $('tvbar');
+const pad2 = n => String(n).padStart(2, '0');
+
+/* article bodies, fetched the first time something that holds one is picked up */
+const artCache = {};
+function tidyArticle(html) {
+  const t = document.createElement('template'); t.innerHTML = html; const f = t.content;
+  f.querySelectorAll('.anchor-link, script, style, link').forEach(e => e.remove());
+  f.querySelectorAll('details').forEach(e => e.setAttribute('open', ''));
+  f.querySelectorAll('img').forEach(e => e.setAttribute('loading', 'eager'));
+  // a page is drawn several times over while it turns, so a live embed becomes a way out to it instead
+  f.querySelectorAll('iframe').forEach(e => { const a = document.createElement('a'); a.className = 'embed-out'; a.href = e.getAttribute('src'); a.textContent = (e.getAttribute('title') || '內嵌內容') + ' ↗'; (e.closest('.dartpad-container, .video-container') || e).replaceWith(a); });
+  f.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
+  return t.innerHTML.trim();
+}
+const loadArticle = aid => artCache[aid] || (artCache[aid] = fetch(SITE.study + aid + '/').then(r => r.ok ? r.text() : Promise.reject(r.status)).then(tidyArticle).catch(() => { delete artCache[aid]; return ''; }));
+
+function grab(obj, kind) {
+  Object.assign(LF, { obj, kind, parent:obj.parent, lp:obj.userData.base.clone(), lq:obj.quaternion.clone(), ls:obj.scale.clone(), dur:kind === 'book' ? 1.0 : .8 });
+  obj.userData.lifted = true; camera.updateMatrixWorld(); obj.updateWorldMatrix(true, false); camera.attach(obj);
+  LF.s = obj.position.clone(); LF.qs = obj.quaternion.clone();
+  const dir = obj.userData.pull.clone().normalize().applyQuaternion(LF.parent.getWorldQuaternion(_q)).applyQuaternion(camera.quaternion.clone().invert());
+  LF.c = LF.s.clone().addScaledVector(dir, kind === 'book' ? .34 : .16);
+  const hgt = kind === 'book' ? .3 : .28, d = (hgt / (kind === 'book' ? .5 : .56)) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+  LF.e = new THREE.Vector3(0, -.01, -d);
+  LF.qe = new THREE.Quaternion().setFromEuler(kind === 'book' ? new THREE.Euler(.06, Math.PI + .38, 0) : new THREE.Euler(Math.PI / 2 - .16, 0, .05));
+}
+function release() { const o = LF.obj; if (!o) return; LF.parent.add(o); o.position.copy(LF.lp); o.quaternion.copy(LF.lq); o.scale.copy(LF.ls); o.visible = true; o.userData.lifted = false; LF.obj = null; }
+function liftStep(dt) {
+  if (!LF.anim) return;
+  LF.t = Math.min(1, Math.max(0, LF.t + LF.anim * dt / LF.dur));
+  const t = LF.t, k = t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2, u = 1 - k, o = LF.obj;
+  o.position.set(0, 0, 0).addScaledVector(LF.s, u*u).addScaledVector(LF.c, 2*u*k).addScaledVector(LF.e, k*k);
+  const kq = Math.min(1, Math.max(0, (k - .12) / .88)); o.quaternion.slerpQuaternions(LF.qs, LF.qe, kq*kq*(3 - 2*kq));
+  if ((LF.anim > 0 && t >= 1) || (LF.anim < 0 && t <= 0)) { const back = LF.anim < 0; LF.anim = 0; if (back) release(); const cb = LF.cb; LF.cb = null; cb && cb(); }
+}
+function projRect(obj) {
+  obj.updateWorldMatrix(true, true); camera.updateMatrixWorld(); const b = new THREE.Box3().setFromObject(obj); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (let i = 0; i < 8; i++) { _v.set(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).project(camera); const X = (_v.x + 1) / 2 * innerWidth, Y = (1 - _v.y) / 2 * innerHeight; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); }
+  return { x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
+}
+const flipT = (F, P) => 'translate(' + (P.x - F.left) + 'px, ' + (P.y - F.top) + 'px) scale(' + (P.w / F.width) + ', ' + (P.h / F.height) + ')';
+function immerse() { if (panel.classList.contains('open')) { panel.classList.remove('open'); document.body.classList.remove('reading'); } document.body.classList.add('immerse'); tween = null; lockCam = true; controls.enabled = false; tip.style.opacity = 0; hoverRoot = null; }
+function unimmerse() { lockCam = false; if (!tween) controls.enabled = true; document.body.classList.remove('immerse'); }
+
+/* pages off the desk: lift one, read it top to bottom, bookmarks switch to the others */
+function openDraft(id) { if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; mark(id); st.cur = id; loadArticle(ITEMS[id].aid); grab(drafts[id], 'paper'); LF.t = 0; LF.anim = 1; LF.cb = () => showPaper(id); }
+function fillPaper(id) {
+  const it = ITEMS[id], p = $('paper'), pg = p.querySelector('.pg'), lead = '<p>' + esc(it.b[0] || '') + '</p>';
+  pg.innerHTML = '<span class="kick">' + esc(it.k) + '</span><h3 class="ttl">' + esc(it.t) + '</h3><div class="prose paper">' + lead + '<p class="loading">翻開稿紙……</p></div><div class="foot"><span>' + esc(it.m) + '</span><span>' + (DRAFTS.indexOf(id) + 1) + ' / ' + DRAFTS.length + '</span></div>';
+  pg.scrollTop = 0;
+  p.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === id));
+  loadArticle(it.aid).then(html => { const b = pg.querySelector('.prose'); if (RD.mode === 'paper' && RD.id === id && b) b.innerHTML = html || lead + '<p class="loading">（全文暫時讀不到。）</p>'; });
+}
+function showPaper(id) {
+  RD.mode = 'paper'; RD.id = id;
+  const h = Math.min(innerHeight * .84, 880), w = Math.min(h * .75, innerWidth * .8), u = Math.min(1, w / 525), extra = Math.min(2, DRAFTS.length - 1);
+  robj.innerHTML = '<div id="paper" class="obj" style="--u:' + u.toFixed(3) + ';width:' + Math.round(w) + 'px;height:' + Math.round(h) + 'px;left:' + Math.round((innerWidth - w) / 2 - 18 * u) + 'px;top:' + Math.max(8, Math.round((innerHeight - h) / 2 - 24)) + 'px">'
+    + ['rotate(2.4deg) translate(1.5%, 1%)', 'rotate(-1.6deg) translate(-.5%, .5%)'].slice(0, extra).map(t => '<div class="stack" style="transform:' + t + '"></div>').join('')
+    + '<article class="pg" tabindex="0"></article>' + DRAFTS.map((d, i) => '<button class="tab" data-tab="' + d + '" style="top:calc(var(--u) * ' + (56 + i * 166) + 'px)">' + pad2(i + 1) + '　' + esc(ITEMS[d].sp || ITEMS[d].t) + '</button>').join('') + '</div>';
+  fillPaper(id); reader.classList.add('on'); updNav(); requestAnimationFrame(() => reader.classList.add('vis'));
+  const el = $('paper'), F = el.getBoundingClientRect(), P = projRect(LF.obj);
+  el.animate([{ transform:flipT(F, P), opacity:0 }, { opacity:1, offset:.28 }, { transform:'none', opacity:1 }], { duration:640, easing:'cubic-bezier(.2,.7,.2,1)' }).onfinish = () => { RD.busy = false; el.querySelector('.pg').focus({ preventScroll:true }); };
+  setTimeout(() => LF.obj && (LF.obj.visible = false), 200);
+}
+function switchDraft(id) {
+  if (RD.mode !== 'paper' || RD.busy || id === RD.id) return; RD.busy = true; mark(id); st.cur = id;
+  const dir = DRAFTS.indexOf(id) > DRAFTS.indexOf(RD.id) ? 1 : -1; RD.id = id;
+  release(); grab(drafts[id], 'paper'); LF.obj.position.copy(LF.e); LF.obj.quaternion.copy(LF.qe); LF.t = 1; LF.obj.visible = false;
+  const pg = $('paper').querySelector('.pg');
+  const a1 = pg.animate([{ transform:'none', opacity:1 }, { transform:'translate(' + (-dir * 26) + '%, ' + (dir * 3) + '%) rotate(' + (-dir * 7) + 'deg)', opacity:0 }], { duration:300, easing:'cubic-bezier(.5,0,.75,0)', fill:'forwards' });
+  a1.onfinish = () => { fillPaper(id); updNav(); a1.cancel(); pg.animate([{ transform:'translate(' + (dir * 4) + '%, 2%) rotate(' + (dir * 1.5) + 'deg)', opacity:0 }, { transform:'none', opacity:1 }], { duration:380, easing:'cubic-bezier(.2,.7,.2,1)' }).onfinish = () => { RD.busy = false; }; };
+}
+const stepDraft = d => switchDraft(DRAFTS[(DRAFTS.indexOf(RD.id) + d + DRAFTS.length) % DRAFTS.length]);
+
+/* books: pull off the shelf, open the cover, turn pages */
+const FG = 40, TOC_ROWS = 6; // gap between the columns an article is poured into; contents entries per page
+function bookDims() {
+  const single = innerWidth < 760; let H = Math.min(innerHeight * .78, 720), pw;
+  if (single) { pw = Math.min(innerWidth * .86, H * .7); H = pw / .7; } else { pw = H * .7; const mx = innerWidth * .9 / 2.06; if (pw > mx) { pw = mx; H = pw / .7; } }
+  const u = H / 640;
+  return { single, H, pw, u, m:Math.round(H * .022), W:single ? pw : pw * 2, fw:Math.floor(pw - 100 * u), fh:Math.floor(H - 124 * u), fs:Math.max(13, 16.5 * u) };
+}
+const flowCss = D => 'width:' + D.fw + 'px;height:' + D.fh + 'px;column-width:' + D.fw + 'px;column-gap:' + FG + 'px;font-size:' + D.fs.toFixed(1) + 'px;--fh:' + D.fh + 'px';
+// how many pages an article runs to: pour it into page-sized columns off screen and count them
+async function countCols(html, D) {
+  const el = document.createElement('div'); el.className = 'prose flow'; el.style.cssText = flowCss(D) + ';position:fixed;left:0;top:0;visibility:hidden;pointer-events:none'; el.innerHTML = html; document.body.appendChild(el);
+  const imgs = [...el.querySelectorAll('img')].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }));
+  await Promise.race([Promise.all([document.fonts && document.fonts.ready, ...imgs]), new Promise(r => setTimeout(r, 2500))]);
+  const n = Math.max(1, Math.round((el.scrollWidth + FG) / (D.fw + FG))); el.remove(); return n;
+}
+const endpaper = kind => '<div class="endp"><div class="exlib"><span>EX LIBRIS</span><b>' + esc(ABOUT.name.split(' ')[0]) + ' 的書房</b><span>' + KLAB[kind] + '</span></div></div>';
+function closePages(P, id) {
+  const rel = id ? related(id) : [];
+  if (rel.length) P.push('<span class="sec">順手再翻</span><div class="rel">' + rel.map(r => '<button class="btn btn-ghost" data-rel="' + r + '">' + where(r) + '：' + esc(ITEMS[r].t) + ' →</button>').join('') + '</div>');
+  if (P.length % 2) P.push('<div class="colo">— 完 —</div>');
+  return P;
+}
+function articlePages(it, html, n, id) {
+  const P = [endpaper(it.kind), '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + (it.b && it.b[0] ? '<p class="by">' + esc(it.b[0]) + '</p>' : '') + '<span class="foot">' + esc(it.m) + '</span>'];
+  if (html) for (let k = 0; k < n; k++) P.push({ col:k });
+  else P.push('<span class="sec">內容</span><div class="body"><p><em>（全文暫時讀不到。）</em></p></div>');
+  return closePages(P, id);
+}
+async function bookPages(id, D) {
+  const it = ITEMS[id];
+  if (it.aid) { const html = await loadArticle(it.aid); return { art:{ t:it.t, html }, pages:articlePages(it, html, html ? await countCols(html, D) : 0, id) }; }
+  const body = '<div class="body">' + it.b.map(p => '<p>' + esc(p) + '</p>').join('') + '</div>';
+  if (it.toc) {
+    const P = [endpaper(it.kind), '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + body + linkBtns(it.links) + '<span class="foot">' + esc(it.m) + '</span>'];
+    for (let a = 0; a < it.toc.length; a += TOC_ROWS) P.push('<span class="sec">目錄 · ' + (a + 1) + '–' + Math.min(a + TOC_ROWS, it.toc.length) + ' / ' + it.toc.length + '</span><div class="toc">'
+      + it.toc.slice(a, a + TOC_ROWS).map(([aid, t, d]) => '<button data-art="' + aid + '"><span>' + esc(d) + '</span><b>' + esc(t) + '</b></button>').join('') + '</div>');
+    return { art:null, pages:closePages(P, id) };
+  }
+  // a book from the reading list: its card
+  return { art:null, pages:closePages([endpaper(it.kind),
+    (it.cover ? '<img class="cover-img" src="' + esc(it.cover) + '" alt="">' : '') + '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + (it.by ? '<p class="by">' + esc(it.by) + '</p>' : '') + '<span class="foot">' + esc(ABOUT.name) + ' 的書單</span>',
+    '<span class="sec">書卡</span>' + body + (it.pct != null ? '<div><div class="prog"><i style="width:' + it.pct + '%"></i></div><span style="font-size:13px">已讀 ' + it.pct + '%</span></div>' : '') + linkBtns(it.links) + '<span class="foot">' + esc(it.m) + '</span>'], id) };
+}
+function openBook(id) {
+  if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; mark(id); st.cur = id;
+  const D = bookDims(), prep = bookPages(id, D); grab(books[id], 'book'); LF.t = 0; LF.anim = 1; LF.cb = () => prep.then(b => showBook(id, D, b));
+}
+function pageHTML(i) {
+  const p = BK.pages[i], D = BK.D; if (p == null) return '';
+  const body = typeof p === 'string' ? p : '<span class="rh">' + esc(BK.art.t) + '</span><div class="win" style="width:' + D.fw + 'px;height:' + D.fh + 'px"><div class="prose flow" style="' + flowCss(D) + ';transform:translateX(' + (-p.col * (D.fw + FG)) + 'px)">' + BK.art.html + '</div></div>';
+  return '<div class="pc">' + body + '</div>' + (i > 0 ? '<span class="pn">' + i + '</span>' : '');
+}
+const setPage = (el, i) => { el.innerHTML = pageHTML(i); };
+const coverHTML = it => '<i class="band" style="top:6%"></i><i class="band" style="bottom:6%"></i><span class="ck">' + KLAB[it.kind] + '</span><b>' + esc(it.t) + '</b>' + (it.by ? '<span class="cb">' + esc(it.by) + '</span>' : '') + '<span class="cf">' + esc(ABOUT.name.split(' ')[0]) + ' 的書房</span>';
+function showBook(id, D, b) {
+  Object.assign(BK, { pages:b.pages, art:b.art, ret:null, D, single:D.single, i:D.single ? 1 : 0 }); RD.mode = 'book'; RD.id = id;
+  const it = ITEMS[id], [bg, fg] = fCols[id] || [C.c800, C.cream], { H, m, W } = D, bw = W + 2 * m, bh = H + 2 * m;
+  robj.innerHTML = '<div id="book" class="obj" style="--u:' + D.u.toFixed(3) + ';--bg:' + bg + ';--fg:' + fg + ';width:' + Math.round(bw) + 'px;height:' + Math.round(bh) + 'px;left:' + Math.round((innerWidth - bw) / 2) + 'px;top:' + Math.max(8, Math.round((innerHeight - bh) / 2 - 30)) + 'px">'
+    + (BK.single ? '<div class="board S"></div>' : '<div class="board L" style="visibility:hidden"></div><div class="board R"></div>')
+    + '<div class="pages' + (BK.single ? ' single' : '') + '" style="left:' + m + 'px;top:' + m + 'px;width:' + Math.round(W) + 'px;height:' + Math.round(H) + 'px">' + (BK.single ? '' : '<div class="page L sL" style="visibility:hidden"></div>') + '<div class="page R sR"></div></div></div>';
+  const el = $('book'); setPage(el.querySelector('.page.R'), 1);
+  reader.classList.add('on'); updNav(); requestAnimationFrame(() => reader.classList.add('vis'));
+  const F = el.getBoundingClientRect(), P = projRect(LF.obj);
+  setTimeout(() => LF.obj && (LF.obj.visible = false), 220);
+  if (BK.single) { el.animate([{ transform:flipT(F, P), opacity:0 }, { opacity:1, offset:.3 }, { transform:'none', opacity:1 }], { duration:650, easing:'cubic-bezier(.2,.7,.2,1)' }).onfinish = () => { RD.busy = false; }; return; }
+  const cov = document.createElement('div'); cov.className = 'lf cov';
+  cov.innerHTML = '<div class="pf cvr">' + coverHTML(it) + '</div><div class="pf back cvb"><div style="position:absolute;top:' + m + 'px;bottom:' + m + 'px;left:' + m + 'px;right:0">' + BK.pages[0] + '</div></div>';
+  el.appendChild(cov);
+  const sc = P.h / F.height, T = 1300;
+  el.animate([{ transform:'translate(' + (P.x - F.left - F.width / 2 * sc) + 'px, ' + (P.y - F.top) + 'px) scale(' + sc + ')', opacity:0, easing:'cubic-bezier(.2,.7,.3,1)' }, { opacity:1, offset:.12 }, { transform:'translate(' + (-F.width / 4) + 'px, 0px) scale(1)', offset:.42, easing:'cubic-bezier(.45,.05,.35,1)' }, { transform:'translate(0px, 0px) scale(1)', opacity:1 }], { duration:T });
+  cov.animate([{ transform:'rotateY(0deg)' }, { transform:'rotateY(0deg)', offset:.42, easing:'cubic-bezier(.45,.05,.35,1)' }, { transform:'rotateY(-180deg)' }], { duration:T }).onfinish = () => {
+    el.querySelector('.board.L').style.visibility = ''; const Lp = el.querySelector('.page.L'); Lp.style.visibility = ''; setPage(Lp, 0); cov.remove(); RD.busy = false; };
+}
+function flip(d) {
+  if (RD.mode !== 'book' || RD.busy) return; const pg = $('book').querySelector('.pages'), Lp = pg.querySelector('.page.L'), Rp = pg.querySelector('.page.R'), N = BK.pages.length;
+  const mkLeaf = (cls, fi, fc, bi, bc) => { const lf = document.createElement('div'); lf.className = 'lf ' + cls; lf.innerHTML = '<div class="pf ' + fc + '">' + pageHTML(fi) + '<i class="sh"></i></div><div class="pf back ' + bc + '">' + pageHTML(bi) + '<i class="sh"></i></div>'; pg.appendChild(lf); return lf; };
+  const o = { duration:820, easing:'cubic-bezier(.45,.05,.35,1)' };
+  const shade = lf => { const [a, b] = lf.querySelectorAll('.sh'); a.animate([{ opacity:0 }, { opacity:.3 }], { duration:410, fill:'forwards', easing:'ease-in' }); b.animate([{ opacity:.3 }, { opacity:0 }], { duration:410, delay:410, fill:'both', easing:'ease-out' }); };
+  const done = () => { RD.busy = false; updNav(); };
+  if (BK.single) {
+    const ni = BK.i + d; if (ni < 1 || ni >= N) return; RD.busy = true;
+    if (d > 0) { const lf = mkLeaf('R', BK.i, 'sR', -1, 'sL'); setPage(Rp, ni); shade(lf); lf.animate([{ transform:'rotateY(0deg)', opacity:1 }, { opacity:1, offset:.55 }, { transform:'rotateY(-180deg)', opacity:0 }], o).onfinish = () => { lf.remove(); BK.i = ni; done(); }; }
+    else { const lf = mkLeaf('R', ni, 'sR', -1, 'sL'); lf.animate([{ transform:'rotateY(-180deg)', opacity:0 }, { opacity:1, offset:.45 }, { transform:'rotateY(0deg)', opacity:1 }], o).onfinish = () => { setPage(Rp, ni); lf.remove(); BK.i = ni; done(); }; }
+    return;
+  }
+  if (d > 0 ? BK.i + 2 >= N : BK.i - 2 < 0) return; RD.busy = true;
+  if (d > 0) { const lf = mkLeaf('R', BK.i + 1, 'sR', BK.i + 2, 'sL'); setPage(Rp, BK.i + 3); shade(lf); lf.animate([{ transform:'rotateY(0deg)' }, { transform:'rotateY(-180deg)' }], o).onfinish = () => { setPage(Lp, BK.i + 2); lf.remove(); BK.i += 2; done(); }; }
+  else { const lf = mkLeaf('L', BK.i, 'sL', BK.i - 1, 'sR'); setPage(Lp, BK.i - 2); shade(lf); lf.animate([{ transform:'rotateY(0deg)' }, { transform:'rotateY(180deg)' }], o).onfinish = () => { setPage(Rp, BK.i - 1); lf.remove(); BK.i -= 2; done(); }; }
+}
+// swap everything between the boards at once: into an article from a series' contents, and back out
+function swapSpread() {
+  const pg = $('book').querySelector('.pages');
+  pg.animate([{ opacity:1 }, { opacity:0 }], { duration:160, fill:'forwards' }).onfinish = e => {
+    if (BK.single) setPage(pg.querySelector('.page.R'), BK.i); else { setPage(pg.querySelector('.page.L'), BK.i); setPage(pg.querySelector('.page.R'), BK.i + 1); }
+    updNav(); e.target.cancel(); pg.animate([{ opacity:0 }, { opacity:1 }], { duration:240 }).onfinish = () => { RD.busy = false; }; };
+}
+function readEntry(aid) {
+  if (RD.mode !== 'book' || RD.busy) return; const sid = RD.id, s = ITEMS[sid], row = (s.toc || []).find(r => r[0] === aid); if (!row) return; RD.busy = true;
+  loadArticle(aid).then(async html => { const n = html ? await countCols(html, BK.D) : 0; if (RD.mode !== 'book' || RD.id !== sid) return;
+    BK.ret = { pages:BK.pages, i:BK.i, art:BK.art }; BK.art = { t:row[1], html };
+    BK.pages = articlePages({ kind:'writing', k:s.t + ' · ' + row[2], t:row[1], m:s.t }, html, n); BK.i = BK.single ? 1 : 0; swapSpread(); });
+}
+function backToContents() { if (RD.mode !== 'book' || RD.busy || !BK.ret) return; RD.busy = true; Object.assign(BK, BK.ret, { ret:null }); swapSpread(); }
+function updNav() {
+  if (RD.mode === 'book') { const N = BK.pages.length, a = BK.single ? BK.i <= 1 : BK.i <= 0, z = BK.single ? BK.i >= N - 1 : BK.i + 2 >= N;
+    rnav.innerHTML = (BK.ret ? '<button class="btn btn-ghost" data-act="toc">‹ 回目錄</button>' : '') + '<button class="btn btn-ghost" data-act="prev"' + (a ? ' disabled' : '') + '>‹ 上一頁</button><span class="cnt">' + (BK.single ? BK.i + ' / ' + (N - 1) : (BK.i / 2 + 1) + ' / ' + (N / 2)) + '</span><button class="btn btn-ghost" data-act="next"' + (z ? ' disabled' : '') + '>下一頁 ›</button><button class="btn btn-secondary" data-act="shelve">放回書架</button>'; }
+  else if (RD.mode === 'paper') rnav.innerHTML = '<button class="btn btn-ghost" data-act="prev">‹</button><span class="cnt">第 ' + (DRAFTS.indexOf(RD.id) + 1) + ' / ' + DRAFTS.length + ' 張</span><button class="btn btn-ghost" data-act="next">›</button><button class="btn btn-secondary" data-act="shelve">放回桌上</button>';
+}
+function closeReader(cb) {
+  if (!RD.mode || RD.busy) return; RD.busy = true;
+  const el = robj.firstElementChild, P = projRect(LF.obj); reader.classList.remove('vis');
+  let a;
+  if (RD.mode === 'paper') { const F = el.getBoundingClientRect(); a = el.animate([{ transform:'none', opacity:1 }, { opacity:1, offset:.6 }, { transform:flipT(F, P), opacity:0 }], { duration:460, easing:'cubic-bezier(.5,0,.6,1)', fill:'forwards' }); setTimeout(() => LF.obj && (LF.obj.visible = true), 260); }
+  else { a = el.animate([{ transform:'none', opacity:1 }, { transform:'translate(0px, 24px) scale(.95)', opacity:0 }], { duration:340, easing:'ease-in', fill:'forwards' }); setTimeout(() => LF.obj && (LF.obj.visible = true), 140); }
+  a.onfinish = () => { reader.classList.remove('on'); robj.innerHTML = ''; rnav.innerHTML = ''; RD.mode = null; LF.t = 1; LF.anim = -1; LF.cb = () => { RD.busy = false; unimmerse(); cb && cb(); }; };
+}
+reader.addEventListener('click', e => {
+  const a = e.target.closest('a,[data-act],[data-rel],[data-tab],[data-art]');
+  if (a && a.tagName === 'A') return;
+  if (a) { if (a.dataset.tab) return switchDraft(a.dataset.tab); if (a.dataset.art) return readEntry(a.dataset.art); if (a.dataset.rel) { const r = a.dataset.rel; return closeReader(() => openItem(r)); }
+    const act = a.dataset.act; if (act === 'shelve' || act === 'rclose') return closeReader(); if (act === 'toc') return backToContents(); if (act === 'next' || act === 'prev') { const d = act === 'next' ? 1 : -1; return RD.mode === 'book' ? flip(d) : stepDraft(d); } return; }
+  if (e.target.classList.contains('bd')) return closeReader();
+  if (RD.mode === 'book') { const p = e.target.closest('.page'); if (!p) return; if (BK.single) { const r = p.getBoundingClientRect(); flip(e.clientX < r.left + r.width * .35 ? -1 : 1); } else flip(p.classList.contains('L') ? -1 : 1); }
+});
+
+/* TV: push in on the CRT, pick a cartridge, the game plays on the screen */
+function openTV(sel = 0) {
+  if (RD.mode || RD.busy || LF.anim) return; immerse();
+  Object.assign(TV, { on:true, vis:false, play:false, sel }); mark('tv'); st.cur = 'tv';
+  scr.updateWorldMatrix(true, false); const c = scr.getWorldPosition(new THREE.Vector3()), n = new THREE.Vector3(0, 0, 1).applyQuaternion(scr.getWorldQuaternion(new THREE.Quaternion()));
+  const th = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), d = Math.max((.22 / .6) / th, (.27 / .84) / (th * camera.aspect));
+  flyTo(c, c.clone().addScaledVector(n, d), 1.4); tvui.classList.add('on'); tvMenu();
+}
+function tvMenu() {
+  TV.play = false;
+  crt.innerHTML = '<div class="menu"><div class="hd"><span>PLAYBOX</span><span>' + pad2(GAMES.length) + ' CARTS</span></div><div class="sub">選擇卡帶</div><div class="gl">'
+    + GAMES.map((g, i) => '<button class="gi" data-g="' + i + '"><span class="c">▶</span><span>' + esc(g[2]) + '</span><span class="k">' + pad2(i + 1) + '</span></button>').join('')
+    + '</div><div class="ht">↑↓ 選擇　ENTER 開始　ESC 離開</div></div><div class="scan"></div>';
+  tvSel(TV.sel); tvBar();
+}
+function tvSel(i) { TV.sel = i; crt.querySelectorAll('.gi').forEach((b, j) => { b.classList.toggle('on', j === i); if (j === i) b.scrollIntoView({ block:'nearest' }); }); }
+function tvPlay() {
+  TV.play = true; const g = GAMES[TV.sel], slot = IDS.find(k => k !== 'tv' && ITEMS[k].kind === 'play' && gameAt(k) === TV.sel); if (slot) mark(slot);
+  crt.innerHTML = '<iframe src="' + esc(g[4]) + '" title="' + esc(g[2]) + '" allow="autoplay; fullscreen; gamepad"></iframe><div class="ld"><span>插入卡帶中…<br>' + esc(g[2]) + '</span></div><div class="scan" style="opacity:.4"></div>';
+  crt.querySelector('iframe').addEventListener('load', () => { const l = crt.querySelector('.ld'); l && l.remove(); });
+  tvBar(); positionTV();
+}
+function tvBar() {
+  const repo = (ITEMS.tv.links || [])[0];
+  tvbar.innerHTML = (TV.play
+    ? '<button class="btn btn-ghost" data-tv="menu">‹ 換卡帶</button><a class="btn btn-ghost" href="' + esc(GAMES[TV.sel][4]) + '" target="_blank" rel="noopener" style="text-decoration:none">開新分頁玩 ↗</a>'
+    : repo ? '<a class="btn btn-ghost" href="' + esc(repo.u) + '" target="_blank" rel="noopener" style="text-decoration:none">' + esc(repo.l) + '</a>' : '') + '<button class="btn btn-secondary" data-tv="exit">關電視 ✕</button>';
+}
+function positionTV() {
+  camera.updateMatrixWorld(); scr.updateWorldMatrix(true, false); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => { _v.set(a * .131, b * .107, .012).applyMatrix4(scr.matrixWorld).project(camera); const X = (_v.x + 1) / 2 * innerWidth, Y = (1 - _v.y) / 2 * innerHeight; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); });
+  const w = x1 - x0, h = y1 - y0; Object.assign(crt.style, { left:x0 + 'px', top:y0 + 'px', width:w + 'px', height:h + 'px', fontSize:(h / 18).toFixed(1) + 'px' });
+  const f = crt.querySelector('iframe'); if (f) { const sc = w / 900; f.style.width = '900px'; f.style.height = Math.round(h / sc) + 'px'; f.style.transform = 'scale(' + sc + ')'; }
+  tvbar.style.left = (x0 + w / 2) + 'px'; tvbar.style.top = Math.min(innerHeight - 64, y1 + h * .4) + 'px';
+}
+function exitTV() { Object.assign(TV, { on:false, vis:false, play:false }); tvui.classList.remove('vis', 'on'); crt.innerHTML = ''; tvbar.innerHTML = ''; lockCam = false; document.body.classList.remove('immerse'); goHome(); }
+tvui.addEventListener('click', e => { const a = e.target.closest('[data-g],[data-tv]'); if (!a) return; if (a.dataset.g != null) { tvSel(+a.dataset.g); tvPlay(); } else if (a.dataset.tv === 'menu') tvMenu(); else if (a.dataset.tv === 'exit') exitTV(); });
+tvui.addEventListener('pointerover', e => { const a = e.target.closest('[data-g]'); if (a && !TV.play) tvSel(+a.dataset.g); });
 
 /* ================= picking ================= */
 const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = $('tip');
 let hoverRoot = null, down = null;
 function tipText(p) {
-  if (p.type === 'item') { const it = ITEMS[p.id]; const lab = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', older:'較早的文章', cabinet:'作品櫃', project:'Side Project', play:'Playbox', award:'競賽與演講' }[it.kind]; return `${lab} · ${it.t}`; }
+  if (p.type === 'item') { const it = ITEMS[p.id]; return `${KLAB[it.kind]} · ${it.t}`; }
   if (p.type === 'list') return '筆電 · GitHub 活動';
   if (p.type === 'about') return '自畫像 · 關於 Paul';
   if (p.type === 'lamp') return night ? '檯燈 · 點一下天亮' : '檯燈 · 點一下入夜';
@@ -738,6 +998,7 @@ function tipText(p) {
 const setMouse = e => { const r = renderer.domElement.getBoundingClientRect(); mouse.set((e.clientX - r.left)/r.width*2-1, -(e.clientY - r.top)/r.height*2+1); ray.setFromCamera(mouse, camera); };
 renderer.domElement.addEventListener('pointerdown', e => { down = { x:e.clientX, y:e.clientY }; });
 renderer.domElement.addEventListener('pointermove', e => {
+  if (lockCam) { tip.style.opacity = 0; hoverRoot = null; renderer.domElement.style.cursor = TV.on ? 'zoom-out' : 'default'; return; }
   setMouse(e); const hit = ray.intersectObjects(pickables, false)[0]; hoverRoot = hit ? hit.object.userData.root : null;
   renderer.domElement.style.cursor = hoverRoot ? 'pointer' : 'grab';
   if (hoverRoot) { tip.textContent = tipText(hoverRoot.userData.pick); tip.style.left = e.clientX + 14 + 'px'; tip.style.top = e.clientY + 14 + 'px'; tip.style.opacity = 1; } else tip.style.opacity = 0;
@@ -745,6 +1006,7 @@ renderer.domElement.addEventListener('pointermove', e => {
 renderer.domElement.addEventListener('pointerleave', () => { tip.style.opacity = 0; hoverRoot = null; });
 renderer.domElement.addEventListener('pointerup', e => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) { down = null; return; } down = null;
+  if (TV.on) { exitTV(); return; } if (lockCam) return;
   setMouse(e); const hit = ray.intersectObjects(pickables, false)[0];
   if (!hit) { if (panel.classList.contains('open')) closePanel(); return; }
   const root = hit.object.userData.root, p = root.userData.pick;
@@ -758,7 +1020,7 @@ const roots = [...new Set(pickables.map(m => m.userData.root))];
 renderChips();
 function loop(ts) {
   clock.update(ts); const dt = Math.min(clock.getDelta(), .05), t = clock.getElapsed();
-  roots.forEach(r => { const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; r.position.lerp(want, Math.min(1, dt * 10)); });
+  roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; r.position.lerp(want, Math.min(1, dt * 10)); });
   const fl = .85 + Math.sin(t*13) * .06 + Math.sin(t*7.3) * .08 + (Math.random() - .5) * .06; candleLight.intensity = .5 * fl; flame.scale.set(1, 2.2 * fl, 1);
   catBody.scale.y = .55 + Math.sin(t*1.6) * .02; head.rotation.z = Math.sin(t*.4) * .03;
   const w = SKY[season], pa = pGeo.attributes.position.array;
@@ -766,19 +1028,22 @@ function loop(ts) {
   pGeo.attributes.position.needsUpdate = true;
   const da = dGeo.attributes.position.array; for (let i = 0; i < DN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009; da[i*3+1] += Math.sin(t*.21 + s0*30) * .0006 - .00012; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
   candleHalo.material.opacity = candleHalo.userData.op * fl * (night ? 1 : .4);
-  if (tween) { tween.t = Math.min(1, tween.t + dt / tween.d); const k = 1 - Math.pow(1 - tween.t, 3); controls.target.lerpVectors(tween.ft, tween.tt, k); camera.position.lerpVectors(tween.fp, tween.tp, k); if (tween.t >= 1) { tween = null; controls.enabled = true; } }
+  if (tween) { tween.t = Math.min(1, tween.t + dt / tween.d); const k = 1 - Math.pow(1 - tween.t, 3); controls.target.lerpVectors(tween.ft, tween.tt, k); camera.position.lerpVectors(tween.fp, tween.tp, k); if (tween.t >= 1) { tween = null; controls.enabled = !lockCam; } }
+  liftStep(dt);
   // the panel covers the right 460px, or the bottom 58% on a phone — slide the view so the subject stays in the open part
   const open = panel.classList.contains('open'), phone = innerWidth <= 760, k = Math.min(1, dt * 6);
   viewX += ((open && !phone ? 230 : 0) - viewX) * k; viewY += ((open && phone ? innerHeight * .29 : 0) - viewY) * k;
   if (Math.abs(viewX) > .5 || Math.abs(viewY) > .5) camera.setViewOffset(innerWidth, innerHeight, viewX, viewY, innerWidth, innerHeight); else camera.clearViewOffset();
-  controls.update(); renderer.render(scene, camera);
+  controls.update();
+  if (TV.on) { positionTV(); if (!tween && !TV.vis) { TV.vis = true; tvui.classList.add('vis'); } }
+  renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(loop);
-window.__study = { loop, openItem, openList, openAbout, setNight, setSeason };
+window.__study = { loop, openItem, openList, openAbout, setNight, setSeason, openTV, exitTV, flip, closeReader, switchDraft, state:{ RD, BK, TV, LF } };
 flyTo(HOME.tgt, HOME.pos, 2.2);
 setTimeout(() => $('intro').classList.add('off'), 300);
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
 const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
 addEventListener('resize', fitCamera); fitCamera();
-if (matchMedia('(pointer: coarse)').matches) { const hint = document.querySelector('#dock .hint'); if (hint) hint.textContent = '拖曳環顧 · 雙指縮放 · 點房間裡的東西'; }
+if (matchMedia('(pointer: coarse)').matches) { const hint = document.querySelector('#dock .hint'); if (hint) hint.textContent = '拖曳環顧 · 雙指縮放 · 點書、稿子、電視拿起來看'; }
 document.fonts && document.fonts.ready.then(() => texts.forEach(t => t.redraw()));

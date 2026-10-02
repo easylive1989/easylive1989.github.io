@@ -1,0 +1,18 @@
+---
+import NotionRenderer from '../../components/notion/NotionRenderer.astro';
+import { getArticle, getAllArticlesForStaticPaths } from '../../lib/data';
+
+// The body of one article and nothing else: the study fetches this when a book
+// is pulled off the shelf or a page is picked up from the desk, and typesets it
+// there. The full article page still lives at /{category}/{id}/.
+export const partial = true;
+
+export async function getStaticPaths() {
+  const paths = await getAllArticlesForStaticPaths();
+  return paths.map((p) => ({ params: { id: p.articleId }, props: { cat: p.categorySlug } }));
+}
+
+const data = await getArticle(Astro.props.cat, Astro.params.id!);
+---
+
+{data && <NotionRenderer blocks={data.blocks} />}
