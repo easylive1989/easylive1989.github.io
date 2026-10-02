@@ -25,8 +25,6 @@ const BASE = import.meta.env.BASE_URL;
     <div id="dock" class="hud">
       <div class="row sheet">
         <button class="btn btn-primary" id="bRandom">隨手翻一樣</button>
-        <button class="btn btn-secondary" id="bLight">關燈</button>
-        <button class="btn btn-secondary" id="bSeason">窗外：秋</button>
       </div>
       <span class="hint">拖曳環顧 · 滾輪靠近 · 點書、桌上的稿子、電視拿起來看 · Esc 放回</span>
     </div>
@@ -103,7 +101,6 @@ const BASE = import.meta.env.BASE_URL;
 
   #chips { right: var(--space-6); top: var(--space-6); padding: var(--space-2); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 560px; justify-content: flex-end; }
   #chips button { all: unset; cursor: pointer; }
-  #chips .count { font-size: 12px; padding: 0 6px; }
 
   #dock { left: var(--space-6); bottom: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; transition: opacity .4s; }
   #chips { transition: opacity .4s; }

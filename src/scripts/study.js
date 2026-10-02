@@ -7,11 +7,6 @@ import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur, spine
 // slots — a spine on the shelf, a spot in the niche, a page on the desk.
 const DATA = JSON.parse(document.getElementById('study-data').textContent);
 const { items: ITEMS, about: ABOUT, github: GH, site: SITE } = DATA;
-const EGGS = {
-  e1:{t:'椅子上的貓',b:['這張椅子已經不是我的了。']},
-  e2:{t:'窗外的月亮',b:['寫不出來的時候，我會盯著它看。它從來不催稿。']},
-  e3:{t:'書架頂上的橡皮鴨',b:['Rubber duck debugging 的那隻。所有 bug 都是先講給它聽的。']},
-};
 const related = id => DATA.links.filter(l => l.includes(id)).map(l => l[0] === id ? l[1] : l[0]);
 const IDS = Object.keys(ITEMS);
 const CATS = [{ id:'shelf', name:'書架' }, { id:'display', name:'展示架' }, { id:'desk', name:'書桌' }];
@@ -47,9 +42,9 @@ catch (err) {
 }
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
 stage.appendChild(renderer.domElement);
-const scene = new THREE.Scene(); scene.background = col('#140e0a');
+const scene = new THREE.Scene(); scene.background = col('#0e151e');
 const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .02, 60);
 const HOME = { pos:new THREE.Vector3(1.05, 1.72, 2.1), tgt:new THREE.Vector3(-0.2, 1.22, -1.7) };
 camera.position.set(1.6, 1.9, 3.6);
@@ -252,13 +247,13 @@ const plateTex = s => ctex(256, 64, (x, w, h) => { x.fillStyle = C.brass; x.fill
 [2, 3, 4].forEach(lv => { const f = featured[lv]; if (!f) return; const zc = bays[f.bay] + .32 + .02 + f.ids.length*(f.th + .015)/2;
   const pm = new THREE.MeshStandardMaterial({ name:'brass-plate', map:plateTex(f.label), roughness:.4, metalness:.6 });
   shelf.add(mk(new THREE.BoxGeometry(.005, .045, .18), [pm, M.brass, M.brass, M.brass, M.brass, M.brass], 'brass-plate', [-2.605, LV[lv] - .005, zc])); });
-// rubber duck (egg 3) on top of shelf
+// rubber duck on top of shelf
 const duck = new THREE.Group(); duck.name = 'rubber-duck'; duck.position.set(-2.75, 2.785, .9); duck.rotation.y = 1.2;
 const dkM = pbr('duck', C.yel, { roughness:.35, clearcoat:.6, clearcoatRoughness:.2 });
 const dkb = mk(new THREE.SphereGeometry(.05, 20, 14), dkM, 'duck-body'); dkb.scale.set(1, .75, 1.3); duck.add(dkb);
 duck.add(mk(new THREE.SphereGeometry(.032, 16, 12), dkM, 'duck-head', [0,.045,.04]));
 duck.add(mk(new THREE.ConeGeometry(.012, .03, 8), std('beak', '#e0742c'), 'duck-beak', [0,.042,.077], [Math.PI/2,0,0]));
-room.add(duck); tag(duck, { type:'egg', id:'e3', view:'duck' });
+room.add(duck);
 
 /* ================= display niche ================= */
 const niche = new THREE.Group(); niche.name = 'display-niche'; room.add(niche);
@@ -419,7 +414,7 @@ const tvCable = new THREE.CatmullRomCurve3([[-.15, CH + .06, -.19], [-.2, CH + .
 tvc.add(mk(new THREE.TubeGeometry(tvCable, 24, .003, 6), M.ink, 'av-cable'));
 const tvGlow = new THREE.PointLight(0x8fc8ff, .5, 1.6, 2); tvGlow.position.set(.02, CH + .2, -1.9); room.add(tvGlow);
 if (has('tv')) { exh.tv = tvc; tag(tvc, { type:'item', id:'tv', view:'niche' }, [0, 0, .02]); }
-setInterval(() => { tvF++; scrTex.redraw(); tvGlow.intensity = (night ? .55 : .2) * (.85 + Math.random()*.3); }, 120);
+setInterval(() => { tvF++; scrTex.redraw(); tvGlow.intensity = .55 * (.85 + Math.random()*.3); }, 120);
 
 /* ================= window + outside ================= */
 const WIN = { x0:.05, x1:2.65, y0:1.0, y1:2.5 };
@@ -447,7 +442,6 @@ const glass = mk(new THREE.PlaneGeometry(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0), M.gl
 wf.add(box(WIN.x1 - WIN.x0 + .4, .04, .1, M.cream, 'sill', [1.35, WIN.y0 - .02, -2.5]));
 [WIN.x0 - .1, WIN.x1 + .1].forEach(x => wf.add(roomUV(box(.12, WIN.y1 - WIN.y0 + .3, .12, M.wallL, 'reveal', [x, (WIN.y0+WIN.y1)/2, -2.5]))));
 const moon = mk(new THREE.SphereGeometry(.16, 32, 20), new THREE.MeshBasicMaterial({ name:'moon', color:col('#f3ead2') }), 'moon', [2.15, 2.35, -4.4]); moon.castShadow = false; room.add(moon);
-tag(moon, { type:'egg', id:'e2', view:'window' }, [0,0,0]);
 
 /* ================= desk ================= */
 const desk = new THREE.Group(); desk.name = 'desk'; room.add(desk);
@@ -463,7 +457,6 @@ lampL.add(cyl(.09, .1, .02, 32, M.brass, 'lamp-base', [0,.01,0]));
 lampL.add(rod([0,.02,0], [0,.42,0], .012, M.brass, 'lamp-stem')); lampL.add(rod([0,.42,0], [.13,.47,.06], .01, M.brass, 'lamp-arm'));
 const shadeL = mk(new THREE.ConeGeometry(.09, .13, 32, 1, true), std('lamp-shade', '#2d3a2f', { roughness:.4, metalness:.5, side:THREE.DoubleSide }), 'lamp-shade', [.17,.43,.08], [0,0,-.9]); lampL.add(shadeL);
 const bulbL = mk(new THREE.SphereGeometry(.025, 12, 8), new THREE.MeshBasicMaterial({ name:'bulb', color:col('#fff1c9') }), 'bulb', [.19,.39,.08]); bulbL.castShadow = false; lampL.add(bulbL);
-tag(lampL, { type:'lamp' }, [0,0,0]);
 // plant
 const plant = new THREE.Group(); plant.name = 'plant'; plant.position.set(1.1, DY + .025, -2.28); desk.add(plant);
 plant.add(cyl(.085, .1, .02, 24, M.terracotta, 'saucer', [0,.01,0])); plant.add(cyl(.075, .055, .12, 24, M.terracotta, 'pot', [0,.08,0]));
@@ -545,7 +538,6 @@ cat.add(mk(new THREE.SphereGeometry(.035, 12, 10), M.catL, 'cat-muzzle', [.205,.
 const tailCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(-.16,.04,0), new THREE.Vector3(-.17,.03,.12), new THREE.Vector3(-.05,.025,.17), new THREE.Vector3(.08,.025,.16)]);
 cat.add(mk(new THREE.TubeGeometry(tailCurve, 24, .022, 10), M.cat, 'cat-tail'));
 [[.08,.13],[.0,.14]].forEach(([x,z]) => { const p = mk(new THREE.SphereGeometry(.025, 10, 8), M.catL, 'cat-paw', [x,.02,z]); p.scale.set(1.4,.6,1); cat.add(p); });
-tag(cat, { type:'egg', id:'e1', view:'chair' }, [0,.01,0]);
 const rugShape = new THREE.Shape(); for (let i = 0; i <= 64; i++) { const a = i/64*Math.PI*2, r = .75 + Math.sin(a*7)*.05 + Math.sin(a*13)*.03; const x = Math.cos(a)*r*1.25, y = Math.sin(a)*r; i ? rugShape.lineTo(x, y) : rugShape.moveTo(x, y); }
 const rug = mk(new THREE.ShapeGeometry(rugShape), M.fur, 'fur-rug', [-1.75,.006,-.25], [-Math.PI/2,0,.4]); rug.castShadow = false; room.add(rug);
 const furC = cnv(256, 256, (x, w, h) => { x.fillStyle = '#000'; x.fillRect(0,0,w,h); for (let i = 0; i < 9000; i++) { const v = Math.floor(RN()*255); x.fillStyle = 'rgb(' + v + ',' + v + ',' + v + ')'; x.fillRect(RN()*w, RN()*h, 1.5, 1.5); } });
@@ -559,40 +551,35 @@ side.add(box(.5, .12, .04, M.woodD, 'side-drawer', [0,.52,.23]));
 [[C.c900,.035],[C.m800,.04],[C.cream,.03]].forEach(([c, t], i) => side.add(box(.22 - i*.02, t, .3 - i*.02, std('stack-book', c), 'stack-book', [-.05, .62 + .02 + i*.038, 0], [0, i*.2, 0])));
 
 /* ================= lighting ================= */
-const hemi = new THREE.HemisphereLight(0x8a9bb0, 0x2a1a10, .25); scene.add(hemi);
-const amb = new THREE.AmbientLight(0x3a2a20, .5); scene.add(amb);
+const hemi = new THREE.HemisphereLight(0x8a9bb0, 0x2a1a10, .16); scene.add(hemi);
+const amb = new THREE.AmbientLight(0x3a2a20, .22); scene.add(amb);
 const lampLight = new THREE.PointLight(0xffb066, 3.2, 4.5, 1.6); lampLight.position.set(.96, DY + .36, -2.15); lampLight.castShadow = true; lampLight.shadow.mapSize.set(1024, 1024); lampLight.shadow.bias = -.002; lampLight.shadow.radius = 6; room.add(lampLight);
 const lampLight2 = new THREE.PointLight(0xffa850, 2.4, 3.5, 1.6); lampLight2.position.set(2.42, DY + .5, -2.25); room.add(lampLight2);
 const shelfLights = [-1.8, -.45, .9].map(z => { const l = new THREE.PointLight(0xffc27a, 1.6, 2.4, 1.8); l.position.set(-2.4, 1.95, z); room.add(l); return l; });
 const shelfLow = new THREE.PointLight(0xffb870, .9, 2, 1.8); shelfLow.position.set(-2.4, .8, -.4); room.add(shelfLow);
 const nicheLights = [[-1.45, 2.45], [-1.45, 1.65]].map(([x, y]) => { const l = new THREE.PointLight(0xffd29a, 1.1, 1.4, 1.8); l.position.set(x, y, -2.62); room.add(l); return l; });
 const moonLight = new THREE.DirectionalLight(0x8fb0d8, .35); moonLight.position.set(2, 3, -6); moonLight.target.position.set(0, 0, 0); scene.add(moonLight, moonLight.target);
-const sunLight = new THREE.DirectionalLight(0xfff0d8, 0); sunLight.position.set(2.2, 3.4, -6); sunLight.castShadow = true; sunLight.shadow.mapSize.set(2048, 2048);
-Object.assign(sunLight.shadow.camera, { left:-4, right:4, top:4, bottom:-4, near:1, far:14 }); sunLight.shadow.bias = -.0008; sunLight.target.position.set(0,0,0); scene.add(sunLight, sunLight.target);
-const roomFill = new THREE.PointLight(0xffd8b0, 0, 8, 1.2); roomFill.position.set(.5, 2.4, .5); room.add(roomFill);
+const roomFill = new THREE.PointLight(0xffd8b0, .5, 8, 1.2); roomFill.position.set(.5, 2.4, .5); room.add(roomFill);
 lampLight2.castShadow = true; lampLight2.shadow.mapSize.set(512, 512); lampLight2.shadow.bias = -.002;
-renderer.toneMappingExposure = 1.05;
 
 /* environment reflections */
 const pmrem = new THREE.PMREMGenerator(renderer);
-let envRT = null;
-function buildEnv(isNight) {
+{
   const es = new THREE.Scene();
-  es.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2.9, 6), new THREE.MeshBasicMaterial({ color: isNight ? 0x1c130d : 0x6e5a48, side:THREE.BackSide })));
+  es.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2.9, 6), new THREE.MeshBasicMaterial({ color:0x1c130d, side:THREE.BackSide })));
   const add = (geo, c, k, p) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:new THREE.Color(c).multiplyScalar(k) })); m.position.set(...p); es.add(m); };
-  add(new THREE.PlaneGeometry(2.6, 1.5), isNight ? '#1e3442' : '#dfeaf0', isNight ? 1 : 3.5, [1.35, .35, -2.9]);
-  add(new THREE.SphereGeometry(.12, 12, 8), '#ffc27a', isNight ? 14 : 4, [.56, -.6, -2.15]);
-  add(new THREE.SphereGeometry(.14, 12, 8), '#ffb066', isNight ? 10 : 3, [2.42, -.45, -2.25]);
-  add(new THREE.BoxGeometry(.05, 2.4, 3.8), '#ffbe78', isNight ? 2.2 : .8, [-2.7, .1, -.4]);
-  add(new THREE.BoxGeometry(1.6, .05, .3), '#ffd8a0', isNight ? 3 : 1, [-1.45, 1.1, -2.7]);
-  add(new THREE.PlaneGeometry(5.6, 5.6).rotateX(Math.PI/2), isNight ? '#1b2a3c' : '#dfeaf0', isNight ? 1.2 : 2.2, [0, 1.38, 0]); // the open roof: sky light from above
-  if (envRT) envRT.dispose(); envRT = pmrem.fromScene(es, .03); scene.environment = envRT.texture; scene.environmentIntensity = isNight ? .9 : .7;
+  add(new THREE.PlaneGeometry(2.6, 1.5), '#1e3442', 1, [1.35, .35, -2.9]);
+  add(new THREE.SphereGeometry(.12, 12, 8), '#ffc27a', 14, [.56, -.6, -2.15]);
+  add(new THREE.SphereGeometry(.14, 12, 8), '#ffb066', 10, [2.42, -.45, -2.25]);
+  add(new THREE.BoxGeometry(.05, 2.4, 3.8), '#ffbe78', 2.2, [-2.7, .1, -.4]);
+  add(new THREE.BoxGeometry(1.6, .05, .3), '#ffd8a0', 3, [-1.45, 1.1, -2.7]);
+  add(new THREE.PlaneGeometry(5.6, 5.6).rotateX(Math.PI/2), '#1b2a3c', 1.2, [0, 1.38, 0]); // the open roof: sky light from above
+  scene.environment = pmrem.fromScene(es, .03).texture; scene.environmentIntensity = .9;
 }
 
 /* glow halos */
 const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
-const halos = [];
-const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); sp.userData.op = op; room.add(sp); halos.push(sp); return sp; };
+const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); sp.userData.op = op; room.add(sp); return sp; };
 halo([.97, DY + .4, -2.17], .32, .55); halo([2.4, DY + .52, -2.27], .5, .45);
 const candleHalo = halo([-2.1, 1.56, -2.7], .22, .7);
 [[-1.9, 2.5], [-1.0, 2.5]].forEach(([x, y]) => halo([x, y, -2.72], .16, .5));
@@ -623,21 +610,14 @@ const DT = DY + .0265;
 [[1.78, -2.08, .62, .46], [.78, -2.25, .26, .26], [1.1, -2.28, .26, .26], [2.56, -2.33, .22, .22], [1.3, -2.3, .26, .18], [1.18, -1.75, .12, .12]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
 LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - SZ0, .12, [-2.788, y - .02, (SZ0 + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
 
-/* ================= seasons + day/night ================= */
-const SEASONS = ['春','夏','秋','冬'];
+/* ================= seasons ================= */
 const SKY = {
-  '春': { day:['#cfe2e6','#9cc79a'], trees:['#6aa35a','#87b86b','#e6a3bd','#f1c2d2','#4f8a4a'], line:'春 · 窗外落花', part:'#f1b8cc', shape:'petal', n:140, speed:.35, sway:.5, size:.035 },
-  '夏': { day:['#c8dde6','#6f9f63'], trees:['#3f7a3e','#2f6232','#5c9550','#264f2a','#4b8746'], line:'夏 · 午後雷陣雨', part:'#b8d4e4', shape:'rain', n:500, speed:4.5, sway:0, size:.06 },
-  '秋': { day:['#e6d9c4','#a08a52'], trees:['#c46a2c','#d9932f','#a8432a','#e2b246','#6f6a35'], line:'秋 · 晴時多雲，落葉', part:'#d4782e', shape:'leaf', n:90, speed:.45, sway:.7, size:.05 },
-  '冬': { day:['#dfe5ea','#c9d1d6'], trees:['#e9eef1','#c5cfd5','#8a979e','#f4f6f7','#a7b3b9'], line:'冬 · 初雪', part:'#ffffff', shape:'snow', n:420, speed:.5, sway:.25, size:.03 },
+  '春': { day:['#cfe2e6','#9cc79a'], trees:['#6aa35a','#87b86b','#e6a3bd','#f1c2d2','#4f8a4a'], part:'#f1b8cc', shape:'petal', n:140, speed:.35, sway:.5, size:.035 },
+  '夏': { day:['#c8dde6','#6f9f63'], trees:['#3f7a3e','#2f6232','#5c9550','#264f2a','#4b8746'], part:'#b8d4e4', shape:'rain', n:500, speed:4.5, sway:0, size:.06 },
+  '秋': { day:['#e6d9c4','#a08a52'], trees:['#c46a2c','#d9932f','#a8432a','#e2b246','#6f6a35'], part:'#d4782e', shape:'leaf', n:90, speed:.45, sway:.7, size:.05 },
+  '冬': { day:['#dfe5ea','#c9d1d6'], trees:['#e9eef1','#c5cfd5','#8a979e','#f4f6f7','#a7b3b9'], part:'#ffffff', shape:'snow', n:420, speed:.5, sway:.25, size:.03 },
 };
-let season = (() => { const mo = new Date().getMonth() + 1; return mo >= 3 && mo <= 5 ? '春' : mo >= 6 && mo <= 8 ? '夏' : mo >= 9 && mo <= 11 ? '秋' : '冬'; })();
-let night = true;
-function paintOutside() {
-  const s = SKY[season]; scene.background.set(night ? '#0e151e' : s.day[0]);
-  paintGarden(outsideTex.image, { sky:s.day, trees:s.trees, bare:season === '冬', night });
-  outsideTex.needsUpdate = true;
-}
+const season = (() => { const mo = new Date().getMonth() + 1; return mo >= 3 && mo <= 5 ? '春' : mo >= 6 && mo <= 8 ? '夏' : mo >= 9 && mo <= 11 ? '秋' : '冬'; })();
 const shapeTex = kind => ctex(64, 64, (x, w, h) => { x.clearRect(0,0,w,h); x.fillStyle = '#fff'; x.beginPath();
   if (kind === 'rain') x.fillRect(30, 2, 3, 60); else if (kind === 'leaf') { x.ellipse(32,32,26,13,.6,0,Math.PI*2); x.fill(); } else if (kind === 'petal') { x.ellipse(32,32,20,12,0,0,Math.PI*2); x.fill(); } else { x.arc(32,32,18,0,Math.PI*2); x.fill(); } }, false);
 const PN = 500, pPos = new Float32Array(PN*3), pSeed = new Float32Array(PN);
@@ -646,37 +626,23 @@ for (let i = 0; i < PN; i++) { pPos[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0
 const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 const pMat = new THREE.PointsMaterial({ size:.05, transparent:true, depthWrite:false, alphaTest:.2 });
 const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.add(points);
-const texCache = {};
-function setSeason(s) {
-  season = s; const w = SKY[s]; paintOutside();
-  pMat.map = texCache[w.shape] || (texCache[w.shape] = shapeTex(w.shape)); pMat.color.set(w.part); pMat.size = w.size; pMat.needsUpdate = true; pGeo.setDrawRange(0, w.n);
-  (document.getElementById('wxline') || {}).textContent = w.line + (night ? ' · 夜' : ' · 白天');
-  document.getElementById('bSeason').textContent = '窗外：' + s;
-}
-function setNight(n) {
-  night = n; paintOutside(); buildEnv(n); halos.forEach(h => h.material.opacity = n ? h.userData.op : h.userData.op * .35); dustMat.opacity = n ? .55 : .25;
-  moon.visible = n; stars.visible = n;
-  lampLight.intensity = n ? 3.2 : 1.2; lampLight2.intensity = n ? 2.4 : .8; shelfLights.forEach(l => l.intensity = n ? 1.6 : .6); nicheLights.forEach(l => l.intensity = n ? 1.1 : .5); shelfLow.intensity = n ? .9 : .3;
-  hemi.intensity = n ? .16 : .7; amb.intensity = n ? .22 : .4; moonLight.intensity = n ? .35 : 0; sunLight.intensity = n ? 0 : 2.6; roomFill.intensity = n ? .5 : 1.6;
-  renderer.toneMappingExposure = n ? 1.3 : 1.05;
-  document.getElementById('bLight').textContent = n ? '天亮' : '入夜';
-  (document.getElementById('wxline') || {}).textContent = SKY[season].line + (n ? ' · 夜' : ' · 白天');
-}
-/* stars for the open roof — a far dome, on at night only */
+{ const w = SKY[season]; // dress the window for the season: the garden behind the glass, and what falls past it
+  paintGarden(outsideTex.image, { sky:w.day, trees:w.trees, bare:season === '冬', night:true }); outsideTex.needsUpdate = true;
+  pMat.map = shapeTex(w.shape); pMat.color.set(w.part); pMat.size = w.size; pMat.needsUpdate = true; pGeo.setDrawRange(0, w.n); }
+/* stars for the open roof — a far dome */
 const SN = 240, sPos = new Float32Array(SN*3);
 for (let i = 0; i < SN; i++) { const th = Math.random()*Math.PI*2, ph = Math.acos(.15 + Math.random()*.83); sPos[i*3] = Math.sin(ph)*Math.cos(th)*40; sPos[i*3+1] = Math.cos(ph)*40; sPos[i*3+2] = Math.sin(ph)*Math.sin(th)*40; }
 const sGeo = new THREE.BufferGeometry(); sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
 const stars = new THREE.Points(sGeo, new THREE.PointsMaterial({ size:2, sizeAttenuation:false, color:col('#dfe8ff'), transparent:true, opacity:.8, depthWrite:false })); stars.frustumCulled = false; scene.add(stars);
-setSeason(season); setNight(night);
 
 /* ================= UI ================= */
-const st = { seen:{}, eggs:{}, cur:null, about:false };
+const st = { seen:{}, cur:null, about:false };
 const $ = id => document.getElementById(id);
 let toastT; const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); };
 function renderChips() {
   $('chips').innerHTML = CATS.map(c => { const ids = IDS.filter(k => ITEMS[k].cat === c.id), n = ids.filter(k => st.seen[k]).length; if (!ids.length) return '';
     return `<span class="tag ${n === ids.length ? 'tag-accent' : n ? 'tag-outline' : 'tag-neutral'}">${n === ids.length ? '✓ ' : ''}${c.name} ${n}/${ids.length}</span>`; }).join('')
-    + `<span class="tag ${st.about ? 'tag-accent' : 'tag-neutral'}">${st.about ? '✓ ' : ''}自畫像</span><span class="count">彩蛋 ${Object.keys(st.eggs).length} / 3</span>`;
+    + `<span class="tag ${st.about ? 'tag-accent' : 'tag-neutral'}">${st.about ? '✓ ' : ''}自畫像</span>`;
 }
 const panel = $('panel'), pbody = $('pbody');
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
@@ -685,8 +651,7 @@ const ghostBtn = 'justify-content:flex-start;margin-left:-6px;text-align:left;te
 const linkBtns = ls => ls && ls.length ? `<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-4) 0">${ls.map(l => `<a class="btn ${l.p ? 'btn-primary' : 'btn-secondary'}" href="${esc(l.u)}"${linkAttrs(l.u)} style="text-decoration:none">${esc(l.l)}</a>`).join('')}</div>` : '';
 function renderPanel(mode) {
   let h = '';
-  if (mode === 'egg') { const e = EGGS[st.cur]; h = `<span class="card-kicker" style="color:var(--color-accent-2-700)">彩蛋 · ${Object.keys(st.eggs).length} / 3</span><h2>${e.t}</h2><div class="body">${e.b.map(p => `<p>${p}</p>`).join('')}</div>`; }
-  else if (mode === 'about') { h = '<span class="card-kicker">書桌 · 自畫像</span><div style="display:flex;gap:var(--space-4);align-items:center;margin:var(--space-3) 0 var(--space-4)"><img src="' + esc(AVATAR) + '" alt="' + esc(ABOUT.name) + '" style="width:88px;height:88px;object-fit:cover;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)"><div><div style="font-size:14px;font-style:italic">Hi, I&#39;m</div><h2 style="margin:0">' + esc(ABOUT.name) + '</h2><div style="font-size:14px;margin-top:4px">' + esc(ABOUT.tagline) + '</div></div></div>'
+  if (mode === 'about') { h = '<span class="card-kicker">書桌 · 自畫像</span><div style="display:flex;gap:var(--space-4);align-items:center;margin:var(--space-3) 0 var(--space-4)"><img src="' + esc(AVATAR) + '" alt="' + esc(ABOUT.name) + '" style="width:88px;height:88px;object-fit:cover;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)"><div><div style="font-size:14px;font-style:italic">Hi, I&#39;m</div><h2 style="margin:0">' + esc(ABOUT.name) + '</h2><div style="font-size:14px;margin-top:4px">' + esc(ABOUT.tagline) + '</div></div></div>'
       + '<div class="body"><p>' + esc(ABOUT.bio) + '</p><p>' + esc(ABOUT.summary) + '</p></div>'
       + '<div class="rel"><span class="lab card-kicker">Find me at</span>' + ABOUT.channels.map(([k, v, u]) => '<a class="btn btn-ghost" href="' + esc(u) + '"' + linkAttrs(u) + ' style="' + ghostBtn + '">' + esc(k) + '：' + esc(v) + '</a>').join('') + '</div>'
 ; }
@@ -717,8 +682,8 @@ panel.addEventListener('click', e => {
 
 /* ================= camera focus ================= */
 const objOf = id => books[id] || exh[id] || drafts[id] || null;
-const VIEWS = { shelf:new THREE.Vector3(1, .12, .25), niche:new THREE.Vector3(.12, .1, 1), desk:new THREE.Vector3(-.1, .75, 1), chair:new THREE.Vector3(.5, .6, 1), window:new THREE.Vector3(-.3, 0, 1), duck:new THREE.Vector3(1, -.3, .3) };
-const DIST = { shelf:1.15, niche:1.55, desk:1.35, chair:1.4, window:2.6, duck:1.1 };
+const VIEWS = { shelf:new THREE.Vector3(1, .12, .25), niche:new THREE.Vector3(.12, .1, 1), desk:new THREE.Vector3(-.1, .75, 1) };
+const DIST = { shelf:1.15, niche:1.55, desk:1.35 };
 let tween = null, focused = false;
 function flyTo(tgt, pos, d = 1) { tween = { t:0, d, ft:controls.target.clone(), tt:tgt.clone(), fp:camera.position.clone(), tp:pos.clone() }; controls.enabled = false; }
 function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()); const dir = VIEWS[view].clone(); if (view === 'niche' && c.y < 1.5) dir.y = .55; dir.normalize(); flyTo(c, c.clone().addScaledVector(dir, DIST[view])); focused = true; }
@@ -731,11 +696,8 @@ function openItem(id) { const it = ITEMS[id];
   st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, exh[id] ? 'niche' : 'desk'); renderPanel('item'); }
 function openList() { focus(laptop, 'desk'); renderPanel('list'); }
 function openAbout() { st.about = true; renderChips(); focus(portrait, 'desk'); renderPanel('about'); }
-function openEgg(id, obj, view) { if (!st.eggs[id]) { st.eggs[id] = true; toast(`找到彩蛋 ${Object.keys(st.eggs).length} / 3`); renderChips(); } st.cur = id; focus(obj, view); renderPanel('egg'); }
 function closePanel() { panel.classList.remove('open'); document.body.classList.remove('reading'); goHome(); }
 $('bRandom').onclick = () => { const pool = IDS.filter(k => !st.seen[k]); const p = pool.length ? pool : IDS; openItem(p[Math.floor(Math.random()*p.length)]); };
-$('bLight').onclick = () => { setNight(!night); toast(night ? '入夜了。檯燈亮起來。' : '天亮了。'); };
-$('bSeason').onclick = () => { setSeason(SEASONS[(SEASONS.indexOf(season)+1) % 4]); toast('窗外換季：' + SKY[season].line); };
 addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
   if (TV.on) { if (e.key === 'Escape') TV.play ? tvMenu() : exitTV(); else if (!TV.play && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); tvSel((TV.sel + (e.key === 'ArrowDown' ? 1 : -1) + GAMES.length) % GAMES.length); } else if (!TV.play && e.key === 'Enter') tvPlay(); return; }
   if (RD.mode) { const nx = e.key === 'ArrowRight', pv = e.key === 'ArrowLeft';
@@ -1002,8 +964,6 @@ function tipText(p) {
   if (p.type === 'item') { const it = ITEMS[p.id]; return `${KLAB[it.kind]} · ${it.t}`; }
   if (p.type === 'list') return '筆電 · GitHub 活動';
   if (p.type === 'about') return '自畫像 · 關於 Paul';
-  if (p.type === 'lamp') return night ? '檯燈 · 點一下天亮' : '檯燈 · 點一下入夜';
-  if (p.type === 'egg') return st.eggs[p.id] ? EGGS[p.id].t : '……咦？';
   return '';
 }
 const setMouse = e => { const r = renderer.domElement.getBoundingClientRect(); mouse.set((e.clientX - r.left)/r.width*2-1, -(e.clientY - r.top)/r.height*2+1); ray.setFromCamera(mouse, camera); };
@@ -1022,7 +982,6 @@ renderer.domElement.addEventListener('pointerup', e => {
   if (!hit) { if (panel.classList.contains('open')) closePanel(); return; }
   const root = hit.object.userData.root, p = root.userData.pick;
   if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout();
-  else if (p.type === 'lamp') $('bLight').onclick(); else if (p.type === 'egg') openEgg(p.id, root, p.view);
 });
 
 /* ================= loop ================= */
@@ -1038,7 +997,7 @@ function loop(ts) {
   for (let i = 0; i < w.n; i++) { const s = pSeed[i]; pa[i*3+1] -= w.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * w.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
   pGeo.attributes.position.needsUpdate = true;
   const da = dGeo.attributes.position.array; for (let i = 0; i < DN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009; da[i*3+1] += Math.sin(t*.21 + s0*30) * .0006 - .00012; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
-  candleHalo.material.opacity = candleHalo.userData.op * fl * (night ? 1 : .4);
+  candleHalo.material.opacity = candleHalo.userData.op * fl;
   if (tween) { tween.t = Math.min(1, tween.t + dt / tween.d); const k = 1 - Math.pow(1 - tween.t, 3); controls.target.lerpVectors(tween.ft, tween.tt, k); camera.position.lerpVectors(tween.fp, tween.tp, k); if (tween.t >= 1) { tween = null; controls.enabled = !lockCam; } }
   liftStep(dt);
   // the panel covers the right 460px, or the bottom 58% on a phone — slide the view so the subject stays in the open part
@@ -1050,7 +1009,7 @@ function loop(ts) {
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(loop);
-window.__study = { loop, openItem, openList, openAbout, setNight, setSeason, openTV, exitTV, flip, closeReader, switchDraft, state:{ RD, BK, TV, LF } };
+window.__study = { loop, openItem, openList, openAbout, openTV, exitTV, flip, closeReader, switchDraft, state:{ RD, BK, TV, LF } };
 flyTo(HOME.tgt, HOME.pos, 2.2);
 setTimeout(() => $('intro').classList.add('off'), 300);
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
