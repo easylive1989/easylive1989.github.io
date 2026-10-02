@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur, spineAtlas, SPINES, pageEdges, brushedMetal, terracotta, leaf, paintGarden } from './studyTextures.js';
+import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur, spineAtlas, SPINES, pageEdges, brushedMetal, terracotta, leaf, paintGarden, agedPlastic, crtMask } from './studyTextures.js';
 
 /* ================= content ================= */
 // Filled at build time from Notion (src/lib/study.ts). Ids are the room's physical
@@ -136,6 +136,7 @@ const tabbyC = tabbyFur({ size:LOW ? 256 : 512 }), coatTex = { normalMap:texOf(t
 // small things: metal that has been handled, a pot, a leaf, and a fine grit for paper and soil
 const metalC = brushedMetal(), metalTex = { map:texOf(metalC.color), roughnessMap:texOf(metalC.rough, [1, 1], false), metalness:1 };
 const potC = terracotta(), leafC = leaf(), grit = texOf(plasterC.normal, [1, 1], false);
+const plasticC = agedPlastic(), plasticTex = { map:texOf(plasticC.color, [2, 2]), normalMap:texOf(plasticC.normal, [2, 2], false), roughnessMap:texOf(plasticC.rough, [2, 2], false), normalScale:new THREE.Vector2(.35, .35) };
 const pbr = (name, c, o = {}) => new THREE.MeshPhysicalMaterial({ name, color:col(c), roughness:.6, ...o });
 Object.assign(M, {
   wood: pbr('wood', '#9a5f3c', { ...woodTex, roughness:.52, clearcoat:.45, clearcoatRoughness:.28 }),
@@ -332,15 +333,18 @@ place(frame(.38, .3, glyph('g3'), C.ink, 'frame-landscape'), 'g3', -1.05, .88 + 
 /* ================= game cabinet: console + CRT, between the niche and the desk ================= */
 const tvc = new THREE.Group(); tvc.name = 'tv-cabinet'; tvc.position.set(.055, 0, -2.2); room.add(tvc);
 const CW = .7, CH = .77, CD = .42;
-[-1, 1].forEach(sx => tvc.add(box(.025, CH - .05, CD, M.wood, 'cab-side', [sx*(CW/2 - .0125), .05 + (CH - .05)/2, 0])));
-tvc.add(box(CW + .02, .03, CD + .02, M.woodL, 'cab-top', [0, CH - .015 + .02, 0]));
-tvc.add(box(CW, .025, CD, M.wood, 'cab-bottom', [0, .0625, 0]));
-tvc.add(box(CW - .05, .018, CD - .03, M.wood, 'cab-shelf', [0, .4, -.01]));
-tvc.add(box(CW, CH - .05, .012, M.woodD, 'cab-back', [0, .05 + (CH - .05)/2, -CD/2 + .006]));
-tvc.add(box(CW, .04, .02, M.woodD, 'cab-plinth', [0, .03, CD/2 - .02]));
-[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a, b]) => tvc.add(cyl(.012, .009, .05, 10, M.woodD, 'cab-foot', [a*(CW/2 - .04), .025, b*(CD/2 - .04)])));
+// a seventies TV stand: a paler teak with a tighter grain and a brighter lacquer than the rest of the room, hardboard at the back
+const teak = pbr('teak', '#c48c58', { map:texOf(woodC.color, [.8, 1.6]), normalMap:texOf(woodC.normal, [.8, 1.6], false), roughnessMap:texOf(woodC.rough, [.8, 1.6], false), normalScale:new THREE.Vector2(.35, .35), roughness:.45, clearcoat:.6, clearcoatRoughness:.18 });
+const hardboard = std('hardboard', '#3b2b1f', { normalMap:grit, roughness:.92 });
+[-1, 1].forEach(sx => tvc.add(box(.025, CH - .05, CD, teak, 'cab-side', [sx*(CW/2 - .0125), .05 + (CH - .05)/2, 0])));
+tvc.add(box(CW + .02, .03, CD + .02, teak, 'cab-top', [0, CH - .015 + .02, 0]));
+tvc.add(box(CW, .025, CD, teak, 'cab-bottom', [0, .0625, 0]));
+tvc.add(box(CW - .05, .018, CD - .03, teak, 'cab-shelf', [0, .4, -.01]));
+tvc.add(box(CW, CH - .05, .012, hardboard, 'cab-back', [0, .05 + (CH - .05)/2, -CD/2 + .006]));
+tvc.add(box(CW, .04, .02, teak, 'cab-plinth', [0, .03, CD/2 - .02]));
+[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a, b]) => tvc.add(cyl(.012, .009, .05, 10, teak, 'cab-foot', [a*(CW/2 - .04), .025, b*(CD/2 - .04)])));
 // console
-const plasticG = pbr('console-grey', '#b9b4aa', { roughness:.45, clearcoat:.3 }), plasticD = pbr('console-dark', '#2b2a2c', { roughness:.4, clearcoat:.4 });
+const plasticG = pbr('console-grey', '#b9b4aa', { ...plasticTex, roughness:.85, clearcoat:.3 }), plasticD = pbr('console-dark', '#2b2a2c', { ...plasticTex, roughness:.75, clearcoat:.4 });
 const con = new THREE.Group(); con.name = 'game-console'; con.position.set(-.07, .41 + .009, .02); tvc.add(con);
 con.add(mk(rboxGeo(.3, .06, .22, .012), plasticG, 'console-body', [0, .03, 0]));
 con.add(mk(rboxGeo(.3, .02, .1, .006), plasticD, 'console-band', [0, .052, .055]));
@@ -354,7 +358,12 @@ con.add(mk(new THREE.SphereGeometry(.004, 8, 6), ledMat, 'power-led', [.11, .045
 // controller with cord
 const pad = new THREE.Group(); pad.name = 'controller'; pad.position.set(.17, .41 + .009, .15); pad.rotation.y = -.35; tvc.add(pad);
 pad.add(mk(rboxGeo(.13, .018, .055, .008), plasticG, 'pad-body', [0, .009, 0]));
-pad.add(mk(new THREE.PlaneGeometry(.11, .035), plasticD, 'pad-face', [0, .0185, 0], [-Math.PI/2, 0, 0]));
+const faceTex = texOf(cnv(256, 82, (x, w, h) => { x.fillStyle = '#2b2a2c'; x.fillRect(0, 0, w, h); x.strokeStyle = '#8c8a86'; x.lineWidth = 2; x.strokeRect(6, 6, w - 12, h - 12);
+  x.fillStyle = '#1a191b'; x.fillRect(22, 27, 36, 28); x.fillRect(32, 17, 16, 48); x.fillStyle = '#3a393c'; x.beginPath(); x.arc(40, 41, 7, 0, 6.283); x.fill(); // the well the d-pad sits in
+  [[170, 36], [212, 46]].forEach(([bx, by]) => { x.fillStyle = '#1a191b'; x.beginPath(); x.arc(bx, by, 14, 0, 6.283); x.fill(); x.fillStyle = '#c8c6c2'; x.font = '700 9px sans-serif'; x.textAlign = 'center'; x.fillText(bx < 200 ? 'B' : 'A', bx, by + 24); });
+  x.fillStyle = '#6d6b67'; [96, 128].forEach(sx => { x.beginPath(); x.roundRect ? x.roundRect(sx, 50, 22, 7, 3) : x.rect(sx, 50, 22, 7); x.fill(); }); x.fillStyle = '#c8c6c2'; x.font = '700 7px sans-serif'; x.textAlign = 'center'; x.fillText('SELECT', 107, 47); x.fillText('START', 139, 47);
+  x.fillStyle = C.mag; x.font = '700 11px sans-serif'; x.textAlign = 'left'; x.fillText('PLAYBOX', 66, 24); }));
+pad.add(mk(new THREE.PlaneGeometry(.11, .035), std('pad-face', '#ffffff', { map:faceTex, roughness:.7 }), 'pad-face', [0, .0185, 0], [-Math.PI/2, 0, 0]));
 pad.add(box(.026, .006, .008, plasticG, 'dpad', [-.035, .021, 0])); pad.add(box(.008, .006, .026, plasticG, 'dpad', [-.035, .021, 0]));
 [[.03, -.004], [.048, .004]].forEach(([x, z]) => pad.add(cyl(.0065, .0065, .006, 14, std('pad-btn', C.mag, { roughness:.35 }), 'pad-btn', [x, .021, z])));
 const cord = new THREE.CatmullRomCurve3([[.15, .428, .13], [.1, .43, .1], [.12, .427, .07], [.005, .44, .05], [.005, .447, .045]].map(p => new THREE.Vector3(...p)));
@@ -363,7 +372,8 @@ tvc.add(mk(new THREE.TubeGeometry(cord, 24, .0025, 6), M.ink, 'pad-cord'));
 const cartCols = ['#c2412f', '#2e4a3a', C.c800, '#d9a23a', '#3b6c8f', C.m800];
 const carts = has('tv') ? ITEMS.tv.list.slice(0, 10) : [];
 carts.forEach(([, , name], i) => {
-  const lt = ctex(64, 96, (x, w, h) => { x.fillStyle = cartCols[i % cartCols.length]; x.fillRect(0, 0, w, h); x.fillStyle = C.cream; x.font = '700 30px ' + SERIF; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText([...name][0].toUpperCase(), w/2, h/2); });
+  const lt = ctex(64, 96, (x, w, h) => { x.fillStyle = '#3a383c'; x.fillRect(0, 0, w, h); x.fillStyle = cartCols[i % cartCols.length]; x.fillRect(4, 4, w - 8, h - 8); x.fillStyle = 'rgba(255,255,255,.22)'; x.fillRect(4, 4, w - 8, 10); x.fillStyle = C.cream; x.fillRect(8, h - 22, w - 16, 2); x.fillRect(8, h - 16, w - 28, 2);
+    x.font = '700 30px ' + SERIF; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText([...name][0].toUpperCase(), w/2, h/2 - 4); });
   const cm = std('cart-' + i, '#3a383c', { roughness:.5 }); const lm = std('cart-label-' + i, '#fff', { map:lt, roughness:.6 });
   const last = i > 0 && i === carts.length - 1;
   const g = mk(new THREE.BoxGeometry(.022, .1, .075), [lm, cm, cm, cm, cm, cm], 'cartridge-box', [-.27 + i*.027 + (last ? .012 : 0), .075 + .05, .02 + (i % 2) * .01]);
@@ -371,13 +381,15 @@ carts.forEach(([, , name], i) => {
 tvc.add(mk(rboxGeo(.14, .016, .06, .006), plasticD, 'spare-pad', [.18, .075 + .008, .05], [0, .3, 0]));
 // CRT TV
 const tv = new THREE.Group(); tv.name = 'crt-tv'; tv.position.set(0, CH + .02, -.01); tvc.add(tv);
-const tvShell = pbr('tv-shell', '#d8cfbd', { roughness:.42, clearcoat:.35 }), tvTrim = pbr('tv-trim', '#3a3633', { roughness:.35, clearcoat:.4 });
+const tvShell = pbr('tv-shell', '#d8cfbd', { ...plasticTex, roughness:.8, clearcoat:.35 }), tvTrim = pbr('tv-trim', '#3a3633', { ...plasticTex, roughness:.7, clearcoat:.4 });
 const TW = .42, TH = .34;
 tv.add(mk(rboxGeo(TW, TH, .2, .03), tvShell, 'tv-front', [0, TH/2, .07]));
 const bk = mk(new THREE.CylinderGeometry(.11, .17, .2, 4, 1), tvShell, 'tv-back', [0, TH/2 - .01, -.11], [Math.PI/2, Math.PI/4, 0]); bk.scale.set(1.05, 1, .85); tv.add(bk);
 tv.add(mk(rboxGeo(.3, .26, .012, .02), tvTrim, 'tv-bezel', [-.04, TH/2 + .01, .171]));
 let tvF = 0;
-const scrTex = ctex(256, 200, (x, w, h) => {
+const tube = crtMask(512, 400);
+const scrTex = ctex(512, 400, (x) => {
+  x.save(); x.scale(2, 2); const w = 256, h = 200;
   const f = tvF; x.fillStyle = '#1b2b3f'; x.fillRect(0, 0, w, h);
   x.fillStyle = '#25405e'; for (let i = 0; i < 6; i++) x.fillRect(((i*53 - f*1.5) % 300 + 300) % 300 - 40, 26 + (i % 3)*14, 34, 8);
   x.fillStyle = '#e8dcc0'; x.beginPath(); x.arc(205, 38, 14, 0, 6.283); x.fill();
@@ -386,11 +398,10 @@ const scrTex = ctex(256, 200, (x, w, h) => {
   const jy = 132 - Math.abs(Math.sin(f*.18))*38; x.fillStyle = C.mag; x.fillRect(48, jy, 16, 18); x.fillStyle = '#f2d2a8'; x.fillRect(50, jy - 10, 12, 10); x.fillStyle = C.cyan; x.fillRect(46, jy - 13, 20, 4);
   x.fillStyle = '#f3f2f2'; x.font = '700 18px monospace'; x.fillText('PLAYBOX', 12, 22); x.fillText(String(1200 + (f*10 % 9000)).padStart(5, '0'), 186, 22);
   if (Math.floor(f/8) % 2) { x.font = '700 14px monospace'; x.fillText('PRESS START', 82, 88); }
-  x.fillStyle = 'rgba(0,0,0,.28)'; for (let y = 0; y < h; y += 3) x.fillRect(0, y, w, 1);
-  const g = x.createRadialGradient(w/2, h/2, 60, w/2, h/2, 170); g.addColorStop(0, 'rgba(255,255,255,.05)'); g.addColorStop(.7, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.35)'); x.fillStyle = g; x.fillRect(0, 0, w, h); });
+  x.restore(); x.globalCompositeOperation = 'multiply'; x.drawImage(tube, 0, 0); x.globalCompositeOperation = 'source-over'; });
 const scrGeo = new THREE.PlaneGeometry(.27, .22, 20, 16);
 { const p = scrGeo.attributes.position; for (let i = 0; i < p.count; i++) { const u = p.getX(i)/.135, v = p.getY(i)/.11; p.setZ(i, .012 * (1 - u*u) * (1 - v*v)); } scrGeo.computeVertexNormals(); }
-const scrMat = new THREE.MeshPhysicalMaterial({ name:'crt-screen', map:scrTex, emissiveMap:scrTex, emissive:col('#ffffff'), emissiveIntensity:1.1, roughness:.15, clearcoat:.6, clearcoatRoughness:.12 });
+const scrMat = new THREE.MeshPhysicalMaterial({ name:'crt-screen', map:scrTex, emissiveMap:scrTex, emissive:col('#ffffff'), emissiveIntensity:1.35, roughness:.15, clearcoat:.6, clearcoatRoughness:.12 });
 const scr = mk(scrGeo, scrMat, 'crt-screen', [-.04, TH/2 + .01, .178]); scr.castShadow = false; tv.add(scr);
 // side panel: knobs, speaker grille
 tv.add(mk(rboxGeo(.07, .26, .006, .01), tvTrim, 'tv-panel', [.165, TH/2 + .01, .171]));

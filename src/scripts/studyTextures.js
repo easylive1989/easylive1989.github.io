@@ -295,3 +295,28 @@ export function paintGarden(c, { sky, trees, bare = false, night = false, seed =
   depth(.3, lx => { for (let i = 0; i < 160; i++) blob(lx, R() * w, h * (.82 + R() * .14), 12 + R() * 22, pick(), .9); wash(lx, '#000', .3); });
   if (night) { x.fillStyle = 'rgba(6,14,22,.58)'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(40,70,60,.25)'; x.fillRect(0, h * .3, w, h * .7); }
 }
+
+// Moulded plastic that has sat in a room for years: a faint pebble grain, clouds of yellowing, smudges where it is handled,
+// a scuff or two. Pale, to be tinted by the part's colour. Returns colour, normal and roughness canvases.
+export function agedPlastic({ size = 512, seed = 33 } = {}) {
+  const S = size, u = S / 512, R = rng(seed), yellow = noiseField(S, S, { octaves:4, base:3, seed:seed + 1 }), smudge = noiseField(S, S, { octaves:3, base:6, seed:seed + 2 }), grain = noiseField(S, S, { octaves:2, base:128, seed:seed + 3 });
+  const [color, height, rough] = [0, 1, 2].map(() => new ImageData(S, S)), cd = color.data, hd = height.data, rd = rough.data;
+  for (let i = 0; i < S * S; i++) { const y = sstep(.35, .85, yellow[i]), o = i * 4, L = 255 * (1 - y * .08) * (1 + (grain[i] - .5) * .04);
+    cd[o] = L; cd[o+1] = L * (1 - y * .06); cd[o+2] = L * (1 - y * .2);
+    hd[o] = hd[o+1] = hd[o+2] = 128 + (grain[i] - .5) * 70; rd[o] = rd[o+1] = rd[o+2] = 255 * (.52 + (smudge[i] - .5) * .3 + (grain[i] - .5) * .08); cd[o+3] = hd[o+3] = rd[o+3] = 255; }
+  const [c, hgt, r] = [color, height, rough].map(img => cnv(S, S, x => x.putImageData(img, 0, 0)));
+  const cx = c.getContext('2d'), hx = hgt.getContext('2d'), rx = r.getContext('2d'); [cx, hx, rx].forEach(x => { x.lineCap = 'round'; });
+  for (let i = 0; i < 24; i++) { // scuffs: short pale lines, a little lower than the surface and duller
+    const x0 = R() * S, y0 = R() * S, a = R() * 6.283, L = (10 + R() * 50) * u, al = .08 + R() * .18, w = (.6 + R() * 1.2) * u;
+    const line = (x, style) => { x.strokeStyle = style; x.lineWidth = w; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x0 + Math.cos(a) * L, y0 + Math.sin(a) * L); x.stroke(); };
+    line(cx, 'rgba(255,255,255,' + al + ')'); line(hx, 'rgba(0,0,0,' + al * 2 + ')'); line(rx, 'rgba(255,255,255,' + al * 2 + ')'); }
+  return { color:c, normal:normalFromHeight(hgt, 1.2 * u), rough:r };
+}
+
+// What a CRT puts between you and the picture: phosphor stripes, scanlines, and the dim corners of the tube. Multiplied over each frame.
+export const crtMask = (w, h) => cnv(w, h, x => {
+  x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+  ['rgba(255,205,205,1)', 'rgba(205,255,205,1)', 'rgba(205,205,255,1)'].forEach((c, k) => { x.fillStyle = c; for (let i = k; i < w; i += 3) x.fillRect(i, 0, 1, h); });
+  x.fillStyle = 'rgba(0,0,0,.32)'; for (let y = 0; y < h; y += 4) x.fillRect(0, y, w, 1); x.fillStyle = 'rgba(0,0,0,.1)'; for (let y = 1; y < h; y += 4) x.fillRect(0, y, w, 1);
+  const g = x.createRadialGradient(w / 2, h / 2, h * .35, w / 2, h / 2, h * .9); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.45)'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+});
