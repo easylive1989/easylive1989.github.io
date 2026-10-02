@@ -329,6 +329,87 @@ woodBox.add(box(.04, .03, .01, M.brass, 'box-latch', [0,.12,.105]));
 place(woodBox, 'g1', -1.95, .88, -2.7, .1, 0);
 place(frame(.38, .3, glyph('g3'), C.ink, 'frame-landscape'), 'g3', -1.05, .88 + .15, -2.8, -.05, -.1);
 
+/* ================= game cabinet: console + CRT, between the niche and the desk ================= */
+const tvc = new THREE.Group(); tvc.name = 'tv-cabinet'; tvc.position.set(.055, 0, -2.2); room.add(tvc);
+const CW = .7, CH = .77, CD = .42;
+[-1, 1].forEach(sx => tvc.add(box(.025, CH - .05, CD, M.wood, 'cab-side', [sx*(CW/2 - .0125), .05 + (CH - .05)/2, 0])));
+tvc.add(box(CW + .02, .03, CD + .02, M.woodL, 'cab-top', [0, CH - .015 + .02, 0]));
+tvc.add(box(CW, .025, CD, M.wood, 'cab-bottom', [0, .0625, 0]));
+tvc.add(box(CW - .05, .018, CD - .03, M.wood, 'cab-shelf', [0, .4, -.01]));
+tvc.add(box(CW, CH - .05, .012, M.woodD, 'cab-back', [0, .05 + (CH - .05)/2, -CD/2 + .006]));
+tvc.add(box(CW, .04, .02, M.woodD, 'cab-plinth', [0, .03, CD/2 - .02]));
+[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a, b]) => tvc.add(cyl(.012, .009, .05, 10, M.woodD, 'cab-foot', [a*(CW/2 - .04), .025, b*(CD/2 - .04)])));
+// console
+const plasticG = pbr('console-grey', '#b9b4aa', { roughness:.45, clearcoat:.3 }), plasticD = pbr('console-dark', '#2b2a2c', { roughness:.4, clearcoat:.4 });
+const con = new THREE.Group(); con.name = 'game-console'; con.position.set(-.07, .41 + .009, .02); tvc.add(con);
+con.add(mk(rboxGeo(.3, .06, .22, .012), plasticG, 'console-body', [0, .03, 0]));
+con.add(mk(rboxGeo(.3, .02, .1, .006), plasticD, 'console-band', [0, .052, .055]));
+con.add(box(.14, .012, .05, plasticD, 'cart-slot', [0, .062, -.04]));
+con.add(mk(rboxGeo(.12, .07, .02, .004), std('cartridge', '#3d3b3f', { roughness:.5 }), 'cartridge', [0, .09, -.04]));
+con.add(mk(new THREE.PlaneGeometry(.08, .04), std('cart-label', C.cyan, { roughness:.6 }), 'cart-label', [0, .093, -.0295]));
+[-.09, -.055].forEach(x => con.add(box(.025, .01, .01, M.ink, 'console-btn', [x, .062, .095])));
+const ledMat = new THREE.MeshBasicMaterial({ name:'power-led', color:col('#ff3b30') });
+con.add(mk(new THREE.SphereGeometry(.004, 8, 6), ledMat, 'power-led', [.11, .045, .111]));
+[.04, .075].forEach(x => con.add(box(.022, .014, .006, M.ink, 'controller-port', [x, .025, .111])));
+// controller with cord
+const pad = new THREE.Group(); pad.name = 'controller'; pad.position.set(.17, .41 + .009, .15); pad.rotation.y = -.35; tvc.add(pad);
+pad.add(mk(rboxGeo(.13, .018, .055, .008), plasticG, 'pad-body', [0, .009, 0]));
+pad.add(mk(new THREE.PlaneGeometry(.11, .035), plasticD, 'pad-face', [0, .0185, 0], [-Math.PI/2, 0, 0]));
+pad.add(box(.026, .006, .008, plasticG, 'dpad', [-.035, .021, 0])); pad.add(box(.008, .006, .026, plasticG, 'dpad', [-.035, .021, 0]));
+[[.03, -.004], [.048, .004]].forEach(([x, z]) => pad.add(cyl(.0065, .0065, .006, 14, std('pad-btn', C.mag, { roughness:.35 }), 'pad-btn', [x, .021, z])));
+const cord = new THREE.CatmullRomCurve3([[.15, .428, .13], [.1, .43, .1], [.12, .427, .07], [.005, .44, .05], [.005, .447, .045]].map(p => new THREE.Vector3(...p)));
+tvc.add(mk(new THREE.TubeGeometry(cord, 24, .0025, 6), M.ink, 'pad-cord'));
+// cartridges on lower shelf: one per Playbox game, the last one leaning on the row
+const cartCols = ['#c2412f', '#2e4a3a', C.c800, '#d9a23a', '#3b6c8f', C.m800];
+const carts = has('tv') ? ITEMS.tv.list.slice(0, 10) : [];
+carts.forEach(([, , name], i) => {
+  const lt = ctex(64, 96, (x, w, h) => { x.fillStyle = cartCols[i % cartCols.length]; x.fillRect(0, 0, w, h); x.fillStyle = C.cream; x.font = '700 30px ' + SERIF; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText([...name][0].toUpperCase(), w/2, h/2); });
+  const cm = std('cart-' + i, '#3a383c', { roughness:.5 }); const lm = std('cart-label-' + i, '#fff', { map:lt, roughness:.6 });
+  const last = i > 0 && i === carts.length - 1;
+  const g = mk(new THREE.BoxGeometry(.022, .1, .075), [lm, cm, cm, cm, cm, cm], 'cartridge-box', [-.27 + i*.027 + (last ? .012 : 0), .075 + .05, .02 + (i % 2) * .01]);
+  g.rotation.z = last ? -.28 : 0; tvc.add(g); });
+tvc.add(mk(rboxGeo(.14, .016, .06, .006), plasticD, 'spare-pad', [.18, .075 + .008, .05], [0, .3, 0]));
+// CRT TV
+const tv = new THREE.Group(); tv.name = 'crt-tv'; tv.position.set(0, CH + .02, -.01); tvc.add(tv);
+const tvShell = pbr('tv-shell', '#d8cfbd', { roughness:.42, clearcoat:.35 }), tvTrim = pbr('tv-trim', '#3a3633', { roughness:.35, clearcoat:.4 });
+const TW = .42, TH = .34;
+tv.add(mk(rboxGeo(TW, TH, .2, .03), tvShell, 'tv-front', [0, TH/2, .07]));
+const bk = mk(new THREE.CylinderGeometry(.11, .17, .2, 4, 1), tvShell, 'tv-back', [0, TH/2 - .01, -.11], [Math.PI/2, Math.PI/4, 0]); bk.scale.set(1.05, 1, .85); tv.add(bk);
+tv.add(mk(rboxGeo(.3, .26, .012, .02), tvTrim, 'tv-bezel', [-.04, TH/2 + .01, .171]));
+let tvF = 0;
+const scrTex = ctex(256, 200, (x, w, h) => {
+  const f = tvF; x.fillStyle = '#1b2b3f'; x.fillRect(0, 0, w, h);
+  x.fillStyle = '#25405e'; for (let i = 0; i < 6; i++) x.fillRect(((i*53 - f*1.5) % 300 + 300) % 300 - 40, 26 + (i % 3)*14, 34, 8);
+  x.fillStyle = '#e8dcc0'; x.beginPath(); x.arc(205, 38, 14, 0, 6.283); x.fill();
+  x.fillStyle = '#3d7a46'; x.fillRect(0, 150, w, 50); x.fillStyle = '#5aa55f'; for (let i = 0; i < w; i += 16) x.fillRect((i - f*3 % 16 + 16) % (w + 16) - 16, 150, 8, 6);
+  x.fillStyle = '#8a5a34'; [[60, 118], [150, 100]].forEach(([bx, by]) => { const X = ((bx - f*3) % 300 + 300) % 300 - 20; x.fillRect(X, by, 30, 30); x.fillStyle = '#b07a50'; x.fillRect(X + 3, by + 3, 24, 4); x.fillStyle = '#8a5a34'; });
+  const jy = 132 - Math.abs(Math.sin(f*.18))*38; x.fillStyle = C.mag; x.fillRect(48, jy, 16, 18); x.fillStyle = '#f2d2a8'; x.fillRect(50, jy - 10, 12, 10); x.fillStyle = C.cyan; x.fillRect(46, jy - 13, 20, 4);
+  x.fillStyle = '#f3f2f2'; x.font = '700 18px monospace'; x.fillText('PLAYBOX', 12, 22); x.fillText(String(1200 + (f*10 % 9000)).padStart(5, '0'), 186, 22);
+  if (Math.floor(f/8) % 2) { x.font = '700 14px monospace'; x.fillText('PRESS START', 82, 88); }
+  x.fillStyle = 'rgba(0,0,0,.28)'; for (let y = 0; y < h; y += 3) x.fillRect(0, y, w, 1);
+  const g = x.createRadialGradient(w/2, h/2, 60, w/2, h/2, 170); g.addColorStop(0, 'rgba(255,255,255,.05)'); g.addColorStop(.7, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.35)'); x.fillStyle = g; x.fillRect(0, 0, w, h); });
+const scrGeo = new THREE.PlaneGeometry(.27, .22, 20, 16);
+{ const p = scrGeo.attributes.position; for (let i = 0; i < p.count; i++) { const u = p.getX(i)/.135, v = p.getY(i)/.11; p.setZ(i, .012 * (1 - u*u) * (1 - v*v)); } scrGeo.computeVertexNormals(); }
+const scrMat = new THREE.MeshPhysicalMaterial({ name:'crt-screen', map:scrTex, emissiveMap:scrTex, emissive:col('#ffffff'), emissiveIntensity:1.1, roughness:.15, clearcoat:.6, clearcoatRoughness:.12 });
+const scr = mk(scrGeo, scrMat, 'crt-screen', [-.04, TH/2 + .01, .178]); scr.castShadow = false; tv.add(scr);
+// side panel: knobs, speaker grille
+tv.add(mk(rboxGeo(.07, .26, .006, .01), tvTrim, 'tv-panel', [.165, TH/2 + .01, .171]));
+[.24, .19].forEach(y => tv.add(cyl(.016, .016, .018, 20, M.alu, 'tv-knob', [.165, y, .18], [Math.PI/2, 0, 0])));
+for (let i = 0; i < 6; i++) tv.add(box(.044, .004, .004, M.ink, 'grille', [.165, .07 + i*.012, .176]));
+tv.add(box(.02, .01, .006, M.ink, 'tv-power', [.165, .14, .176]));
+const tvLed = mk(new THREE.SphereGeometry(.003, 8, 6), new THREE.MeshBasicMaterial({ name:'tv-led', color:col('#5cff8a') }), 'tv-led', [.185, .14, .177]); tv.add(tvLed);
+tv.add(box(.36, .015, .16, tvTrim, 'tv-foot', [0, .0075, .04]));
+// rabbit ears
+const ant = new THREE.Group(); ant.name = 'antenna'; ant.position.set(0, TH + .005, -.02); tv.add(ant);
+ant.add(mk(new THREE.SphereGeometry(.03, 20, 12, 0, 6.283, 0, Math.PI/2), tvTrim, 'antenna-base'));
+[[-.5, .2], [.42, -.25]].forEach(([rz, rx]) => { const r = mk(new THREE.CylinderGeometry(.0018, .003, .3, 6), M.alu, 'antenna-rod', [0, 0, 0]); r.geometry.translate(0, .15, 0); r.rotation.set(rx, 0, rz); r.position.y = .02; ant.add(r); const tip = mk(new THREE.SphereGeometry(.005, 8, 6), M.alu, 'antenna-tip', [0, .3, 0]); r.add(tip); });
+// cable to console
+const tvCable = new THREE.CatmullRomCurve3([[-.15, CH + .06, -.19], [-.2, CH + .02, -.225], [-.2, .5, -.225], [-.2, .45, -.2], [-.14, .44, -.1]].map(p => new THREE.Vector3(...p)));
+tvc.add(mk(new THREE.TubeGeometry(tvCable, 24, .003, 6), M.ink, 'av-cable'));
+const tvGlow = new THREE.PointLight(0x8fc8ff, .5, 1.6, 2); tvGlow.position.set(.02, CH + .2, -1.9); room.add(tvGlow);
+if (has('tv')) { exh.tv = tvc; tag(tvc, { type:'item', id:'tv', view:'niche' }, [0, 0, .02]); }
+setInterval(() => { tvF++; scrTex.redraw(); tvGlow.intensity = (night ? .55 : .2) * (.85 + Math.random()*.3); }, 120);
+
 /* ================= window + outside ================= */
 const WIN = { x0:.05, x1:2.65, y0:1.0, y1:2.5 };
 const outsideTex = ctex(1024, 600, () => {}, false);
@@ -359,21 +440,21 @@ tag(moon, { type:'egg', id:'e2', view:'window' }, [0,0,0]);
 
 /* ================= desk ================= */
 const desk = new THREE.Group(); desk.name = 'desk'; room.add(desk);
-const DY = .76, DZ = -2.0, DX = 1.4;
-desk.add(box(2.7, .05, .95, M.wood, 'desk-top', [DX, DY, DZ]));
-desk.add(box(2.6, .14, .05, M.woodD, 'desk-apron', [DX, DY - .1, DZ + .44]));
-[[.16,-2.42],[2.64,-2.42],[.16,-1.58],[2.64,-1.58]].forEach(([x,z]) => desk.add(box(.06, DY - .025, .06, M.woodD, 'desk-leg', [x, (DY - .025)/2, z])));
-desk.add(box(2.5, .03, .04, M.woodD, 'stretcher', [DX, .15, -2.4]));
+const DY = .76, DZ = -2.0, DX = 1.675;
+desk.add(box(2.15, .05, .95, M.wood, 'desk-top', [DX, DY, DZ]));
+desk.add(box(2.05, .14, .05, M.woodD, 'desk-apron', [DX, DY - .1, DZ + .44]));
+[[.7,-2.42],[2.64,-2.42],[.7,-1.58],[2.64,-1.58]].forEach(([x,z]) => desk.add(box(.06, DY - .025, .06, M.woodD, 'desk-leg', [x, (DY - .025)/2, z])));
+desk.add(box(1.94, .03, .04, M.woodD, 'stretcher', [DX, .15, -2.4]));
 desk.add(box(.6, .1, .01, M.woodL, 'drawer', [DX, DY - .1, DZ + .468])); desk.add(cyl(.012, .012, .03, 8, M.brass, 'drawer-pull', [DX, DY - .1, DZ + .48], [Math.PI/2,0,0]));
 // banker lamp (left)
-const lampL = new THREE.Group(); lampL.name = 'desk-lamp'; lampL.position.set(.38, DY + .025, -2.25); desk.add(lampL);
+const lampL = new THREE.Group(); lampL.name = 'desk-lamp'; lampL.position.set(.78, DY + .025, -2.25); desk.add(lampL);
 lampL.add(cyl(.09, .1, .02, 32, M.brass, 'lamp-base', [0,.01,0]));
 lampL.add(rod([0,.02,0], [0,.42,0], .012, M.brass, 'lamp-stem')); lampL.add(rod([0,.42,0], [.13,.47,.06], .01, M.brass, 'lamp-arm'));
 const shadeL = mk(new THREE.ConeGeometry(.09, .13, 32, 1, true), std('lamp-shade', '#2d3a2f', { roughness:.4, metalness:.5, side:THREE.DoubleSide }), 'lamp-shade', [.17,.43,.08], [0,0,-.9]); lampL.add(shadeL);
 const bulbL = mk(new THREE.SphereGeometry(.025, 12, 8), new THREE.MeshBasicMaterial({ name:'bulb', color:col('#fff1c9') }), 'bulb', [.19,.39,.08]); bulbL.castShadow = false; lampL.add(bulbL);
 tag(lampL, { type:'lamp' }, [0,0,0]);
 // plant
-const plant = new THREE.Group(); plant.name = 'plant'; plant.position.set(.78, DY + .025, -2.28); desk.add(plant);
+const plant = new THREE.Group(); plant.name = 'plant'; plant.position.set(1.1, DY + .025, -2.28); desk.add(plant);
 plant.add(cyl(.085, .1, .02, 24, M.terracotta, 'saucer', [0,.01,0])); plant.add(cyl(.075, .055, .12, 24, M.terracotta, 'pot', [0,.08,0]));
 plant.add(cyl(.068, .068, .01, 24, std('soil', '#2a1c12', { normalMap:grit, roughness:1 }), 'soil', [0,.135,0]));
 const stalk = std('stalk', '#5d8f3c', { roughness:.7 });
@@ -381,7 +462,7 @@ for (let i = 0; i < 11; i++) { const a = i * 2.4, r = .02 + (i % 3) * .02, lg = 
   lg.add(rod([0,0,0], [.04, .1 + (i%4)*.03, 0], .004, stalk, 'leaf-stem'));
   const lf = mk(new THREE.SphereGeometry(.045, 12, 8), M.leaf, 'leaf', [.07, .12 + (i%4)*.03, 0]); lf.scale.set(1.3, .15, .6); lf.rotation.z = -.5 + (i%3)*.2; lg.add(lf); plant.add(lg); }
 // laptop (mermer)
-const laptop = new THREE.Group(); laptop.name = 'laptop'; laptop.position.set(1.62, DY + .025, -2.08); laptop.rotation.y = -.05; desk.add(laptop);
+const laptop = new THREE.Group(); laptop.name = 'laptop'; laptop.position.set(1.78, DY + .025, -2.08); laptop.rotation.y = -.05; desk.add(laptop);
 laptop.add(box(.5, .016, .34, M.alu, 'laptop-base', [0,.008,0]));
 const kbTex = ctex(256, 160, (x, w, h) => { x.fillStyle = '#86847f'; x.fillRect(0,0,w,h); x.fillStyle = '#2a2a2a'; for (let r = 0; r < 5; r++) for (let c = 0; c < 13; c++) x.fillRect(10 + c*18.4, 10 + r*16, 15, 13); x.fillStyle = '#7a7873'; x.fillRect(80, 100, 96, 52); }, false);
 laptop.add(mk(new THREE.PlaneGeometry(.44, .27), new THREE.MeshStandardMaterial({ name:'keyboard', map:kbTex, roughness:.5 }), 'keyboard', [0,.0165,.02], [-Math.PI/2,0,0]));
@@ -404,13 +485,13 @@ const draftTex = (title, stamp) => ctex(256, 340, (x, w, h) => { x.fillStyle = '
   x.strokeStyle = '#6d6a64'; x.lineWidth = 1.6; const n = 9 + title.length % 4; for (let i = 0; i < n; i++) { x.beginPath(); x.moveTo(22, 96 + i*20); const L = i === n-1 ? 70 : 190 + Math.sin(i*3.1)*20; for (let s = 0; s < L; s += 6) x.lineTo(22 + s, 96 + i*20 + Math.sin(s*.5 + i)*1.2); x.stroke(); }
   x.strokeStyle = C.m700; x.lineWidth = 2; x.beginPath(); x.moveTo(30, 96 + n*20); x.lineTo(80, 96 + n*20 + 4); x.stroke(); });
 const drafts = {};
-[['d1', 2.2, -2.18, .25], ['d2', 2.42, -1.95, -.35], ['d3', 2.05, -1.86, .05]].forEach(([id, x, z, r], i) => {
+[['d1', 2.36, -2.12, .18], ['d2', 2.46, -1.98, -.22], ['d3', 2.33, -1.9, .06]].forEach(([id, x, z, r], i) => {
   if (!has(id)) return;
   const g = new THREE.Group(); g.name = 'draft-' + id; g.position.set(x, DY + .027 + i*.0025, z); g.rotation.y = r;
   g.add(mk(new THREE.PlaneGeometry(.21, .28), new THREE.MeshStandardMaterial({ name:'draft-paper', map:draftTex(ITEMS[id].t, (ITEMS[id].k.match(/\d{4}\.\d{2}\.\d{2}/) || ['舊稿'])[0]), normalMap:grit, normalScale:new THREE.Vector2(.3, .3), roughness:.9 }), 'draft-paper', [0,0,0], [-Math.PI/2,0,0]));
   desk.add(g); drafts[id] = g; tag(g, { type:'item', id, view:'desk' }, [0,.03,0]);
 });
-const pen = rod([1.95, DY + .033, -1.72], [2.12, DY + .033, -1.78], .006, M.ink, 'pen'); desk.add(pen);
+const pen = rod([2.26, DY + .033, -1.74], [2.42, DY + .033, -1.8], .006, M.ink, 'pen'); desk.add(pen);
 // right lamp
 const lampR = new THREE.Group(); lampR.name = 'side-lamp'; lampR.position.set(2.56, DY + .025, -2.33); desk.add(lampR);
 lampR.add(cyl(.07, .08, .025, 32, M.brass, 'lamp-base', [0,.012,0])); lampR.add(rod([0,.02,0], [0,.5,0], .009, M.brass, 'lamp-stem'));
@@ -422,7 +503,7 @@ const portraitTex = ctex(240, 300, (x, w, h) => { x.fillStyle = C.paper; x.fillR
   x.globalCompositeOperation = 'multiply'; x.font = `700 200px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillStyle = C.yel; x.fillText('P', w/2 - 6, h/2 - 2); x.fillStyle = C.mag; x.fillText('P', w/2 + 6, h/2 - 6); x.fillStyle = C.cyan; x.fillText('P', w/2, h/2 - 10);
   x.globalCompositeOperation = 'source-over'; x.fillStyle = C.ink; x.font = `italic 400 22px ${SERIF}`; x.fillText('自畫像', w/2, h - 34); });
-const portrait = new THREE.Group(); portrait.name = 'self-portrait'; portrait.position.set(1.08, DY + .025, -2.3); portrait.rotation.set(0, .22, 0); desk.add(portrait);
+const portrait = new THREE.Group(); portrait.name = 'self-portrait'; portrait.position.set(1.3, DY + .025, -2.3); portrait.rotation.set(0, .22, 0); desk.add(portrait);
 const pf = new THREE.Group(); pf.position.y = .135; pf.rotation.x = -.16; portrait.add(pf);
 const portraitMat = new THREE.MeshStandardMaterial({ name:'portrait', map:portraitTex, roughness:.85 });
 pf.add(mk(new THREE.BoxGeometry(.2, .25, .015), [M.brass, M.brass, M.brass, M.brass, portraitMat, M.brass], 'portrait-frame'));
@@ -432,7 +513,7 @@ new THREE.TextureLoader().setCrossOrigin('anonymous').load(AVATAR, t => { t.colo
 portrait.add(rod([0,.01,-.07], [0,.2,-.005], .006, M.brass, 'easel-leg'));
 tag(portrait, { type:'about', view:'desk' }, [0,.03,0]);
 // mug
-const mug = new THREE.Group(); mug.position.set(.95, DY + .025, -1.75); desk.add(mug);
+const mug = new THREE.Group(); mug.position.set(1.18, DY + .025, -1.75); desk.add(mug);
 // glazed ceramic: the glaze breaks paler over the rim and pools darker at the foot
 const glaze = pbr('mug', C.mag, { map:texOf(cnv(8, 64, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); [[0,'#fff'],[.07,'#dcdcdc'],[.8,'#d2d2d2'],[1,'#a8a8a8']].forEach(([p, c]) => g.addColorStop(p, c)); x.fillStyle = g; x.fillRect(0, 0, w, h); })), roughness:.3, clearcoat:1, clearcoatRoughness:.06 });
 mug.add(cyl(.035, .032, .085, 32, glaze, 'mug', [0,.043,0])); mug.add(mk(new THREE.TorusGeometry(.022, .006, 10, 24), glaze, 'mug-handle', [.038,.045,0]));
@@ -469,7 +550,7 @@ side.add(box(.5, .12, .04, M.woodD, 'side-drawer', [0,.52,.23]));
 /* ================= lighting ================= */
 const hemi = new THREE.HemisphereLight(0x8a9bb0, 0x2a1a10, .25); scene.add(hemi);
 const amb = new THREE.AmbientLight(0x3a2a20, .5); scene.add(amb);
-const lampLight = new THREE.PointLight(0xffb066, 3.2, 4.5, 1.6); lampLight.position.set(.56, DY + .36, -2.15); lampLight.castShadow = true; lampLight.shadow.mapSize.set(1024, 1024); lampLight.shadow.bias = -.002; lampLight.shadow.radius = 6; room.add(lampLight);
+const lampLight = new THREE.PointLight(0xffb066, 3.2, 4.5, 1.6); lampLight.position.set(.96, DY + .36, -2.15); lampLight.castShadow = true; lampLight.shadow.mapSize.set(1024, 1024); lampLight.shadow.bias = -.002; lampLight.shadow.radius = 6; room.add(lampLight);
 const lampLight2 = new THREE.PointLight(0xffa850, 2.4, 3.5, 1.6); lampLight2.position.set(2.42, DY + .5, -2.25); room.add(lampLight2);
 const shelfLights = [-1.8, -.45, .9].map(z => { const l = new THREE.PointLight(0xffc27a, 1.6, 2.4, 1.8); l.position.set(-2.4, 1.95, z); room.add(l); return l; });
 const shelfLow = new THREE.PointLight(0xffb870, .9, 2, 1.8); shelfLow.position.set(-2.4, .8, -.4); room.add(shelfLow);
@@ -501,7 +582,7 @@ function buildEnv(isNight) {
 const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
 const halos = [];
 const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); sp.userData.op = op; room.add(sp); halos.push(sp); return sp; };
-halo([.57, DY + .4, -2.17], .32, .55); halo([2.4, DY + .52, -2.27], .5, .45);
+halo([.97, DY + .4, -2.17], .32, .55); halo([2.4, DY + .52, -2.27], .5, .45);
 const candleHalo = halo([-2.1, 1.56, -2.7], .22, .7);
 [[-1.9, 2.5], [-1.0, 2.5]].forEach(([x, y]) => halo([x, y, -2.72], .16, .5));
 
@@ -518,16 +599,17 @@ const aoLin = ctex(8, 128, (x, w, h) => { const g = x.createLinearGradient(0, 0,
 const decal = (tex, w, h, p, r, op = 1) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map:tex, color:0x000000, transparent:true, opacity:op, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2 })); m.position.set(...p); m.rotation.set(...r); m.renderOrder = 1; room.add(m); return m; };
 const FL = [-Math.PI/2, 0, 0];
 decal(aoRad, 1.3, 1.25, [-1.95, .004, -.75], [-Math.PI/2, 0, -.55], .9);
-decal(aoRad, 3.1, 1.4, [1.4, .004, -1.95], FL, .75);
+decal(aoRad, 2.55, 1.4, [1.675, .004, -1.95], FL, .75);
 decal(aoRad, .9, .8, [2.6, .004, .9], FL, .8);
 decal(aoRad, 2.2, .9, [-1.45, .004, -2.42], FL, .8);
+decal(aoRad, .95, .62, [.055, .004, -2.2], FL, .85);
 decal(aoLin, 6, .45, [0, .005, -2.27], [-Math.PI/2, 0, Math.PI], .8);
 decal(aoLin, 4.2, .5, [-2.33, .005, -.43], [-Math.PI/2, 0, -Math.PI/2], .85);
 decal(aoLin, 6, .5, [2.77, .005, 0], [-Math.PI/2, 0, Math.PI/2], .7);
 decal(aoLin, 6, .55, [0, .28, -2.494], [0, 0, Math.PI], .6);
 decal(aoLin, 6, .55, [2.995, .28, 0], [0, -Math.PI/2, Math.PI], .6);
 const DT = DY + .0265;
-[[1.62, -2.08, .62, .46], [.38, -2.25, .26, .26], [.78, -2.28, .26, .26], [2.56, -2.33, .22, .22], [1.08, -2.3, .26, .18], [.95, -1.75, .12, .12]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
+[[1.78, -2.08, .62, .46], [.78, -2.25, .26, .26], [1.1, -2.28, .26, .26], [2.56, -2.33, .22, .22], [1.3, -2.3, .26, .18], [1.18, -1.75, .12, .12]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
 LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - SZ0, .12, [-2.788, y - .02, (SZ0 + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
 
 /* ================= seasons + day/night ================= */

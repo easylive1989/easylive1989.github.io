@@ -19,6 +19,7 @@ import type { Article, Book } from './notion';
  *   s1–s3  series spines            w1–w6  newest articles on the shelf
  *   r1–r4  reading shelf            p1 p3 g2  side projects in the niche
  *   g1 g3 g4 t2 p2  Playbox games   aw  awards & talks   cab  the cabinet
+ *   tv  the game cabinet beside the desk: every Playbox game
  *   d1–d3  older articles on the desk
  */
 
@@ -335,6 +336,23 @@ export async function buildStudyData(): Promise<StudyData> {
     list: TALKS,
     m: '展示架 · 獎狀',
   };
+
+  /* ── the game cabinet between the niche and the desk: the whole Playbox ── */
+  const gameRows = games
+    .filter((g) => g.url && g.url !== '#')
+    .map((g): [string, string, string, string, string] => ['Playbox', '小遊戲', g.name, '', g.url]);
+  if (gameRows.length) {
+    items.tv = {
+      cat: 'display',
+      kind: 'play',
+      k: `Playbox · 電視遊樂器 · ${gameRows.length} 款`,
+      t: `${config.author.name.split(' ')[0]} 的 Playbox`,
+      b: ['窗邊小櫃子上的老電視，接著一台遊戲機。所有小遊戲都收在 Playbox 裡，按下開關就能玩。'],
+      list: gameRows,
+      m: '窗邊 · 遊戲櫃',
+      links: [{ l: 'Playbox GitHub ↗', u: PLAYBOX_REPO, p: 1 }],
+    };
+  }
 
   /* ── the cabinet under the niche: everything that has no shelf space of its own ── */
   const cabinetRows: StudyItem['list'] = [
