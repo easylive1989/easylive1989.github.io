@@ -21,13 +21,6 @@ const BASE = import.meta.env.BASE_URL;
     <div id="vig"></div>
     <div id="grain"></div>
     <div id="intro"><div>推開書房的門……</div></div>
-    <div id="chips" class="hud sheet"></div>
-    <div id="dock" class="hud">
-      <div class="row sheet">
-        <button class="btn btn-primary" id="bRandom">隨手翻一樣</button>
-      </div>
-      <span class="hint">拖曳環顧 · 滾輪靠近 · 點書、桌上的稿子、電視拿起來看 · Esc 放回</span>
-    </div>
     <div id="toast" class="hud"></div>
     <div id="tip"></div>
     <!-- A book or a page picked up and held in front of the camera -->
@@ -99,16 +92,7 @@ const BASE = import.meta.env.BASE_URL;
   .hud { position: fixed; z-index: 10; }
   .sheet { background: var(--color-bg); box-shadow: var(--shadow-sm); border-radius: var(--radius-md); }
 
-  #chips { right: var(--space-6); top: var(--space-6); padding: var(--space-2); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 560px; justify-content: flex-end; }
-  #chips button { all: unset; cursor: pointer; }
-
-  #dock { left: var(--space-6); bottom: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; transition: opacity .4s; }
-  #chips { transition: opacity .4s; }
-  body.immerse #dock, body.immerse #chips { opacity: 0; pointer-events: none; }
   body.immerse #tip { opacity: 0 !important; }
-  #dock .row { display: flex; gap: 6px; padding: 6px; }
-  #dock .hint { font-size: 12px; font-style: italic; color: var(--color-bg); }
-  body.reading #dock { opacity: 0; pointer-events: none; }
 
   #tip { position: fixed; z-index: 30; pointer-events: none; font-size: 13px; padding: 6px 10px; background: var(--color-text); color: var(--color-bg); border-radius: var(--radius-md); opacity: 0; transition: opacity .15s; white-space: nowrap; }
 
@@ -270,11 +254,6 @@ const BASE = import.meta.env.BASE_URL;
 
   /* Phones: the panel becomes a bottom sheet (study.js shifts the camera to match) */
   @media (max-width: 760px) {
-    #chips { left: var(--space-2); right: var(--space-2); top: var(--space-2); max-width: none; justify-content: flex-start; padding: 6px; }
-    #dock { left: var(--space-2); right: var(--space-2); bottom: var(--space-2); }
-    #dock .row { flex-wrap: wrap; }
-    #dock .btn { padding: 8px 12px; font-size: 13px; }
-    #dock .hint { font-size: 11px; }
     #toast { top: 76px; font-size: 14px; max-width: calc(100vw - 24px); text-align: center; }
     body.reading #toast { left: 50%; }
     #panel { top: auto; left: 0; right: 0; width: auto; height: 58vh; transform: translateY(105%); padding: var(--space-6) var(--space-4) var(--space-8); box-shadow: 0 -12px 32px color-mix(in srgb, #000 40%, transparent); }

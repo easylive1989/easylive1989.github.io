@@ -636,14 +636,9 @@ const sGeo = new THREE.BufferGeometry(); sGeo.setAttribute('position', new THREE
 const stars = new THREE.Points(sGeo, new THREE.PointsMaterial({ size:2, sizeAttenuation:false, color:col('#dfe8ff'), transparent:true, opacity:.8, depthWrite:false })); stars.frustumCulled = false; scene.add(stars);
 
 /* ================= UI ================= */
-const st = { seen:{}, cur:null, about:false };
+const st = { seen:{}, cur:null };
 const $ = id => document.getElementById(id);
 let toastT; const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); };
-function renderChips() {
-  $('chips').innerHTML = CATS.map(c => { const ids = IDS.filter(k => ITEMS[k].cat === c.id), n = ids.filter(k => st.seen[k]).length; if (!ids.length) return '';
-    return `<span class="tag ${n === ids.length ? 'tag-accent' : n ? 'tag-outline' : 'tag-neutral'}">${n === ids.length ? '✓ ' : ''}${c.name} ${n}/${ids.length}</span>`; }).join('')
-    + `<span class="tag ${st.about ? 'tag-accent' : 'tag-neutral'}">${st.about ? '✓ ' : ''}自畫像</span>`;
-}
 const panel = $('panel'), pbody = $('pbody');
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 const where = id => ({ shelf:'書架', display:'展示架', desk:'書桌' }[ITEMS[id].cat]);
@@ -688,16 +683,15 @@ let tween = null, focused = false;
 function flyTo(tgt, pos, d = 1) { tween = { t:0, d, ft:controls.target.clone(), tt:tgt.clone(), fp:camera.position.clone(), tp:pos.clone() }; controls.enabled = false; }
 function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()); const dir = VIEWS[view].clone(); if (view === 'niche' && c.y < 1.5) dir.y = .55; dir.normalize(); flyTo(c, c.clone().addScaledVector(dir, DIST[view])); focused = true; }
 function goHome() { flyTo(HOME.tgt, HOME.pos, 1.1); focused = false; }
-function mark(id) { if (!st.seen[id]) { st.seen[id] = true; renderChips(); const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。貓表示佩服。'), 2700); } } }
+function mark(id) { if (!st.seen[id]) { st.seen[id] = true; const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。貓表示佩服。'), 2700); } } }
 function openItem(id) { const it = ITEMS[id];
   if (books[id]) return openBook(id);
   if (drafts[id]) return openDraft(id);
   if (it.kind === 'play' && GAMES.length) { if (id !== 'tv') mark(id); return openTV(id === 'tv' ? 0 : Math.max(0, gameAt(id))); }
   st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, exh[id] ? 'niche' : 'desk'); renderPanel('item'); }
 function openList() { focus(laptop, 'desk'); renderPanel('list'); }
-function openAbout() { st.about = true; renderChips(); focus(portrait, 'desk'); renderPanel('about'); }
+function openAbout() { focus(portrait, 'desk'); renderPanel('about'); }
 function closePanel() { panel.classList.remove('open'); document.body.classList.remove('reading'); goHome(); }
-$('bRandom').onclick = () => { const pool = IDS.filter(k => !st.seen[k]); const p = pool.length ? pool : IDS; openItem(p[Math.floor(Math.random()*p.length)]); };
 addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
   if (TV.on) { if (e.key === 'Escape') TV.play ? tvMenu() : exitTV(); else if (!TV.play && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); tvSel((TV.sel + (e.key === 'ArrowDown' ? 1 : -1) + GAMES.length) % GAMES.length); } else if (!TV.play && e.key === 'Enter') tvPlay(); return; }
   if (RD.mode) { const nx = e.key === 'ArrowRight', pv = e.key === 'ArrowLeft';
@@ -987,7 +981,6 @@ renderer.domElement.addEventListener('pointerup', e => {
 /* ================= loop ================= */
 const clock = new THREE.Timer(); let viewX = 0, viewY = 0;
 const roots = [...new Set(pickables.map(m => m.userData.root))];
-renderChips();
 function loop(ts) {
   clock.update(ts); const dt = Math.min(clock.getDelta(), .05), t = clock.getElapsed();
   roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; r.position.lerp(want, Math.min(1, dt * 10)); });
@@ -1015,5 +1008,4 @@ setTimeout(() => $('intro').classList.add('off'), 300);
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
 const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
 addEventListener('resize', fitCamera); fitCamera();
-if (matchMedia('(pointer: coarse)').matches) { const hint = document.querySelector('#dock .hint'); if (hint) hint.textContent = '拖曳環顧 · 雙指縮放 · 點書、稿子、電視拿起來看'; }
 document.fonts && document.fonts.ready.then(() => texts.forEach(t => t.redraw()));
