@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur, spineAtlas, SPINES, pageEdges, brushedMetal, terracotta, leaf, paintGarden, agedPlastic, crtMask } from './studyTextures.js';
+import { rng, cnv, texOf, plankFloor, woodGrain, plaster, weave, tabbyFur, spineAtlas, SPINES, pageEdges, brushedMetal, terracotta, leaf, paintLakeView, agedPlastic, crtMask } from './studyTextures.js';
 
 /* ================= content ================= */
 // Filled at build time from Notion (src/lib/study.ts). Ids are the room's physical
@@ -44,7 +44,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWid
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
 stage.appendChild(renderer.domElement);
-const scene = new THREE.Scene(); scene.background = col('#0e151e');
+const scene = new THREE.Scene(); scene.background = col('#b4bfca');
 const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .02, 60);
 const HOME = { pos:new THREE.Vector3(1.05, 1.72, 2.1), tgt:new THREE.Vector3(-0.2, 1.22, -1.7) };
 camera.position.set(1.6, 1.9, 3.6);
@@ -412,9 +412,9 @@ ant.add(mk(new THREE.SphereGeometry(.03, 20, 12, 0, 6.283, 0, Math.PI/2), tvTrim
 // cable to console
 const tvCable = new THREE.CatmullRomCurve3([[-.15, CH + .06, -.19], [-.2, CH + .02, -.225], [-.2, .5, -.225], [-.2, .45, -.2], [-.14, .44, -.1]].map(p => new THREE.Vector3(...p)));
 tvc.add(mk(new THREE.TubeGeometry(tvCable, 24, .003, 6), M.ink, 'av-cable'));
-const tvGlow = new THREE.PointLight(0x8fc8ff, .5, 1.6, 2); tvGlow.position.set(.02, CH + .2, -1.9); room.add(tvGlow);
+const tvGlow = new THREE.PointLight(0x8fc8ff, .2, 1.6, 2); tvGlow.position.set(.02, CH + .2, -1.9); room.add(tvGlow);
 if (has('tv')) { exh.tv = tvc; tag(tvc, { type:'item', id:'tv', view:'niche' }, [0, 0, .02]); }
-setInterval(() => { tvF++; scrTex.redraw(); tvGlow.intensity = .55 * (.85 + Math.random()*.3); }, 120);
+setInterval(() => { tvF++; scrTex.redraw(); tvGlow.intensity = .2 * (.85 + Math.random()*.3); }, 120);
 
 /* ================= window + outside ================= */
 const WIN = { x0:.05, x1:2.65, y0:1.0, y1:2.5 };
@@ -441,7 +441,6 @@ wf.add(box(WIN.x1 - WIN.x0 + .1, .08, .14, M.woodD, 'window-frame', [1.35, WIN.y
 const glass = mk(new THREE.PlaneGeometry(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0), M.glass, 'glass', [1.35, (WIN.y0+WIN.y1)/2, WZ - .02]); glass.castShadow = false; wf.add(glass);
 wf.add(box(WIN.x1 - WIN.x0 + .4, .04, .1, M.cream, 'sill', [1.35, WIN.y0 - .02, -2.5]));
 [WIN.x0 - .1, WIN.x1 + .1].forEach(x => wf.add(roomUV(box(.12, WIN.y1 - WIN.y0 + .3, .12, M.wallL, 'reveal', [x, (WIN.y0+WIN.y1)/2, -2.5]))));
-const moon = mk(new THREE.SphereGeometry(.16, 32, 20), new THREE.MeshBasicMaterial({ name:'moon', color:col('#f3ead2') }), 'moon', [2.15, 2.35, -4.4]); moon.castShadow = false; room.add(moon);
 
 /* ================= desk ================= */
 const desk = new THREE.Group(); desk.name = 'desk'; room.add(desk);
@@ -551,44 +550,46 @@ side.add(box(.5, .12, .04, M.woodD, 'side-drawer', [0,.52,.23]));
 [[C.c900,.035],[C.m800,.04],[C.cream,.03]].forEach(([c, t], i) => side.add(box(.22 - i*.02, t, .3 - i*.02, std('stack-book', c), 'stack-book', [-.05, .62 + .02 + i*.038, 0], [0, i*.2, 0])));
 
 /* ================= lighting ================= */
-const hemi = new THREE.HemisphereLight(0x8a9bb0, 0x2a1a10, .16); scene.add(hemi);
-const amb = new THREE.AmbientLight(0x3a2a20, .22); scene.add(amb);
-const lampLight = new THREE.PointLight(0xffb066, 3.2, 4.5, 1.6); lampLight.position.set(.96, DY + .36, -2.15); lampLight.castShadow = true; lampLight.shadow.mapSize.set(1024, 1024); lampLight.shadow.bias = -.002; lampLight.shadow.radius = 6; room.add(lampLight);
-const lampLight2 = new THREE.PointLight(0xffa850, 2.4, 3.5, 1.6); lampLight2.position.set(2.42, DY + .5, -2.25); room.add(lampLight2);
-const shelfLights = [-1.8, -.45, .9].map(z => { const l = new THREE.PointLight(0xffc27a, 1.6, 2.4, 1.8); l.position.set(-2.4, 1.95, z); room.add(l); return l; });
-const shelfLow = new THREE.PointLight(0xffb870, .9, 2, 1.8); shelfLow.position.set(-2.4, .8, -.4); room.add(shelfLow);
-const nicheLights = [[-1.45, 2.45], [-1.45, 1.65]].map(([x, y]) => { const l = new THREE.PointLight(0xffd29a, 1.1, 1.4, 1.8); l.position.set(x, y, -2.62); room.add(l); return l; });
-const moonLight = new THREE.DirectionalLight(0x8fb0d8, .35); moonLight.position.set(2, 3, -6); moonLight.target.position.set(0, 0, 0); scene.add(moonLight, moonLight.target);
-const roomFill = new THREE.PointLight(0xffd8b0, .5, 8, 1.2); roomFill.position.set(.5, 2.4, .5); room.add(roomFill);
+const hemi = new THREE.HemisphereLight(0xc6d2dc, 0x4a3a2c, .7); scene.add(hemi);
+const amb = new THREE.AmbientLight(0x5a5048, .4); scene.add(amb);
+const lampLight = new THREE.PointLight(0xffb066, 1.2, 4.5, 1.6); lampLight.position.set(.96, DY + .36, -2.15); lampLight.castShadow = true; lampLight.shadow.mapSize.set(1024, 1024); lampLight.shadow.bias = -.002; lampLight.shadow.radius = 6; room.add(lampLight);
+const lampLight2 = new THREE.PointLight(0xffa850, .8, 3.5, 1.6); lampLight2.position.set(2.42, DY + .5, -2.25); room.add(lampLight2);
+const shelfLights = [-1.8, -.45, .9].map(z => { const l = new THREE.PointLight(0xffc27a, .6, 2.4, 1.8); l.position.set(-2.4, 1.95, z); room.add(l); return l; });
+const shelfLow = new THREE.PointLight(0xffb870, .3, 2, 1.8); shelfLow.position.set(-2.4, .8, -.4); room.add(shelfLow);
+const nicheLights = [[-1.45, 2.45], [-1.45, 1.65]].map(([x, y]) => { const l = new THREE.PointLight(0xffd29a, .5, 1.4, 1.8); l.position.set(x, y, -2.62); room.add(l); return l; });
+// an overcast day's light through the window: cool, soft-edged, from high over the lake
+const sunLight = new THREE.DirectionalLight(0xe6edf5, 2.2); sunLight.position.set(2.2, 3.4, -6); sunLight.castShadow = true; sunLight.shadow.mapSize.set(2048, 2048);
+Object.assign(sunLight.shadow.camera, { left:-4, right:4, top:4, bottom:-4, near:1, far:14 }); sunLight.shadow.bias = -.0008; sunLight.shadow.radius = 8; sunLight.target.position.set(0, 0, 0); scene.add(sunLight, sunLight.target);
+const roomFill = new THREE.PointLight(0xffd8b0, 1.6, 8, 1.2); roomFill.position.set(.5, 2.4, .5); room.add(roomFill);
 lampLight2.castShadow = true; lampLight2.shadow.mapSize.set(512, 512); lampLight2.shadow.bias = -.002;
 
 /* environment reflections */
 const pmrem = new THREE.PMREMGenerator(renderer);
 {
   const es = new THREE.Scene();
-  es.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2.9, 6), new THREE.MeshBasicMaterial({ color:0x1c130d, side:THREE.BackSide })));
+  es.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2.9, 6), new THREE.MeshBasicMaterial({ color:0x6e5a48, side:THREE.BackSide })));
   const add = (geo, c, k, p) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:new THREE.Color(c).multiplyScalar(k) })); m.position.set(...p); es.add(m); };
-  add(new THREE.PlaneGeometry(2.6, 1.5), '#1e3442', 1, [1.35, .35, -2.9]);
-  add(new THREE.SphereGeometry(.12, 12, 8), '#ffc27a', 14, [.56, -.6, -2.15]);
-  add(new THREE.SphereGeometry(.14, 12, 8), '#ffb066', 10, [2.42, -.45, -2.25]);
-  add(new THREE.BoxGeometry(.05, 2.4, 3.8), '#ffbe78', 2.2, [-2.7, .1, -.4]);
-  add(new THREE.BoxGeometry(1.6, .05, .3), '#ffd8a0', 3, [-1.45, 1.1, -2.7]);
-  add(new THREE.PlaneGeometry(5.6, 5.6).rotateX(Math.PI/2), '#1b2a3c', 1.2, [0, 1.38, 0]); // the open roof: sky light from above
-  scene.environment = pmrem.fromScene(es, .03).texture; scene.environmentIntensity = .9;
+  add(new THREE.PlaneGeometry(2.6, 1.5), '#dfeaf0', 3.5, [1.35, .35, -2.9]);
+  add(new THREE.SphereGeometry(.12, 12, 8), '#ffc27a', 4, [.56, -.6, -2.15]);
+  add(new THREE.SphereGeometry(.14, 12, 8), '#ffb066', 3, [2.42, -.45, -2.25]);
+  add(new THREE.BoxGeometry(.05, 2.4, 3.8), '#ffbe78', .8, [-2.7, .1, -.4]);
+  add(new THREE.BoxGeometry(1.6, .05, .3), '#ffd8a0', 1, [-1.45, 1.1, -2.7]);
+  add(new THREE.PlaneGeometry(5.6, 5.6).rotateX(Math.PI/2), '#dfeaf0', 2.2, [0, 1.38, 0]); // the open roof: sky light from above
+  scene.environment = pmrem.fromScene(es, .03).texture; scene.environmentIntensity = .7;
 }
 
 /* glow halos */
 const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
 const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); sp.userData.op = op; room.add(sp); return sp; };
-halo([.97, DY + .4, -2.17], .32, .55); halo([2.4, DY + .52, -2.27], .5, .45);
-const candleHalo = halo([-2.1, 1.56, -2.7], .22, .7);
-[[-1.9, 2.5], [-1.0, 2.5]].forEach(([x, y]) => halo([x, y, -2.72], .16, .5));
+halo([.97, DY + .4, -2.17], .32, .2); halo([2.4, DY + .52, -2.27], .5, .16);
+const candleHalo = halo([-2.1, 1.56, -2.7], .22, .28);
+[[-1.9, 2.5], [-1.0, 2.5]].forEach(([x, y]) => halo([x, y, -2.72], .16, .18));
 
 /* dust in lamplight */
 const DN = 260, dPos = new Float32Array(DN*3), dSeed = new Float32Array(DN);
 for (let i = 0; i < DN; i++) { dPos[i*3] = -.2 + RN()*3; dPos[i*3+1] = .8 + RN()*1.7; dPos[i*3+2] = -2.4 + RN()*1.8; dSeed[i] = RN(); }
 const dGeo = new THREE.BufferGeometry(); dGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
-const dustMat = new THREE.PointsMaterial({ size:.008, color:col('#ffdcaa'), transparent:true, opacity:.55, depthWrite:false, blending:THREE.AdditiveBlending, map:haloTex });
+const dustMat = new THREE.PointsMaterial({ size:.008, color:col('#ffdcaa'), transparent:true, opacity:.25, depthWrite:false, blending:THREE.AdditiveBlending, map:haloTex });
 const dust = new THREE.Points(dGeo, dustMat); dust.frustumCulled = false; room.add(dust);
 
 /* contact shadows / ambient occlusion decals */
@@ -612,10 +613,10 @@ LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - SZ0, .12, [-2.788, y - .02, (SZ0 
 
 /* ================= seasons ================= */
 const SKY = {
-  '春': { day:['#cfe2e6','#9cc79a'], trees:['#6aa35a','#87b86b','#e6a3bd','#f1c2d2','#4f8a4a'], part:'#f1b8cc', shape:'petal', n:140, speed:.35, sway:.5, size:.035 },
-  '夏': { day:['#c8dde6','#6f9f63'], trees:['#3f7a3e','#2f6232','#5c9550','#264f2a','#4b8746'], part:'#b8d4e4', shape:'rain', n:500, speed:4.5, sway:0, size:.06 },
-  '秋': { day:['#e6d9c4','#a08a52'], trees:['#c46a2c','#d9932f','#a8432a','#e2b246','#6f6a35'], part:'#d4782e', shape:'leaf', n:90, speed:.45, sway:.7, size:.05 },
-  '冬': { day:['#dfe5ea','#c9d1d6'], trees:['#e9eef1','#c5cfd5','#8a979e','#f4f6f7','#a7b3b9'], part:'#ffffff', shape:'snow', n:420, speed:.5, sway:.25, size:.03 },
+  '春': { trees:['#6aa35a','#87b86b','#e6a3bd','#f1c2d2','#4f8a4a'], part:'#f1b8cc', shape:'petal', n:140, speed:.35, sway:.5, size:.035 },
+  '夏': { trees:['#3f7a3e','#2f6232','#5c9550','#264f2a','#4b8746'], part:'#b8d4e4', shape:'rain', n:500, speed:4.5, sway:0, size:.06 },
+  '秋': { trees:['#c46a2c','#d9932f','#a8432a','#e2b246','#6f6a35'], part:'#d4782e', shape:'leaf', n:90, speed:.45, sway:.7, size:.05 },
+  '冬': { trees:['#e9eef1','#c5cfd5','#8a979e','#f4f6f7','#a7b3b9'], part:'#ffffff', shape:'snow', n:420, speed:.5, sway:.25, size:.03 },
 };
 const season = (() => { const mo = new Date().getMonth() + 1; return mo >= 3 && mo <= 5 ? '春' : mo >= 6 && mo <= 8 ? '夏' : mo >= 9 && mo <= 11 ? '秋' : '冬'; })();
 const shapeTex = kind => ctex(64, 64, (x, w, h) => { x.clearRect(0,0,w,h); x.fillStyle = '#fff'; x.beginPath();
@@ -627,13 +628,8 @@ const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE
 const pMat = new THREE.PointsMaterial({ size:.05, transparent:true, depthWrite:false, alphaTest:.2 });
 const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.add(points);
 { const w = SKY[season]; // dress the window for the season: the garden behind the glass, and what falls past it
-  paintGarden(outsideTex.image, { sky:w.day, trees:w.trees, bare:season === '冬', night:true }); outsideTex.needsUpdate = true;
+  paintLakeView(outsideTex.image, { trees:w.trees, bare:season === '冬' }); outsideTex.needsUpdate = true;
   pMat.map = shapeTex(w.shape); pMat.color.set(w.part); pMat.size = w.size; pMat.needsUpdate = true; pGeo.setDrawRange(0, w.n); }
-/* stars for the open roof — a far dome */
-const SN = 240, sPos = new Float32Array(SN*3);
-for (let i = 0; i < SN; i++) { const th = Math.random()*Math.PI*2, ph = Math.acos(.15 + Math.random()*.83); sPos[i*3] = Math.sin(ph)*Math.cos(th)*40; sPos[i*3+1] = Math.cos(ph)*40; sPos[i*3+2] = Math.sin(ph)*Math.sin(th)*40; }
-const sGeo = new THREE.BufferGeometry(); sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
-const stars = new THREE.Points(sGeo, new THREE.PointsMaterial({ size:2, sizeAttenuation:false, color:col('#dfe8ff'), transparent:true, opacity:.8, depthWrite:false })); stars.frustumCulled = false; scene.add(stars);
 
 /* ================= UI ================= */
 const st = { seen:{}, cur:null };
@@ -984,7 +980,7 @@ const roots = [...new Set(pickables.map(m => m.userData.root))];
 function loop(ts) {
   clock.update(ts); const dt = Math.min(clock.getDelta(), .05), t = clock.getElapsed();
   roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; r.position.lerp(want, Math.min(1, dt * 10)); });
-  const fl = .85 + Math.sin(t*13) * .06 + Math.sin(t*7.3) * .08 + (Math.random() - .5) * .06; candleLight.intensity = .5 * fl; flame.scale.set(1, 2.2 * fl, 1);
+  const fl = .85 + Math.sin(t*13) * .06 + Math.sin(t*7.3) * .08 + (Math.random() - .5) * .06; candleLight.intensity = .2 * fl; flame.scale.set(1, 2.2 * fl, 1);
   catBody.scale.y = .55 + Math.sin(t*1.6) * .02; head.rotation.z = Math.sin(t*.4) * .03;
   const w = SKY[season], pa = pGeo.attributes.position.array;
   for (let i = 0; i < w.n; i++) { const s = pSeed[i]; pa[i*3+1] -= w.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * w.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }

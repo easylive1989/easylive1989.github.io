@@ -267,33 +267,94 @@ export function leaf({ size = 256, seed = 27 } = {}) {
   return { color:c, normal:normalFromHeight(hgt, 1.2 * W / 256) };
 }
 
-// The garden behind the window, painted onto `c` in three depths: far woods, the garden's own trees, a hedge under the sill.
-// Each depth is drawn small and scaled up, so the farthest is the softest — an out-of-focus blur that needs no canvas filter.
-export function paintGarden(c, { sky, trees, bare = false, night = false, seed = 11 }) {
+// The lake behind the window, after an autumn morning in the Alps: a low overcast, snow on the far peaks, mist along the slopes,
+// a wooded hillside running down from the left to a boathouse on the shore, a strip of meadow, and all of it again in the still
+// water. Each depth is drawn small and scaled up, so the farthest is the softest — a blur that needs no canvas filter.
+export function paintLakeView(c, { trees, bare = false, seed = 11 }) {
   const x = c.getContext('2d'), w = c.width, h = c.height, R = rng(seed), pick = () => trees[Math.floor(R() * trees.length)];
-  const depth = (k, draw) => x.drawImage(cnv(Math.round(w * k), Math.round(h * k), lx => { lx.scale(k, k); lx.lineCap = 'round'; draw(lx); }), 0, 0, w, h);
-  const blob = (lx, bx, by, r, col, a) => { lx.globalAlpha = a; lx.fillStyle = col; lx.beginPath(); lx.arc(bx, by, r, 0, 6.2832); lx.fill(); };
+  const SHORE = h * .55; // where the water begins
+  const layer = (k, draw) => cnv(Math.round(w * k), Math.round(h * k), lx => { lx.scale(k, k); lx.lineCap = lx.lineJoin = 'round'; draw(lx); });
+  const depth = (k, draw) => x.drawImage(layer(k, draw), 0, 0, w, h);
+  const blob = (lx, bx, by, r, col, a, ry = r, rot = 0) => { lx.globalAlpha = a; lx.fillStyle = col; lx.beginPath(); lx.ellipse(bx, by, r, ry, rot, 0, 6.2832); lx.fill(); };
   // tint whatever the layer already holds, and nothing else
-  const wash = (lx, style, a = 1) => { lx.globalCompositeOperation = 'source-atop'; lx.globalAlpha = a; lx.fillStyle = style; lx.fillRect(0, 0, w, h); lx.globalCompositeOperation = 'source-over'; };
-  const fade = (lx, x0, y0, x1, y1, from, to) => { const g = lx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, from); g.addColorStop(1, to); return g; };
-  const tree = (lx, tx, base, H) => {
-    const lean = (R() - .5) * .3, crown = H * (.3 + R() * .1), main = pick(), cx = tx + Math.sin(lean) * H * .66, cy = base - H * .66;
-    const bough = (x0, y0, ang, len, wd, n) => { const x1 = x0 + Math.sin(ang) * len, y1 = y0 - Math.cos(ang) * len; lx.lineWidth = wd; lx.beginPath(); lx.moveTo(x0, y0); lx.lineTo(x1, y1); lx.stroke();
-      if (n) for (let k = 0; k < (bare ? 3 : 2); k++) bough(x1, y1, ang + (R() - .5) * 1.6, len * (.5 + R() * .25), wd * .62, n - 1); };
-    lx.globalAlpha = 1; lx.strokeStyle = '#2a2018'; bough(tx, base, lean, H * .46, H * .055, bare ? 4 : 2);
-    // foliage: clumps gathered into a crown — or, on a bare tree, what little still clings to the boughs
-    for (let k = 0, n = bare ? 30 : 150; k < n; k++) { const a = R() * 6.2832, d = Math.sqrt(R()), bx = cx + Math.cos(a) * d * crown * 1.15, by = cy + Math.sin(a) * d * crown * .85, r = crown * (bare ? .07 + R() * .08 : .1 + R() * .13);
-      blob(lx, bx, by, r, R() < .72 ? main : pick(), bare ? .85 : .8 + R() * .2);
-      const lit = -(Math.cos(a) * .6 + Math.sin(a) * .8) * d; blob(lx, bx, by, r, lit > 0 ? '#fff' : '#000', Math.abs(lit) * (lit > 0 ? .22 : .32)); } // lit from the upper left
-  };
+  const wash = (lx, style, a = 1) => { lx.globalCompositeOperation = 'source-atop'; lx.globalAlpha = a; lx.fillStyle = style; lx.fillRect(0, 0, w, h); lx.globalCompositeOperation = 'source-over'; lx.globalAlpha = 1; };
+  const fade = (lx, x0, y0, x1, y1, ...stops) => { const g = lx.createLinearGradient(x0, y0, x1, y1); stops.forEach((s, i) => g.addColorStop(i / (stops.length - 1), s)); return g; };
+  const poly = (lx, pts, style, a = 1) => { lx.globalAlpha = a; lx.fillStyle = style; lx.beginPath(); pts.forEach(([px, py], i) => i ? lx.lineTo(px, py) : lx.moveTo(px, py)); lx.closePath(); lx.fill(); };
+  const curve = (pts, t) => { let i = 1; while (i < pts.length - 1 && pts[i][0] < t) i++; const [a, b] = [pts[i - 1], pts[i]], k = (t - a[0]) / (b[0] - a[0]); return a[1] + (b[1] - a[1]) * (.5 - Math.cos(Math.min(1, Math.max(0, k)) * Math.PI) / 2); };
+  const DARK = ['#2c4631', '#243b29', '#365636', '#1d3024', '#2f4d35'], conif = () => DARK[Math.floor(R() * DARK.length)];
+  const conifer = (lx, tx, base, H, col) => { // a spruce: two tiers of a narrow triangle, and a lit edge on the left
+    lx.globalAlpha = .95; lx.fillStyle = col;
+    [[1, .3], [.7, .22], [.42, .14]].forEach(([k, half]) => { lx.beginPath(); lx.moveTo(tx, base - H); lx.lineTo(tx + H * half, base - H * (1 - k)); lx.lineTo(tx - H * half, base - H * (1 - k)); lx.closePath(); lx.fill(); });
+    lx.globalAlpha = .12; lx.fillStyle = '#dfe8d8'; lx.beginPath(); lx.moveTo(tx, base - H); lx.lineTo(tx - H * .3, base); lx.lineTo(tx - H * .12, base); lx.closePath(); lx.fill(); };
+  const crown = (lx, cx, cy, r, main) => { // a broadleaf crown: clumps gathered round a centre, lit from the upper left
+    for (let k = 0, n = 10 + r; k < n; k++) { const a = R() * 6.2832, d = Math.sqrt(R()), bx = cx + Math.cos(a) * d * r, by = cy + Math.sin(a) * d * r * .85, rr = r * (.22 + R() * .2);
+      blob(lx, bx, by, rr, R() < .7 ? main : pick(), .85 + R() * .15);
+      const lit = -(Math.cos(a) * .6 + Math.sin(a) * .8) * d; blob(lx, bx, by, rr, lit > 0 ? '#fff' : '#000', Math.abs(lit) * (lit > 0 ? .18 : .3)); } };
+  // the hillside's ridge, as a fraction of height against a fraction of width: high on the left, down to the lake on the right,
+  // then the near trees climb again at the right edge
+  const RIDGE = [[0, .02], [.12, .11], [.25, .22], [.38, .34], [.5, .43], [.6, .47], [.72, .49], [.84, .49], [.92, .465], [1, .41]];
+  const ridge = t => h * curve(RIDGE, t);
+
   x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
-  x.fillStyle = fade(x, 0, 0, 0, h * .72, sky[0], sky[1]); x.fillRect(0, 0, w, h);
-  depth(.1, lx => { for (let i = 0; i < 110; i++) blob(lx, R() * w, h * (.46 + R() * .22), 26 + R() * 48, pick(), .6); wash(lx, sky[0], .5); }); // haze
-  x.fillStyle = sky[1]; x.fillRect(0, h * .7, w, h * .3); x.fillStyle = fade(x, 0, h * .68, 0, h, 'rgba(0,0,0,0)', 'rgba(0,0,0,.3)'); x.fillRect(0, h * .68, w, h * .32); // the lawn, darker towards the house
-  depth(.18, lx => { for (let i = 0; i < 6; i++) tree(lx, (i + .2 + R() * .6) / 6 * w, h * (.69 + R() * .05), h * (.42 + R() * .16));
-    wash(lx, fade(lx, 0, h * .35, 0, h * .8, 'rgba(0,0,0,0)', 'rgba(0,0,0,.3)')); }); // shade gathers under the crowns
-  depth(.3, lx => { for (let i = 0; i < 160; i++) blob(lx, R() * w, h * (.82 + R() * .14), 12 + R() * 22, pick(), .9); wash(lx, '#000', .3); });
-  if (night) { x.fillStyle = 'rgba(6,14,22,.58)'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(40,70,60,.25)'; x.fillRect(0, h * .3, w, h * .7); }
+  // sky: a low overcast, brighter where the cloud thins above the peaks
+  x.fillStyle = fade(x, 0, 0, 0, h * .46, '#8794a4', '#b4bec8', '#dde2e6'); x.fillRect(0, 0, w, h);
+  depth(.08, lx => { for (let i = 0; i < 80; i++) { const t = R(); blob(lx, R() * w, h * R() * .34, 50 + R() * 90, t < .45 ? '#78859a' : t < .8 ? '#aab4bf' : '#eef1f3', .3 + R() * .3, 30 + R() * 40); } }); // cloud bellies, and a few bright tears
+
+  // the far range: a jagged ridge, snow above the snowline, rock showing through, and haze gathering at its foot
+  depth(.5, lx => {
+    const pts = [[.2, .5], [.28, .36], [.34, .27], [.4, .32], [.46, .2], [.51, .29], [.57, .235], [.63, .27], [.69, .22], [.75, .3], [.81, .255], [.87, .33], [.92, .18], [.96, .24], [1.02, .21], [1.08, .5]]
+      .map(([px, py]) => [px * w, (py + (R() - .5) * .02) * h]);
+    const jag = []; for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i]; jag.push([ax, ay]); for (let k = 1; k < 4; k++) jag.push([ax + (bx - ax) * k / 4, ay + (by - ay) * k / 4 + (R() - .5) * h * .018]); }
+    jag.push(pts[pts.length - 1], [w * 1.06, h * .62], [w * .22, h * .62]);
+    poly(lx, jag, fade(lx, 0, h * .18, 0, h * .52, '#46576c', '#5e6f84', '#8795a6'));
+    pts.forEach(([px, py], i) => { if (i && i < pts.length - 1 && py < pts[i - 1][1] && py < pts[i + 1][1]) poly(lx, [[px, py], [pts[i + 1][0] + w * .02, h * .55], [px - w * .01, h * .55]], '#2f3d4f', .35); }); // the faces turned from the light
+    wash(lx, fade(lx, 0, h * .18, 0, h * .36, 'rgba(244,247,250,.95)', 'rgba(244,247,250,.55)', 'rgba(244,247,250,0)')); // snow, thinning down the slopes
+    lx.strokeStyle = '#3e4c5d'; for (let i = 0; i < 70; i++) { const sx = w * (.24 + R() * .82), sy = h * (.2 + R() * .14), dx = (R() - .5) * 18; lx.globalAlpha = .2 + R() * .3; lx.lineWidth = 1.5 + R() * 2; lx.beginPath(); lx.moveTo(sx, sy); lx.lineTo(sx + dx, sy + 8 + R() * 16); lx.stroke(); } // rock showing through
+    wash(lx, fade(lx, 0, h * .36, 0, h * .52, 'rgba(190,200,212,0)', 'rgba(190,200,212,.45)')); });
+  depth(.06, lx => { for (let i = 0; i < 14; i++) blob(lx, w * (.4 + R() * .62), h * (.38 + R() * .12), 60 + R() * 110, '#e4e9ee', .22 + R() * .28, 10 + R() * 14); }); // mist along the slopes
+
+  // the hillside behind: a wooded slope in haze
+  depth(.18, lx => {
+    const pts = []; for (let i = 0; i <= 40; i++) pts.push([w * i / 40, ridge(i / 40) + (R() - .5) * h * .01]); pts.push([w, SHORE + 2], [0, SHORE + 2]);
+    poly(lx, pts, bare ? '#aeb9c0' : '#33503a');
+    for (let i = 0; i < 420; i++) { const tx = R() * w, top = ridge(tx / w), ty = top + R() * (SHORE - top), s = 10 + R() * 16;
+      if (R() < .6) conifer(lx, tx, ty, s * 2.2, conif()); else crown(lx, tx, ty - s * .6, s, pick()); }
+    wash(lx, fade(lx, 0, 0, 0, SHORE, 'rgba(175,188,200,.5)', 'rgba(175,188,200,.3)', 'rgba(175,188,200,.05)')); });
+  // the trees along the shore, and the tall ones at the right edge: nearer, so sharper and darker under the crowns
+  depth(.28, lx => {
+    const mx0 = w * .56, mx1 = w * .985, mp = [[mx0, SHORE]]; for (let i = 0; i <= 12; i++) mp.push([mx0 + (mx1 - mx0) * i / 12, SHORE - h * (.012 + R() * .012)]); mp.push([mx1, SHORE]);
+    poly(lx, mp, fade(lx, 0, SHORE - h * .03, 0, SHORE, '#8aa456', '#66844a'), .95); // the meadow, down to a pale gravel edge
+    lx.fillStyle = 'rgba(205,208,196,.6)'; lx.fillRect(mx0, SHORE - 1.5, mx1 - mx0, 2.5);
+    for (let i = 0; i < 150; i++) { const tx = R() * w, ty = SHORE - R() * h * .03, s = 16 + R() * 18; if (tx > w * .6 && tx < w * .97 && R() < .7) continue; // the meadow keeps the right shore open
+      if (R() < .4) conifer(lx, tx, ty, s * 2.4, conif()); else crown(lx, tx, ty - s * .55, s, pick()); }
+    for (let i = 0; i < 9; i++) { const tx = w * (.93 + R() * .1), ty = SHORE - R() * h * .02; crown(lx, tx, ty - h * .07 - R() * h * .1, 38 + R() * 22, pick()); }
+    wash(lx, fade(lx, 0, SHORE - h * .25, 0, SHORE, 'rgba(0,0,0,0)', 'rgba(0,0,0,.35)')); });
+
+  // the boathouse: a flat roof over open bays on the water, a boarded wall on the left, a few boats in under it
+  depth(.5, lx => {
+    const bx = w * .21, bw = w * .15, top = SHORE - h * .062, wall = bx + bw * .4;
+    lx.globalAlpha = 1; lx.fillStyle = '#2a2521'; lx.fillRect(wall, top, bx + bw - wall, SHORE - top); // the dark of the bays
+    lx.fillStyle = fade(lx, 0, top, 0, SHORE, '#cfae7c', '#b08f60'); lx.fillRect(bx, top, wall - bx, SHORE - top); // boards
+    lx.strokeStyle = 'rgba(90,65,35,.45)'; lx.lineWidth = 1; for (let px = bx + 4; px < wall; px += 6) { lx.beginPath(); lx.moveTo(px, top + 3); lx.lineTo(px, SHORE); lx.stroke(); }
+    lx.fillStyle = '#bf9c6a'; for (let px = wall + 5; px < bx + bw; px += bw * .11) lx.fillRect(px, top + 3, 3, SHORE - top - 3); // posts
+    lx.fillStyle = '#a88a5c'; lx.fillRect(wall, top + 3, bx + bw - wall, 4); // the beam under the roof
+    poly(lx, [[bx - 6, top], [bx + bw + 8, top + 2], [bx + bw + 8, top + 7], [bx - 6, top + 5]], '#3c3f42'); // roof
+    poly(lx, [[bx - 6, top - 1], [bx + bw + 8, top + 1], [bx + bw + 8, top + 2.5], [bx - 6, top + .5]], '#6b6e70'); // its lit edge
+    lx.fillStyle = '#8a7a62'; lx.fillRect(bx - 5, SHORE - 3, bw + 12 + w * .045, 3); // the deck and the jetty off to the right
+    [['#e3ebf0', .5], ['#4f9bc9', .63], ['#ece6d6', .76], ['#5e9fcf', .89], ['#e3ebf0', 1.12]].forEach(([col, k]) => blob(lx, wall + (bx + bw - wall) * k, SHORE - 2.5, 7, col, 1, 2.8)); }); // boats
+
+  // the water: the far shore again, upside down, broken by a slow ripple, under a green-tinted glass
+  x.fillStyle = fade(x, 0, SHORE, 0, h, '#33503f', '#223d35'); x.fillRect(0, SHORE, w, h - SHORE);
+  const K = .35, refl = layer(K, lx => lx.drawImage(c, 0, 0)), phase = R() * 6;
+  x.globalAlpha = .62;
+  for (let sy = 0; sy < h - SHORE; sy += 2) { const dx = Math.sin(sy * .07 + phase) * (1 + sy * .012), sq = 1 + sy * .0004; // the mirror stretches a little towards the near shore
+    x.drawImage(refl, 0, Math.max(0, (SHORE - (sy + 2) * sq) * K), w * K, 2 * K * sq, dx, SHORE + sy, w, 2); }
+  x.globalAlpha = 1; x.fillStyle = fade(x, 0, SHORE, 0, h, 'rgba(30,60,50,.42)', 'rgba(40,75,65,.22)', 'rgba(55,80,80,.12)'); x.fillRect(0, SHORE, w, h - SHORE);
+  x.fillStyle = fade(x, 0, SHORE, 0, SHORE + h * .03, 'rgba(0,0,0,.35)', 'rgba(0,0,0,0)'); x.fillRect(0, SHORE, w, h * .03); // the shadow of the bank
+  // what has blown onto the water: leaves drifting, thickest near the window
+  if (!bare) for (let i = 0; i < 260; i++) { const k = Math.pow(R(), .55), ly = SHORE + h * .04 + k * (h - SHORE - h * .04), r = 1.2 + k * 4;
+    blob(x, R() * w, ly, r, R() < .3 ? '#e8c06a' : pick(), .6 + R() * .35, r * .45, R() * 3); }
+  x.globalAlpha = 1;
 }
 
 // Moulded plastic that has sat in a room for years: a faint pebble grain, clouds of yellowing, smudges where it is handled,
