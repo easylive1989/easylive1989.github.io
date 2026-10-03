@@ -141,13 +141,16 @@ const STAND_IN = { color:'#bdbdbd', normal:'#8080ff', rough:'#ffffff' }, slots =
 const sheet = (key, ch, rep = [1, 1]) => { const t = texOf(cnv(2, 2, (x, w, h) => { x.fillStyle = STAND_IN[ch]; x.fillRect(0, 0, w, h); }), rep, ch === 'color'); slots.push([key, ch, t]); return t; };
 const sheetsReady = (async () => {
   await null; // let the whole room be built (and every slot claimed) first
-  let sets = null;
+  let sets = null, w = null;
   if (typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined') {
-    try { sets = await new Promise((res, rej) => { const w = new Worker(new URL('./studyWorker.js', import.meta.url), { type:'module' }); w.onmessage = e => { res(e.data); w.terminate(); }; w.onerror = e => { rej(e); w.terminate(); }; w.postMessage({ low:Q.low }); }); }
+    try { sets = await new Promise((res, rej) => { w = new Worker(new URL('./studyWorker.js', import.meta.url), { type:'module' }); w.onmessage = e => res(e.data); w.onerror = rej; w.postMessage({ low:Q.low }); }); }
     catch (err) { console.warn('painting the room\'s sheets on the main thread instead', err); }
   }
   if (!sets) sets = paintSheets(Q.low);
-  slots.forEach(([key, ch, t]) => { t.dispose(); t.image = sets[key][ch]; t.needsUpdate = true; });
+  // Uploaded here and now rather than on the next frame: in Chromium a worker's bitmaps live on its GPU context and go when it does, and
+  // the next frame can be a long way off (a tab opened in the background, shaders still compiling). Only then is the worker let go.
+  slots.forEach(([key, ch, t]) => { t.dispose(); t.image = sets[key][ch]; t.needsUpdate = true; renderer.initTexture(t); });
+  w?.terminate();
 })();
 // one sheet of grain, 2 m along it and 1 m across, stained three ways by the material colours
 const woodTex = { map:sheet('wood', 'color', [.5, 1]), normalMap:sheet('wood', 'normal', [.5, 1]), roughnessMap:sheet('wood', 'rough', [.5, 1]), normalScale:new THREE.Vector2(.35, .35) };
