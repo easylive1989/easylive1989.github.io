@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, crtMask } from './studyTextures.js';
+import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, LAKE_SKY, crtMask } from './studyTextures.js';
 const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
 
 /* ================= content ================= */
 // Filled at build time from Notion (src/lib/study.ts). Ids are the room's physical
-// slots — a spine on the shelf, a spot in the niche, a page on the desk.
+// slots — a spine on the shelf, a spot on the display shelves, a page on the desk.
 const DATA = JSON.parse(document.getElementById('study-data').textContent);
 const { items: ITEMS, about: ABOUT, github: GH, site: SITE } = DATA;
 const related = id => DATA.links.filter(l => l.includes(id)).map(l => l[0] === id ? l[1] : l[0]);
@@ -64,6 +64,7 @@ camera.position.set(1.6, 1.9, 3.6);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.tgt); controls.enableDamping = true; controls.enablePan = false; controls.rotateSpeed = .45;
 controls.minDistance = .35; controls.maxDistance = 4.4; controls.minPolarAngle = .95; controls.maxPolarAngle = 1.8;
+const CAM_TOP = 2.6; // as high as the camera goes: the ceiling is at 2.8
 const az0 = Math.atan2(HOME.pos.x - HOME.tgt.x, HOME.pos.z - HOME.tgt.z);
 controls.minAzimuthAngle = az0 - .62; controls.maxAzimuthAngle = az0 + .42;
 
@@ -170,7 +171,7 @@ Object.assign(M, {
   woodD: pbr('wood-dark', '#6a3f29', { ...woodTex, roughness:.62, clearcoat:.3, clearcoatRoughness:.35 }),
   woodL: pbr('wood-light', '#b07a50', { ...woodTex, roughness:.47, clearcoat:.5, clearcoatRoughness:.25 }),
   wall: std('wall', '#544739', { ...plasterTex, roughness:1 }),
-  wallL: std('wall-light', '#665645', { ...plasterTex, roughness:1 }),
+  wallL: std('wall-light', '#665645', { ...plasterTex, roughness:1 }), ceil: std('ceiling', '#7d6f5e', { ...plasterTex, map:null, roughness:1 }), // painted flat: the walls' mottling would be most of a phone's screen
   fabric: pbr('fabric', '#9a917a', { ...fabricTex, sheenColor:col('#cfc7ae') }),
   fabricD: pbr('fabric-dark', '#7a7262', { ...fabricTex, sheenColor:col('#aaa290') }),
   brass: pbr('brass', '#d2a868', { ...metalTex, roughness:.43 }), bronze: pbr('bronze', '#6a442a', { ...metalTex, metalness:.9, roughness:.63 }),
@@ -184,30 +185,34 @@ Object.assign(M, {
 /* ================= room shell ================= */
 // one 3 m tile of 12.5 cm boards, laid twice each way
 const [floorMap, floorNormal, floorRough] = ['color', 'normal', 'rough'].map(ch => { const t = sheet('floor', ch, [2, 2]); t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; });
-room.add(mk(new THREE.PlaneGeometry(6, 6), new THREE.MeshPhysicalMaterial(lite({ name:'floor', map:floorMap, normalMap:floorNormal, normalScale:new THREE.Vector2(.7, .7), roughnessMap:floorRough, roughness:1, clearcoat:.25, clearcoatRoughness:.35 })), 'floor', [0,0,0], [-Math.PI/2,0,0]));
+// the boards stop at the outer face of the back wall, where the deck takes over; the tile keeps its scale
+const floorGeo = new THREE.PlaneGeometry(6, 5.6); for (let i = 0, uv = floorGeo.attributes.uv; i < uv.count; i++) uv.setY(i, uv.getY(i) * 5.6 / 6);
+room.add(mk(floorGeo, new THREE.MeshPhysicalMaterial(lite({ name:'floor', map:floorMap, normalMap:floorNormal, normalScale:new THREE.Vector2(.7, .7), roughnessMap:floorRough, roughness:1, clearcoat:.25, clearcoatRoughness:.35 })), 'floor', [0,0,.2], [-Math.PI/2,0,0]));
 room.add(roomUV(box(.1, 2.8, 6, M.wall, 'wall-left', [-3.05,1.4,0])));
 room.add(roomUV(box(.1, 2.8, 6, M.wall, 'wall-right', [3.05,1.4,0])));
-// back wall with niche + window openings
-room.add(roomUV(box(.7, 2.8, .1, M.wall, 'wall-back', [-2.7,1.4,-2.55])));
-room.add(roomUV(box(.6, 2.8, .1, M.wall, 'wall-back', [-.25,1.4,-2.55])));
+// back wall with the door and window openings
+const DOOR = { x0:-2, x1:-.9, y1:2.15 };
+room.add(roomUV(box(DOOR.x0 + 3.05, 2.8, .1, M.wall, 'wall-back', [(DOOR.x0 - 3.05)/2,1.4,-2.55])));
+room.add(roomUV(box(.05 - DOOR.x1, 2.8, .1, M.wall, 'wall-back', [(DOOR.x1 + .05)/2,1.4,-2.55])));
+room.add(roomUV(box(DOOR.x1 - DOOR.x0, 2.8 - DOOR.y1, .1, M.wall, 'wall-back', [(DOOR.x0 + DOOR.x1)/2,(2.8 + DOOR.y1)/2,-2.55])));
 room.add(roomUV(box(.4, 2.8, .1, M.wall, 'wall-back', [2.85,1.4,-2.55])));
-room.add(roomUV(box(1.8, .25, .1, M.wall, 'wall-back', [-1.45,2.68,-2.55])));
 room.add(roomUV(box(2.6, 1.0, .1, M.wall, 'wall-back', [1.35,.5,-2.55])));
 room.add(roomUV(box(2.6, .3, .1, M.wall, 'wall-back', [1.35,2.65,-2.55])));
+room.add(roomUV(box(6.2, .1, 5.7, M.ceil, 'ceiling', [0,2.85,.15])));
 // crown + skirting
 [[-3,0,'x'],[3,0,'x']].forEach(([x]) => { room.add(box(.08, .12, 6, M.cream, 'crown', [x*.985,2.74,0])); room.add(box(.05, .14, 6, M.woodD, 'skirting', [x*.99,.07,0])); });
 room.add(box(6, .12, .08, M.cream, 'crown', [0,2.74,-2.48]));
-room.add(box(6, .14, .05, M.woodD, 'skirting', [0,.07,-2.48]));
+[[-3, DOOR.x0 - .04], [DOOR.x1 + .04, 3]].forEach(([a, b]) => room.add(box(b - a, .14, .05, M.woodD, 'skirting', [(a + b)/2,.07,-2.48])));
 
 /* ================= bookshelf (left wall) ================= */
 const shelf = new THREE.Group(); shelf.name = 'bookshelf'; room.add(shelf);
 const SX = -2.62, SZ0 = -2.47, SZ1 = 1.6, LV = [.1, .45, .8, 1.15, 1.5, 1.85, 2.2, 2.55];
-shelf.add(box(.4, 2.72, 4.1, M.woodD, 'shelf-carcass-back', [-2.98,1.36,(SZ0+SZ1)/2]));
-const bays = [SZ0, -1.13, .23, SZ1];
+const bays = [SZ0, -1.13, .23, SZ1], BZ = bays[1]; // the corner bay is the display shelves; the books start at BZ
+shelf.add(box(.4, 2.72, SZ1 - BZ + .03, M.woodD, 'shelf-carcass-back', [-2.98,1.36,(BZ+SZ1)/2]));
 bays.forEach(z => shelf.add(box(.4, 2.72, .05, M.wood, 'shelf-divider', [-2.81,1.36,z])));
-LV.forEach(y => shelf.add(box(.4, .035, SZ1 - SZ0, M.wood, 'shelf-board', [-2.81,y,(SZ0+SZ1)/2])));
+LV.forEach((y, i) => { const z0 = i === LV.length - 1 ? SZ0 : BZ; shelf.add(box(.4, .035, SZ1 - z0, M.wood, 'shelf-board', [-2.81,y,(z0+SZ1)/2])); }); // only the top board runs the whole length
 shelf.add(box(.42, .18, SZ1 - SZ0 + .05, M.wood, 'shelf-cornice', [-2.8,2.68,(SZ0+SZ1)/2]));
-LV.slice(1).forEach(y => { const s = mk(new THREE.BoxGeometry(.02, .01, SZ1 - SZ0), new THREE.MeshBasicMaterial({ name:'led', color:col('#b98450') }), 'led-strip', [-2.63, y - .025, (SZ0+SZ1)/2]); s.castShadow = false; shelf.add(s); });
+LV.slice(1).forEach(y => { const s = mk(new THREE.BoxGeometry(.02, .01, SZ1 - BZ), new THREE.MeshBasicMaterial({ name:'led', color:col('#b98450') }), 'led-strip', [-2.63, y - .025, (BZ+SZ1)/2]); s.castShadow = false; shelf.add(s); });
 const spineCols = [C.c900, C.m900, C.m800, '#24402f', '#2e4a3a', '#1f2c3d', C.cream, '#6b3a26', '#8a6b45', C.n800, '#3d2a1e', C.c800, '#c9b88f', '#5a1f1f'];
 const featured = { 2:{ bay:1, ids:['s1','s2','s3'], label:'系列', th:.12 }, 3:{ bay:1, ids:['w1','w2','w3','w4','w5','w6'], label:'最近寫的', th:.07 }, 4:{ bay:1, ids:['r1','r2','r3','r4'], label:'書單', th:.07 } };
 Object.keys(featured).forEach(lv => { featured[lv].ids = featured[lv].ids.filter(has); if (!featured[lv].ids.length) delete featured[lv]; });
@@ -237,7 +242,7 @@ const inst = new THREE.InstancedMesh(bookGeo, bookMat, 900); inst.castShadow = t
 let ni = 0; const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
 const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
 const featPos = {};
-for (let lv = 0; lv < 7; lv++) for (let b = 0; b < 3; b++) {
+for (let lv = 0; lv < 7; lv++) for (let b = 1; b < 3; b++) {
   let z = bays[b] + .04; const zEnd = bays[b+1] - .04; const f = featured[lv] && featured[lv].bay === b ? featured[lv] : null;
   const fStart = f ? bays[b] + .32 : 99, fEnd = f ? fStart + f.ids.length * (f.th + .015) + .02 : 99;
   if (f) f.ids.forEach((id, i) => featPos[id] = { y:LV[lv], z:fStart + .02 + i*(f.th + .015) + f.th/2, th:f.th });
@@ -278,28 +283,20 @@ const plateTex = s => ctex(256, 64, (x, w, h) => { x.fillStyle = C.brass; x.fill
 [2, 3, 4].forEach(lv => { const f = featured[lv]; if (!f) return; const zc = bays[f.bay] + .32 + .02 + f.ids.length*(f.th + .015)/2;
   const pm = new THREE.MeshStandardMaterial({ name:'brass-plate', map:plateTex(f.label), roughness:.4, metalness:.6 });
   shelf.add(mk(new THREE.BoxGeometry(.005, .045, .18), [pm, M.brass, M.brass, M.brass, M.brass, M.brass], 'brass-plate', [-2.605, LV[lv] - .005, zc])); });
-// rubber duck on top of shelf
-const duck = new THREE.Group(); duck.name = 'rubber-duck'; duck.position.set(-2.75, 2.785, .9); duck.rotation.y = 1.2;
-const dkM = pbr('duck', C.yel, { roughness:.35, clearcoat:.6, clearcoatRoughness:.2 });
-const dkb = mk(new THREE.SphereGeometry(.05, 20, 14), dkM, 'duck-body'); dkb.scale.set(1, .75, 1.3); duck.add(dkb);
-duck.add(mk(new THREE.SphereGeometry(.032, 16, 12), dkM, 'duck-head', [0,.045,.04]));
-duck.add(mk(new THREE.ConeGeometry(.012, .03, 8), std('beak', '#e0742c'), 'duck-beak', [0,.042,.077], [Math.PI/2,0,0]));
-room.add(duck);
 
-/* ================= display niche ================= */
-const niche = new THREE.Group(); niche.name = 'display-niche'; room.add(niche);
-const NX0 = -2.35, NX1 = -.55, NZB = -2.92, NZF = -2.5;
-niche.add(roomUV(box(NX1 - NX0, 1.75, .04, M.wallL, 'niche-back', [(NX0+NX1)/2, 1.725, NZB])));
-[NX0, NX1].forEach(x => niche.add(box(.06, 1.75, NZF - NZB, M.wood, 'niche-side', [x, 1.725, (NZB+NZF)/2])));
-niche.add(box(NX1 - NX0 + .06, .06, NZF - NZB, M.wood, 'niche-top', [(NX0+NX1)/2, 2.58, (NZB+NZF)/2]));
-const NL = [.86, 1.3, 1.75, 2.2];
-NL.forEach(y => niche.add(box(NX1 - NX0, .04, NZF - NZB + .02, M.woodL, 'niche-shelf', [(NX0+NX1)/2, y, (NZB+NZF)/2])));
-const cabinet = new THREE.Group(); cabinet.name = 'cabinet'; niche.add(cabinet);
-cabinet.add(box(NX1 - NX0 + .12, .84, .5, M.wood, 'niche-cabinet', [(NX0+NX1)/2, .42, -2.67]));
-[-1.9, -1.0].forEach(x => cabinet.add(box(.8, .66, .01, M.woodD, 'cabinet-door', [x, .45, -2.415], null, 1)));
-[-1.52, -1.38].forEach(x => cabinet.add(cyl(.012, .012, .05, 8, M.brass, 'knob', [x, .5, -2.4], [Math.PI/2,0,0])));
-if (has('cab')) tag(cabinet, { type:'item', id:'cab', view:'niche' }, [0,0,.03]);
-[[-1.9, 2.55], [-1.0, 2.55]].forEach(([x, y]) => { const s = mk(new THREE.CircleGeometry(.03, 16), new THREE.MeshBasicMaterial({ color:col('#ffe2b0') }), 'downlight', [x, y - .001, -2.72], [Math.PI/2,0,0]); niche.add(s); });
+/* ================= display shelves (the bookshelf's corner bay) ================= */
+// Laid out in a frame of its own, x across the bay and z out from the wall, then turned to face the room.
+const disp = new THREE.Group(); disp.name = 'display-shelves'; disp.position.set(-2.98, 0, (SZ0 + BZ)/2); disp.rotation.y = Math.PI/2; room.add(disp); disp.updateMatrixWorld();
+const dispAt = (x, y, z) => disp.localToWorld(new THREE.Vector3(x, y, z)).toArray(); // for what has to live in the room: lights and halos
+const DW = BZ - SZ0 - .05, DD = .37, DL = [.8, 1.24, 1.68, 2.12], on = i => DL[i] + .018;
+disp.add(roomUV(box(DW, 1.75, .02, M.wallL, 'display-back', [0, 1.675, .01])));
+DL.forEach(y => disp.add(box(DW, .035, DD, M.woodL, 'display-shelf', [0, y, DD/2])));
+const cabinet = new THREE.Group(); cabinet.name = 'cabinet'; disp.add(cabinet);
+cabinet.add(box(DW, .78, DD + .01, M.wood, 'display-cabinet', [0, .39, (DD + .01)/2]));
+[-.315, .315].forEach(x => cabinet.add(box(.6, .64, .012, M.woodD, 'cabinet-door', [x, .41, DD + .016], null, 1)));
+[-.06, .06].forEach(x => cabinet.add(cyl(.012, .012, .05, 8, M.brass, 'knob', [x, .46, DD + .03], [Math.PI/2,0,0])));
+if (has('cab')) tag(cabinet, { type:'item', id:'cab', view:'display' }, [0,0,.03]);
+[-.3, .3].forEach(x => { const s = mk(new THREE.CircleGeometry(.03, 16), new THREE.MeshBasicMaterial({ color:col('#ffe2b0') }), 'downlight', [x, 2.531, .2], [Math.PI/2,0,0]); disp.add(s); });
 // picture textures (typographic prints)
 const printTex = (ch, ink, bg = C.cream) => ctex(256, 320, (x, w, h) => { x.fillStyle = bg; x.fillRect(0,0,w,h); x.fillStyle = '#d9ccad'; x.fillRect(24,24,w-48,h-48); x.fillStyle = bg; x.fillRect(30,30,w-60,h-60);
   x.globalCompositeOperation = 'multiply'; x.font = `700 170px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle';
@@ -312,14 +309,15 @@ const frame = (w, h, ch, ink, name) => { const g = new THREE.Group(); g.name = n
   return g; };
 const exh = {};
 if (has('cab')) exh.cab = cabinet;
-const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { if (!has(id)) return; g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); niche.add(g); exh[id] = g; tag(g, { type:'item', id, view:'niche' }); };
-place(frame(.5, .32, glyph('p1'), C.c800, 'frame-large'), 'p1', -1.65, 2.24 + .17, -2.8, 0, -.05);
+const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { if (!has(id)) return; g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); disp.add(g); exh[id] = g; tag(g, { type:'item', id, view:'display' }); };
+place(frame(.5, .32, glyph('p1'), C.c800, 'frame-large'), 'p1', -.14, on(3) + .17, .105, 0, -.05);
 const statue = new THREE.Group(); statue.name = 'statue';
 const sPts = [[0,0],[.06,0],[.06,.02],[.035,.04],[.04,.12],[.05,.2],[.035,.27],[.045,.31],[.03,.36],[0,.38]].map(([a,b]) => new THREE.Vector2(a, b));
 statue.add(mk(new THREE.LatheGeometry(sPts, 32), M.bronze, 'statue-body'));
 statue.add(mk(new THREE.SphereGeometry(.03, 16, 12), M.bronze, 'statue-head', [0,.41,0]));
-place(statue, 'p2', -.85, 2.22, -2.72, 0, 0);
-place(frame(.4, .32, glyph('aw'), C.m800, 'frame-mid'), 'aw', -1.85, 1.77 + .16, -2.82, .08, -.08);
+statue.scale.setScalar(.82); // the top shelf is a little lower than the statue was cast for
+place(statue, 'p2', .41, on(3), .18, 0, 0);
+place(frame(.4, .32, glyph('aw'), C.m800, 'frame-mid'), 'aw', -.28, on(2) + .16, .09, .08, -.08);
 const deskClock = new THREE.Group(); deskClock.name = 'clock';
 const clockTex = ctex(256, 256, (x, w, h) => { const d = new Date(); x.fillStyle = C.cream; x.fillRect(0,0,w,h); x.strokeStyle = '#3a2a18'; x.lineWidth = 8; x.beginPath(); x.arc(128,128,118,0,Math.PI*2); x.stroke();
   for (let i = 0; i < 12; i++) { const a = i/12*Math.PI*2; x.lineWidth = i % 3 ? 3 : 7; x.beginPath(); x.moveTo(128 + Math.sin(a)*96, 128 - Math.cos(a)*96); x.lineTo(128 + Math.sin(a)*110, 128 - Math.cos(a)*110); x.stroke(); }
@@ -330,33 +328,33 @@ setInterval(() => clockTex.redraw(), 30000);
 deskClock.add(box(.22, .06, .12, M.woodD, 'clock-base', [0,.03,0]));
 deskClock.add(cyl(.075, .075, .05, 32, M.brass, 'clock-case', [0,.14,0], [Math.PI/2,0,0]));
 deskClock.add(mk(new THREE.CircleGeometry(.066, 32), new THREE.MeshStandardMaterial({ name:'clock-face', map:clockTex, roughness:.5 }), 'clock-face', [0,.14,.026]));
-place(deskClock, 'p3', -1.35, 1.77, -2.68, 0, 0);
+place(deskClock, 'p3', .07, on(2), .21, 0, 0);
 const fig = new THREE.Group(); fig.name = 'figurine';
 const fPts = [[0,0],[.04,0],[.04,.03],[.02,.05],[.025,.14],[.03,.2],[.018,.24],[0,.25]].map(([a,b]) => new THREE.Vector2(a, b));
 fig.add(mk(new THREE.LatheGeometry(fPts, 24), std('figurine-wood', '#8a5a34', { roughness:.5 }), 'figurine'));
 fig.add(mk(new THREE.SphereGeometry(.022, 12, 10), std('figurine-wood', '#8a5a34'), 'figurine-head', [0,.27,0]));
-place(fig, 'g2', -.82, 1.77, -2.72, 0, 0);
+place(fig, 'g2', .43, on(2), .18, 0, 0);
 const candle = new THREE.Group(); candle.name = 'candle';
 candle.add(cyl(.05, .06, .015, 24, M.brass, 'candle-dish', [0,.008,0])); candle.add(cyl(.012, .016, .07, 12, M.brass, 'candle-stem', [0,.05,0]));
 candle.add(cyl(.018, .018, .14, 16, M.cream, 'candle-wax', [0,.155,0]));
 const flame = mk(new THREE.SphereGeometry(.012, 12, 8), new THREE.MeshBasicMaterial({ name:'flame', color:col('#ffd27a') }), 'flame', [0,.24,0]); flame.scale.set(1, 2.2, 1); flame.castShadow = false; candle.add(flame);
-candle.position.set(-2.1, 1.32, -2.7); niche.add(candle);
-const candleLight = new THREE.PointLight(0xffb45a, .5, 1.6, 2); candleLight.position.set(-2.1, 1.6, -2.62); room.add(candleLight);
-place(frame(.2, .25, glyph('t2'), C.c700, 'frame-small'), 't2', -1.55, 1.32 + .125, -2.78, .15, -.12);
+candle.position.set(-.45, on(1), .19); disp.add(candle);
+const candleLight = new THREE.PointLight(0xffb45a, .5, 1.6, 2); candleLight.position.set(...dispAt(-.45, on(1) + .28, .27)); room.add(candleLight);
+place(frame(.2, .25, glyph('t2'), C.c700, 'frame-small'), 't2', -.07, on(1) + .125, .12, .15, -.12);
 const bottle = new THREE.Group(); bottle.name = 'water-bottle';
 const btPts = [[0,0],[.032,0],[.034,.01],[.034,.12],[.026,.15],[.013,.17],[.013,.19],[0,.19]].map(([a,b]) => new THREE.Vector2(a, b));
 bottle.add(mk(new THREE.LatheGeometry(btPts, 32), new THREE.MeshStandardMaterial({ name:'bottle-plastic', color:col('#b9d8e6'), transparent:true, opacity:.55, roughness:.1 }), 'bottle'));
 bottle.add(cyl(.031, .031, .06, 24, std('bottle-water', '#5aa8cc', { transparent:true, opacity:.6, roughness:.1 }), 'bottle-water', [0,.04,0]));
 bottle.add(cyl(.015, .015, .025, 16, std('bottle-cap', C.cyan, { roughness:.4 }), 'bottle-cap', [0,.2,0]));
 bottle.add(cyl(.0345, .0345, .035, 32, std('bottle-label', C.cream), 'bottle-label', [0,.09,0], null, true));
-place(bottle, 'g4', -1.1, 1.32, -2.66, 0, 0);
+place(bottle, 'g4', .24, on(1), .23, 0, 0);
 const woodBox = new THREE.Group(); woodBox.name = 'wooden-box';
 woodBox.add(box(.3, .14, .2, M.woodD, 'box-body', [0,.07,0])); woodBox.add(box(.31, .035, .21, M.wood, 'box-lid', [0,.155,0]));
 woodBox.add(box(.04, .03, .01, M.brass, 'box-latch', [0,.12,.105]));
-place(woodBox, 'g1', -1.95, .88, -2.7, .1, 0);
-place(frame(.38, .3, glyph('g3'), C.ink, 'frame-landscape'), 'g3', -1.05, .88 + .15, -2.8, -.05, -.1);
+place(woodBox, 'g1', -.345, on(0), .2, .1, 0);
+place(frame(.38, .3, glyph('g3'), C.ink, 'frame-landscape'), 'g3', .4, on(0) + .15, .105, -.05, -.1);
 
-/* ================= game cabinet: console + CRT, between the niche and the desk ================= */
+/* ================= game cabinet: console + CRT, between the door and the desk ================= */
 const tvc = new THREE.Group(); tvc.name = 'tv-cabinet'; tvc.position.set(.055, 0, -2.2); room.add(tvc);
 const CW = .7, CH = .77, CD = .42;
 // a seventies TV stand: a paler teak with a tighter grain and a brighter lacquer than the rest of the room, hardboard at the back
@@ -443,24 +441,24 @@ ant.add(mk(new THREE.SphereGeometry(.03, 20, 12, 0, 6.283, 0, Math.PI/2), tvTrim
 // cable to console
 const tvCable = new THREE.CatmullRomCurve3([[-.15, CH + .06, -.19], [-.2, CH + .02, -.225], [-.2, .5, -.225], [-.2, .45, -.2], [-.14, .44, -.1]].map(p => new THREE.Vector3(...p)));
 tvc.add(mk(new THREE.TubeGeometry(tvCable, 24, .003, 6), M.ink, 'av-cable'));
-if (has('tv')) { exh.tv = tvc; tag(tvc, { type:'item', id:'tv', view:'niche' }, [0, 0, .02]); }
+if (has('tv')) { exh.tv = tvc; tag(tvc, { type:'item', id:'tv', view:'back' }, [0, 0, .02]); }
 setInterval(() => { tvF++; scrTex.redraw(); }, 120);
 
 /* ================= window + outside ================= */
 const WIN = { x0:.05, x1:2.65, y0:1.0, y1:2.5 };
 const outsideTex = ctex(1024, 600, () => {}, false);
-// The garden is a flat backdrop that belongs behind the window. With no roof, a camera that climbs above the walls would see it
-// as a billboard standing behind them, so it is only drawn where the line of sight leaves the room below the wall tops.
-const gardenMat = new THREE.MeshBasicMaterial({ name:'garden', map:outsideTex });
-gardenMat.onBeforeCompile = sh => {
-  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('void main() {', `void main() {
-    vec3 d = vWP - cameraPosition;
-    float tb = (-2.55 - cameraPosition.z) / d.z, tr = (3.05 - cameraPosition.x) / d.x; // where the sight line crosses the back / right wall
-    if (tb > 0.0 && tb < 1.0 && cameraPosition.y + d.y * tb > 2.8) discard;
-    if (tr > 0.0 && tr < 1.0 && cameraPosition.z + d.z * tr > -2.55 && cameraPosition.y + d.y * tr > 2.8) discard;`);
-};
-const outside = mk(new THREE.PlaneGeometry(7, 4.2), gardenMat, 'garden', [1.35, 1.75, -4.6]); outside.castShadow = false; outside.receiveShadow = false; room.add(outside);
+// the lake is a flat backdrop a little way behind the window
+const outside = mk(new THREE.PlaneGeometry(7, 4.2), new THREE.MeshBasicMaterial({ name:'garden', map:outsideTex }), 'garden', [1.35, 1.75, -4.6]); outside.castShadow = false; outside.receiveShadow = false; room.add(outside);
+// What the door looks out on: the same lake further along the shore, painted on its own canvas and laid over the left edge of the first.
+// It is drawn mirrored, so its hillside rises towards the join, and mirrored again beyond that for the sight lines that leave the door almost along the wall.
+const sideTex = ctex(1024, 600, () => {}, false); sideTex.wrapS = THREE.MirroredRepeatWrapping; sideTex.repeat.x = -2; sideTex.offset.x = 2;
+const outsideL = mk(new THREE.PlaneGeometry(14, 4.2), new THREE.MeshBasicMaterial({ name:'garden-side', map:sideTex, transparent:true }), 'garden-side', [-8.45, 1.75, -4.59]); outsideL.castShadow = false; outsideL.receiveShadow = false; room.add(outsideL);
+// The far shore is a long way off, so it should stay level with the eye. When the camera drops, both paintings sink with it (the loop
+// does that), and this strip of their own sky stands behind to show above them.
+const sky = mk(new THREE.PlaneGeometry(22, 3), new THREE.MeshBasicMaterial({ name:'sky', color:col(LAKE_SKY) }), 'sky', [-5.6, 3.6, -4.61]); sky.castShadow = false; sky.receiveShadow = false; room.add(sky);
+// the lake itself, from under the house out to the foot of the painting
+const waterTex = ctex(256, 256, () => {}, false); waterTex.wrapS = THREE.RepeatWrapping; waterTex.repeat.x = 10;
+const water = mk(new THREE.PlaneGeometry(22, 2.2), new THREE.MeshBasicMaterial({ name:'water', map:waterTex }), 'water', [-5.6, -.35, -3.5], [-Math.PI/2,0,0]); water.castShadow = false; water.receiveShadow = false; room.add(water);
 const wf = new THREE.Group(); wf.name = 'window'; room.add(wf);
 const WZ = -2.55;
 wf.add(box(WIN.x1 - WIN.x0 + .1, .08, .14, M.woodD, 'window-frame', [1.35, WIN.y1 + .02, WZ]));
@@ -471,6 +469,30 @@ wf.add(box(WIN.x1 - WIN.x0 + .1, .08, .14, M.woodD, 'window-frame', [1.35, WIN.y
 const glass = mk(new THREE.PlaneGeometry(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0), M.glass, 'glass', [1.35, (WIN.y0+WIN.y1)/2, WZ - .02]); glass.castShadow = false; wf.add(glass);
 wf.add(box(WIN.x1 - WIN.x0 + .4, .04, .1, M.cream, 'sill', [1.35, WIN.y0 - .02, -2.5]));
 [WIN.x0 - .1, WIN.x1 + .1].forEach(x => wf.add(roomUV(box(.12, WIN.y1 - WIN.y0 + .3, .12, M.wallL, 'reveal', [x, (WIN.y0+WIN.y1)/2, -2.5]))));
+
+/* ================= door + deck ================= */
+// an open doorway in the back wall: a frame and a threshold, no leaf
+const DCX = (DOOR.x0 + DOOR.x1)/2, df = new THREE.Group(); df.name = 'door'; room.add(df);
+[DOOR.x0, DOOR.x1].forEach(x => df.add(box(.08, DOOR.y1, .14, M.woodD, 'door-frame', [x, DOOR.y1/2, WZ])));
+df.add(box(DOOR.x1 - DOOR.x0 + .16, .08, .14, M.woodD, 'door-frame', [DCX, DOOR.y1 + .02, WZ]));
+df.add(box(DOOR.x1 - DOOR.x0 + .08, .03, .2, M.woodD, 'threshold', [DCX, .008, WZ - .01]));
+// a jetty off the door: boards laid across and weathered grey, on two beams and four posts standing in the lake
+const deckM = pbr('deck', '#81796c', { ...woodTex, roughness:.88 }), deckD = pbr('deck-dark', '#5d564c', { ...woodTex, roughness:.92 });
+const deck = new THREE.Group(); deck.name = 'deck'; room.add(deck);
+const DKW = 2.6, DKD = 1.5, DKZ = -2.62;
+for (let i = 0; i < 10; i++) deck.add(box(DKW, .03, .138, deckM, 'deck-board', [DCX, -.035, DKZ - .074 - i*.148], null, 0));
+[-1, 1].forEach(sd => { const x = DCX + sd*(DKW/2 - .12);
+  deck.add(box(.07, .12, DKD, deckD, 'deck-beam', [x, -.11, DKZ - DKD/2], null, 2));
+  [DKZ - .12, DKZ - DKD + .06].forEach(z => deck.add(cyl(.05, .05, .7, 12, deckD, 'deck-post', [x, -.4, z])));
+  deck.add(cyl(.06, .065, 1.25, 14, deckD, 'piling', [DCX + sd*(DKW/2 + .1), -.15, DKZ - DKD + .12])); }); // a piling stands proud of each far corner
+deck.add(box(DKW, .1, .04, deckD, 'deck-fascia', [DCX, -.07, DKZ - DKD - .005], null, 0));
+// the rubber duck has come out with it
+const duck = new THREE.Group(); duck.name = 'rubber-duck'; duck.position.set(DCX - .3, .018, -3.35); duck.rotation.y = .4;
+const dkM = pbr('duck', C.yel, { roughness:.35, clearcoat:.6, clearcoatRoughness:.2 });
+const dkb = mk(new THREE.SphereGeometry(.05, 20, 14), dkM, 'duck-body'); dkb.scale.set(1, .75, 1.3); duck.add(dkb);
+duck.add(mk(new THREE.SphereGeometry(.032, 16, 12), dkM, 'duck-head', [0,.045,.04]));
+duck.add(mk(new THREE.ConeGeometry(.012, .03, 8), std('beak', '#e0742c'), 'duck-beak', [0,.042,.077], [Math.PI/2,0,0]));
+room.add(duck);
 
 /* ================= desk ================= */
 const desk = new THREE.Group(); desk.name = 'desk'; room.add(desk);
@@ -581,17 +603,17 @@ side.add(box(.5, .12, .04, M.woodD, 'side-drawer', [0,.52,.23]));
 [[C.c900,.035],[C.m800,.04],[C.cream,.03]].forEach(([c, t], i) => side.add(box(.22 - i*.02, t, .3 - i*.02, std('stack-book', c), 'stack-book', [-.05, .62 + .02 + i*.038, 0], [0, i*.2, 0])));
 
 /* ================= lighting ================= */
-const hemi = new THREE.HemisphereLight(0xc6d2dc, 0x4a3a2c, .7); scene.add(hemi);
-const amb = new THREE.AmbientLight(0x5a5048, .4); scene.add(amb);
+const hemi = new THREE.HemisphereLight(0xc6d2dc, 0x6b5440, 1); scene.add(hemi); // daylight off the walls from above, lamplight off the floor from below
+const amb = new THREE.AmbientLight(0x5a5048, .6); scene.add(amb);
 const lampLight = new THREE.PointLight(0xffb066, 1.2, 4.5, 1.6); lampLight.position.set(.96, DY + .36, -2.15); room.add(lampLight);
 const lampLight2 = new THREE.PointLight(0xffa850, .8, 3.5, 1.6); lampLight2.position.set(2.42, DY + .5, -2.25); room.add(lampLight2);
-// every point light is paid for on every pixel, so the shelf strip and the niche downlights are each one light, placed between the fittings they stand for
-const shelfLight = new THREE.PointLight(0xffc27a, 1.2, 4.2, 1.5); shelfLight.position.set(-2.4, 1.9, -.45); room.add(shelfLight);
-const nicheLight = new THREE.PointLight(0xffd29a, .8, 1.9, 1.8); nicheLight.position.set(-1.45, 2.05, -2.62); room.add(nicheLight);
+// every point light is paid for on every pixel, so the shelf strip and the display downlights are each one light, placed between the fittings they stand for
+const shelfLight = new THREE.PointLight(0xffc27a, 1.2, 4.2, 1.5); shelfLight.position.set(-2.4, 1.9, .1); room.add(shelfLight);
+const displayLight = new THREE.PointLight(0xffd29a, .8, 1.9, 1.8); displayLight.position.set(...dispAt(0, 2.05, DD + .06)); room.add(displayLight);
 // an overcast day's light through the window: cool, soft-edged, from high over the lake
 const sunLight = new THREE.DirectionalLight(0xe6edf5, 2.2); sunLight.position.set(2.2, 3.4, -6); sunLight.castShadow = true; sunLight.shadow.mapSize.set(1024, 1024);
 Object.assign(sunLight.shadow.camera, { left:-4, right:4, top:4, bottom:-4, near:1, far:14 }); sunLight.shadow.bias = -.0008; sunLight.shadow.radius = 5; sunLight.target.position.set(0, 0, 0); scene.add(sunLight, sunLight.target);
-const roomFill = new THREE.PointLight(0xffd8b0, 1.6, 8, 1.2); roomFill.position.set(.5, 2.4, .5); room.add(roomFill);
+const roomFill = new THREE.PointLight(0xffd8b0, 2.3, 8, 1.2); roomFill.position.set(.5, 2.4, .5); room.add(roomFill);
 
 /* environment reflections */
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -600,20 +622,21 @@ const pmrem = new THREE.PMREMGenerator(renderer);
   es.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2.9, 6), new THREE.MeshBasicMaterial({ color:0x6e5a48, side:THREE.BackSide })));
   const add = (geo, c, k, p) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:new THREE.Color(c).multiplyScalar(k) })); m.position.set(...p); es.add(m); };
   add(new THREE.PlaneGeometry(2.6, 1.5), '#dfeaf0', 3.5, [1.35, .35, -2.9]);
+  add(new THREE.PlaneGeometry(1.1, 2.15), '#dfeaf0', 3.5, [DCX, -.325, -2.9]);
   add(new THREE.SphereGeometry(.12, 12, 8), '#ffc27a', 4, [.56, -.6, -2.15]);
   add(new THREE.SphereGeometry(.14, 12, 8), '#ffb066', 3, [2.42, -.45, -2.25]);
-  add(new THREE.BoxGeometry(.05, 2.4, 3.8), '#ffbe78', .8, [-2.7, .1, -.4]);
-  add(new THREE.BoxGeometry(1.6, .05, .3), '#ffd8a0', 1, [-1.45, 1.1, -2.7]);
-  add(new THREE.PlaneGeometry(5.6, 5.6).rotateX(Math.PI/2), '#dfeaf0', 2.2, [0, 1.38, 0]); // the open roof: sky light from above
-  scene.environment = pmrem.fromScene(es, .03).texture; scene.environmentIntensity = .7;
+  add(new THREE.BoxGeometry(.05, 2.4, 2.7), '#ffbe78', .8, [-2.7, .1, .24]);
+  add(new THREE.BoxGeometry(.3, .05, 1.2), '#ffd8a0', 1, [-2.8, 1.1, -1.8]);
+  add(new THREE.PlaneGeometry(5.6, 5.6).rotateX(Math.PI/2), '#8a7a66', 1, [0, 1.38, 0]); // the ceiling, catching what the lamps and the daylight throw up
+  scene.environment = pmrem.fromScene(es, .03).texture; scene.environmentIntensity = .85;
 }
 
 /* glow halos */
 const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
 const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); sp.userData.op = op; room.add(sp); return sp; };
 halo([.97, DY + .4, -2.17], .32, .2); halo([2.4, DY + .52, -2.27], .5, .16);
-const candleHalo = halo([-2.1, 1.56, -2.7], .22, .28);
-[[-1.9, 2.5], [-1.0, 2.5]].forEach(([x, y]) => halo([x, y, -2.72], .16, .18));
+const candleHalo = halo(dispAt(-.45, on(1) + .24, .19), .22, .28);
+[-.3, .3].forEach(x => halo(dispAt(x, 2.48, .2), .16, .18));
 
 /* dust in lamplight */
 const DN = 160, dPos = new Float32Array(DN*3), dSeed = new Float32Array(DN);
@@ -631,16 +654,17 @@ const FL = [-Math.PI/2, 0, 0];
 decal(aoRad, 1.3, 1.25, [-1.95, .004, -.75], [-Math.PI/2, 0, -.55], .9);
 decal(aoRad, 2.55, 1.4, [1.675, .004, -1.95], FL, .75);
 decal(aoRad, .9, .8, [2.6, .004, .9], FL, .8);
-decal(aoRad, 2.2, .9, [-1.45, .004, -2.42], FL, .8);
 decal(aoRad, .95, .62, [.055, .004, -2.2], FL, .85);
-decal(aoLin, 6, .45, [0, .005, -2.27], [-Math.PI/2, 0, Math.PI], .8);
+[[-3, DOOR.x0], [DOOR.x1, 3]].forEach(([a, b]) => { decal(aoLin, b - a, .45, [(a + b)/2, .005, -2.27], [-Math.PI/2, 0, Math.PI], .8); decal(aoLin, b - a, .55, [(a + b)/2, .28, -2.494], [0, 0, Math.PI], .6); });
 decal(aoLin, 4.2, .5, [-2.33, .005, -.43], [-Math.PI/2, 0, -Math.PI/2], .85);
 decal(aoLin, 6, .5, [2.77, .005, 0], [-Math.PI/2, 0, Math.PI/2], .7);
-decal(aoLin, 6, .55, [0, .28, -2.494], [0, 0, Math.PI], .6);
 decal(aoLin, 6, .55, [2.995, .28, 0], [0, -Math.PI/2, Math.PI], .6);
+decal(aoLin, 6, .5, [0, 2.54, -2.494], [0, 0, 0], .5);
+decal(aoLin, 6, .5, [2.995, 2.54, 0], [0, -Math.PI/2, 0], .5);
 const DT = DY + .0265;
 [[1.78, -2.08, .62, .46], [.78, -2.25, .26, .26], [1.1, -2.28, .26, .26], [2.56, -2.33, .22, .22], [1.3, -2.3, .26, .18], [1.18, -1.75, .12, .12]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
-LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - SZ0, .12, [-2.788, y - .02, (SZ0 + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
+LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - BZ, .12, [-2.788, y - .02, (BZ + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
+[...DL.slice(1), LV[7]].forEach(y => decal(aoLin, DW, .12, [-2.957, y - .02, (SZ0 + BZ)/2], [0, Math.PI/2, Math.PI], .55));
 
 /* ================= seasons ================= */
 const SKY = {
@@ -653,14 +677,16 @@ const season = (() => { const mo = new Date().getMonth() + 1; return mo >= 3 && 
 const shapeTex = kind => ctex(64, 64, (x, w, h) => { x.clearRect(0,0,w,h); x.fillStyle = '#fff'; x.beginPath();
   if (kind === 'rain') x.fillRect(30, 2, 3, 60); else if (kind === 'leaf') { x.ellipse(32,32,26,13,.6,0,Math.PI*2); x.fill(); } else if (kind === 'petal') { x.ellipse(32,32,20,12,0,0,Math.PI*2); x.fill(); } else { x.arc(32,32,18,0,Math.PI*2); x.fill(); } }, false);
 const PN = 500, pPos = new Float32Array(PN*3), pSeed = new Float32Array(PN);
-const OUT = { x0:-.6, x1:3.3, z0:-4.3, z1:-2.75, y0:0, y1:3.2 };
+const OUT = { x0:-3.3, x1:3.3, z0:-4.3, z1:-2.75, y0:0, y1:3.2 };
 for (let i = 0; i < PN; i++) { pPos[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); pPos[i*3+1] = Math.random()*OUT.y1; pPos[i*3+2] = OUT.z0 + Math.random()*(OUT.z1-OUT.z0); pSeed[i] = Math.random(); }
 const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 const pMat = new THREE.PointsMaterial({ size:.05, transparent:true, depthWrite:false, alphaTest:.2 });
 const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.add(points);
 let partN = 0;
-{ const w = SKY[season]; // dress the window for the season: the garden behind the glass, and what falls past it
-  paintLakeView(outsideTex.image, { trees:w.trees, bare:season === '冬' }); outsideTex.needsUpdate = true;
+{ const w = SKY[season], bare = season === '冬'; // dress the window and the door for the season: the lake outside, and what falls past them
+  paintLakeView(outsideTex.image, { trees:w.trees, bare }); outsideTex.needsUpdate = true;
+  paintLakeView(sideTex.image, { trees:w.trees, bare, seed:23, boathouse:false, feather:.1 }); sideTex.needsUpdate = true;
+  paintNearWater(waterTex.image, outsideTex.image, { trees:w.trees, bare }); waterTex.needsUpdate = true;
   pMat.map = shapeTex(w.shape); pMat.color.set(w.part); pMat.size = w.size; pMat.needsUpdate = true; partN = Q.low ? Math.ceil(w.n / 2) : w.n; pGeo.setDrawRange(0, partN); }
 
 /* ================= UI ================= */
@@ -705,18 +731,24 @@ panel.addEventListener('click', e => {
 
 /* ================= camera focus ================= */
 const objOf = id => books[id] || exh[id] || drafts[id] || null;
-const VIEWS = { shelf:new THREE.Vector3(1, .12, .25), niche:new THREE.Vector3(.12, .1, 1), desk:new THREE.Vector3(-.1, .75, 1) };
-const DIST = { shelf:1.15, niche:1.55, desk:1.35 };
-let tween = null, focused = false;
-function flyTo(tgt, pos, d = 1) { tween = { t:0, d, ft:controls.target.clone(), tt:tgt.clone(), fp:camera.position.clone(), tp:pos.clone() }; controls.enabled = false; }
-function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()); const dir = VIEWS[view].clone(); if (view === 'niche' && c.y < 1.5) dir.y = .55; dir.normalize(); flyTo(c, c.clone().addScaledVector(dir, DIST[view])); focused = true; }
+const VIEWS = { shelf:new THREE.Vector3(1, .12, .25), display:new THREE.Vector3(1, .1, .12), back:new THREE.Vector3(.12, .1, 1), desk:new THREE.Vector3(-.1, .75, 1) };
+const DIST = { shelf:1.15, display:1.55, back:1.55, desk:1.35 };
+// The orbit is held to a range of bearings that keeps the camera in the room while it faces the back wall and the desk. The display
+// shelves are on the left wall and are looked at from the middle of the room, so they have a range of their own. A flight is held to
+// neither (the loop sees to that) and lands inside the range it was given.
+const AZ = { home:[controls.minAzimuthAngle, controls.maxAzimuthAngle], display:[.9, 1.6] };
+let tween = null, focused = false, azWin = AZ.home;
+const _sph = new THREE.Spherical();
+function flyTo(tgt, pos, d = 1, az = AZ.home) { const o = pos.clone().sub(tgt); _sph.setFromVector3(o); _sph.theta = Math.max(az[0], Math.min(az[1], _sph.theta)); azWin = az;
+  tween = { t:0, d, ft:controls.target.clone(), tt:tgt.clone(), fp:camera.position.clone(), tp:tgt.clone().add(o.setFromSpherical(_sph)) }; controls.enabled = false; }
+function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()); const dir = VIEWS[view].clone(); if ((view === 'display' || view === 'back') && c.y < 1.5) dir.y = .55; dir.normalize(); flyTo(c, c.clone().addScaledVector(dir, DIST[view]), 1, AZ[view] || AZ.home); focused = true; }
 function goHome() { flyTo(HOME.tgt, HOME.pos, 1.1); focused = false; }
 function mark(id) { if (!st.seen[id]) { st.seen[id] = true; const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。貓表示佩服。'), 2700); } } }
 function openItem(id) { const it = ITEMS[id];
   if (books[id]) return openBook(id);
   if (drafts[id]) return openDraft(id);
   if (it.kind === 'play' && GAMES.length) { if (id !== 'tv') mark(id); return openTV(id === 'tv' ? 0 : Math.max(0, gameAt(id))); }
-  st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, exh[id] ? 'niche' : 'desk'); renderPanel('item'); }
+  st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, o.userData.pick.view); renderPanel('item'); }
 function openList() { focus(laptop, 'desk'); renderPanel('list'); }
 function openAbout() { focus(portrait, 'desk'); renderPanel('about'); }
 function closePanel() { panel.classList.remove('open'); document.body.classList.remove('reading'); goHome(); }
@@ -1046,7 +1078,10 @@ function loop(ts) {
   const open = panel.classList.contains('open'), phone = innerWidth <= 760, k = Math.min(1, dt * 6);
   viewX += ((open && !phone ? 230 : 0) - viewX) * k; viewY += ((open && phone ? innerHeight * .29 : 0) - viewY) * k;
   if (Math.abs(viewX) > .5 || Math.abs(viewY) > .5) camera.setViewOffset(innerWidth, innerHeight, viewX, viewY, innerWidth, innerHeight); else camera.clearViewOffset();
+  controls.minAzimuthAngle = tween ? -Infinity : azWin[0]; controls.maxAzimuthAngle = tween ? Infinity : azWin[1];
+  controls.minPolarAngle = Math.max(.95, Math.acos(Math.min(1, (CAM_TOP - controls.target.y) / camera.position.distanceTo(controls.target)))); // the further out, the less it can climb
   controls.update();
+  outside.position.y = outsideL.position.y = 1.75 + Math.min(0, camera.position.y - HOME.pos.y); // the far shore keeps level with a low eye
   if (TV.on) { positionTV(); if (!tween && !TV.vis) { TV.vis = true; tvui.classList.add('vis'); } }
   renderer.render(scene, camera);
 }

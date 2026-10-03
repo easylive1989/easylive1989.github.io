@@ -11,15 +11,15 @@ import type { Article, Book } from './notion';
 
 /**
  * Everything the 3D study room shows, shaped for study.js. Item ids are the
- * room's physical slots (a spine position on the shelf, a spot in the display
- * niche, a sheet of paper on the desk), not content ids — the scene is built
+ * room's physical slots (a spine position on the shelf, a spot on the display
+ * shelves, a sheet of paper on the desk), not content ids — the scene is built
  * once and the slots are filled from Notion at build time.
  *
  * Nothing here links to another page of this site: a book opens in the room and
  * its article is fetched from /study/{id}/ (see pages/study/[id].astro).
  *
  *   s1–s3  series spines            w1–w6  newest articles on the shelf
- *   r1–r4  reading shelf            p1 p3 g2  side projects in the niche
+ *   r1–r4  reading shelf            p1 p3 g2  side projects on the display shelves
  *   g1 g3 g4 t2 p2  Playbox games   aw  awards & talks   cab  the cabinet
  *   tv  the game cabinet beside the desk: every Playbox game
  *   d1–d3  older articles on the desk
@@ -284,7 +284,7 @@ export async function buildStudyData(): Promise<StudyData> {
     };
   }
 
-  /* ── display niche: side projects ── */
+  /* ── display shelves: side projects ── */
   projects.slice(0, PROJECT_SLOTS.length).forEach((p, i) => {
     const links: StudyLink[] = [];
     if (p.mainUrl) links.push({ l: '玩玩看 ↗', u: p.mainUrl, p: 1 });
@@ -302,7 +302,7 @@ export async function buildStudyData(): Promise<StudyData> {
     };
   });
 
-  /* ── display niche: Playbox games, matched to the object that suits their name ── */
+  /* ── display shelves: Playbox games, matched to the object that suits their name ── */
   const free = [...GAME_SLOTS];
   const placed: [string, (typeof games)[number]][] = [];
   const rest: (typeof games)[number][] = [];
@@ -342,7 +342,7 @@ export async function buildStudyData(): Promise<StudyData> {
     m: '展示架 · 獎狀',
   };
 
-  /* ── the game cabinet between the niche and the desk: the whole Playbox ── */
+  /* ── the game cabinet between the door and the desk: the whole Playbox ── */
   const gameRows = games
     .filter((g) => g.url && g.url !== '#')
     .map((g): [string, string, string, string, string] => ['Playbox', '小遊戲', g.name, '', g.url]);
@@ -359,7 +359,7 @@ export async function buildStudyData(): Promise<StudyData> {
     };
   }
 
-  /* ── the cabinet under the niche: everything that has no shelf space of its own ── */
+  /* ── the cabinet under the display shelves: everything that has no shelf space of its own ── */
   const cabinetRows: StudyItem['list'] = [
     ...projects.map((p): [string, string, string, string, string] => [
       'Side Project',

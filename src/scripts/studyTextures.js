@@ -279,7 +279,8 @@ export function leaf({ size = 256, seed = 27 } = {}) {
 // The lake behind the window, after an autumn morning in the Alps: a low overcast, snow on the far peaks, mist along the slopes,
 // a wooded hillside running down from the left to a boathouse on the shore, a strip of meadow, and all of it again in the still
 // water. Each depth is drawn small and scaled up, so the farthest is the softest — a blur that needs no canvas filter.
-export function paintLakeView(c, { trees, bare = false, seed = 11 }) {
+export const LAKE_SKY = '#8794a4'; // the overcast at the top of the view, and of the strip of sky that stands behind it
+export function paintLakeView(c, { trees, bare = false, seed = 11, boathouse = true, feather = 0 }) {
   const x = c.getContext('2d'), w = c.width, h = c.height, R = rng(seed), pick = () => trees[Math.floor(R() * trees.length)];
   const SHORE = h * .55; // where the water begins
   const layer = (k, draw) => cnv(Math.round(w * k), Math.round(h * k), lx => { lx.scale(k, k); lx.lineCap = lx.lineJoin = 'round'; draw(lx); });
@@ -306,7 +307,7 @@ export function paintLakeView(c, { trees, bare = false, seed = 11 }) {
 
   x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
   // sky: a low overcast, brighter where the cloud thins above the peaks
-  x.fillStyle = fade(x, 0, 0, 0, h * .46, '#8794a4', '#b4bec8', '#dde2e6'); x.fillRect(0, 0, w, h);
+  x.fillStyle = fade(x, 0, 0, 0, h * .46, LAKE_SKY, '#b4bec8', '#dde2e6'); x.fillRect(0, 0, w, h);
   depth(.08, lx => { for (let i = 0; i < 80; i++) { const t = R(); blob(lx, R() * w, h * R() * .34, 50 + R() * 90, t < .45 ? '#78859a' : t < .8 ? '#aab4bf' : '#eef1f3', .3 + R() * .3, 30 + R() * 40); } }); // cloud bellies, and a few bright tears
 
   // the far range: a jagged ridge, snow above the snowline, rock showing through, and haze gathering at its foot
@@ -340,7 +341,7 @@ export function paintLakeView(c, { trees, bare = false, seed = 11 }) {
     wash(lx, fade(lx, 0, SHORE - h * .25, 0, SHORE, 'rgba(0,0,0,0)', 'rgba(0,0,0,.35)')); });
 
   // the boathouse: a flat roof over open bays on the water, a boarded wall on the left, a few boats in under it
-  depth(.5, lx => {
+  if (boathouse) depth(.5, lx => {
     const bx = w * .21, bw = w * .15, top = SHORE - h * .062, wall = bx + bw * .4;
     lx.globalAlpha = 1; lx.fillStyle = '#2a2521'; lx.fillRect(wall, top, bx + bw - wall, SHORE - top); // the dark of the bays
     lx.fillStyle = fade(lx, 0, top, 0, SHORE, '#cfae7c', '#b08f60'); lx.fillRect(bx, top, wall - bx, SHORE - top); // boards
@@ -363,6 +364,24 @@ export function paintLakeView(c, { trees, bare = false, seed = 11 }) {
   // what has blown onto the water: leaves drifting, thickest near the window
   if (!bare) for (let i = 0; i < 260; i++) { const k = Math.pow(R(), .55), ly = SHORE + h * .04 + k * (h - SHORE - h * .04), r = 1.2 + k * 4;
     blob(x, R() * w, ly, r, R() < .3 ? '#e8c06a' : pick(), .6 + R() * .35, r * .45, R() * 3); }
+  x.globalAlpha = 1;
+  // the top runs out into plain overcast, so the view has no edge against the sky behind it: cloud, or a hillside lost in it
+  x.fillStyle = fade(x, 0, 0, 0, h * .1, LAKE_SKY, LAKE_SKY + '00'); x.fillRect(0, 0, w, h * .1);
+  // a view that is laid over the edge of another gives way to it along its own left edge
+  if (feather) { x.globalCompositeOperation = 'destination-out'; x.fillStyle = fade(x, 0, 0, w * feather, 0, 'rgba(0,0,0,1)', 'rgba(0,0,0,0)'); x.fillRect(0, 0, w * feather, h); x.globalCompositeOperation = 'source-over'; }
+}
+
+// The water between the house and the painted lake. It leaves the far edge in the colour the painting ends on and darkens as it comes
+// under the eye, with the same leaves adrift on it. Tiles from side to side.
+export function paintNearWater(c, lake, { trees, bare = false, seed = 19 }) {
+  const x = c.getContext('2d'), w = c.width, h = c.height, R = rng(seed);
+  const [r, g, b] = cnv(1, 1, lx => lx.drawImage(lake, 0, lake.height - 6, lake.width, 6, 0, 0, 1, 1)).getContext('2d').getImageData(0, 0, 1, 1).data;
+  const grad = x.createLinearGradient(0, 0, 0, h); grad.addColorStop(0, `rgb(${r},${g},${b})`); grad.addColorStop(1, `rgb(${Math.round(r * .42)},${Math.round(g * .52)},${Math.round(b * .48)})`);
+  x.globalAlpha = 1; x.fillStyle = grad; x.fillRect(0, 0, w, h);
+  const wrap = (bx, draw) => [-w, 0, w].forEach(dx => draw(bx + dx));
+  for (let i = 0; i < 70; i++) { const by = R() * h, len = 20 + R() * 60, bx = R() * w, th = 1 + R(); x.globalAlpha = .05 + R() * .08; x.fillStyle = R() < .5 ? '#dfe8ea' : '#0c1a18'; wrap(bx, px => x.fillRect(px, by, len, th)); } // a slow ripple
+  if (!bare) for (let i = 0; i < 40; i++) { const bx = R() * w, by = h * (.15 + R() * .85), rr = 1.5 + R() * 2.5, col = R() < .3 ? '#e8c06a' : trees[Math.floor(R() * trees.length)], rot = R() * 3;
+    x.globalAlpha = .6 + R() * .35; x.fillStyle = col; wrap(bx, px => { x.beginPath(); x.ellipse(px, by, rr, rr * .5, rot, 0, 6.2832); x.fill(); }); }
   x.globalAlpha = 1;
 }
 
