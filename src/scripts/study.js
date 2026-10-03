@@ -574,7 +574,7 @@ mug.add(cyl(.035, .032, .085, 32, glaze, 'mug', [0,.043,0])); mug.add(mk(new THR
 mug.add(cyl(.031, .031, .002, 24, std('coffee', '#2a160c', { roughness:.06 }), 'coffee', [0,.075,0]));
 
 /* ================= armchair + cat + rug ================= */
-const chair = new THREE.Group(); chair.name = 'armchair'; chair.position.set(-1.95, 0, -.75); chair.rotation.y = .55; room.add(chair);
+const chair = new THREE.Group(); chair.name = 'armchair'; chair.position.set(2.4, 0, -.55); chair.rotation.y = -.6; room.add(chair); // by the right wall, in front of the desk's far end, turned to the room
 [[-.3,-.28],[.3,-.28],[-.3,.3],[.3,.3]].forEach(([x,z]) => chair.add(box(.05, .32, .05, M.woodD, 'chair-leg', [x,.16,z])));
 chair.add(mk(rboxGeo(.72, .14, .7, .04), M.fabricD, 'chair-frame', [0,.36,0]));
 const seatCushion = mk(rboxGeo(.6, .11, .6, .045), M.fabric, 'seat-cushion', [0,.47,.02]); chair.add(seatCushion);
@@ -651,7 +651,7 @@ const aoRad = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2
 const aoLin = ctex(8, 128, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, 'rgba(0,0,0,.75)'); g.addColorStop(.4, 'rgba(0,0,0,.3)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
 const decal = (tex, w, h, p, r, op = 1) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map:tex, color:0x000000, transparent:true, opacity:op, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2 })); m.position.set(...p); m.rotation.set(...r); m.renderOrder = 1; room.add(m); return m; };
 const FL = [-Math.PI/2, 0, 0];
-decal(aoRad, 1.3, 1.25, [-1.95, .004, -.75], [-Math.PI/2, 0, -.55], .9);
+decal(aoRad, 1.3, 1.25, [2.4, .004, -.55], [-Math.PI/2, 0, .6], .9);
 decal(aoRad, 2.55, 1.4, [1.675, .004, -1.95], FL, .75);
 decal(aoRad, .9, .8, [2.6, .004, .9], FL, .8);
 decal(aoRad, .95, .62, [.055, .004, -2.2], FL, .85);
