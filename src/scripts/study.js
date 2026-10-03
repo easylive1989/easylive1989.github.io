@@ -26,7 +26,7 @@ const C = {
   paper:T('--color-bg'), ink:T('--color-text'), cyan:T('--color-accent'), mag:T('--color-accent-2'), yel:rgb(tok('--color-process-yellow','#edbb00')),
   c700:T('--color-accent-700'), c800:T('--color-accent-800'), c900:T('--color-accent-900'), m700:T('--color-accent-2-700'), m800:T('--color-accent-2-800'), m900:T('--color-accent-2-900'),
   n200:T('--color-neutral-200'), n600:T('--color-neutral-600'), n800:T('--color-neutral-800'),
-  wood:'#5b3522', woodD:'#3b2216', woodL:'#7a4a2c', wall:'#3a322b', wallL:'#4a4038', fabric:'#776f5c', fabricD:'#5e5747', cream:'#eadfc6', brass:'#b38b4b', terracotta:'#b4643c', cat:'#d98a46', leaf:'#5e9a3a', fur:'#3a3633',
+  wood:'#5b3522', woodD:'#3b2216', woodL:'#7a4a2c', wall:'#3a322b', wallL:'#4a4038', fabric:'#776f5c', fabricD:'#5e5747', cream:'#eadfc6', brass:'#b38b4b', terracotta:'#b4643c', cat:'#d98a46', leaf:'#5e9a3a',
 };
 const col = h => new THREE.Color(h);
 
@@ -76,7 +76,7 @@ const M = {
   fabric:std('fabric', C.fabric, { roughness:1 }), fabricD:std('fabric-dark', C.fabricD, { roughness:1 }),
   cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
   terracotta:std('terracotta', C.terracotta), leaf:std('leaf', C.leaf, { roughness:.7, side:THREE.DoubleSide }), cat:std('cat', C.cat, { roughness:.95 }), catL:std('cat-light', '#efc394', { roughness:.95 }),
-  fur:std('fur-rug', C.fur, { roughness:1 }), glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
+  glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
   alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }), bronze:std('bronze', '#5a3a24', { roughness:.4, metalness:.6 }),
 };
 const mk = (geo, m, name, p, r) => { const o = new THREE.Mesh(geo, m); o.name = name; if (p) o.position.set(...p); if (r) o.rotation.set(...r); o.castShadow = true; o.receiveShadow = true; return o; };
@@ -573,7 +573,7 @@ const glaze = pbr('mug', C.mag, { map:texOf(cnv(8, 64, (x, w, h) => { const g = 
 mug.add(cyl(.035, .032, .085, 32, glaze, 'mug', [0,.043,0])); mug.add(mk(new THREE.TorusGeometry(.022, .006, 10, 24), glaze, 'mug-handle', [.038,.045,0]));
 mug.add(cyl(.031, .031, .002, 24, std('coffee', '#2a160c', { roughness:.06 }), 'coffee', [0,.075,0]));
 
-/* ================= armchair + cat + rug ================= */
+/* ================= armchair + cat ================= */
 const chair = new THREE.Group(); chair.name = 'armchair'; chair.position.set(2.4, 0, -.55); chair.rotation.y = -.6; room.add(chair); // by the right wall, in front of the desk's far end, turned to the room
 [[-.3,-.28],[.3,-.28],[-.3,.3],[.3,.3]].forEach(([x,z]) => chair.add(box(.05, .32, .05, M.woodD, 'chair-leg', [x,.16,z])));
 chair.add(mk(rboxGeo(.72, .14, .7, .04), M.fabricD, 'chair-frame', [0,.36,0]));
@@ -588,14 +588,6 @@ cat.add(mk(new THREE.SphereGeometry(.035, 12, 10), M.catL, 'cat-muzzle', [.205,.
 const tailCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(-.16,.04,0), new THREE.Vector3(-.17,.03,.12), new THREE.Vector3(-.05,.025,.17), new THREE.Vector3(.08,.025,.16)]);
 cat.add(mk(new THREE.TubeGeometry(tailCurve, 24, .022, 10), M.cat, 'cat-tail'));
 [[.08,.13],[.0,.14]].forEach(([x,z]) => { const p = mk(new THREE.SphereGeometry(.025, 10, 8), M.catL, 'cat-paw', [x,.02,z]); p.scale.set(1.4,.6,1); cat.add(p); });
-const rugShape = new THREE.Shape(); for (let i = 0; i <= 64; i++) { const a = i/64*Math.PI*2, r = .75 + Math.sin(a*7)*.05 + Math.sin(a*13)*.03; const x = Math.cos(a)*r*1.25, y = Math.sin(a)*r; i ? rugShape.lineTo(x, y) : rugShape.moveTo(x, y); }
-const rug = mk(new THREE.ShapeGeometry(rugShape), M.fur, 'fur-rug', [-1.75,.006,-.25], [-Math.PI/2,0,.4]); rug.castShadow = false; room.add(rug);
-const furC = cnv(256, 256, (x, w, h) => { x.fillStyle = '#000'; x.fillRect(0,0,w,h); for (let i = 0; i < 9000; i++) { const v = Math.floor(RN()*255); x.fillStyle = 'rgb(' + v + ',' + v + ',' + v + ')'; x.fillRect(RN()*w, RN()*h, 1.5, 1.5); } });
-const furTex = texOf(furC, [9, 9], false);
-// the pile is a stack of shells, each a little higher and sparser than the one below; fewer shells is a coarser but much cheaper rug
-const FUR = Q.low ? 3 : 6, furShells = [];
-for (let i = 1; i <= FUR; i++) { const k = i / FUR, sm = new THREE.MeshStandardMaterial({ name:'fur-shell', color:col('#3a3633').lerp(col('#8a8479'), k * .75), alphaMap:furTex, alphaTest:.12 + k * .765, roughness:1, side:THREE.DoubleSide });
-  const shell = new THREE.Mesh(rug.geometry, sm); shell.position.set(-1.75, .006 + k * .038, -.25); shell.rotation.copy(rug.rotation); shell.scale.setScalar(1 - k * .036); shell.receiveShadow = true; room.add(shell); furShells.push(shell); }
 // side table + books stack front right
 const side = new THREE.Group(); side.position.set(2.6, 0, .9); room.add(side);
 side.add(box(.6, .04, .5, M.wood, 'side-top', [0,.6,0])); [[-.26,-.21],[.26,-.21],[-.26,.21],[.26,.21]].forEach(([x,z]) => side.add(box(.04, .58, .04, M.woodD, 'side-leg', [x,.29,z])));
@@ -1051,7 +1043,6 @@ function judge(dt) {
 function demote() {
   Q.low = true; document.body.classList.add('lite');
   renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight);
-  furShells.forEach((s, i) => s.visible = i < 3);
   dustN = DN / 2; dGeo.setDrawRange(0, dustN); partN = Math.ceil(SKY[season].n / 2); pGeo.setDrawRange(0, partN);
   try { localStorage.setItem(QKEY, 'low'); } catch {}
   toast('這台電腦跑得有點吃力，書房已切到輕量模式');
