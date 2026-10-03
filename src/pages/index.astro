@@ -54,8 +54,10 @@ const BASE = import.meta.env.BASE_URL;
         c.width = c.height = 160;
         const x = c.getContext('2d');
         const d = x.createImageData(160, 160);
+        // black and white specks on a clear sheet: plain alpha compositing, so the browser never has to
+        // read the WebGL frame back for a blend mode
         for (let i = 0; i < d.data.length; i += 4) {
-          const v = Math.random() * 255;
+          const v = Math.random() < 0.5 ? 0 : 255;
           d.data[i] = d.data[i + 1] = d.data[i + 2] = v;
           d.data[i + 3] = 255;
         }
@@ -87,7 +89,9 @@ const BASE = import.meta.env.BASE_URL;
   #stage canvas { display: block; outline: none; }
 
   #vig { position: fixed; inset: 0; pointer-events: none; z-index: 4; background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,.5) 100%); }
-  #grain { position: fixed; inset: -50px; pointer-events: none; z-index: 4; opacity: .06; mix-blend-mode: overlay; }
+  #grain { position: fixed; inset: -50px; pointer-events: none; z-index: 4; opacity: .035; will-change: transform; }
+  /* the low tier (study.js decides) does without the two full-screen overlays */
+  body.lite #grain, body.lite #vig { display: none; }
 
   .hud { position: fixed; z-index: 10; }
   .sheet { background: var(--color-bg); box-shadow: var(--shadow-sm); border-radius: var(--radius-md); }

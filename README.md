@@ -31,7 +31,9 @@ src/
 │       ├── index.astro      # 分類文章列表
 │       └── [slug].astro     # 文章內頁
 ├── scripts/
-│   └── study.js      # 書房場景與互動 (three.js)
+│   ├── study.js          # 書房場景與互動 (three.js)
+│   ├── studyTextures.js  # 程序化貼圖（木紋、灰泥、地板……），不碰 DOM，Worker 也能跑
+│   └── studyWorker.js    # 在 Worker 裡畫上面那些貼圖，開頁時主執行緒不被卡住
 └── styles/           # broadsheet.css (設計系統)、desk.css (內容頁共用)、
                       # 各頁樣式 (prose / reading / archive)
 ```

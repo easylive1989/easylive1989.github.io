@@ -1,11 +1,20 @@
-import * as THREE from 'three';
-
-// Procedural textures for the study room. Everything is painted on canvases at load,
-// so the room ships no image files for its materials.
+// Procedural textures for the study room. Everything is painted on canvases at load, so the room ships no image files for its
+// materials. Nothing here touches the DOM or three.js, so the same code runs inside a worker on OffscreenCanvas (see studyWorker.js).
 
 export const rng = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-export const cnv = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; if (fn) fn(c.getContext('2d'), w, h); return c; };
-export const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
+export const cnv = (w, h, fn) => { const c = typeof document === 'undefined' ? new OffscreenCanvas(w, h) : document.createElement('canvas'); c.width = w; c.height = h; if (fn) fn(c.getContext('2d'), w, h); return c; };
+
+// A hex colour nudged in hue and saturation and scaled in brightness, worked in linear light the way three.js's Color would, as a CSS rgb().
+const toLin = c => c < .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4, toSrgb = c => c < .0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - .055;
+const hue = (p, q, t) => { t = (t % 1 + 1) % 1; return t < 1/6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2/3 ? p + (q - p) * 6 * (2/3 - t) : p; };
+export function tint(hex, dh, ds, k) {
+  const [r, g, b] = [1, 3, 5].map(i => toLin(parseInt(hex.slice(i, i + 2), 16) / 255)), max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (max !== min) { const d = max - min; s = l <= .5 ? d / (max + min) : d / (2 - max - min); h = (max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4) / 6; }
+  h = (h + dh) % 1; s = Math.min(1, Math.max(0, s + ds));
+  const q = l <= .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  return 'rgb(' + [hue(p, q, h + 1/3), hue(p, q, h), hue(p, q, h - 1/3)].map(v => Math.round(toSrgb(Math.min(1, v * k)) * 255)).join(',') + ')';
+}
 
 // Tileable fractal value noise, stretched to the full 0–1 range. `base` is the number of lattice cells
 // across the first octave; give it as [x, y] for noise that is streaky along one axis.
@@ -82,7 +91,7 @@ export function plankFloor({ size = 2048, planks = 24, seed = 5, tones = ['#4a2b
     let y = Math.floor(R() * S), left = S;
     while (left > 0) {
       let L = Math.round((.24 + R() * .24) * S); if (left - L < .2 * S) L = left > .55 * S ? Math.round(left / 2) : left;
-      const p = { tone:new THREE.Color(tones[Math.floor(R() * tones.length)]).offsetHSL((R() - .5) * .015, (R() - .5) * .08, 0).multiplyScalar(.85 + R() * .35).getStyle(),
+      const p = { tone:tint(tones[Math.floor(R() * tones.length)], (R() - .5) * .015, (R() - .5) * .08, .85 + R() * .35),
         fx:R() * (N - w / u), fy:R() * (N - L / u / 9), gx:R() * (N - w / u * 2.5), gy:R() * (N - L / u / 40), px:R() * (N - w / u), py:R() * (N - L / u / 2.5),
         arcs:R() < .4 ? 5 + Math.floor(R() * 6) : 0, ax:.25 + R() * .5, ay:R(), ah:.15 + R() * .3, gap:18 + R() * 26,
         lift:gray(128 + (R() - .5) * 14), sheen:gray(128 + (R() - .5) * 44) };
@@ -372,6 +381,14 @@ export function agedPlastic({ size = 512, seed = 33 } = {}) {
     const line = (x, style) => { x.strokeStyle = style; x.lineWidth = w; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x0 + Math.cos(a) * L, y0 + Math.sin(a) * L); x.stroke(); };
     line(cx, 'rgba(255,255,255,' + al + ')'); line(hx, 'rgba(0,0,0,' + al * 2 + ')'); line(rx, 'rgba(255,255,255,' + al * 2 + ')'); }
   return { color:c, normal:normalFromHeight(hgt, 1.2 * u), rough:r };
+}
+
+// The sheets the room's materials are built on, at full size or, for the low tier, half. Worth a worker: together they are most of the
+// time it takes to open the room.
+export function paintSheets(low) {
+  const s = low ? 1 : 0;
+  return { wood:woodGrain({ size:[1024, 512][s] }), plaster:plaster({ size:[1024, 512][s] }), fabric:weave({ size:[512, 256][s] }), tabby:tabbyFur({ size:[512, 256][s] }),
+    metal:brushedMetal(), pot:terracotta(), leaf:leaf(), plastic:agedPlastic(), floor:plankFloor({ size:[1536, 768][s] }) };
 }
 
 // What a CRT puts between you and the picture: phosphor stripes, scanlines, and the dim corners of the tube. Multiplied over each frame.
