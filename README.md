@@ -11,6 +11,8 @@ https://paul-learning.dev
 - **框架**: Astro (靜態網站生成)
 - **內容來源**: Notion API (`@notionhq/client`)
 - **首頁**: three.js 做的 3D 書房（互動式，內容在建置時從 Notion 抓好）
+  - 左邊書架是「閱讀書單」裡讀完的書，依類型分區；書的 Notion 頁面裡有筆記的，抽出來就能翻，沒寫的只有書卡
+  - 寫的東西都在書桌：系列與最近的文章在桌上的書架，較早的幾篇是桌上的稿紙
 - **部署**: GitHub Pages
 
 ## 專案結構
@@ -26,6 +28,7 @@ src/
 │   ├── index.astro          # 首頁：3D 書房
 │   ├── archive.astro        # 文章彙整
 │   ├── reading.astro        # 書單（書架）
+│   ├── study/[id].astro     # 書房裡翻開的內文：文章全文，或書單裡一本書的筆記
 │   ├── rss.xml.ts           # RSS feed
 │   └── [category]/
 │       ├── index.astro      # 分類文章列表

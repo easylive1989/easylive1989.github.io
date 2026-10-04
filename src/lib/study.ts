@@ -2,6 +2,7 @@ import { loadConfig } from './config';
 import {
   getAllArticles,
   getAllBooks,
+  getBookNotes,
   getAllSideProjects,
   getAllPlayboxGames,
 } from './data';
@@ -16,13 +17,15 @@ import type { Article, Book } from './notion';
  * once and the slots are filled from Notion at build time.
  *
  * Nothing here links to another page of this site: a book opens in the room and
- * its article is fetched from /study/{id}/ (see pages/study/[id].astro).
+ * its article, or the notes kept in it, are fetched from /study/{id}/ (see
+ * pages/study/[id].astro).
  *
- *   s1–s3  series, racked on the desk  w1–w6  newest articles on the shelf
- *   r1–r4  reading shelf            p1 p3 g2  side projects on the display shelves
+ *   b1…    every finished book of the reading list, on the bookshelf by category
+ *   s1–s3  series, racked on the desk   w1–w6  newest articles, in the same rack
+ *   d1–d3  older articles on the desk   mb  the book I wrote, on the display shelves
+ *   p1 p3 g2  side projects on the display shelves
  *   g1 g3 g4 t2 p2  Playbox games   aw  awards & talks   cab  the cabinet
  *   tv  the game cabinet beside the desk: every Playbox game
- *   d1–d3  older articles on the desk
  */
 
 export interface StudyLink {
@@ -60,6 +63,8 @@ export interface StudyItem {
 export interface StudyData {
   items: Record<string, StudyItem>;
   links: [string, string][];
+  /** The bookshelf, section by section in shelving order: [category, the slots of its books]. */
+  library: [string, string[]][];
   about: {
     name: string;
     bio: string;
@@ -169,22 +174,77 @@ function articleItem(a: Article, kicker: string, kind = 'writing', cat: StudyIte
   };
 }
 
-function bookItem(b: Book, kicker: string, meta: string): StudyItem {
-  const done = bookStatus(b) === 'read';
-  const cat = b.categories[0] ?? '';
-  const lines = done ? [`讀完於 ${dotted(b.finishedDate)}。`] : [];
-  if (b.categories.length > 1) lines.push(`類型：${b.categories.join(' · ')}`);
+const UNFILED = '未分類';
+// Sections that are a remainder rather than a subject go to the end of the shelf.
+const LAST_SECTIONS = ['其他', UNFILED];
+const SPINE_MAX = 14;
+const SPINE_MAX_LATIN = 20;
+
+const textWidth = (s: string) => [...s].reduce((w, ch) => w + (isCJK(ch) || /[\u3000-\u303f\uff00-\uffef]/.test(ch) ? 1 : 0.5), 0);
+
+/** A book's title and the subtitle that publishers hang after a colon or a dash. */
+export function splitBookTitle(title: string): [string, string] {
+  const m = title.match(/\s[-–—]\s|\s*[：:︰｜|－]\s*|――|——/);
+  if (!m || !m.index) return [title.trim(), ''];
+  return [title.slice(0, m.index).trim(), title.slice(m.index + m[0].length).trim()];
+}
+
+/** What a book's spine says: its title without the subtitle, cut at a pause if it is still too long to stand there. */
+export function bookSpine(title: string): string {
+  let s = splitBookTitle(title)[0].replace(/[（(].*?[）)]/g, '').trim() || title;
+  if (textWidth(s) > SPINE_MAX) {
+    const pause = s.search(/[？！，。、?!,]/);
+    if (pause >= 3) s = s.slice(0, pause);
+  }
+  // A title in Latin lies along the spine, where there is more room for it; one that still has to be cut is not cut mid-word.
+  const max = [...s].some(isCJK) ? SPINE_MAX : SPINE_MAX_LATIN;
+  if (textWidth(s) <= max) return s;
+  let out = '';
+  for (const ch of s) {
+    if (textWidth(out + ch) > max) break;
+    out += ch;
+  }
+  const cutInWord = /[A-Za-z0-9]$/.test(out) && /^[A-Za-z0-9]/.test(s.slice(out.length));
+  return (cutInWord && out.includes(' ') ? out.slice(0, out.lastIndexOf(' ')) : out).trim();
+}
+
+/** The reading list keeps the month a book was finished in, not the day. */
+function finishedMonth(b: Book): string {
+  return dotted(b.finishedDate).slice(0, 7);
+}
+
+function bookItem(b: Book, hasNotes: boolean): StudyItem {
+  const category = b.categories[0] || UNFILED;
+  const month = finishedMonth(b);
+  const [title, subtitle] = splitBookTitle(b.title);
   return {
     cat: 'shelf',
     kind: 'reading',
-    sp: spineLabel(b.title),
-    k: `${kicker}${cat ? ` · ${cat}` : ''}`,
-    t: b.title,
-    b: lines,
-    m: meta,
-    ...(done ? {} : { pct: b.progress }),
+    sp: bookSpine(b.title),
+    k: `讀過的書 · ${category}`,
+    t: title,
+    ...(subtitle ? { by: subtitle } : {}),
+    b: month ? [`${month} 讀完。`] : [],
+    m: `書架 · ${category}${month ? ` · ${month} 讀完` : ''}`,
+    ...(hasNotes ? { aid: b.id } : {}),
     ...(b.coverUrl ? { cover: b.coverUrl } : {}),
   };
+}
+
+/** Finished books in shelving order: the fullest category first, and within one the latest read first. */
+function shelveBooks(books: Book[]): [string, Book[]][] {
+  const sections = new Map<string, Book[]>();
+  const read = books
+    .filter((b) => bookStatus(b) === 'read')
+    .sort((a, b) => (b.finishedDate ?? '').localeCompare(a.finishedDate ?? '') || a.title.localeCompare(b.title, 'zh-Hant'));
+  for (const b of read) {
+    const name = b.categories[0] || UNFILED;
+    if (!sections.has(name)) sections.set(name, []);
+    sections.get(name)!.push(b);
+  }
+  const last = (name: string) => LAST_SECTIONS.indexOf(name);
+  // the sort is stable, so equally full sections keep the order of their latest book
+  return [...sections].sort(([a, x], [b, y]) => last(a) - last(b) || y.length - x.length);
 }
 
 function githubLabel(config: ReturnType<typeof loadConfig>): { username: string; channels: [string, string, string][] } {
@@ -205,9 +265,10 @@ function githubLabel(config: ReturnType<typeof loadConfig>): { username: string;
 
 export async function buildStudyData(): Promise<StudyData> {
   const config = loadConfig();
-  const [articles, books, projects, games] = await Promise.all([
+  const [articles, books, notes, projects, games] = await Promise.all([
     getAllArticles(),
     getAllBooks(),
+    getBookNotes(),
     getAllSideProjects(),
     getAllPlayboxGames(),
   ]);
@@ -238,51 +299,35 @@ export async function buildStudyData(): Promise<StudyData> {
     for (const a of inSeries) owner[a.id] = slot;
   });
 
-  /* ── shelf, level 3: the six newest articles ── */
+  /* ── desk, the book rack: the six newest articles, beside the series ── */
   const recent = articles.slice(0, WRITING_SLOTS.length);
   recent.forEach((a, i) => {
-    items[WRITING_SLOTS[i]] = articleItem(a, `${i === 0 ? '★ 最新文章 · ' : ''}${a.category} · ${dotted(a.createdTime)}`);
+    items[WRITING_SLOTS[i]] = articleItem(a, `${i === 0 ? '★ 最新文章 · ' : ''}${a.category} · ${dotted(a.createdTime)}`, 'writing', 'desk');
   });
 
-  /* ── shelf, level 4: reading ── */
-  const read = books
-    .filter((b) => bookStatus(b) === 'read')
-    .sort((a, b) => (b.finishedDate ?? '').localeCompare(a.finishedDate ?? ''));
-  read.slice(0, 2).forEach((b, i) => {
-    items[`r${i + 1}`] = bookItem(b, '最近讀完', `書單 · 最近讀完 0${i + 1}`);
-  });
-  items.r3 = {
-    cat: 'shelf',
+  /* ── the bookshelf: every finished book of the reading list, filed by category ── */
+  const library: StudyData['library'] = [];
+  let shelved = 0;
+  for (const [category, inCategory] of shelveBooks(books)) {
+    const slots = inCategory.map((b) => {
+      const slot = `b${++shelved}`;
+      items[slot] = bookItem(b, notes.has(b.id));
+      return slot;
+    });
+    library.push([category, slots]);
+  }
+
+  /* ── display shelves: the book I wrote ── */
+  items.mb = {
+    cat: 'display',
     kind: 'mybook',
     sp: 'Flutter 測試',
     k: '我出的書 · Book',
     t: '30 天輕鬆學會 Flutter 測試',
     b: ['由 2023 iThome 鐵人賽佳作改寫成書，從基礎到進階一次到位。'],
-    m: '出版書籍',
+    m: '展示架 · 出版書籍',
     links: [{ l: '看書 ↗', u: MY_BOOK_URL, p: 1 }],
   };
-  const current = books.find((b) => bookStatus(b) === 'reading');
-  if (current) {
-    items.r4 = bookItem(current, '正在讀', '書單 · 正在讀');
-  } else {
-    const wish = books.filter((b) => bookStatus(b) === 'unstarted').length;
-    const year = new Date().getFullYear();
-    const thisYear = read.filter((b) => b.finishedDate && new Date(b.finishedDate).getFullYear() === year).length;
-    const last = read[0]?.finishedDate;
-    const days = last ? Math.max(0, Math.floor((Date.now() - new Date(last).getTime()) / 86_400_000)) : null;
-    items.r4 = {
-      cat: 'shelf',
-      kind: 'reading',
-      sp: '下一本？',
-      k: '書架空著 · /reading',
-      t: '目前沒在讀什麼',
-      b: [
-        days == null ? '正在挑下一本。' : `上一本讀完已經 ${days} 天了，正在挑下一本。`,
-        `想讀 ${wish} 本 · 今年讀了 ${thisYear} 本。`,
-      ],
-      m: '書單',
-    };
-  }
 
   /* ── display shelves: side projects ── */
   projects.slice(0, PROJECT_SLOTS.length).forEach((p, i) => {
@@ -399,10 +444,9 @@ export async function buildStudyData(): Promise<StudyData> {
     .slice(WRITING_SLOTS.length, WRITING_SLOTS.length + DESK_SLOTS.length)
     .forEach((a, i) => owner[a.id] && add(DESK_SLOTS[i], owner[a.id]));
   const flutterSeries = SERIES_SLOTS.find((s) => items[s]?.t === '30 天輕鬆學會 Flutter 測試');
-  if (flutterSeries) add('r3', flutterSeries);
-  add('aw', 'r3');
+  if (flutterSeries) add('mb', flutterSeries);
+  add('aw', 'mb');
   add('w1', 'd3');
-  add('r1', 'r2');
   placed.forEach(([slot], i) => i > 0 && add(slot, placed[i - 1][0]));
   PROJECT_SLOTS.forEach((slot, i) => i > 0 && add(slot, PROJECT_SLOTS[i - 1]));
 
@@ -410,6 +454,7 @@ export async function buildStudyData(): Promise<StudyData> {
   return {
     items,
     links,
+    library,
     about: {
       name: config.author.name,
       bio: config.author.bio.replace(/\n/g, ' '),

@@ -1,5 +1,6 @@
 ---
 import { renderRichText } from '../../lib/richtext';
+import NotionRenderer from './NotionRenderer.astro';
 import type { NotionBlock } from '../../lib/notion';
 
 interface Props { block: NotionBlock; }
@@ -10,5 +11,8 @@ const text = renderRichText(callout.rich_text);
 ---
 <div class="callout">
   {icon && <span class="callout-icon" aria-hidden="true">{icon}</span>}
-  <div class="callout-content" set:html={text} />
+  <div class="callout-content">
+    <Fragment set:html={text} />
+    {block.children && <NotionRenderer blocks={block.children} />}
+  </div>
 </div>

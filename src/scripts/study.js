@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, LAKE_SKY, crtMask } from './studyTextures.js';
+import { rng, cnv, paintSheets, pageEdges, paintLakeView, paintNearWater, LAKE_SKY, crtMask } from './studyTextures.js';
 const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
 
 /* ================= content ================= */
@@ -212,78 +212,108 @@ bays.forEach(z => shelf.add(box(.4, 2.72, .05, M.wood, 'shelf-divider', [-2.81,1
 LV.forEach((y, i) => { const z0 = i === LV.length - 1 ? SZ0 : BZ; shelf.add(box(.4, .035, SZ1 - z0, M.wood, 'shelf-board', [-2.81,y,(z0+SZ1)/2])); }); // only the top board runs the whole length
 shelf.add(box(.42, .18, SZ1 - SZ0 + .05, M.wood, 'shelf-cornice', [-2.8,2.68,(SZ0+SZ1)/2]));
 LV.slice(1).forEach(y => { const s = mk(new THREE.BoxGeometry(.02, .01, SZ1 - BZ), new THREE.MeshBasicMaterial({ name:'led', color:col('#b98450') }), 'led-strip', [-2.63, y - .025, (BZ+SZ1)/2]); s.castShadow = false; shelf.add(s); });
-const spineCols = [C.c900, C.m900, C.m800, '#24402f', '#2e4a3a', '#1f2c3d', C.cream, '#6b3a26', '#8a6b45', C.n800, '#3d2a1e', C.c800, '#c9b88f', '#5a1f1f'];
-const featured = { 3:{ bay:1, ids:['w1','w2','w3','w4','w5','w6'], label:'最近寫的', th:.07 }, 4:{ bay:1, ids:['r1','r2','r3','r4'], label:'書單', th:.07 } };
-Object.keys(featured).forEach(lv => { featured[lv].ids = featured[lv].ids.filter(has); if (!featured[lv].ids.length) delete featured[lv]; });
-// every shelved book is one instance of a unit block; `aBook` gives each its own spine layout, and the shader tells its cloth from its paper
-const bookGeo = rboxGeo(1, 1, 1, .09).clone(), bookAttr = new THREE.InstancedBufferAttribute(new Float32Array(900 * 2), 2), bookR = rng(41); bookGeo.setAttribute('aBook', bookAttr);
-const bookMat = new THREE.MeshStandardMaterial({ name:'books', roughness:.68 }), spines = texOf(spineAtlas(), [1, 1], false);
-bookMat.onBeforeCompile = sh => {
-  sh.uniforms.uSpines = { value:spines };
-  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aBook;\nvarying vec3 vBookP;\nvarying vec3 vBookN;\nvarying vec2 vBook;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvBookP = position; vBookN = normal; vBook = aBook;');
-  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D uSpines;\nvarying vec3 vBookP;\nvarying vec3 vBookN;\nvarying vec2 vBook;\nfloat bookFoil = 0.0;').replace('#include <color_fragment>', `#include <color_fragment>
+/* the books: every finished book of the reading list, filed by category. Whatever the list has not filled yet stays bare. */
+const CJK = '\u2e80-\u9fff\uff00-\uffef', cjkRun = new RegExp('[' + CJK + ']|[^' + CJK + ']+', 'g');
+const VERT = { '「':'﹁', '」':'﹂', '『':'﹃', '』':'﹄', '（':'︵', '）':'︶', '《':'︽', '》':'︾', '：':'︰' }; // what turns with the line when it is set downwards
+// One spine, head up, in the w×h box at (x0, y0): cloth that rounds away at its edges, a double rule at head and foot, and the title set down
+// its length — CJK upright one under another, a run of Latin on its side. `asp` is the spine's own width over its height, so the lettering
+// keeps its shape however the box is stretched over the book.
+function drawSpine(x, x0, y0, w, h, title, bg, fg, asp = w / h) {
+  const lw = h * asp, u = h / 512;
+  x.save(); x.translate(x0, y0); x.scale(w / lw, 1);
+  x.fillStyle = bg; x.fillRect(0, 0, lw, h);
+  const g = x.createLinearGradient(0, 0, lw, 0); [[0,.3],[.2,0],[.8,0],[1,.3]].forEach(([p, a]) => g.addColorStop(p, 'rgba(0,0,0,' + a + ')')); x.fillStyle = g; x.fillRect(0, 0, lw, h);
+  x.fillStyle = fg; [[26, 4], [35, 1.5]].forEach(([y, t]) => { x.fillRect(0, y*u, lw, t*u); x.fillRect(0, h - (y + t)*u, lw, t*u); });
+  // each run and the length it takes, in ems: a CJK character or a pair of figures is a square, a longer run of Latin lies along the spine
+  x.font = `600 100px ${SERIF}`; x.textBaseline = 'middle';
+  const runs = (title.replace(/[《》]/g, '').match(cjkRun) || []).map(s => { const r = s.trim(); return !r ? [null, .35] : r.length < 3 ? [VERT[r] || r, 1.05, 1] : [r, x.measureText(r).width / 100 + .18]; });
+  const len = runs.reduce((a, r) => a + r[1], 0), fs = Math.min(lw * .62, h * .125, (h - 112*u) / len);
+  let y = runs.some(r => r[2]) ? 58*u : (h - len * fs) / 2; // a title that is all Latin sits mid-spine
+  x.font = `600 ${fs}px ${SERIF}`;
+  runs.forEach(([s, l, upright]) => {
+    if (upright) { x.textAlign = 'center'; x.fillText(s, lw/2, y + fs * .52, fs); }
+    else if (s) { x.save(); x.translate(lw/2, y + fs * .09); x.rotate(Math.PI/2); x.textAlign = 'left'; x.fillText(s, 0, fs * .04); x.restore(); }
+    y += l * fs; });
+  x.restore();
+}
+const fPal = [[C.c800,C.cream],[C.m800,C.cream],['#2e4a3a',C.cream],[C.cream,C.ink],['#6b3a26',C.cream],[C.c900,C.yel],[C.cream,C.m700],['#1f2c3d',C.cream]];
+const libPal = [...fPal, ['#8a6b45',C.cream], ['#3d2a1e','#e3cf98'], ['#c9b88f',C.ink], ['#5a1f1f',C.cream], ['#24402f','#e3cf98'], [C.n800,C.cream]];
+const SERIES = ['s1','s2','s3'].filter(has), RECENT = ['w1','w2','w3','w4','w5','w6'].filter(has); // these stand in the rack on the desk
+const fCols = { mb:[C.cyan, C.paper] }; [...SERIES, ...RECENT].forEach((id, i) => fCols[id] = fPal[i % fPal.length]);
+const books = {}, pagesMat = std('pages', '#ffffff', { map:texOf(pageEdges()), roughness:.9 });
+// a book with its spine on +x, `d` from spine to fore-edge
+const bookOf = (id, d, h, th, keep = true) => { const [bg, fg] = fCols[id];
+  const sm = new THREE.MeshStandardMaterial({ name:'spine-' + id, map:ctex(96, 512, (x, w, hh) => drawSpine(x, 0, 0, w, hh, ITEMS[id].sp || ITEMS[id].t, bg, fg, th / h), keep), roughness:.7 });
+  const cm = std('cover-' + id, bg, { roughness:.7 }), pm = pagesMat;
+  const g = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(d, h, th), [sm, pm, pm, pm, cm, cm], 'book-' + id)); return books[id] = g; };
+// The shelves are filled in reading order: from just above eye level down, the top shelf last, and on each level the bay nearer the
+// camera first — it is on the left as you face the shelf, so z runs down. A section opens with a brass plate on the edge of its board.
+const PLATE = .16, PLATE_H = .042, libR = rng(97), shelved = [], plates = [];
+{ const cells = [5, 4, 3, 2, 1, 0, 6].flatMap(lv => [2, 1].map(b => ({ lv, z0:bays[b + 1] - .045, z1:bays[b] + .045 })));
+  let ci = 0, z = cells[0].z0, clear = z, last = -1; // `clear`: where the last plate ends
+  for (const [name, ids] of DATA.library || []) {
+    if (z < cells[ci].z0) { z = Math.min(z - .06, clear - .02); if (z - PLATE < cells[ci].z1 && cells[ci + 1]) z = cells[++ci].z0; }
+    let fresh = true;
+    for (const id of ids) {
+      const t = .046 + libR() * .03, h = .235 + libR() * .065, d = .2 + libR() * .05; let p; do p = Math.floor(libR() * libPal.length); while (p === last); last = p;
+      if (z - t < cells[ci].z1) { if (!cells[ci + 1]) break; z = cells[++ci].z0; fresh = true; } // the section runs on in the next bay, under a plate of its own
+      if (fresh) { plates.push({ name, lv:cells[ci].lv, z:z - PLATE / 2 }); clear = z - PLATE; fresh = false; }
+      shelved.push({ id, t, h, d, y:LV[cells[ci].lv] + .018 + h / 2, z:z - t / 2 }); fCols[id] = libPal[p]; z -= t + .004;
+    }
+  }
+}
+// Every shelved book is one instance of a unit block, and all their spines are cells of one sheet, so the whole library is a single draw.
+// Each has a stand-in the room's hover and picking treat as an object of its own.
+let lib = null; const libOf = {};
+if (shelved.length) {
+  const N = shelved.length, P = 2, cw0 = (Q.low ? 64 : 80) + 2*P, ch0 = (Q.low ? 360 : 448) + 2*P, cols = Math.ceil(Math.sqrt(N * ch0 / cw0)), rows = Math.ceil(N / cols);
+  const k = Math.min(1, 4096 / (cols * cw0), 4096 / (rows * ch0)), cw = Math.floor(cw0 * k), ch = Math.floor(ch0 * k), AW = cols * cw, AH = rows * ch; // a sheet no GPU refuses
+  const titles = ctex(AW, AH, x => shelved.forEach((b, i) => { const [bg, fg] = fCols[b.id], x0 = (i % cols) * cw, y0 = Math.floor(i / cols) * ch;
+    x.fillStyle = bg; x.fillRect(x0, y0, cw, ch); drawSpine(x, x0 + P, y0 + P, cw - 2*P, ch - 2*P, ITEMS[b.id].sp || ITEMS[b.id].t, bg, fg, b.t / b.h); }));
+  const libGeo = rboxGeo(1, 1, 1, .09).clone(), cellAttr = new THREE.InstancedBufferAttribute(new Float32Array(N * 4), 4); libGeo.setAttribute('aCell', cellAttr);
+  const libMat = new THREE.MeshStandardMaterial({ name:'library', roughness:.68 });
+  libMat.onBeforeCompile = sh => {
+    sh.uniforms.uTitles = { value:titles };
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec4 aCell;\nvarying vec3 vBookP;\nvarying vec3 vBookN;\nvarying vec4 vCell;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvBookP = position; vBookN = normal; vCell = aCell;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D uTitles;\nvarying vec3 vBookP;\nvarying vec3 vBookN;\nvarying vec4 vCell;').replace('#include <color_fragment>', `#include <color_fragment>
     vec3 bn = abs(vBookN);
     if ((vBookN.y > 0.0 && bn.y > bn.x && bn.y > bn.z) || (vBookN.x < 0.0 && bn.x > bn.y && bn.x > bn.z)) {
       // head and fore-edge are the paper block: sheets across the thickness, blurring into plain cream once they are too fine to draw
       float s = vBookP.z * 22.0, sheet = mix(0.84 + 0.16 * sin(s * 6.2832), 0.92, smoothstep(0.25, 0.7, fwidth(s)));
       diffuseColor.rgb = vec3(0.82, 0.74, 0.57) * sheet;
-    } else {
-      float across = clamp(vBookP.z + 0.5, 0.04, 0.96);
-      vec3 deco = texture2D(uSpines, vec2(vBookP.y + 0.5, (vBook.x + across) / ${SPINES}.0)).rgb, cloth = diffuseColor.rgb * (0.78 + 0.22 * sin(across * 3.1416)); // the spine rounds away at its edges
-      // pale cloth is stamped in dark ink, dark cloth in gold or, for one book in four, silver
-      bool pale = dot(cloth, vec3(0.3, 0.6, 0.1)) > 0.22;
-      vec3 foil = pale ? vec3(0.03, 0.018, 0.012) : vBook.y > 0.75 ? vec3(0.62, 0.6, 0.55) : vec3(0.69, 0.48, 0.17);
-      bookFoil = pale ? 0.0 : deco.r;
-      diffuseColor.rgb = mix(mix(mix(cloth, cloth * 0.4, deco.b), vec3(0.84, 0.78, 0.62), deco.g), foil, deco.r);
-    }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.35, bookFoil);').replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.85, bookFoil);');
-};
-const inst = new THREE.InstancedMesh(bookGeo, bookMat, 900); inst.castShadow = true; inst.receiveShadow = true;
-let ni = 0; const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
-const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
-const featPos = {};
-for (let lv = 0; lv < 7; lv++) for (let b = 1; b < 3; b++) {
-  let z = bays[b] + .04; const zEnd = bays[b+1] - .04; const f = featured[lv] && featured[lv].bay === b ? featured[lv] : null;
-  const fStart = f ? bays[b] + .32 : 99, fEnd = f ? fStart + f.ids.length * (f.th + .015) + .02 : 99;
-  if (f) f.ids.forEach((id, i) => featPos[id] = { y:LV[lv], z:fStart + .02 + i*(f.th + .015) + f.th/2, th:f.th });
-  while (z < zEnd - .02) {
-    if (z >= fStart && z < fEnd) { z = fEnd; continue; }
-    if (rnd() < .025) { z += .12; continue; }
-    const t = .025 + rnd()*.045, h = .22 + rnd()*.1, d = .2 + rnd()*.06;
-    if (z + t > zEnd) break;
-    const lean = rnd() < .04 && z + .2 < zEnd ? .22 : 0;
-    q.setFromEuler(new THREE.Euler(lean, 0, 0)); sc.set(d, h, t); ps.set(-2.78 + (.26 - d)/2 + .02, LV[lv] + .018 + h/2, z + t/2 + (lean ? .03 : 0));
-    m4.compose(ps, q, sc); inst.setMatrixAt(ni, m4); const c = col(spineCols[Math.floor(rnd()*spineCols.length)]); c.multiplyScalar(.8 + rnd()*.35); inst.setColorAt(ni, c); bookAttr.setXY(ni, Math.floor(bookR() * SPINES), bookR()); ni++;
-    z += t + .003 + (lean ? .05 : 0);
-  }
+    } else if (vBookN.x > 0.0 && bn.x > bn.y && bn.x > bn.z) {
+      // the spine: this book's cell of the sheet, read from the room, so across it runs against z
+      diffuseColor.rgb = texture2D(uTitles, vCell.xy + clamp(vec2(0.5 - vBookP.z, vBookP.y + 0.5), 0.01, 0.99) * vCell.zw).rgb;
+    }`);
+  };
+  lib = new THREE.InstancedMesh(libGeo, libMat, N); lib.name = 'library'; lib.castShadow = true; lib.receiveShadow = true;
+  lib.userData.roots = shelved.map((b, i) => { const r = new THREE.Object3D(); r.position.set(-2.76 + (.26 - b.d)/2, b.y, b.z); r.scale.set(b.d, b.h, b.t);
+    r.userData = { pick:{ type:'item', id:b.id, view:'shelf' }, pull:new THREE.Vector3(.1, 0, 0), base:r.position.clone(), inst:i };
+    r.updateMatrix(); lib.setMatrixAt(i, r.matrix); lib.setColorAt(i, col(fCols[b.id][0]));
+    cellAttr.setXYZW(i, ((i % cols) * cw + P) / AW, 1 - (Math.floor(i / cols) * ch + ch - P) / AH, (cw - 2*P) / AW, (ch - 2*P) / AH);
+    return libOf[b.id] = r; });
+  shelf.add(lib); pickables.push(lib);
+  // the plates are one sheet and one mesh too: a quad each, just proud of the board's edge
+  const names = [...new Set(plates.map(p => p.name))], RH = 64, pos = [], nor = [], uv = [], idx = [];
+  const sheetOf = ctex(256, RH * names.length, (x, w) => names.forEach((s, i) => { const y = i * RH; x.fillStyle = C.brass; x.fillRect(0, y, w, RH); x.strokeStyle = '#6e5228'; x.lineWidth = 4; x.strokeRect(4, y + 4, w - 8, RH - 8);
+    x.fillStyle = '#2a1d0e'; x.font = `600 34px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(s, w/2, y + RH/2 + 2, w - 28); }));
+  plates.forEach((p, i) => { const r = names.indexOf(p.name), v0 = 1 - (r + 1) / names.length, v1 = 1 - r / names.length;
+    [[1, -1, 0, v0], [-1, -1, 1, v0], [-1, 1, 1, v1], [1, 1, 0, v1]].forEach(([sz, sy, a, v]) => { pos.push(-2.604, LV[p.lv] - .004 + sy * PLATE_H/2, p.z + sz * PLATE/2); nor.push(1, 0, 0); uv.push(a, v); });
+    idx.push(i*4, i*4 + 1, i*4 + 2, i*4, i*4 + 2, i*4 + 3); });
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); pg.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); pg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); pg.setIndex(idx);
+  const pl = mk(pg, new THREE.MeshStandardMaterial({ name:'brass-plate', map:sheetOf, roughness:.4, metalness:.6 }), 'brass-plates'); pl.castShadow = false; shelf.add(pl);
 }
-inst.count = ni; shelf.add(inst);
-// featured books with real spines
-const hasCJK = s => /[\u3400-\u9fff]/.test(s);
-const spineTex = (title, bg, fg) => ctex(96, 512, (x, w, h) => {
-  x.fillStyle = bg; x.fillRect(0,0,w,h);
-  const g = x.createLinearGradient(0, 0, w, 0); [[0,.3],[.2,0],[.8,0],[1,.3]].forEach(([p, a]) => g.addColorStop(p, 'rgba(0,0,0,' + a + ')')); x.fillStyle = g; x.fillRect(0,0,w,h); // the spine rounds away at its edges
-  x.fillStyle = fg; x.fillRect(0, 26, w, 4); x.fillRect(0, h-30, w, 4); x.fillRect(0, 35, w, 1.5); x.fillRect(0, h-36.5, w, 1.5);
-  const t = title.replace(/[《》]/g, ''); x.textAlign = 'center'; x.textBaseline = 'middle';
-  if (hasCJK(t)) { const n = t.length, fs = Math.min(58, 400 / n); x.font = `600 ${fs}px ${SERIF}`; [...t].forEach((ch, i) => x.fillText(ch, w/2, 60 + fs/2 + i*fs*1.05)); }
-  else { x.save(); x.translate(w/2, h/2); x.rotate(Math.PI/2); x.font = `600 40px ${SERIF}`; x.fillText(t, 0, 2, h - 80); x.restore(); }
-});
-const fPal = [[C.c800,C.cream],[C.m800,C.cream],['#2e4a3a',C.cream],[C.cream,C.ink],['#6b3a26',C.cream],[C.c900,C.yel],[C.cream,C.m700],['#1f2c3d',C.cream]];
-const SERIES = ['s1','s2','s3'].filter(has); // these stand in the rack on the desk
-const fCols = {}; [...SERIES, ...Object.keys(featPos)].forEach((id, i) => fCols[id] = id === 'r3' ? [C.cyan, C.paper] : fPal[i % fPal.length]);
-const books = {}, pagesMat = std('pages', '#ffffff', { map:texOf(pageEdges()), roughness:.9 });
-// a book with its spine on +x, `d` from spine to fore-edge
-const bookOf = (id, d, h, th) => { const [bg, fg] = fCols[id];
-  const sm = new THREE.MeshStandardMaterial({ name:'spine-' + id, map:spineTex(ITEMS[id].sp || ITEMS[id].t, bg, fg), roughness:.7 });
-  const cm = std('cover-' + id, bg, { roughness:.7 }), pm = pagesMat;
-  const g = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(d, h, th), [sm, pm, pm, pm, cm, cm], 'book-' + id)); return books[id] = g; };
-Object.entries(featPos).forEach(([id, p]) => {
-  const h = id[0] === 'r' ? .29 : .3, g = bookOf(id, .24, h, p.th); g.position.set(-2.78 + .13 - .01, p.y + .018 + h/2, p.z); shelf.add(g);
-  tag(g, { type:'item', id, view:'shelf' }, [.1, 0, 0]);
-});
-const plateTex = s => ctex(256, 64, (x, w, h) => { x.fillStyle = C.brass; x.fillRect(0,0,w,h); x.strokeStyle = '#6e5228'; x.lineWidth = 4; x.strokeRect(4,4,w-8,h-8); x.fillStyle = '#2a1d0e'; x.font = `600 34px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(s, w/2, h/2+2); });
-[3, 4].forEach(lv => { const f = featured[lv]; if (!f) return; const zc = bays[f.bay] + .32 + .02 + f.ids.length*(f.th + .015)/2;
-  const pm = new THREE.MeshStandardMaterial({ name:'brass-plate', map:plateTex(f.label), roughness:.4, metalness:.6 });
-  shelf.add(mk(new THREE.BoxGeometry(.005, .045, .18), [pm, M.brass, M.brass, M.brass, M.brass, M.brass], 'brass-plate', [-2.605, LV[lv] - .005, zc])); });
+// A shelved book is only an instance; the one being read is stood in for by a book of its own for as long as it is off the shelf.
+const goneM = new THREE.Matrix4().makeScale(0, 0, 0);
+const seat = r => { r.updateMatrix(); lib.setMatrixAt(r.userData.inst, r.matrix); lib.instanceMatrix.needsUpdate = true; };
+function takeDown(id) {
+  const r = libOf[id], g = bookOf(id, r.scale.x, r.scale.y, r.scale.z, false), [sm, , , , cm] = g.children[0].material;
+  g.position.copy(r.position); Object.assign(g.userData, { base:r.userData.base, pull:r.userData.pull }); shelf.add(g);
+  r.userData.lifted = true; lib.setMatrixAt(r.userData.inst, goneM); lib.instanceMatrix.needsUpdate = true;
+  g.userData.shelved = () => { shelf.remove(g); sm.map.dispose(); sm.dispose(); cm.dispose(); g.children[0].geometry.dispose(); delete books[id];
+    r.userData.lifted = false; r.position.copy(r.userData.base); seat(r); renderer.shadowMap.needsUpdate = true; };
+  return g;
+}
 
 /* ================= display shelves (the bookshelf's corner bay) ================= */
 // Laid out in a frame of its own, x across the bay and z out from the wall, then turned to face the room.
@@ -349,6 +379,15 @@ bottle.add(cyl(.031, .031, .06, 24, std('bottle-water', '#5aa8cc', { transparent
 bottle.add(cyl(.015, .015, .025, 16, std('bottle-cap', C.cyan, { roughness:.4 }), 'bottle-cap', [0,.2,0]));
 bottle.add(cyl(.0345, .0345, .035, 32, std('bottle-label', C.cream), 'bottle-label', [0,.09,0], null, true));
 place(bottle, 'g4', .24, on(1), .23, 0, 0);
+// the book I wrote, face out and leaning on the back of the shelf: built like any other book, then turned so its front board faces the room
+if (has('mb')) { const g = bookOf('mb', .17, .24, .03), [bg, fg] = fCols.mb;
+  g.children[0].material[5] = new THREE.MeshStandardMaterial({ name:'cover-mb-front', roughness:.7, map:ctex(340, 480, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h);
+    x.fillStyle = fg; [[30, 4], [40, 1.5]].forEach(([y, t]) => { x.fillRect(24, y, w - 48, t); x.fillRect(24, h - y - t, w - 48, t); });
+    x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `600 40px ${SERIF}`;
+    const lines = (ITEMS.mb.t.match(cjkRun) || []).reduce((ls, tok) => { const cur = ls[ls.length - 1]; if (x.measureText((cur + tok).trim()).width > w - 60 && cur.trim()) ls.push(tok); else ls[ls.length - 1] = cur + tok; return ls; }, ['']);
+    lines.forEach((l, i) => x.fillText(l.trim(), w/2, h * .4 + (i - (lines.length - 1) / 2) * 56));
+    x.font = `400 19px ${SERIF}`; x.fillText(ABOUT.name, w/2, h - 84); }) });
+  place(g, 'mb', .5, on(1) + .12, .055, Math.PI, -.1); }
 const woodBox = new THREE.Group(); woodBox.name = 'wooden-box';
 woodBox.add(box(.3, .14, .2, M.woodD, 'box-body', [0,.07,0])); woodBox.add(box(.31, .035, .21, M.wood, 'box-lid', [0,.155,0]));
 woodBox.add(box(.04, .03, .01, M.brass, 'box-latch', [0,.12,.105]));
@@ -503,13 +542,14 @@ desk.add(box(2.05, .14, .05, M.woodD, 'desk-apron', [DX, DY - .1, DZ + .44]));
 [[.7,-2.42],[2.64,-2.42],[.7,-1.58],[2.64,-1.58]].forEach(([x,z]) => desk.add(box(.06, DY - .025, .06, M.woodD, 'desk-leg', [x, (DY - .025)/2, z])));
 desk.add(box(1.94, .03, .04, M.woodD, 'stretcher', [DX, .15, -2.4]));
 desk.add(box(.6, .1, .01, M.woodL, 'drawer', [DX, DY - .1, DZ + .468])); desk.add(cyl(.012, .012, .03, 8, M.brass, 'drawer-pull', [DX, DY - .1, DZ + .48], [Math.PI/2,0,0]));
-// book rack (left): one book per series, spines to the room
-const rack = new THREE.Group(); rack.name = 'book-rack'; rack.position.set(1.05, DY + .025, -2.24); rack.rotation.y = .12; desk.add(rack);
-const RKW = .38, RKD = .22, BH = .29, BT = .105;
+// book rack (left): one book per series, then the newest articles, spines to the room
+const rack = new THREE.Group(); rack.name = 'book-rack'; rack.position.set(1.07, DY + .025, -2.24); rack.rotation.y = .08; desk.add(rack);
+const racked = [...SERIES.map(id => [id, .29, .105]), ...RECENT.map(id => [id, .26, .052])]; // [id, height, thickness]
+const RKW = Math.max(.38, racked.reduce((a, b) => a + b[2] + .006, 0) + .045), RKD = .22;
 rack.add(box(RKW, .018, RKD, M.woodL, 'rack-base', [0, .009, 0])); rack.add(box(RKW - .036, .12, .014, M.woodL, 'rack-back', [0, .078, -RKD/2 + .007]));
 [-1, 1].forEach(k => rack.add(box(.018, .19, RKD, M.woodL, 'rack-end', [k * (RKW/2 - .009), .113, 0])));
-SERIES.forEach((id, i) => { const g = bookOf(id, .2, BH, BT); g.position.set((i - 1) * (BT + .006), .018 + BH/2, .006); g.rotation.y = -Math.PI/2; rack.add(g);
-  tag(g, { type:'item', id, view:'desk' }, [0, .02, .06]); });
+racked.reduce((x, [id, h, th]) => { const g = bookOf(id, .2, h, th); g.position.set(x + th/2, .018 + h/2, .006); g.rotation.y = -Math.PI/2; rack.add(g);
+  tag(g, { type:'item', id, view:'desk' }, [0, .02, .06]); return x + th + .006; }, -RKW/2 + .025);
 // laptop (mermer)
 const laptop = new THREE.Group(); laptop.name = 'laptop'; laptop.position.set(1.78, DY + .025, -2.08); laptop.rotation.y = -.05; desk.add(laptop);
 laptop.add(box(.5, .016, .34, M.alu, 'laptop-base', [0,.008,0]));
@@ -729,7 +769,7 @@ function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().
 function goHome() { flyTo(HOME.tgt, HOME.pos, 1.1); focused = false; }
 function mark(id) { if (!st.seen[id]) { st.seen[id] = true; const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。貓表示佩服。'), 2700); } } }
 function openItem(id) { const it = ITEMS[id];
-  if (books[id]) return openBook(id);
+  if (books[id] || libOf[id]) return openBook(id);
   if (drafts[id]) return openDraft(id);
   if (it.kind === 'play' && GAMES.length) { if (id !== 'tv') mark(id); return openTV(id === 'tv' ? 0 : Math.max(0, gameAt(id))); }
   st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, o.userData.pick.view); renderPanel('item'); }
@@ -782,7 +822,7 @@ function grab(obj, kind) {
   LF.e = new THREE.Vector3(0, -.01, -d);
   LF.qe = new THREE.Quaternion().setFromEuler(kind === 'book' ? new THREE.Euler(.06, Math.PI + .38, 0) : new THREE.Euler(Math.PI / 2 - .16, 0, .05));
 }
-function release() { const o = LF.obj; if (!o) return; LF.parent.add(o); o.position.copy(LF.lp); o.quaternion.copy(LF.lq); o.scale.copy(LF.ls); o.visible = true; o.userData.lifted = false; LF.obj = null; }
+function release() { const o = LF.obj; if (!o) return; LF.parent.add(o); o.position.copy(LF.lp); o.quaternion.copy(LF.lq); o.scale.copy(LF.ls); o.visible = true; o.userData.lifted = false; LF.obj = null; o.userData.shelved && o.userData.shelved(); }
 function liftStep(dt) {
   if (!LF.anim) return;
   LF.t = Math.min(1, Math.max(0, LF.t + LF.anim * dt / LF.dur));
@@ -854,7 +894,8 @@ function closePages(P, id) {
   return P;
 }
 function articlePages(it, html, n, id) {
-  const P = [endpaper(it.kind), '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + (it.b && it.b[0] ? '<p class="by">' + esc(it.b[0]) + '</p>' : '') + '<span class="foot">' + esc(it.m) + '</span>'];
+  const by = it.by || (it.b && it.b[0]);
+  const P = [endpaper(it.kind), (it.cover ? '<img class="cover-img" src="' + esc(it.cover) + '" alt="">' : '') + '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + (by ? '<p class="by">' + esc(by) + '</p>' : '') + '<span class="foot">' + esc(it.m) + '</span>'];
   if (html) for (let k = 0; k < n; k++) P.push({ col:k });
   else P.push('<span class="sec">內容</span><div class="body"><p><em>（全文暫時讀不到。）</em></p></div>');
   return closePages(P, id);
@@ -876,7 +917,7 @@ async function bookPages(id, D) {
 }
 function openBook(id) {
   if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; mark(id); st.cur = id;
-  const D = bookDims(), prep = bookPages(id, D); grab(books[id], 'book'); LF.t = 0; LF.anim = 1; LF.cb = () => prep.then(b => showBook(id, D, b));
+  const D = bookDims(), prep = bookPages(id, D); grab(books[id] || takeDown(id), 'book'); LF.t = 0; LF.anim = 1; LF.cb = () => prep.then(b => showBook(id, D, b));
 }
 function pageHTML(i) {
   const p = BK.pages[i], D = BK.D; if (p == null) return '';
@@ -998,6 +1039,7 @@ tvui.addEventListener('pointerover', e => { const a = e.target.closest('[data-g]
 /* ================= picking ================= */
 const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = $('tip');
 let hoverRoot = null, down = null;
+const rootOf = hit => hit ? hit.object.userData.roots ? hit.object.userData.roots[hit.instanceId] : hit.object.userData.root : null; // the library is one mesh: its books answer by instance
 function tipText(p) {
   if (p.type === 'item') { const it = ITEMS[p.id]; return `${KLAB[it.kind]} · ${it.t}`; }
   if (p.type === 'list') return '筆電 · GitHub 活動';
@@ -1008,7 +1050,7 @@ const setMouse = e => { const r = renderer.domElement.getBoundingClientRect(); m
 renderer.domElement.addEventListener('pointerdown', e => { down = { x:e.clientX, y:e.clientY }; });
 renderer.domElement.addEventListener('pointermove', e => {
   if (lockCam) { tip.style.opacity = 0; hoverRoot = null; renderer.domElement.style.cursor = TV.on ? 'zoom-out' : 'default'; return; }
-  setMouse(e); const hit = ray.intersectObjects(pickables, false)[0]; hoverRoot = hit ? hit.object.userData.root : null;
+  setMouse(e); hoverRoot = rootOf(ray.intersectObjects(pickables, false)[0]);
   renderer.domElement.style.cursor = hoverRoot ? 'pointer' : 'grab';
   if (hoverRoot) { tip.textContent = tipText(hoverRoot.userData.pick); tip.style.left = e.clientX + 14 + 'px'; tip.style.top = e.clientY + 14 + 'px'; tip.style.opacity = 1; } else tip.style.opacity = 0;
 });
@@ -1016,9 +1058,9 @@ renderer.domElement.addEventListener('pointerleave', () => { tip.style.opacity =
 renderer.domElement.addEventListener('pointerup', e => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) { down = null; return; } down = null;
   if (TV.on) { exitTV(); return; } if (lockCam) return;
-  setMouse(e); const hit = ray.intersectObjects(pickables, false)[0];
-  if (!hit) { if (panel.classList.contains('open')) closePanel(); return; }
-  const root = hit.object.userData.root, p = root.userData.pick;
+  setMouse(e); const root = rootOf(ray.intersectObjects(pickables, false)[0]);
+  if (!root) { if (panel.classList.contains('open')) closePanel(); return; }
+  const p = root.userData.pick;
   if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout();
 });
 
@@ -1042,11 +1084,11 @@ function demote() {
 
 /* ================= loop ================= */
 const clock = new THREE.Timer(); let viewX = 0, viewY = 0;
-const roots = [...new Set(pickables.map(m => m.userData.root))];
+const roots = [...new Set(pickables.flatMap(m => m.userData.roots || m.userData.root))];
 function loop(ts) {
   clock.update(ts); const dt = Math.min(clock.getDelta(), .05), t = clock.getElapsed(); judge(dt);
   let moved = LF.anim !== 0; // the only things that cast moving shadows: an object sliding out under the cursor, or one being lifted
-  roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; if (r.position.distanceToSquared(want) > 1e-10) { r.position.lerp(want, Math.min(1, dt * 10)); moved = true; } });
+  roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; if (r.position.distanceToSquared(want) > 1e-10) { r.position.lerp(want, Math.min(1, dt * 10)); moved = true; if (r.userData.inst != null) seat(r); } });
   if (moved) renderer.shadowMap.needsUpdate = true;
   const fl = .85 + Math.sin(t*13) * .06 + Math.sin(t*7.3) * .08 + (Math.random() - .5) * .06; candleLight.intensity = .2 * fl; flame.scale.set(1, 2.2 * fl, 1);
   catBody.scale.y = .55 + Math.sin(t*1.6) * .02; head.rotation.z = Math.sin(t*.4) * .03;

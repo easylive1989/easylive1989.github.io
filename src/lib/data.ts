@@ -12,6 +12,7 @@ import {
 import { fetchSideProjects, type SideProject } from './sideProjects';
 import { fetchPlayboxGames, type PlayboxGame } from './playbox';
 import { enrichBookCovers } from './bookCovers';
+import { bookStatus } from './bookCover';
 import { replaceImageUrls, downloadImages } from './images';
 import { categorySlug } from './category';
 import {
@@ -138,10 +139,70 @@ export async function getAllBooks(): Promise<Book[]> {
         `Fetched ${raw.length} books from Notion, below minimum ${min} — aborting production build`,
       );
     }
+    pruneBlockCache(new Set(raw.map((b) => b.id)), 'book-blocks');
   }
 
   cachedBooks = await enrichBookCovers(raw);
   return cachedBooks;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Reading notes — whatever is written inside a finished book's page
+// ─────────────────────────────────────────────────────────────────
+
+const NOTES_CONCURRENCY = 3; // Notion allows about three requests a second
+
+/** A page that holds nothing, or only the blank lines Notion leaves behind, has no notes. */
+function hasContent(blocks: NotionBlock[]): boolean {
+  return blocks.some((b) => {
+    if (b.type !== 'paragraph') return true;
+    const text = ((b as any).paragraph?.rich_text ?? []) as { plain_text?: string }[];
+    return !!b.children?.length || text.some((t) => t.plain_text?.trim());
+  });
+}
+
+let cachedBookNotes: Promise<Map<string, NotionBlock[]>> | null = null;
+
+/** The notes of every finished book that has any, by book id. */
+export function getBookNotes(): Promise<Map<string, NotionBlock[]>> {
+  return (cachedBookNotes ??= loadBookNotes());
+}
+
+async function loadBookNotes(): Promise<Map<string, NotionBlock[]>> {
+  const notes = new Map<string, NotionBlock[]>();
+  const client = getNotionClient();
+  if (!client) return notes;
+  const queue = (await getAllBooks()).filter((b) => bookStatus(b) === 'read');
+
+  const worker = async () => {
+    for (let book = queue.shift(); book; book = queue.shift()) {
+      let blocks = loadCachedBlocks(book.id, book.lastEditedTime, 'book-blocks');
+      if (!blocks) {
+        try {
+          blocks = await fetchPageBlocks(client, book.id);
+        } catch (err: any) {
+          if (isProductionBuild()) throw new Error(`Failed to fetch the notes of 「${book.title}」: ${err.message}`);
+          console.warn(`Failed to fetch the notes of 「${book.title}」: ${err.message}`);
+          continue;
+        }
+        saveCachedBlocks(book.id, book.lastEditedTime, blocks, 'book-blocks');
+      }
+      if (hasContent(blocks)) notes.set(book.id, blocks);
+    }
+  };
+  await Promise.all(Array.from({ length: NOTES_CONCURRENCY }, worker));
+  return notes;
+}
+
+/** One book's notes, ready to render: its pictures downloaded and pointed at their local copies. */
+export async function getBookNoteBlocks(bookId: string): Promise<NotionBlock[]> {
+  const raw = (await getBookNotes()).get(bookId);
+  if (!raw) return [];
+  const { blocks, imageMap } = replaceImageUrls(raw, 'reading', bookId);
+  const publicDir = path.resolve(process.cwd(), 'public');
+  const distDir = path.resolve(process.cwd(), 'dist');
+  await downloadImages(imageMap, publicDir, distDir);
+  return blocks;
 }
 
 export async function getAllArticlesForStaticPaths(): Promise<

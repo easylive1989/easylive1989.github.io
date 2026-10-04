@@ -12,6 +12,7 @@ export interface Article {
 export interface Book {
   id: string;
   title: string;
+  lastEditedTime: string;
   progress: number;            // 0..100
   categories: string[];
   finishedDate: string | null; // ISO date or null
@@ -198,6 +199,7 @@ export async function fetchBooksDatabase(
         books.push({
           id: p.id,
           title: getBookTitle(props),
+          lastEditedTime: p.last_edited_time,
           progress: getBookProgress(props),
           categories: getBookCategories(props),
           finishedDate: getBookFinishedDate(props),
@@ -226,10 +228,12 @@ export async function fetchPageBlocks(
   let cursor: string | undefined = undefined;
 
   do {
-    const response = await client.blocks.children.list({
-      block_id: pageId,
-      start_cursor: cursor,
-    });
+    const response = await withRetry(`List blocks of ${pageId}`, () =>
+      client.blocks.children.list({
+        block_id: pageId,
+        start_cursor: cursor,
+      }),
+    );
 
     for (const block of response.results) {
       const b = block as any;

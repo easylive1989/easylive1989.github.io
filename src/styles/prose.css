@@ -21,17 +21,17 @@
 }
 
 /* — flow: one rhythm for siblings, blocks that need air ask for more — */
-.prose :where(p, ul, ol, blockquote, h2, h3, h4) { margin: 0; }
+.prose :where(p, ul, ol, blockquote, h2, h3, h4, h5) { margin: 0; }
 .prose > * + *,
 .prose details > * + *,
 .prose li > * + * { margin-top: 1.15em; }
 .prose li > ul,
 .prose li > ol { margin-top: 0.35em; }
-.prose > :is(h2, h3, h4) + *,
+.prose > :is(h2, h3, h4, h5) + *,
 .prose details > summary + * { margin-top: 0.75em; }
 
 /* — headings — */
-.prose :is(h2, h3, h4) {
+.prose :is(h2, h3, h4, h5) {
   position: relative;
   font-family: var(--font-reading);
   font-weight: 700;
@@ -48,7 +48,8 @@
 }
 .prose h3 { font-size: 22px; margin-top: 1.7em; }
 .prose h4 { font-size: 18px; margin-top: 1.6em; }
-.prose > :is(h2, h3, h4):first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.prose h5 { font-size: 16px; margin-top: 1.5em; }
+.prose > :is(h2, h3, h4, h5):first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 
 .prose .anchor-link {
   position: absolute;
@@ -107,6 +108,7 @@
   font-style: italic;
   color: color-mix(in srgb, var(--color-text) 78%, transparent);
 }
+.prose blockquote > * + * { margin-top: 0.6em; }
 
 /* — divider: three dots, a section break rather than a rule — */
 .prose hr {
@@ -199,6 +201,9 @@
 }
 .prose .callout-icon { flex: none; width: 1.5em; font-size: 20px; line-height: 1.55; }
 .prose .callout-content { flex: 1; min-width: 0; font-size: 16px; line-height: 1.75; }
+/* a callout that holds blocks of its own: a heading set off as a part title, say */
+.prose .callout-content > * + * { margin-top: 0.6em; }
+.prose .callout-content > :is(h2, h3, h4, h5) { margin-top: 0; padding-top: 0; border-top: 0; }
 
 /* — image — */
 .prose figure { margin: 2em 0; }

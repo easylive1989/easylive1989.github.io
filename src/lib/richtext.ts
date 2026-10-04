@@ -23,6 +23,12 @@ function escapeHtml(str: string): string {
     .replace(/"/g, '&quot;');
 }
 
+// A link to another page of the Notion workspace opens for nobody but its owner,
+// so it is set as plain text.
+function isNotionLink(url: string): boolean {
+  return url.startsWith('/') || /^https?:\/\/([\w-]+\.)?notion\.(so|com|site)\//.test(url);
+}
+
 export function renderRichText(richText: RichTextItem[]): string {
   return richText
     .map((item) => {
@@ -44,7 +50,7 @@ export function renderRichText(richText: RichTextItem[]): string {
         text = `<u>${text}</u>`;
       }
 
-      if (item.text?.link) {
+      if (item.text?.link && !isNotionLink(item.text.link.url)) {
         text = `<a href="${escapeHtml(item.text.link.url)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
       }
 
