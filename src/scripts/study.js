@@ -280,8 +280,8 @@ function drawSpine(x, x0, y0, w, h, title, bg, fg, asp = w / h) {
 }
 const fPal = [[C.c800,C.cream],[C.m800,C.cream],['#2e4a3a',C.cream],[C.cream,C.ink],['#6b3a26',C.cream],[C.c900,C.yel],[C.cream,C.m700],['#1f2c3d',C.cream]];
 const libPal = [...fPal, ['#8a6b45',C.cream], ['#3d2a1e','#e3cf98'], ['#c9b88f',C.ink], ['#5a1f1f',C.cream], ['#24402f','#e3cf98'], [C.n800,C.cream]];
-const SERIES = ['s1','s2','s3'].filter(has), RECENT = ['w1','w2','w3','w4','w5','w6'].filter(has); // these stand in the rack on the desk
-const fCols = { mb:[C.cyan, C.paper] }; [...SERIES, ...RECENT].forEach((id, i) => fCols[id] = fPal[i % fPal.length]);
+const SERIES = ['s1','s2','s3'].filter(has); // these stand in the rack on the desk
+const fCols = { mb:[C.cyan, C.paper] }; SERIES.forEach((id, i) => fCols[id] = fPal[i % fPal.length]);
 const books = {}, pagesMat = std('pages', '#ffffff', { map:texOf(pageEdges()), roughness:.9 });
 // a book with its spine on +x, `d` from spine to fore-edge
 const bookOf = (id, d, h, th, keep = true) => { const [bg, fg] = fCols[id];
@@ -644,14 +644,13 @@ desk.add(box(2.05, .14, .05, M.woodD, 'desk-apron', [DX, DY - .1, DZ + .44]));
 [[.7,-2.42],[2.64,-2.42],[.7,-1.58],[2.64,-1.58]].forEach(([x,z]) => desk.add(box(.06, DY - .025, .06, M.woodD, 'desk-leg', [x, (DY - .025)/2, z])));
 desk.add(box(1.94, .03, .04, M.woodD, 'stretcher', [DX, .15, -2.4]));
 desk.add(box(.6, .1, .01, M.woodL, 'drawer', [DX, DY - .1, DZ + .468])); desk.add(cyl(.012, .012, .03, 8, M.brass, 'drawer-pull', [DX, DY - .1, DZ + .48], [Math.PI/2,0,0]));
-// book rack (left): one book per series, then the newest articles, spines to the room
-const rack = new THREE.Group(); rack.name = 'book-rack'; rack.position.set(1.07, DY + .025, -2.24); rack.rotation.y = .08; desk.add(rack);
-const racked = [...SERIES.map(id => [id, .29, .105]), ...RECENT.map(id => [id, .26, .052])]; // [id, height, thickness]
-const RKW = Math.max(.38, racked.reduce((a, b) => a + b[2] + .006, 0) + .045), RKD = .22;
+// book rack (left): one book per series, spines to the room
+const rack = new THREE.Group(); rack.name = 'book-rack'; rack.position.set(1.05, DY + .025, -2.24); rack.rotation.y = .12; desk.add(rack);
+const RKW = .38, RKD = .22, BH = .29, BT = .105;
 rack.add(box(RKW, .018, RKD, M.woodL, 'rack-base', [0, .009, 0])); rack.add(box(RKW - .036, .12, .014, M.woodL, 'rack-back', [0, .078, -RKD/2 + .007]));
 [-1, 1].forEach(k => rack.add(box(.018, .19, RKD, M.woodL, 'rack-end', [k * (RKW/2 - .009), .113, 0])));
-racked.reduce((x, [id, h, th]) => { const g = bookOf(id, .2, h, th); g.position.set(x + th/2, .018 + h/2, .006); g.rotation.y = -Math.PI/2; rack.add(g);
-  tag(g, { type:'item', id, view:'desk' }, [0, .02, .06]); return x + th + .006; }, -RKW/2 + .025);
+SERIES.forEach((id, i) => { const g = bookOf(id, .2, BH, BT); g.position.set((i - 1) * (BT + .006), .018 + BH/2, .006); g.rotation.y = -Math.PI/2; rack.add(g);
+  tag(g, { type:'item', id, view:'desk' }, [0, .02, .06]); });
 // laptop (mermer)
 const laptop = new THREE.Group(); laptop.name = 'laptop'; laptop.position.set(1.78, DY + .025, -2.08); laptop.rotation.y = -.05; desk.add(laptop);
 laptop.add(box(.5, .016, .34, M.alu, 'laptop-base', [0,.008,0]));
@@ -678,7 +677,7 @@ const drafts = {};
 [['d1', 2.36, -2.12, .18], ['d2', 2.46, -1.98, -.22], ['d3', 2.33, -1.9, .06]].forEach(([id, x, z, r], i) => {
   if (!has(id)) return;
   const g = new THREE.Group(); g.name = 'draft-' + id; g.position.set(x, DY + .027 + i*.0025, z); g.rotation.y = r;
-  g.add(mk(new THREE.PlaneGeometry(.21, .28), new THREE.MeshStandardMaterial({ name:'draft-paper', map:draftTex(ITEMS[id].t, (ITEMS[id].k.match(/\d{4}\.\d{2}\.\d{2}/) || ['舊稿'])[0]), normalMap:grit, normalScale:new THREE.Vector2(.3, .3), roughness:.9 }), 'draft-paper', [0,0,0], [-Math.PI/2,0,0]));
+  g.add(mk(new THREE.PlaneGeometry(.21, .28), new THREE.MeshStandardMaterial({ name:'draft-paper', map:draftTex(ITEMS[id].t, (ITEMS[id].k.match(/\d{4}\.\d{2}\.\d{2}/) || ['新稿'])[0]), normalMap:grit, normalScale:new THREE.Vector2(.3, .3), roughness:.9 }), 'draft-paper', [0,0,0], [-Math.PI/2,0,0]));
   desk.add(g); drafts[id] = g; tag(g, { type:'item', id, view:'desk' }, [0,.03,0]);
 });
 const pen = rod([2.26, DY + .033, -1.74], [2.42, DY + .033, -1.8], .006, M.ink, 'pen'); desk.add(pen);
@@ -830,12 +829,12 @@ function renderPanel(mode) {
       + '<div class="body"><p>' + esc(ABOUT.bio) + '</p><p>' + esc(ABOUT.summary) + '</p></div>'
       + '<div class="rel"><span class="lab card-kicker">Find me at</span>' + ABOUT.channels.map(([k, v, u]) => '<a class="btn btn-ghost" href="' + esc(u) + '"' + linkAttrs(u) + ' style="' + ghostBtn + '">' + esc(k) + '：' + esc(v) + '</a>').join('') + '</div>'
 ; }
-  else if (mode === 'list') { const recent = IDS.filter(k => /^w\d$/.test(k));
+  else if (mode === 'list') { const recent = DRAFTS;
     h = '<span class="card-kicker">書桌 · 筆電</span><h2>GitHub 活動</h2><p class="intro">' + (GH.ok ? `過去 18 週，${GH.year} 年共 ${GH.total.toLocaleString()} 次 contributions。目前連續 ${GH.current} 天，最長 ${GH.longest} 天。` : '活動統計暫時讀不到，直接去 GitHub 看吧。') + '</p>'
       + linkBtns(ABOUT.channels.filter(c => c[0] === 'GitHub' || c[0] === 'Threads').map(c => c[0] === 'GitHub' ? { l:`GitHub · ${c[1]} ↗`, u:c[2], p:1 } : { l:'Threads ↗', u:c[2] }))
       + (recent.length ? '<div class="rel"><span class="lab card-kicker">最近 ' + recent.length + ' 篇 →</span>' + recent.map(k => '<button class="btn btn-ghost" data-item="' + k + '" style="' + ghostBtn + '">' + esc(ITEMS[k].t) + '</button>').join('') + '</div>' : ''); }
   else { const it = ITEMS[st.cur];
-    const accent2 = it.kind === 'older';
+    const accent2 = it.kind === 'latest';
     h += `<div style="margin-top:var(--space-2)"><span class="card-kicker"${accent2 ? ' style="color:var(--color-accent-2-700)"' : ''}>${esc(it.k)}</span><h3>${esc(it.t)}</h3>${it.by ? `<div style="font-size:15px;font-style:italic;margin-top:-6px">${esc(it.by)}</div>` : ''}</div>`;
     if (it.tech && it.tech.length) h += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:var(--space-2) 0 var(--space-3)">${it.tech.map(t => `<span class="tag tag-neutral">${esc(t)}</span>`).join('')}</div>`;
     if (it.list) h += `<div class="list" style="gap:var(--space-4);margin-bottom:var(--space-4)">${it.list.map(([y, kind, t, org, u]) => `<a href="${esc(u)}"${linkAttrs(u)} style="display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--color-text)"><span class="card-kicker">${esc(y)} · ${esc(kind)}</span><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.3">${esc(t)} ↗</span>${org ? `<span style="font-size:14px">${esc(org)}</span>` : ''}</a>`).join('')}</div>`;
@@ -889,7 +888,7 @@ addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) 
 // (or the camera goes to it), and a DOM stand-in takes over from the mesh once it is close enough to read.
 scene.add(camera);
 let lockCam = false;
-const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', older:'較早的文章', cabinet:'作品櫃', project:'Side Project', play:'Playbox' };
+const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', latest:'最新文章', cabinet:'作品櫃', project:'Side Project', play:'Playbox' };
 const DRAFTS = IDS.filter(k => drafts[k]);
 const GAMES = has('tv') ? ITEMS.tv.list : [];
 const TV = { on:false, vis:false, play:false, sel:0 };

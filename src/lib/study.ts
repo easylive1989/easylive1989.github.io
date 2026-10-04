@@ -21,8 +21,8 @@ import type { Article, Book } from './notion';
  * pages/study/[id].astro).
  *
  *   b1…    every finished book of the reading list, by category, in the bookshelf's bay beside the display shelves
- *   s1–s3  series, racked on the desk   w1–w6  newest articles, in the same rack
- *   d1–d3  older articles on the desk   mb  the book I wrote, on the display shelves
+ *   s1–s3  series, racked on the desk
+ *   d1–d3  newest articles on the desk  mb  the book I wrote, on the display shelves
  *   p1 p3 g2  side projects on the display shelves
  *   ir1–ir3  the Ironman bears   tk1 tk2  talks, on videotape   cab  the cabinet
  *   tv  the game cabinet beside the desk: every Playbox game
@@ -89,7 +89,6 @@ export interface StudyData {
 }
 
 const BASE = import.meta.env.BASE_URL;
-const WRITING_SLOTS = ['w1', 'w2', 'w3', 'w4', 'w5', 'w6'];
 const SERIES_SLOTS = ['s1', 's2', 's3'];
 const DESK_SLOTS = ['d1', 'd2', 'd3'];
 const PROJECT_SLOTS = ['p1', 'p3', 'g2'];
@@ -298,12 +297,6 @@ export async function buildStudyData(): Promise<StudyData> {
     for (const a of inSeries) owner[a.id] = slot;
   });
 
-  /* ── desk, the book rack: the six newest articles, beside the series ── */
-  const recent = articles.slice(0, WRITING_SLOTS.length);
-  recent.forEach((a, i) => {
-    items[WRITING_SLOTS[i]] = articleItem(a, `${i === 0 ? '★ 最新文章 · ' : ''}${a.category} · ${dotted(a.createdTime)}`, 'writing', 'desk');
-  });
-
   /* ── the bookshelf: every finished book of the reading list, filed by category ── */
   const library: StudyData['library'] = [];
   let shelved = 0;
@@ -412,21 +405,19 @@ export async function buildStudyData(): Promise<StudyData> {
     };
   }
 
-  /* ── desk: the next three older articles, as loose pages ── */
-  articles.slice(WRITING_SLOTS.length, WRITING_SLOTS.length + DESK_SLOTS.length).forEach((a, i) => {
+  /* ── desk: the three newest articles, as loose pages ── */
+  const newest = articles.slice(0, DESK_SLOTS.length);
+  newest.forEach((a, i) => {
     items[DESK_SLOTS[i]] = {
-      ...articleItem(a, `較早的文章 · ${a.category} · ${dotted(a.createdTime)}`, 'older', 'desk'),
-      m: `桌上的舊稿 · ${dotted(a.createdTime)}`,
+      ...articleItem(a, `最新文章 · ${a.category} · ${dotted(a.createdTime)}`, 'latest', 'desk'),
+      m: `桌上的稿紙 · ${dotted(a.createdTime)}`,
     };
   });
 
   /* ── "順手再翻" ── */
   const links: [string, string][] = [];
   const add = (a: string, b: string) => items[a] && items[b] && links.push([a, b]);
-  recent.forEach((a, i) => owner[a.id] && add(WRITING_SLOTS[i], owner[a.id]));
-  articles
-    .slice(WRITING_SLOTS.length, WRITING_SLOTS.length + DESK_SLOTS.length)
-    .forEach((a, i) => owner[a.id] && add(DESK_SLOTS[i], owner[a.id]));
+  newest.forEach((a, i) => owner[a.id] && add(DESK_SLOTS[i], owner[a.id]));
   const flutterSeries = SERIES_SLOTS.find((s) => items[s]?.t === '30 天輕鬆學會 Flutter 測試');
   if (flutterSeries) add('mb', flutterSeries);
   // a bear points at its series in the rack, and at the book the series became
@@ -435,7 +426,6 @@ export async function buildStudyData(): Promise<StudyData> {
     if (racked) add(IRONMAN_SLOTS[i], racked);
     if (series === items.mb.t) add(IRONMAN_SLOTS[i], 'mb');
   });
-  add('w1', 'd3');
   PROJECT_SLOTS.forEach((slot, i) => i > 0 && add(slot, PROJECT_SLOTS[i - 1]));
 
   const firstYear = articles.length ? new Date(articles[articles.length - 1].createdTime).getFullYear() : new Date().getFullYear();
