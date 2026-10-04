@@ -200,14 +200,8 @@ export function bookSpine(title: string): string {
   return (cutInWord && out.includes(' ') ? out.slice(0, out.lastIndexOf(' ')) : out).trim();
 }
 
-/** The reading list keeps the month a book was finished in, not the day. */
-function finishedMonth(b: Book): string {
-  return dotted(b.finishedDate).slice(0, 7);
-}
-
 function bookItem(b: Book, hasNotes: boolean): StudyItem {
   const category = b.categories[0] || UNFILED;
-  const month = finishedMonth(b);
   const [title, subtitle] = splitBookTitle(b.title);
   return {
     cat: 'shelf',
@@ -216,8 +210,8 @@ function bookItem(b: Book, hasNotes: boolean): StudyItem {
     k: `讀過的書 · ${category}`,
     t: title,
     ...(subtitle ? { by: subtitle } : {}),
-    b: month ? [`${month} 讀完。`] : [],
-    m: `書架 · ${category}${month ? ` · ${month} 讀完` : ''}`,
+    b: [],
+    m: `書架 · ${category}`,
     ...(hasNotes ? { aid: b.id } : {}),
     ...(b.coverUrl ? { cover: b.coverUrl } : {}),
   };

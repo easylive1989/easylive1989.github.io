@@ -1056,10 +1056,11 @@ async function bookPages(id, D) {
       + it.toc.slice(a, a + TOC_ROWS).map(([aid, t, d]) => '<button data-art="' + aid + '"><span>' + esc(d) + '</span><b>' + esc(t) + '</b></button>').join('') + '</div>');
     return { art:null, pages:closePages(P, id) };
   }
-  // a book from the reading list: its card
+  // a book from the reading list: its title page, and a card after it when there is something to put on one
+  const card = it.b.length || it.pct != null || (it.links && it.links.length);
   return { art:null, pages:closePages([endpaper(it.kind),
     (it.cover ? '<img class="cover-img" src="' + esc(it.cover) + '" alt="">' : '') + '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + (it.by ? '<p class="by">' + esc(it.by) + '</p>' : '') + '<span class="foot">' + esc(ABOUT.name) + ' 的書單</span>',
-    '<span class="sec">書卡</span>' + body + (it.pct != null ? '<div><div class="prog"><i style="width:' + it.pct + '%"></i></div><span style="font-size:13px">已讀 ' + it.pct + '%</span></div>' : '') + linkBtns(it.links) + '<span class="foot">' + esc(it.m) + '</span>'], id) };
+    ...(card ? ['<span class="sec">書卡</span>' + body + (it.pct != null ? '<div><div class="prog"><i style="width:' + it.pct + '%"></i></div><span style="font-size:13px">已讀 ' + it.pct + '%</span></div>' : '') + linkBtns(it.links) + '<span class="foot">' + esc(it.m) + '</span>'] : [])], id) };
 }
 function openBook(id) {
   if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; mark(id); st.cur = id;
