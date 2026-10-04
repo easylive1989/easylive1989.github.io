@@ -51,7 +51,7 @@ catch (err) {
   intro.innerHTML = '<div>這間書房需要 WebGL 才能走進去。<br><br><a href="' + SITE.reading + '">書單</a> · <a href="' + SITE.archive + '">全部文章</a> · <a href="' + SITE.rss + '">RSS</a></div>';
   throw err;
 }
-renderer.setPixelRatio(Q.low ? 1 : Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Q.low ? 1 : Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 // nothing in the room moves on its own, so the shadow map is drawn once and again only while something is being pulled or carried
 renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;
