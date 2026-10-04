@@ -248,34 +248,6 @@ export function brushedMetal({ size = 256, seed = 17 } = {}) {
   return { color:c, rough:r };
 }
 
-// The wall of a terracotta pot, x round the pot and y from the rim down to the foot: throwing rings, a chalky bloom of salts,
-// and a darker damp band above the foot. Carries its own colour. Returns colour and normal canvases.
-export function terracotta({ size = 256, seed = 21 } = {}) {
-  const W = size, H = size / 2, cloud = noiseField(W, H, { octaves:4, base:[6, 3], seed:seed + 1 }), tooth = noiseField(W, H, { octaves:2, base:[64, 32], seed:seed + 2 });
-  const [color, height] = [0, 1].map(() => new ImageData(W, H)), cd = color.data, hd = height.data;
-  for (let y = 0, i = 0; y < H; y++) { const v = y / H, damp = sstep(.7, .95, v) * .28;
-    for (let x = 0; x < W; x++, i++) { const ring = Math.sin(v * 88 + cloud[i] * 2), bloom = sstep(.5, .9, cloud[i]) * .55, L = (1 - damp) * (1 + (tooth[i] - .5) * .16 + ring * .03), o = i * 4;
-      cd[o] = 190 * L * (1 - bloom) + 226 * bloom; cd[o+1] = 104 * L * (1 - bloom) + 196 * bloom; cd[o+2] = 62 * L * (1 - bloom) + 172 * bloom;
-      hd[o] = hd[o+1] = hd[o+2] = 128 + ring * 40 + (tooth[i] - .5) * 120; cd[o+3] = hd[o+3] = 255; } }
-  const [c, hgt] = [color, height].map(img => cnv(W, H, x => x.putImageData(img, 0, 0)));
-  return { color:c, normal:normalFromHeight(hgt, 1.5 * W / 256) };
-}
-
-// A leaf for a flattened sphere whose long axis is x, stalk at -x and tip at +x: a pale midrib with side veins sweeping towards the tip,
-// darker towards the margin, paler underneath. Carries its own colour. Returns colour and normal canvases.
-export function leaf({ size = 256, seed = 27 } = {}) {
-  const W = size, H = size / 2, blotch = noiseField(W, H, { octaves:4, base:[4, 2], seed });
-  const [color, height] = [0, 1].map(() => new ImageData(W, H)), cd = color.data, hd = height.data;
-  for (let y = 0, i = 0; y < H; y++) { const pol = (y + .5) / H * Math.PI, sp = Math.sin(pol), sy = Math.cos(pol);
-    for (let x = 0; x < W; x++, i++) { const lon = x / W * 6.2832, sx = -sp * Math.cos(lon), az = Math.abs(sp * Math.sin(lon)), o = i * 4;
-      const q = sx * 4.5 - az * 3.6, off = Math.abs(q - Math.round(q)), rib = sstep(.07 - sx * .025, .01, az), vein = Math.max(rib, sstep(.09, .03, off) * sstep(.92, .55, az) * .7);
-      const under = sstep(.05, -.3, sy), L = (1 - .3 * az * az) * (1 + (blotch[i] - .5) * .3), mix = (g, pale, dull) => (g * L * (1 - vein * .6) + pale * vein * .6) * (1 - under * .45) + dull * under * .45;
-      cd[o] = mix(70, 176, 138); cd[o+1] = mix(140, 208, 170); cd[o+2] = mix(52, 118, 104); cd[o+3] = hd[o+3] = 255;
-      hd[o] = hd[o+1] = hd[o+2] = 60 + 150 * sstep(0, .5, off) * (1 - rib); } } // the blade quilts up between the veins
-  const [c, hgt] = [color, height].map(img => cnv(W, H, x => x.putImageData(img, 0, 0)));
-  return { color:c, normal:normalFromHeight(hgt, 1.2 * W / 256) };
-}
-
 // The lake behind the window, after an autumn morning in the Alps: a low overcast, snow on the far peaks, mist along the slopes,
 // a wooded hillside running down from the left to a boathouse on the shore, a strip of meadow, and all of it again in the still
 // water. Each depth is drawn small and scaled up, so the farthest is the softest — a blur that needs no canvas filter.
@@ -407,7 +379,7 @@ export function agedPlastic({ size = 512, seed = 33 } = {}) {
 export function paintSheets(low) {
   const s = low ? 1 : 0;
   return { wood:woodGrain({ size:[1024, 512][s] }), plaster:plaster({ size:[1024, 512][s] }), fabric:weave({ size:[512, 256][s] }), tabby:tabbyFur({ size:[512, 256][s] }),
-    metal:brushedMetal(), pot:terracotta(), leaf:leaf(), plastic:agedPlastic(), floor:plankFloor({ size:[1536, 768][s] }) };
+    metal:brushedMetal(), plastic:agedPlastic(), floor:plankFloor({ size:[1536, 768][s] }) };
 }
 
 // What a CRT puts between you and the picture: phosphor stripes, scanlines, and the dim corners of the tube. Multiplied over each frame.

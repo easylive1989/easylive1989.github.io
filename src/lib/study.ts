@@ -18,7 +18,7 @@ import type { Article, Book } from './notion';
  * Nothing here links to another page of this site: a book opens in the room and
  * its article is fetched from /study/{id}/ (see pages/study/[id].astro).
  *
- *   s1–s3  series spines            w1–w6  newest articles on the shelf
+ *   s1–s3  series, racked on the desk  w1–w6  newest articles on the shelf
  *   r1–r4  reading shelf            p1 p3 g2  side projects on the display shelves
  *   g1 g3 g4 t2 p2  Playbox games   aw  awards & talks   cab  the cabinet
  *   tv  the game cabinet beside the desk: every Playbox game
@@ -217,7 +217,7 @@ export async function buildStudyData(): Promise<StudyData> {
   const items: Record<string, StudyItem> = {};
   const owner: Record<string, string> = {}; // article id → series slot, for "順手再翻"
 
-  /* ── shelf, level 2: one spine per series, newest series first ── */
+  /* ── desk, the book rack: one book per series, newest series first ── */
   const categories: string[] = [];
   for (const a of articles) if (a.category && !categories.includes(a.category)) categories.push(a.category);
   categories.slice(0, SERIES_SLOTS.length).forEach((name, i) => {
@@ -225,7 +225,7 @@ export async function buildStudyData(): Promise<StudyData> {
     const inSeries = articles.filter((a) => a.category === name);
     const links: StudyLink[] = ITHOME_SERIES[name] ? [{ l: 'iThome 鐵人賽 ↗', u: ITHOME_SERIES[name], p: 1 }] : [];
     items[slot] = {
-      cat: 'shelf',
+      cat: 'desk',
       kind: 'series',
       sp: SERIES_SPINE[name] ?? spineLabel(name),
       k: `系列 · ${inSeries.length} 篇`,

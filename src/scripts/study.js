@@ -26,7 +26,7 @@ const C = {
   paper:T('--color-bg'), ink:T('--color-text'), cyan:T('--color-accent'), mag:T('--color-accent-2'), yel:rgb(tok('--color-process-yellow','#edbb00')),
   c700:T('--color-accent-700'), c800:T('--color-accent-800'), c900:T('--color-accent-900'), m700:T('--color-accent-2-700'), m800:T('--color-accent-2-800'), m900:T('--color-accent-2-900'),
   n200:T('--color-neutral-200'), n600:T('--color-neutral-600'), n800:T('--color-neutral-800'),
-  wood:'#5b3522', woodD:'#3b2216', woodL:'#7a4a2c', wall:'#3a322b', wallL:'#4a4038', fabric:'#776f5c', fabricD:'#5e5747', cream:'#eadfc6', brass:'#b38b4b', terracotta:'#b4643c', cat:'#d98a46', leaf:'#5e9a3a',
+  wood:'#5b3522', woodD:'#3b2216', woodL:'#7a4a2c', wall:'#3a322b', wallL:'#4a4038', fabric:'#776f5c', fabricD:'#5e5747', cream:'#eadfc6', brass:'#b38b4b', cat:'#d98a46',
 };
 const col = h => new THREE.Color(h);
 
@@ -75,7 +75,7 @@ const M = {
   wood:std('wood', C.wood, { roughness:.55 }), woodD:std('wood-dark', C.woodD, { roughness:.6 }), woodL:std('wood-light', C.woodL, { roughness:.5 }),
   fabric:std('fabric', C.fabric, { roughness:1 }), fabricD:std('fabric-dark', C.fabricD, { roughness:1 }),
   cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
-  terracotta:std('terracotta', C.terracotta), leaf:std('leaf', C.leaf, { roughness:.7, side:THREE.DoubleSide }), cat:std('cat', C.cat, { roughness:.95 }), catL:std('cat-light', '#efc394', { roughness:.95 }),
+  cat:std('cat', C.cat, { roughness:.95 }), catL:std('cat-light', '#efc394', { roughness:.95 }),
   glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
   alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }), bronze:std('bronze', '#5a3a24', { roughness:.4, metalness:.6 }),
 };
@@ -160,7 +160,7 @@ const plasterTex = { map:sheet('plaster', 'color', [.4, .4]), normalMap:sheet('p
 // upholstery: one 12.5 cm swatch of 4 mm threads
 const fabricTex = { map:sheet('fabric', 'color', [8, 8]), normalMap:sheet('fabric', 'normal', [8, 8]), normalScale:new THREE.Vector2(.8, .8), roughness:1, sheen:.4, sheenRoughness:.75 };
 const coatTex = { normalMap:sheet('tabby', 'normal'), normalScale:new THREE.Vector2(.6, .6), roughness:1, sheen:.6, sheenRoughness:.6, sheenColor:col('#ffd9b0') };
-// small things: metal that has been handled, a pot, a leaf, and a fine grit for paper and soil
+// small things: metal that has been handled, and a fine grit for paper and hardboard
 const metalTex = { map:sheet('metal', 'color'), roughnessMap:sheet('metal', 'rough'), metalness:1 };
 const grit = sheet('plaster', 'normal');
 const plasticTex = { map:sheet('plastic', 'color', [2, 2]), normalMap:sheet('plastic', 'normal', [2, 2]), roughnessMap:sheet('plastic', 'rough', [2, 2]), normalScale:new THREE.Vector2(.35, .35) };
@@ -177,8 +177,7 @@ Object.assign(M, {
   brass: pbr('brass', '#d2a868', { ...metalTex, roughness:.43 }), bronze: pbr('bronze', '#6a442a', { ...metalTex, metalness:.9, roughness:.63 }),
   alu: pbr('aluminium', '#b4b2ad', { ...metalTex, map:null, roughness:.53 }),
   cat: pbr('cat', '#ffffff', { map:sheet('tabby', 'color'), ...coatTex }), catL: pbr('cat-light', '#f7dcb8', coatTex),
-  cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }), terracotta: std('terracotta', '#ffffff', { map:sheet('pot', 'color'), normalMap:sheet('pot', 'normal'), roughness:.95 }),
-  leaf: pbr('leaf', '#ffffff', { map:sheet('leaf', 'color'), normalMap:sheet('leaf', 'normal'), normalScale:new THREE.Vector2(.7, .7), roughness:.5, clearcoat:.35, clearcoatRoughness:.3, side:THREE.DoubleSide }),
+  cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }),
   glass: new THREE.MeshPhysicalMaterial(lite({ name:'glass', color:col('#c8d8d4'), transparent:true, opacity:.14, roughness:.04, metalness:0, depthWrite:false, clearcoat:1 })),
 });
 
@@ -214,7 +213,7 @@ LV.forEach((y, i) => { const z0 = i === LV.length - 1 ? SZ0 : BZ; shelf.add(box(
 shelf.add(box(.42, .18, SZ1 - SZ0 + .05, M.wood, 'shelf-cornice', [-2.8,2.68,(SZ0+SZ1)/2]));
 LV.slice(1).forEach(y => { const s = mk(new THREE.BoxGeometry(.02, .01, SZ1 - BZ), new THREE.MeshBasicMaterial({ name:'led', color:col('#b98450') }), 'led-strip', [-2.63, y - .025, (BZ+SZ1)/2]); s.castShadow = false; shelf.add(s); });
 const spineCols = [C.c900, C.m900, C.m800, '#24402f', '#2e4a3a', '#1f2c3d', C.cream, '#6b3a26', '#8a6b45', C.n800, '#3d2a1e', C.c800, '#c9b88f', '#5a1f1f'];
-const featured = { 2:{ bay:1, ids:['s1','s2','s3'], label:'系列', th:.12 }, 3:{ bay:1, ids:['w1','w2','w3','w4','w5','w6'], label:'最近寫的', th:.07 }, 4:{ bay:1, ids:['r1','r2','r3','r4'], label:'書單', th:.07 } };
+const featured = { 3:{ bay:1, ids:['w1','w2','w3','w4','w5','w6'], label:'最近寫的', th:.07 }, 4:{ bay:1, ids:['r1','r2','r3','r4'], label:'書單', th:.07 } };
 Object.keys(featured).forEach(lv => { featured[lv].ids = featured[lv].ids.filter(has); if (!featured[lv].ids.length) delete featured[lv]; });
 // every shelved book is one instance of a unit block; `aBook` gives each its own spine layout, and the shader tells its cloth from its paper
 const bookGeo = rboxGeo(1, 1, 1, .09).clone(), bookAttr = new THREE.InstancedBufferAttribute(new Float32Array(900 * 2), 2), bookR = rng(41); bookGeo.setAttribute('aBook', bookAttr);
@@ -269,18 +268,20 @@ const spineTex = (title, bg, fg) => ctex(96, 512, (x, w, h) => {
   else { x.save(); x.translate(w/2, h/2); x.rotate(Math.PI/2); x.font = `600 40px ${SERIF}`; x.fillText(t, 0, 2, h - 80); x.restore(); }
 });
 const fPal = [[C.c800,C.cream],[C.m800,C.cream],['#2e4a3a',C.cream],[C.cream,C.ink],['#6b3a26',C.cream],[C.c900,C.yel],[C.cream,C.m700],['#1f2c3d',C.cream]];
-const fCols = {}; Object.keys(featPos).forEach((id, i) => fCols[id] = id === 'r3' ? [C.cyan, C.paper] : fPal[i % fPal.length]);
+const SERIES = ['s1','s2','s3'].filter(has); // these stand in the rack on the desk
+const fCols = {}; [...SERIES, ...Object.keys(featPos)].forEach((id, i) => fCols[id] = id === 'r3' ? [C.cyan, C.paper] : fPal[i % fPal.length]);
 const books = {}, pagesMat = std('pages', '#ffffff', { map:texOf(pageEdges()), roughness:.9 });
-Object.entries(featPos).forEach(([id, p]) => {
-  const [bg, fg] = fCols[id]; const h = id[0] === 's' ? .32 : id[0] === 'r' ? .29 : .3;
+// a book with its spine on +x, `d` from spine to fore-edge
+const bookOf = (id, d, h, th) => { const [bg, fg] = fCols[id];
   const sm = new THREE.MeshStandardMaterial({ name:'spine-' + id, map:spineTex(ITEMS[id].sp || ITEMS[id].t, bg, fg), roughness:.7 });
   const cm = std('cover-' + id, bg, { roughness:.7 }), pm = pagesMat;
-  const g = new THREE.Group(); g.position.set(-2.78 + .13 - .01, p.y + .018 + h/2, p.z);
-  g.add(mk(new THREE.BoxGeometry(.24, h, p.th), [sm, pm, pm, pm, cm, cm], 'book-' + id)); shelf.add(g); books[id] = g;
+  const g = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(d, h, th), [sm, pm, pm, pm, cm, cm], 'book-' + id)); return books[id] = g; };
+Object.entries(featPos).forEach(([id, p]) => {
+  const h = id[0] === 'r' ? .29 : .3, g = bookOf(id, .24, h, p.th); g.position.set(-2.78 + .13 - .01, p.y + .018 + h/2, p.z); shelf.add(g);
   tag(g, { type:'item', id, view:'shelf' }, [.1, 0, 0]);
 });
 const plateTex = s => ctex(256, 64, (x, w, h) => { x.fillStyle = C.brass; x.fillRect(0,0,w,h); x.strokeStyle = '#6e5228'; x.lineWidth = 4; x.strokeRect(4,4,w-8,h-8); x.fillStyle = '#2a1d0e'; x.font = `600 34px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(s, w/2, h/2+2); });
-[2, 3, 4].forEach(lv => { const f = featured[lv]; if (!f) return; const zc = bays[f.bay] + .32 + .02 + f.ids.length*(f.th + .015)/2;
+[3, 4].forEach(lv => { const f = featured[lv]; if (!f) return; const zc = bays[f.bay] + .32 + .02 + f.ids.length*(f.th + .015)/2;
   const pm = new THREE.MeshStandardMaterial({ name:'brass-plate', map:plateTex(f.label), roughness:.4, metalness:.6 });
   shelf.add(mk(new THREE.BoxGeometry(.005, .045, .18), [pm, M.brass, M.brass, M.brass, M.brass, M.brass], 'brass-plate', [-2.605, LV[lv] - .005, zc])); });
 
@@ -502,20 +503,13 @@ desk.add(box(2.05, .14, .05, M.woodD, 'desk-apron', [DX, DY - .1, DZ + .44]));
 [[.7,-2.42],[2.64,-2.42],[.7,-1.58],[2.64,-1.58]].forEach(([x,z]) => desk.add(box(.06, DY - .025, .06, M.woodD, 'desk-leg', [x, (DY - .025)/2, z])));
 desk.add(box(1.94, .03, .04, M.woodD, 'stretcher', [DX, .15, -2.4]));
 desk.add(box(.6, .1, .01, M.woodL, 'drawer', [DX, DY - .1, DZ + .468])); desk.add(cyl(.012, .012, .03, 8, M.brass, 'drawer-pull', [DX, DY - .1, DZ + .48], [Math.PI/2,0,0]));
-// banker lamp (left)
-const lampL = new THREE.Group(); lampL.name = 'desk-lamp'; lampL.position.set(.78, DY + .025, -2.25); desk.add(lampL);
-lampL.add(cyl(.09, .1, .02, 32, M.brass, 'lamp-base', [0,.01,0]));
-lampL.add(rod([0,.02,0], [0,.42,0], .012, M.brass, 'lamp-stem')); lampL.add(rod([0,.42,0], [.13,.47,.06], .01, M.brass, 'lamp-arm'));
-const shadeL = mk(new THREE.ConeGeometry(.09, .13, 32, 1, true), std('lamp-shade', '#2d3a2f', { roughness:.4, metalness:.5, side:THREE.DoubleSide }), 'lamp-shade', [.17,.43,.08], [0,0,-.9]); lampL.add(shadeL);
-const bulbL = mk(new THREE.SphereGeometry(.025, 12, 8), new THREE.MeshBasicMaterial({ name:'bulb', color:col('#fff1c9') }), 'bulb', [.19,.39,.08]); bulbL.castShadow = false; lampL.add(bulbL);
-// plant
-const plant = new THREE.Group(); plant.name = 'plant'; plant.position.set(1.1, DY + .025, -2.28); desk.add(plant);
-plant.add(cyl(.085, .1, .02, 24, M.terracotta, 'saucer', [0,.01,0])); plant.add(cyl(.075, .055, .12, 24, M.terracotta, 'pot', [0,.08,0]));
-plant.add(cyl(.068, .068, .01, 24, std('soil', '#2a1c12', { normalMap:grit, roughness:1 }), 'soil', [0,.135,0]));
-const stalk = std('stalk', '#5d8f3c', { roughness:.7 });
-for (let i = 0; i < 11; i++) { const a = i * 2.4, r = .02 + (i % 3) * .02, lg = new THREE.Group(); lg.position.set(Math.cos(a)*r, .14, Math.sin(a)*r); lg.rotation.y = -a;
-  lg.add(rod([0,0,0], [.04, .1 + (i%4)*.03, 0], .004, stalk, 'leaf-stem'));
-  const lf = mk(new THREE.SphereGeometry(.045, 12, 8), M.leaf, 'leaf', [.07, .12 + (i%4)*.03, 0]); lf.scale.set(1.3, .15, .6); lf.rotation.z = -.5 + (i%3)*.2; lg.add(lf); plant.add(lg); }
+// book rack (left): one book per series, spines to the room
+const rack = new THREE.Group(); rack.name = 'book-rack'; rack.position.set(1.05, DY + .025, -2.24); rack.rotation.y = .12; desk.add(rack);
+const RKW = .38, RKD = .22, BH = .29, BT = .105;
+rack.add(box(RKW, .018, RKD, M.woodL, 'rack-base', [0, .009, 0])); rack.add(box(RKW - .036, .12, .014, M.woodL, 'rack-back', [0, .078, -RKD/2 + .007]));
+[-1, 1].forEach(k => rack.add(box(.018, .19, RKD, M.woodL, 'rack-end', [k * (RKW/2 - .009), .113, 0])));
+SERIES.forEach((id, i) => { const g = bookOf(id, .2, BH, BT); g.position.set((i - 1) * (BT + .006), .018 + BH/2, .006); g.rotation.y = -Math.PI/2; rack.add(g);
+  tag(g, { type:'item', id, view:'desk' }, [0, .02, .06]); });
 // laptop (mermer)
 const laptop = new THREE.Group(); laptop.name = 'laptop'; laptop.position.set(1.78, DY + .025, -2.08); laptop.rotation.y = -.05; desk.add(laptop);
 laptop.add(box(.5, .016, .34, M.alu, 'laptop-base', [0,.008,0]));
@@ -557,7 +551,7 @@ const portraitTex = ctex(240, 300, (x, w, h) => { x.fillStyle = C.paper; x.fillR
   x.globalCompositeOperation = 'multiply'; x.font = `700 200px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillStyle = C.yel; x.fillText('P', w/2 - 6, h/2 - 2); x.fillStyle = C.mag; x.fillText('P', w/2 + 6, h/2 - 6); x.fillStyle = C.cyan; x.fillText('P', w/2, h/2 - 10);
   x.globalCompositeOperation = 'source-over'; x.fillStyle = C.ink; x.font = `italic 400 22px ${SERIF}`; x.fillText('自畫像', w/2, h - 34); });
-const portrait = new THREE.Group(); portrait.name = 'self-portrait'; portrait.position.set(1.3, DY + .025, -2.3); portrait.rotation.set(0, .22, 0); desk.add(portrait);
+const portrait = new THREE.Group(); portrait.name = 'self-portrait'; portrait.position.set(2.22, DY + .025, -2.33); portrait.rotation.set(0, -.22, 0); desk.add(portrait);
 const pf = new THREE.Group(); pf.position.y = .135; pf.rotation.x = -.16; portrait.add(pf);
 const portraitMat = new THREE.MeshStandardMaterial({ name:'portrait', map:portraitTex, roughness:.85 });
 pf.add(mk(new THREE.BoxGeometry(.2, .25, .015), [M.brass, M.brass, M.brass, M.brass, portraitMat, M.brass], 'portrait-frame'));
@@ -597,7 +591,6 @@ side.add(box(.5, .12, .04, M.woodD, 'side-drawer', [0,.52,.23]));
 /* ================= lighting ================= */
 const hemi = new THREE.HemisphereLight(0xc6d2dc, 0x6b5440, 1); scene.add(hemi); // daylight off the walls from above, lamplight off the floor from below
 const amb = new THREE.AmbientLight(0x5a5048, .6); scene.add(amb);
-const lampLight = new THREE.PointLight(0xffb066, 1.2, 4.5, 1.6); lampLight.position.set(.96, DY + .36, -2.15); room.add(lampLight);
 const lampLight2 = new THREE.PointLight(0xffa850, .8, 3.5, 1.6); lampLight2.position.set(2.42, DY + .5, -2.25); room.add(lampLight2);
 // every point light is paid for on every pixel, so the shelf strip and the display downlights are each one light, placed between the fittings they stand for
 const shelfLight = new THREE.PointLight(0xffc27a, 1.2, 4.2, 1.5); shelfLight.position.set(-2.4, 1.9, .1); room.add(shelfLight);
@@ -615,7 +608,6 @@ const pmrem = new THREE.PMREMGenerator(renderer);
   const add = (geo, c, k, p) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:new THREE.Color(c).multiplyScalar(k) })); m.position.set(...p); es.add(m); };
   add(new THREE.PlaneGeometry(2.6, 1.5), '#dfeaf0', 3.5, [1.35, .35, -2.9]);
   add(new THREE.PlaneGeometry(1.1, 2.15), '#dfeaf0', 3.5, [DCX, -.325, -2.9]);
-  add(new THREE.SphereGeometry(.12, 12, 8), '#ffc27a', 4, [.56, -.6, -2.15]);
   add(new THREE.SphereGeometry(.14, 12, 8), '#ffb066', 3, [2.42, -.45, -2.25]);
   add(new THREE.BoxGeometry(.05, 2.4, 2.7), '#ffbe78', .8, [-2.7, .1, .24]);
   add(new THREE.BoxGeometry(.3, .05, 1.2), '#ffd8a0', 1, [-2.8, 1.1, -1.8]);
@@ -626,7 +618,7 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 /* glow halos */
 const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
 const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); sp.userData.op = op; room.add(sp); return sp; };
-halo([.97, DY + .4, -2.17], .32, .2); halo([2.4, DY + .52, -2.27], .5, .16);
+halo([2.4, DY + .52, -2.27], .5, .16);
 const candleHalo = halo(dispAt(-.45, on(1) + .24, .19), .22, .28);
 [-.3, .3].forEach(x => halo(dispAt(x, 2.48, .2), .16, .18));
 
@@ -654,7 +646,7 @@ decal(aoLin, 6, .55, [2.995, .28, 0], [0, -Math.PI/2, Math.PI], .6);
 decal(aoLin, 6, .5, [0, 2.54, -2.494], [0, 0, 0], .5);
 decal(aoLin, 6, .5, [2.995, 2.54, 0], [0, -Math.PI/2, 0], .5);
 const DT = DY + .0265;
-[[1.78, -2.08, .62, .46], [.78, -2.25, .26, .26], [1.1, -2.28, .26, .26], [2.56, -2.33, .22, .22], [1.3, -2.3, .26, .18], [1.18, -1.75, .12, .12]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
+[[1.78, -2.08, .62, .46], [1.05, -2.24, .5, .34], [2.56, -2.33, .22, .22], [2.22, -2.33, .26, .18], [1.18, -1.75, .12, .12]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
 LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - BZ, .12, [-2.788, y - .02, (BZ + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
 [...DL.slice(1), LV[7]].forEach(y => decal(aoLin, DW, .12, [-2.957, y - .02, (SZ0 + BZ)/2], [0, Math.PI/2, Math.PI], .55));
 
