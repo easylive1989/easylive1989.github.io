@@ -210,6 +210,29 @@ export function tabbyFur({ size = 512, seed = 8 } = {}) {
   return { color, normal:normalFromHeight(height, 1.6 * u) };
 }
 
+// Eight spine layouts for the shelved books, one per 64 px row, each read along the spine from its foot (x = 0) to its head.
+// The channels are masks, not colours: red is foil stamping, green a paper label, blue a darkened panel. The books' shader colours them per book.
+export const SPINES = 8;
+export function spineAtlas() {
+  const W = 512, RH = 64;
+  return cnv(W, RH * SPINES, x => {
+    const FOIL = '#f00', PAPER = '#0f0', DARK = '#00f';
+    const bar = (r, c, u0, u1, v0 = 0, v1 = 1) => { x.fillStyle = c; x.fillRect(u0 * W, (r + v0) * RH, (u1 - u0) * W, (v1 - v0) * RH); };
+    // a line of lettering: a run of word-sized dashes along the spine
+    const words = (r, c, u0, u1, th, v = .5) => { const R = rng(r * 7 + 3); for (let u = u0; u < u1 - .03;) { const L = Math.min(u1 - u, .05 + R() * .09); bar(r, c, u, u + L, v - th / 2, v + th / 2); u += L + .018; } };
+    x.fillStyle = '#000'; x.fillRect(0, 0, W, RH * SPINES);
+    [.07, .1, .893, .915].forEach((u, i) => bar(0, FOIL, u, u + (i % 3 ? .007 : .015))); bar(0, DARK, .6, .8); words(0, FOIL, .62, .78, .16);                   // classic: double rules, a title panel
+    [.18, .34, .5, .66, .82].forEach(u => bar(1, FOIL, u, u + .012)); words(1, FOIL, .69, .81, .14);                                                         // raised bands
+    bar(2, PAPER, .68, .88, .14, .86); words(2, DARK, .71, .85, .1, .38); words(2, DARK, .71, .82, .1, .62);                                                 // a pasted paper label
+    bar(3, DARK, .5, .9); bar(3, FOIL, .5, .508); bar(3, FOIL, .892, .9); words(3, FOIL, .55, .85, .2); bar(3, FOIL, .1, .16, .4, .6);                         // a deep title panel
+    bar(4, DARK, 0, .3); words(4, PAPER, .36, .9, .22);                                                                                                      // a modern jacket
+    bar(5, FOIL, .05, .058); bar(5, FOIL, .942, .95); words(5, FOIL, .62, .86, .14); words(5, FOIL, .16, .36, .1);
+    x.save(); x.translate(.5 * W, 5.5 * RH); x.rotate(Math.PI / 4); x.fillStyle = FOIL; x.fillRect(-9, -9, 18, 18); x.restore();                             // rules and a lozenge
+    bar(6, PAPER, .3, .7); words(6, DARK, .34, .66, .18);                                                                                                    // a broad paper band
+    bar(7, FOIL, .08, .1, .35, .65); words(7, FOIL, .5, .85, .12);                                                                                           // plain cloth
+  });
+}
+
 // The top of a closed book: cream paper, its sheets showing as faint lines across the thickness (canvas y).
 export const pageEdges = () => cnv(64, 64, (x, w, h) => { const R = rng(31); x.fillStyle = '#eadfc6'; x.fillRect(0, 0, w, h);
   for (let y = 0; y < h; y += 1 + Math.floor(R() * 2)) { x.fillStyle = 'rgba(90,70,40,' + (.05 + R() * .16) + ')'; x.fillRect(0, y, w, 1); } });

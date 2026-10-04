@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rng, cnv, paintSheets, pageEdges, paintLakeView, paintNearWater, LAKE_SKY, crtMask } from './studyTextures.js';
+import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, LAKE_SKY, crtMask } from './studyTextures.js';
 const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
 
 /* ================= content ================= */
@@ -212,7 +212,47 @@ bays.forEach(z => shelf.add(box(.4, 2.72, .05, M.wood, 'shelf-divider', [-2.81,1
 LV.forEach((y, i) => { const z0 = i === LV.length - 1 ? SZ0 : BZ; shelf.add(box(.4, .035, SZ1 - z0, M.wood, 'shelf-board', [-2.81,y,(z0+SZ1)/2])); }); // only the top board runs the whole length
 shelf.add(box(.42, .18, SZ1 - SZ0 + .05, M.wood, 'shelf-cornice', [-2.8,2.68,(SZ0+SZ1)/2]));
 LV.slice(1).forEach(y => { const s = mk(new THREE.BoxGeometry(.02, .01, SZ1 - BZ), new THREE.MeshBasicMaterial({ name:'led', color:col('#b98450') }), 'led-strip', [-2.63, y - .025, (BZ+SZ1)/2]); s.castShadow = false; shelf.add(s); });
-/* the books: every finished book of the reading list, filed by category. Whatever the list has not filled yet stays bare. */
+/* the bay nearer the camera: books that are only there to be looked at */
+const spineCols = [C.c900, C.m900, C.m800, '#24402f', '#2e4a3a', '#1f2c3d', C.cream, '#6b3a26', '#8a6b45', C.n800, '#3d2a1e', C.c800, '#c9b88f', '#5a1f1f'];
+// each is one instance of a unit block; `aBook` gives each its own spine layout, and the shader tells its cloth from its paper
+const bookGeo = rboxGeo(1, 1, 1, .09).clone(), bookAttr = new THREE.InstancedBufferAttribute(new Float32Array(400 * 2), 2), bookR = rng(41); bookGeo.setAttribute('aBook', bookAttr);
+const bookMat = new THREE.MeshStandardMaterial({ name:'books', roughness:.68 }), spines = texOf(spineAtlas(), [1, 1], false);
+bookMat.onBeforeCompile = sh => {
+  sh.uniforms.uSpines = { value:spines };
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aBook;\nvarying vec3 vBookP;\nvarying vec3 vBookN;\nvarying vec2 vBook;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvBookP = position; vBookN = normal; vBook = aBook;');
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D uSpines;\nvarying vec3 vBookP;\nvarying vec3 vBookN;\nvarying vec2 vBook;\nfloat bookFoil = 0.0;').replace('#include <color_fragment>', `#include <color_fragment>
+    vec3 bn = abs(vBookN);
+    if ((vBookN.y > 0.0 && bn.y > bn.x && bn.y > bn.z) || (vBookN.x < 0.0 && bn.x > bn.y && bn.x > bn.z)) {
+      // head and fore-edge are the paper block: sheets across the thickness, blurring into plain cream once they are too fine to draw
+      float s = vBookP.z * 22.0, sheet = mix(0.84 + 0.16 * sin(s * 6.2832), 0.92, smoothstep(0.25, 0.7, fwidth(s)));
+      diffuseColor.rgb = vec3(0.82, 0.74, 0.57) * sheet;
+    } else {
+      float across = clamp(vBookP.z + 0.5, 0.04, 0.96);
+      vec3 deco = texture2D(uSpines, vec2(vBookP.y + 0.5, (vBook.x + across) / ${SPINES}.0)).rgb, cloth = diffuseColor.rgb * (0.78 + 0.22 * sin(across * 3.1416)); // the spine rounds away at its edges
+      // pale cloth is stamped in dark ink, dark cloth in gold or, for one book in four, silver
+      bool pale = dot(cloth, vec3(0.3, 0.6, 0.1)) > 0.22;
+      vec3 foil = pale ? vec3(0.03, 0.018, 0.012) : vBook.y > 0.75 ? vec3(0.62, 0.6, 0.55) : vec3(0.69, 0.48, 0.17);
+      bookFoil = pale ? 0.0 : deco.r;
+      diffuseColor.rgb = mix(mix(mix(cloth, cloth * 0.4, deco.b), vec3(0.84, 0.78, 0.62), deco.g), foil, deco.r);
+    }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.35, bookFoil);').replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.85, bookFoil);');
+};
+const inst = new THREE.InstancedMesh(bookGeo, bookMat, 400); inst.castShadow = true; inst.receiveShadow = true;
+let ni = 0; const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
+const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+for (let lv = 0; lv < 7; lv++) {
+  let z = bays[2] + .04; const zEnd = bays[3] - .04;
+  while (z < zEnd - .02) {
+    if (rnd() < .025) { z += .12; continue; }
+    const t = .025 + rnd()*.045, h = .22 + rnd()*.1, d = .2 + rnd()*.06;
+    if (z + t > zEnd || ni === 400) break;
+    const lean = rnd() < .04 && z + .2 < zEnd ? .22 : 0;
+    q.setFromEuler(new THREE.Euler(lean, 0, 0)); sc.set(d, h, t); ps.set(-2.78 + (.26 - d)/2 + .02, LV[lv] + .018 + h/2, z + t/2 + (lean ? .03 : 0));
+    m4.compose(ps, q, sc); inst.setMatrixAt(ni, m4); const c = col(spineCols[Math.floor(rnd()*spineCols.length)]); c.multiplyScalar(.8 + rnd()*.35); inst.setColorAt(ni, c); bookAttr.setXY(ni, Math.floor(bookR() * SPINES), bookR()); ni++;
+    z += t + .003 + (lean ? .05 : 0);
+  }
+}
+inst.count = ni; shelf.add(inst);
+/* the bay beside the display shelves: every finished book of the reading list, filed by category */
 const CJK = '\u2e80-\u9fff\uff00-\uffef', cjkRun = new RegExp('[' + CJK + ']|[^' + CJK + ']+', 'g');
 const VERT = { '「':'﹁', '」':'﹂', '『':'﹃', '』':'﹄', '（':'︵', '）':'︶', '《':'︽', '》':'︾', '：':'︰' }; // what turns with the line when it is set downwards
 // One spine, head up, in the w×h box at (x0, y0): cloth that rounds away at its edges, a double rule at head and foot, and the title set down
@@ -246,22 +286,26 @@ const bookOf = (id, d, h, th, keep = true) => { const [bg, fg] = fCols[id];
   const sm = new THREE.MeshStandardMaterial({ name:'spine-' + id, map:ctex(96, 512, (x, w, hh) => drawSpine(x, 0, 0, w, hh, ITEMS[id].sp || ITEMS[id].t, bg, fg, th / h), keep), roughness:.7 });
   const cm = std('cover-' + id, bg, { roughness:.7 }), pm = pagesMat;
   const g = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(d, h, th), [sm, pm, pm, pm, cm, cm], 'book-' + id)); return books[id] = g; };
-// The shelves are filled in reading order: from just above eye level down, the top shelf last, and on each level the bay nearer the
-// camera first — it is on the left as you face the shelf, so z runs down. A section opens with a brass plate on the edge of its board.
-const PLATE = .16, PLATE_H = .042, libR = rng(97), shelved = [], plates = [];
-{ const cells = [5, 4, 3, 2, 1, 0, 6].flatMap(lv => [2, 1].map(b => ({ lv, z0:bays[b + 1] - .045, z1:bays[b] + .045 })));
-  let ci = 0, z = cells[0].z0, clear = z, last = -1; // `clear`: where the last plate ends
+// The shelves are filled in reading order, top to bottom, and left to right as you face them, so z runs down. A section opens with a brass
+// plate on the edge of its board. The whole list has to stand in this one bay, so the books are made slimmer until it does.
+const PLATE = .16, PLATE_H = .042;
+const cells = [6, 5, 4, 3, 2, 1, 0].map(lv => ({ lv, z0:bays[2] - .045, z1:bays[1] + .045 }));
+function shelve(k, cram) { // `k` scales every book's thickness; with `cram`, whatever is left over when the bay is full stays off the shelf
+  const R = rng(97), bk = [], pl = []; let ci = 0, z = cells[0].z0, clear = z, last = -1; // `clear`: where the last plate ends
   for (const [name, ids] of DATA.library || []) {
-    if (z < cells[ci].z0) { z = Math.min(z - .06, clear - .02); if (z - PLATE < cells[ci].z1 && cells[ci + 1]) z = cells[++ci].z0; }
+    if (z < cells[ci].z0) { z = Math.min(z - .035, clear - .015); if (z - PLATE < cells[ci].z1) { if (!cells[ci + 1]) return cram ? { bk, pl } : null; z = cells[++ci].z0; } }
     let fresh = true;
     for (const id of ids) {
-      const t = .046 + libR() * .03, h = .235 + libR() * .065, d = .2 + libR() * .05; let p; do p = Math.floor(libR() * libPal.length); while (p === last); last = p;
-      if (z - t < cells[ci].z1) { if (!cells[ci + 1]) break; z = cells[++ci].z0; fresh = true; } // the section runs on in the next bay, under a plate of its own
-      if (fresh) { plates.push({ name, lv:cells[ci].lv, z:z - PLATE / 2 }); clear = z - PLATE; fresh = false; }
-      shelved.push({ id, t, h, d, y:LV[cells[ci].lv] + .018 + h / 2, z:z - t / 2 }); fCols[id] = libPal[p]; z -= t + .004;
+      const t = (.046 + R() * .03) * k, h = .235 + R() * .065, d = .2 + R() * .05; let p; do p = Math.floor(R() * libPal.length); while (p === last); last = p;
+      if (z - t < cells[ci].z1) { if (!cells[ci + 1]) return cram ? { bk, pl } : null; z = cells[++ci].z0; fresh = true; } // the section runs on along the next shelf, under a plate of its own
+      if (fresh) { pl.push({ name, lv:cells[ci].lv, z:z - PLATE / 2 }); clear = z - PLATE; fresh = false; }
+      bk.push({ id, t, h, d, p, y:LV[cells[ci].lv] + .018 + h / 2, z:z - t / 2 }); z -= t + .003;
     }
   }
+  return { bk, pl };
 }
+let fit = null; for (let k = 1; !fit && k > .6; k -= .04) fit = shelve(k);
+const { bk:shelved, pl:plates } = fit || shelve(.6, true); shelved.forEach(b => fCols[b.id] = libPal[b.p]);
 // Every shelved book is one instance of a unit block, and all their spines are cells of one sheet, so the whole library is a single draw.
 // Each has a stand-in the room's hover and picking treat as an object of its own.
 let lib = null; const libOf = {};

@@ -20,7 +20,7 @@ import type { Article, Book } from './notion';
  * its article, or the notes kept in it, are fetched from /study/{id}/ (see
  * pages/study/[id].astro).
  *
- *   b1…    every finished book of the reading list, on the bookshelf by category
+ *   b1…    every finished book of the reading list, by category, in the bookshelf's bay beside the display shelves
  *   s1–s3  series, racked on the desk   w1–w6  newest articles, in the same rack
  *   d1–d3  older articles on the desk   mb  the book I wrote, on the display shelves
  *   p1 p3 g2  side projects on the display shelves
