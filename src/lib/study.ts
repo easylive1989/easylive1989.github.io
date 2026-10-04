@@ -24,7 +24,7 @@ import type { Article, Book } from './notion';
  *   s1–s3  series, racked on the desk
  *   d1–d3  newest articles on the desk  mb  the book I wrote, on the display shelves
  *   p1 p3 g2 aw  side projects on the display shelves, each one a model of its project
- *   ir1–ir3  the Ironman bears   tk1 tk2  talks, on videotape   cab  the cabinet
+ *   ir1–ir3  the Ironman bears   tk1 tk2  talks, on videotape
  *   tv  the game cabinet beside the desk: every Playbox game
  */
 
@@ -89,7 +89,7 @@ export interface StudyData {
 const BASE = import.meta.env.BASE_URL;
 const SERIES_SLOTS = ['s1', 's2', 's3'];
 const DESK_SLOTS = ['d1', 'd2', 'd3'];
-// A side project's exhibit is modelled after it, so the slots go by title, not by order; a project with no model is listed in the cabinet only.
+// A side project's exhibit is modelled after it, so the slots go by title, not by order; a project with no model is not shown.
 const PROJECT_SLOTS: Record<string, [slot: string, spot: string]> = {
   Lorescape: ['p1', '展示架 · 山徑模型'],
   'YouTube 運動計時器': ['p3', '展示架 · 座鐘'],
@@ -377,28 +377,6 @@ export async function buildStudyData(): Promise<StudyData> {
       list: gameRows,
       m: '窗邊 · 遊戲櫃',
       links: [{ l: 'Playbox GitHub ↗', u: PLAYBOX_REPO, p: 1 }],
-    };
-  }
-
-  /* ── the cabinet under the display shelves: every side project, with or without shelf space of its own ── */
-  const cabinetRows: StudyItem['list'] = projects
-    .map((p): [string, string, string, string, string] => [
-      'Side Project',
-      p.status || '作品',
-      p.title,
-      p.subtitle || p.description.slice(0, 40),
-      p.mainUrl ?? p.githubUrl ?? '',
-    ])
-    .filter((r) => r[4]);
-  if (cabinetRows.length) {
-    items.cab = {
-      cat: 'display',
-      kind: 'cabinet',
-      k: `作品櫃 · ${cabinetRows.length} 件`,
-      t: '作品櫃',
-      b: ['展示架放不下的，都收在這裡。'],
-      list: cabinetRows,
-      m: '展示架 · 櫃子',
     };
   }
 

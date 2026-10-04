@@ -374,10 +374,8 @@ const cabinet = new THREE.Group(); cabinet.name = 'cabinet'; disp.add(cabinet);
 cabinet.add(box(DW, .78, DD + .01, M.wood, 'display-cabinet', [0, .39, (DD + .01)/2]));
 [-.315, .315].forEach(x => cabinet.add(box(.6, .64, .012, M.woodD, 'cabinet-door', [x, .41, DD + .016], null, 1)));
 [-.06, .06].forEach(x => cabinet.add(cyl(.012, .012, .05, 8, M.brass, 'knob', [x, .46, DD + .03], [Math.PI/2,0,0])));
-if (has('cab')) tag(cabinet, { type:'item', id:'cab', view:'display' }, [0,0,.03]);
 [-.3, .3].forEach(x => { const s = mk(new THREE.CircleGeometry(.03, 16), new THREE.MeshBasicMaterial({ color:col('#ffe2b0') }), 'downlight', [x, 2.531, .2], [Math.PI/2,0,0]); disp.add(s); });
 const exh = {};
-if (has('cab')) exh.cab = cabinet;
 const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { if (!has(id)) return; g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); disp.add(g); exh[id] = g; tag(g, { type:'item', id, view:'display' }); };
 // an exhibit built from many small parts is drawn as one mesh per material
 const weld = g => { g.updateMatrixWorld(true); const inv = g.matrixWorld.clone().invert(), by = new Map();
@@ -936,7 +934,7 @@ addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) 
 // (or the camera goes to it), and a DOM stand-in takes over from the mesh once it is close enough to read.
 scene.add(camera);
 let lockCam = false;
-const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', latest:'最新文章', cabinet:'作品櫃', project:'Side Project', play:'Playbox' };
+const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', latest:'最新文章', project:'Side Project', play:'Playbox' };
 const DRAFTS = IDS.filter(k => drafts[k]);
 const GAMES = has('tv') ? ITEMS.tv.list : [];
 const TV = { on:false, vis:false, play:false, sel:0 };
