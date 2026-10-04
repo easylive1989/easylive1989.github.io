@@ -334,7 +334,7 @@ export async function buildStudyData(): Promise<StudyData> {
       t: p.subtitle ? `${p.title} · ${p.subtitle}` : p.title,
       b: p.description ? [p.description] : [],
       tech: p.tags,
-      m: ['展示架 · 大相框', '展示架 · 座鐘', '展示架 · 棋子'][i],
+      m: ['展示架 · 大相框', '展示架 · 座鐘', '展示架 · 棋盤'][i],
       links,
     };
   });

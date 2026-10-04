@@ -401,17 +401,15 @@ deskClock.add(box(.22, .06, .12, M.woodD, 'clock-base', [0,.03,0]));
 deskClock.add(cyl(.075, .075, .05, 32, M.brass, 'clock-case', [0,.14,0], [Math.PI/2,0,0]));
 deskClock.add(mk(new THREE.CircleGeometry(.066, 32), new THREE.MeshStandardMaterial({ name:'clock-face', map:clockTex, roughness:.5 }), 'clock-face', [0,.14,.026]));
 place(deskClock, 'p3', .07, on(2), .21, 0, 0);
-const fig = new THREE.Group(); fig.name = 'figurine';
-const fPts = [[0,0],[.04,0],[.04,.03],[.02,.05],[.025,.14],[.03,.2],[.018,.24],[0,.25]].map(([a,b]) => new THREE.Vector2(a, b));
-fig.add(mk(new THREE.LatheGeometry(fPts, 24), std('figurine-wood', '#8a5a34', { roughness:.5 }), 'figurine'));
-fig.add(mk(new THREE.SphereGeometry(.022, 12, 10), std('figurine-wood', '#8a5a34'), 'figurine-head', [0,.27,0]));
-place(fig, 'g2', .43, on(2), .18, 0, 0);
-const candle = new THREE.Group(); candle.name = 'candle';
-candle.add(cyl(.05, .06, .015, 24, M.brass, 'candle-dish', [0,.008,0])); candle.add(cyl(.012, .016, .07, 12, M.brass, 'candle-stem', [0,.05,0]));
-candle.add(cyl(.018, .018, .14, 16, M.cream, 'candle-wax', [0,.155,0]));
-const flame = mk(new THREE.SphereGeometry(.012, 12, 8), new THREE.MeshBasicMaterial({ name:'flame', color:col('#ffd27a') }), 'flame', [0,.24,0]); flame.scale.set(1, 2.2, 1); flame.castShadow = false; candle.add(flame);
-candle.position.set(-.45, on(1), .19); disp.add(candle);
-const candleLight = new THREE.PointLight(0xffb45a, .5, 1.6, 2); candleLight.position.set(...dispAt(-.45, on(1) + .28, .27)); room.add(candleLight);
+// the game bot's board: chequered, stood on a plate stand beside the print — the top shelf is above eye level, where a board laid flat would only show its edge
+const board = new THREE.Group(); board.name = 'game-board';
+{ const BS = .26, lean = new THREE.Group(); lean.position.set(0, .012, .028); lean.rotation.x = -.16; board.add(lean);
+  const squares = ctex(256, 256, (x, w) => { const s = w/8; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { x.fillStyle = (r + c) % 2 ? '#1b1917' : C.cream; x.fillRect(c*s, r*s, s, s); } }, false);
+  lean.add(box(BS, BS, .016, M.woodD, 'board-frame', [0, BS/2, -.008]));
+  lean.add(mk(new THREE.PlaneGeometry(BS - .036, BS - .036), pbr('board-squares', '#ffffff', { map:squares, roughness:.4, clearcoat:.4, clearcoatRoughness:.25 }), 'board-squares', [0, BS/2, .0004]));
+  lean.add(box(.03, .17, .01, M.wood, 'stand-back', [0, .085, -.021]));
+  board.add(box(.15, .012, .085, M.wood, 'stand-base', [0, .006, 0])); board.add(box(.15, .012, .01, M.wood, 'stand-lip', [0, .018, .0375])); }
+place(board, 'g2', .4, on(3), .15, -.15, 0);
 // the book I wrote, face out and leaning on the back of the shelf: built like any other book, then turned so its front board faces the room
 if (has('mb')) { const g = bookOf('mb', .17, .24, .03), [bg, fg] = fCols.mb;
   g.children[0].material[5] = new THREE.MeshStandardMaterial({ name:'cover-mb-front', roughness:.7, map:ctex(340, 480, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h);
@@ -422,7 +420,7 @@ if (has('mb')) { const g = bookOf('mb', .17, .24, .03), [bg, fg] = fCols.mb;
     x.font = `400 19px ${SERIF}`; x.fillText(ABOUT.name, w/2, h - 84); }) });
   place(g, 'mb', .5, on(1) + .12, .055, Math.PI, -.1); }
 
-/* the Ironman bears: one for every run, between the candle and the book the last run became; a run that took a prize has a cup in its raised hand */
+/* the Ironman bears: one for every run, beside the book the last run became; a run that took a prize has a cup in its raised hand */
 // a box rolled over a radius at every edge and corner, its six faces keeping their own UVs and material slots; `warp` reshapes it afterwards
 function softBox(w, h, d, r, seg, warp) {
   const g = new THREE.BoxGeometry(w, h, d, seg, seg, seg), p = g.attributes.position, n = g.attributes.normal, v = new THREE.Vector3(), c = new THREE.Vector3(), cl = THREE.MathUtils.clamp;
@@ -758,9 +756,8 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 
 /* glow halos */
 const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
-const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); sp.userData.op = op; room.add(sp); return sp; };
+const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); room.add(sp); };
 halo([2.4, DY + .52, -2.27], .5, .16);
-const candleHalo = halo(dispAt(-.45, on(1) + .24, .19), .22, .28);
 [-.3, .3].forEach(x => halo(dispAt(x, 2.48, .2), .16, .18));
 
 /* dust in lamplight */
@@ -1190,13 +1187,11 @@ function loop(ts) {
   let moved = LF.anim !== 0; // the only things that cast moving shadows: an object sliding out under the cursor, or one being lifted
   roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; if (r.position.distanceToSquared(want) > 1e-10) { r.position.lerp(want, Math.min(1, dt * 10)); moved = true; if (r.userData.inst != null) seat(r); } });
   if (moved) renderer.shadowMap.needsUpdate = true;
-  const fl = .85 + Math.sin(t*13) * .06 + Math.sin(t*7.3) * .08 + (Math.random() - .5) * .06; candleLight.intensity = .2 * fl; flame.scale.set(1, 2.2 * fl, 1);
   catBody.scale.y = .55 + Math.sin(t*1.6) * .02; head.rotation.z = Math.sin(t*.4) * .03;
   const w = SKY[season], pa = pGeo.attributes.position.array;
   for (let i = 0; i < partN; i++) { const s = pSeed[i]; pa[i*3+1] -= w.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * w.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
   pGeo.attributes.position.needsUpdate = true;
   const da = dGeo.attributes.position.array; for (let i = 0; i < dustN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009; da[i*3+1] += Math.sin(t*.21 + s0*30) * .0006 - .00012; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
-  candleHalo.material.opacity = candleHalo.userData.op * fl;
   if (tween) { tween.t = Math.min(1, tween.t + dt / tween.d); const k = 1 - Math.pow(1 - tween.t, 3); controls.target.lerpVectors(tween.ft, tween.tt, k); camera.position.lerpVectors(tween.fp, tween.tp, k); if (tween.t >= 1) { tween = null; controls.enabled = !lockCam; } }
   liftStep(dt);
   // the panel covers the right 460px, or the bottom 58% on a phone — slide the view so the subject stays in the open part
