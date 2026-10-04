@@ -206,7 +206,7 @@ room.add(box(6, .12, .08, M.cream, 'crown', [0,2.74,-2.48]));
 /* ================= bookshelf (left wall) ================= */
 const shelf = new THREE.Group(); shelf.name = 'bookshelf'; room.add(shelf);
 const SX = -2.62, SZ0 = -2.47, SZ1 = 1.6, LV = [.1, .45, .8, 1.15, 1.5, 1.85, 2.2, 2.55];
-const bays = [SZ0, -1.13, .23, SZ1], BZ = bays[1]; // the corner bay is the display shelves; the books start at BZ
+const bays = [SZ0, -1.13, 1, SZ1], BZ = bays[1]; // the corner bay is the display shelves; the books start at BZ, and the wide bay is the reading list's, with room to grow
 shelf.add(box(.4, 2.72, SZ1 - BZ + .03, M.woodD, 'shelf-carcass-back', [-2.98,1.36,(BZ+SZ1)/2]));
 bays.forEach(z => shelf.add(box(.4, 2.72, .05, M.wood, 'shelf-divider', [-2.81,1.36,z])));
 LV.forEach((y, i) => { const z0 = i === LV.length - 1 ? SZ0 : BZ; shelf.add(box(.4, .035, SZ1 - z0, M.wood, 'shelf-board', [-2.81,y,(z0+SZ1)/2])); }); // only the top board runs the whole length
@@ -287,7 +287,8 @@ const bookOf = (id, d, h, th, keep = true) => { const [bg, fg] = fCols[id];
   const cm = std('cover-' + id, bg, { roughness:.7 }), pm = pagesMat;
   const g = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(d, h, th), [sm, pm, pm, pm, cm, cm], 'book-' + id)); return books[id] = g; };
 // The shelves are filled in reading order, top to bottom, and left to right as you face them, so z runs down. A section opens with a brass
-// plate on the edge of its board. The whole list has to stand in this one bay, so the books are made slimmer until it does.
+// plate on the edge of its board. The whole list has to stand in this one bay: the shelves it has not reached yet stay bare, and once
+// it outgrows them the books are made slimmer until it fits again.
 const PLATE = .16, PLATE_H = .042;
 const cells = [6, 5, 4, 3, 2, 1, 0].map(lv => ({ lv, z0:bays[2] - .045, z1:bays[1] + .045 }));
 function shelve(k, cram) { // `k` scales every book's thickness; with `cram`, whatever is left over when the bay is full stays off the shelf
