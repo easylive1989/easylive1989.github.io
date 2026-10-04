@@ -471,7 +471,7 @@ const ironBear = (() => {
       [-1, 1].forEach(s => c.add(mk(handleGeo, gold, 'cup-handle', [s*.023, .066, 0], [0, 0, -s*Math.PI/2]))); b.add(c); }
     return g; };
 })();
-['ir1', 'ir2', 'ir3'].forEach((id, i) => has(id) && place(ironBear(ITEMS[id].cup), id, -.25 + i*.24, on(1), .2, -.18, 0));
+['ir1', 'ir2', 'ir3'].forEach((id, i) => has(id) && place(ironBear(ITEMS[id].cup), id, -.45 + i*.24, on(1), .2, -.18, 0));
 
 /* the talks, kept on tape where the certificates used to hang: a cassette each, stood on its long edge, the talk written on the label between its reels */
 const VW = .215, VH = .118, VD = .029, tapeShell = pbr('tape-shell', '#1d1c1e', { ...plasticTex, roughness:.7, clearcoat:.3 });
