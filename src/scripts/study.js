@@ -1189,9 +1189,9 @@ const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = $('tip');
 let hoverRoot = null, down = null;
 const rootOf = hit => hit ? hit.object.userData.roots ? hit.object.userData.roots[hit.instanceId] : hit.object.userData.root : null; // the library is one mesh: its books answer by instance
 function tipText(p) {
-  if (p.type === 'item') { const it = ITEMS[p.id]; return it.kind === 'reading' ? it.t : `${KLAB[it.kind] || it.k} · ${it.t}`; } // a shelf book goes by its title alone; a bear or a tape is told apart by its own kicker
-  if (p.type === 'list') return '筆電 · GitHub 活動';
-  if (p.type === 'about') return '自畫像 · 關於 Paul';
+  if (p.type === 'item') return ITEMS[p.id].t; // everything in the room goes by its title alone
+  if (p.type === 'list') return 'GitHub 活動';
+  if (p.type === 'about') return '關於 Paul';
   return '';
 }
 const setMouse = e => { const r = renderer.domElement.getBoundingClientRect(); mouse.set((e.clientX - r.left)/r.width*2-1, -(e.clientY - r.top)/r.height*2+1); ray.setFromCamera(mouse, camera); };
