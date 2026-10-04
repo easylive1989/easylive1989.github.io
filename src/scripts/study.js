@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, LAKE_SKY, crtMask } from './studyTextures.js';
 const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
 
@@ -12,7 +13,6 @@ const related = id => DATA.links.filter(l => l.includes(id)).map(l => l[0] === i
 const IDS = Object.keys(ITEMS);
 const CATS = [{ id:'shelf', name:'書架' }, { id:'display', name:'展示架' }, { id:'desk', name:'書桌' }];
 const has = id => !!ITEMS[id];
-const glyph = id => (ITEMS[id] && ITEMS[id].ch) || '書';
 const isExt = u => /^(https?:)?\/\/|^mailto:/.test(u);
 const linkAttrs = u => isExt(u) ? ' target="_blank" rel="noopener"' : '';
 
@@ -376,20 +376,43 @@ cabinet.add(box(DW, .78, DD + .01, M.wood, 'display-cabinet', [0, .39, (DD + .01
 [-.06, .06].forEach(x => cabinet.add(cyl(.012, .012, .05, 8, M.brass, 'knob', [x, .46, DD + .03], [Math.PI/2,0,0])));
 if (has('cab')) tag(cabinet, { type:'item', id:'cab', view:'display' }, [0,0,.03]);
 [-.3, .3].forEach(x => { const s = mk(new THREE.CircleGeometry(.03, 16), new THREE.MeshBasicMaterial({ color:col('#ffe2b0') }), 'downlight', [x, 2.531, .2], [Math.PI/2,0,0]); disp.add(s); });
-// picture textures (typographic prints)
-const printTex = (ch, ink, bg = C.cream) => ctex(256, 320, (x, w, h) => { x.fillStyle = bg; x.fillRect(0,0,w,h); x.fillStyle = '#d9ccad'; x.fillRect(24,24,w-48,h-48); x.fillStyle = bg; x.fillRect(30,30,w-60,h-60);
-  x.globalCompositeOperation = 'multiply'; x.font = `700 170px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillStyle = C.yel; x.fillText(ch, w/2 - 4, h/2 + 12); x.fillStyle = C.mag; x.fillText(ch, w/2 + 5, h/2 + 9); x.fillStyle = ink; x.fillText(ch, w/2, h/2 + 6); x.globalCompositeOperation = 'source-over'; });
-const frame = (w, h, ch, ink, name) => { const g = new THREE.Group(); g.name = name;
-  const pm = new THREE.MeshStandardMaterial({ name:'print', map:printTex(ch, ink), roughness:.9 });
-  g.add(mk(new THREE.BoxGeometry(w, h, .03), [M.woodD, M.woodD, M.woodD, M.woodD, pm, M.woodD], 'frame'));
-  g.add(box(w, .02, .035, M.woodD, 'frame-edge', [0, h/2, .005])); g.add(box(w, .02, .035, M.woodD, 'frame-edge', [0, -h/2, .005]));
-  g.add(box(.02, h, .035, M.woodD, 'frame-edge', [w/2, 0, .005])); g.add(box(.02, h, .035, M.woodD, 'frame-edge', [-w/2, 0, .005]));
-  return g; };
 const exh = {};
 if (has('cab')) exh.cab = cabinet;
 const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { if (!has(id)) return; g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); disp.add(g); exh[id] = g; tag(g, { type:'item', id, view:'display' }); };
-place(frame(.5, .32, glyph('p1'), C.c800, 'frame-large'), 'p1', -.14, on(3) + .17, .105, 0, -.05);
+// an exhibit built from many small parts is drawn as one mesh per material
+const weld = g => { g.updateMatrixWorld(true); const inv = g.matrixWorld.clone().invert(), by = new Map();
+  g.traverse(o => { if (!o.isMesh) return; const c = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); c.applyMatrix4(o.matrixWorld.clone().premultiply(inv));
+    if (!c.attributes.uv) c.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(c.attributes.position.count * 2), 2));
+    by.has(o.material) ? by.get(o.material).push(c) : by.set(o.material, [c]); });
+  g.clear(); by.forEach((gs, m) => g.add(mk(mergeGeometries(gs), m, m.name))); return g; };
+/* Lorescape, as its mark: two peaks leaning back on one slope, snow on both, and a trail of stepping stones down from the pass between them */
+const peaks = new THREE.Group(); peaks.name = 'lorescape-peaks';
+{ // drawn on the mark's own artboard — x to the right, y down, the ground line at y = 215 — and stood up on the slope
+  const S = .0019, LEAN = .3, cL = Math.cos(LEAN), sL = Math.sin(LEAN), PH = .016, ZF = .092, LR = 5 * S, V3 = (...p) => new THREE.Vector3(...p);
+  const blue = pbr('lore-blue', '#2f6bbd', { roughness:.42, clearcoat:.5, clearcoatRoughness:.3 }), rock = pbr('lore-rock', '#c6cedb', { roughness:.75 }), snow = pbr('lore-snow', '#ffffff', { roughness:.5, clearcoat:.3, clearcoatRoughness:.4 });
+  const at = (x, y) => { const v = (215 - y) * S; return V3((x - 160) * S, PH + v * cL, ZF - v * sL); };
+  const ZIG = [[0, 1], [.2, .74], [.38, .98], [.56, .68], [.78, .96], [1, 1]]; // the snow line across a face: how far along its foot, how far down from the summit
+  // a peak is a pyramid whose front face lies in the slope, so the two fronts run into each other without a seam
+  const peak = (x0, x1, ax, ay, snowTo) => { const A = at(ax, ay), d = 2 * (ZF - A.z), F0 = at(x0, 215), F1 = at(x1, 215), B0 = V3(F0.x, PH, ZF - d), B1 = V3(F1.x, PH, ZF - d), body = [], cap = [];
+    [[F0, F1], [F1, B1], [B1, B0], [B0, F0]].forEach(([a, b]) => { body.push(a, b, A);
+      const top = b.clone().sub(a).cross(A.clone().sub(a)).normalize().multiplyScalar(.0012).add(A), line = ZIG.map(([s, k]) => a.clone().lerp(b, s).sub(A).multiplyScalar(snowTo * k).add(top));
+      for (let i = 1; i < line.length; i++) cap.push(line[i - 1], line[i], top); });
+    [[body, rock, 'peak'], [cap, snow, 'peak-snow']].forEach(([pts, m, name]) => { const g = new THREE.BufferGeometry().setFromPoints(pts); g.computeVertexNormals(); peaks.add(mk(g, m, name)); });
+    return [F0, F1, B0, B1, A]; };
+  const [L, , LB, , A1] = peak(35, 201, 118, 80, .3), [, R, , RB, A2] = peak(95, 285, 190, 52, .3), pass = at(146.6, 126.5); // the pass is where the two inner slopes cross
+  // the mark's line: over both summits by way of the pass, along the ground as far as the trail, and down the outer ridges behind
+  const bead = new THREE.SphereGeometry(LR, 14, 10), beaded = new Set();
+  [[L, A1, pass, A2, R], [A1, LB, L, at(138, 215)], [A2, RB, R, at(207, 215)]].forEach(run => run.forEach((p, i) => { if (!beaded.has(p)) { beaded.add(p); peaks.add(mk(bead, blue, 'peak-line', p.toArray())); }
+    if (i) peaks.add(rod(run[i - 1].toArray(), p.toArray(), LR, blue, 'peak-line')); }));
+  // the trail: the mark's dashes as stepping stones, each a white pebble set in a blue rim
+  const slope = new THREE.Group(); slope.position.set(0, PH, ZF); slope.rotation.x = -LEAN; peaks.add(slope);
+  const trail = new THREE.CatmullRomCurve3([[150,131], [166,144], [186,151], [202,163], [208,181], [200,198], [184,206], [163,209]].map(([x, y]) => V3((x - 160) * S, (215 - y) * S, 0)));
+  const rim = rboxGeo(13 * S, 8.5 * S, .006, .0029), pebble = rboxGeo(8.6 * S, 4.2 * S, .006, .0029);
+  for (let i = 0; i < 8; i++) { const p = trail.getPointAt((i + .5) / 8), t = trail.getTangentAt((i + .5) / 8), rz = Math.atan2(t.y, t.x);
+    slope.add(mk(rim, blue, 'trail-stone', [p.x, p.y, .002], [0, 0, rz])); slope.add(mk(pebble, snow, 'trail-stone', [p.x, p.y, .0035], [0, 0, rz])); }
+  peaks.add(box(.525, PH, .22, M.woodD, 'peaks-plinth', [0, PH/2, 0]));
+  weld(peaks); }
+place(peaks, 'p1', -.15, on(3), .19, -.12, 0);
 const deskClock = new THREE.Group(); deskClock.name = 'clock';
 const clockTex = ctex(256, 256, (x, w, h) => { const d = new Date(); x.fillStyle = C.cream; x.fillRect(0,0,w,h); x.strokeStyle = '#3a2a18'; x.lineWidth = 8; x.beginPath(); x.arc(128,128,118,0,Math.PI*2); x.stroke();
   for (let i = 0; i < 12; i++) { const a = i/12*Math.PI*2; x.lineWidth = i % 3 ? 3 : 7; x.beginPath(); x.moveTo(128 + Math.sin(a)*96, 128 - Math.cos(a)*96); x.lineTo(128 + Math.sin(a)*110, 128 - Math.cos(a)*110); x.stroke(); }
@@ -419,6 +442,34 @@ if (has('mb')) { const g = bookOf('mb', .17, .24, .03), [bg, fg] = fCols.mb;
     lines.forEach((l, i) => x.fillText(l, w/2, h * .4 + (i - (lines.length - 1) / 2) * 56));
     x.font = `400 19px ${SERIF}`; x.fillText(ABOUT.name, w/2, h - 84); }) });
   place(g, 'mb', .5, on(1) + .12, .055, Math.PI, -.1); }
+
+/* the award ceremony: a black-and-gold podium with the star on its top step, and beside it the envelope — seal broken, the winner's card half drawn */
+const podium = new THREE.Group(); podium.name = 'award-podium';
+{ const black = pbr('award-black', '#17140f', { roughness:.3, clearcoat:.7, clearcoatRoughness:.15 }), gold = pbr('award-gold', '#f2c14e', { ...metalTex, roughness:.3 }), paper = pbr('award-card', C.cream, { roughness:.8 }), wax = pbr('award-wax', '#a8261d', { roughness:.4, clearcoat:.6 });
+  const SD = .09, steps = [[-.094, .09, .058, '2'], [0, .1, .085, '1'], [.094, .09, .04, '3']]; // x, width, height, place
+  const places = ctex(192, 64, (x, w, h) => { x.fillStyle = '#000'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; x.font = `700 54px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle'; steps.forEach((s, i) => x.fillText(s[3], (i + .5) * w / 3, h/2 + 3)); });
+  const numeral = pbr('award-numeral', '#f2c14e', { ...metalTex, roughness:.3, alphaMap:places, alphaTest:.5 });
+  steps.forEach(([x, w, h], i) => { podium.add(mk(rboxGeo(w, h, SD, .004), black, 'podium-step', [x, h/2, 0])); podium.add(mk(rboxGeo(w + .006, .005, SD + .006, .002), gold, 'podium-trim', [x, h + .0025, 0]));
+    const n = new THREE.PlaneGeometry(.03, .03), uv = n.attributes.uv; for (let j = 0; j < 4; j++) uv.setX(j, (uv.getX(j) + i) / 3); podium.add(mk(n, numeral, 'podium-numeral', [x, h/2, SD/2 + .0005])); });
+  // the trophy: a star on a stem
+  const star = new THREE.Shape(); for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5, r = i % 2 ? .0145 : .034; star[i ? 'lineTo' : 'moveTo'](Math.sin(a) * r, Math.cos(a) * r); }
+  const starGeo = new THREE.ExtrudeGeometry(star, { depth:.006, bevelEnabled:true, bevelThickness:.003, bevelSize:.002, bevelSegments:2 }).translate(0, 0, -.003);
+  podium.add(cyl(.02, .024, .012, 24, black, 'trophy-base', [0, .096, 0])); podium.add(cyl(.016, .016, .004, 24, gold, 'trophy-collar', [0, .104, 0]));
+  podium.add(cyl(.004, .006, .046, 12, gold, 'trophy-stem', [0, .129, 0])); podium.add(mk(starGeo, gold, 'trophy-star', [0, .164, 0]));
+  // the envelope, stood on the second step: the card rises out of the pocket, the opened flap behind it
+  const env = new THREE.Group(); env.position.set(-.094, .063, .006); env.rotation.x = -.2; podium.add(env);
+  env.add(mk(rboxGeo(.08, .052, .005, .0015), black, 'envelope', [0, .026, 0])); env.add(mk(rboxGeo(.068, .046, .0012, .0005), paper, 'winner-card', [0, .052, 0]));
+  env.add(mk(starGeo.clone().scale(.22, .22, .1), gold, 'card-star', [0, .0635, .001]));
+  const flap = new THREE.Shape(); flap.moveTo(-.04, 0); flap.lineTo(.04, 0); flap.lineTo(0, .03);
+  env.add(mk(new THREE.ExtrudeGeometry(flap, { depth:.0008, bevelEnabled:false }), black, 'envelope-flap', [0, .052, -.0034], [-.15, 0, 0]));
+  [-1, 1].forEach(sx => env.add(rod([sx*.038, .05, .003], [0, .024, .003], .0007, gold, 'envelope-seam')));
+  env.add(cyl(.007, .007, .003, 20, wax, 'wax-seal', [0, .024, .0035], [Math.PI/2, 0, 0]));
+  // what is left of the gold shower
+  const fleck = new THREE.BoxGeometry(.007, .0006, .007), fr = rng(11);
+  for (let i = 0; i < 18; i++) { const x = (fr() - .5) * .3, z = (fr() - .35) * .16, st = steps.find(s => Math.abs(x - s[0]) < s[1]/2);
+    podium.add(mk(fleck, gold, 'confetti', [x, (st && Math.abs(z) < SD/2 ? st[2] + .005 : 0) + .0006, z], [0, fr() * 3, 0])); }
+  weld(podium); }
+place(podium, 'aw', .42, on(2), .19, -.15, 0);
 
 /* the Ironman bears: one for every run, beside the book the last run became; a run that took a prize has a cup in its raised hand */
 // a box rolled over a radius at every edge and corner, its six faces keeping their own UVs and material slots; `warp` reshapes it afterwards

@@ -23,7 +23,7 @@ import type { Article, Book } from './notion';
  *   b1…    every finished book of the reading list, by category, in the bookshelf's bay beside the display shelves
  *   s1–s3  series, racked on the desk
  *   d1–d3  newest articles on the desk  mb  the book I wrote, on the display shelves
- *   p1 p3 g2  side projects on the display shelves
+ *   p1 p3 g2 aw  side projects on the display shelves, each one a model of its project
  *   ir1–ir3  the Ironman bears   tk1 tk2  talks, on videotape   cab  the cabinet
  *   tv  the game cabinet beside the desk: every Playbox game
  */
@@ -39,8 +39,6 @@ export interface StudyItem {
   kind: string;
   /** Short text printed on a spine or a label. */
   sp?: string;
-  /** Glyph printed on a framed print. */
-  ch?: string;
   k: string;
   t: string;
   by?: string;
@@ -91,7 +89,13 @@ export interface StudyData {
 const BASE = import.meta.env.BASE_URL;
 const SERIES_SLOTS = ['s1', 's2', 's3'];
 const DESK_SLOTS = ['d1', 'd2', 'd3'];
-const PROJECT_SLOTS = ['p1', 'p3', 'g2'];
+// A side project's exhibit is modelled after it, so the slots go by title, not by order; a project with no model is listed in the cabinet only.
+const PROJECT_SLOTS: Record<string, [slot: string, spot: string]> = {
+  Lorescape: ['p1', '展示架 · 山徑模型'],
+  'YouTube 運動計時器': ['p3', '展示架 · 座鐘'],
+  小遊戲機器人: ['g2', '展示架 · 棋盤'],
+  有趣頒獎動畫: ['aw', '展示架 · 頒獎台'],
+};
 const IRONMAN_SLOTS = ['ir1', 'ir2', 'ir3'];
 const TALK_SLOTS = ['tk1', 'tk2'];
 
@@ -140,16 +144,6 @@ export function spineLabel(title: string, max = 8): string {
     w += cw;
   }
   return out.trim() || title.slice(0, max);
-}
-
-/** The single character a framed print is typeset with. */
-function printGlyph(...sources: string[]): string {
-  for (const s of sources) {
-    const cjk = [...s].find(isCJK);
-    if (cjk) return cjk;
-  }
-  const latin = sources.join('').match(/[A-Za-z]/)?.[0];
-  return (latin ?? '書').toUpperCase();
 }
 
 function dotted(iso: string | null | undefined): string {
@@ -322,21 +316,24 @@ export async function buildStudyData(): Promise<StudyData> {
   };
 
   /* ── display shelves: side projects ── */
-  projects.slice(0, PROJECT_SLOTS.length).forEach((p, i) => {
+  const modelled: string[] = [];
+  projects.forEach((p) => {
+    const [slot, spot] = PROJECT_SLOTS[p.title] ?? [];
+    if (!slot) return;
     const links: StudyLink[] = [];
     if (p.mainUrl) links.push({ l: '玩玩看 ↗', u: p.mainUrl, p: 1 });
     if (p.githubUrl) links.push({ l: 'GitHub ↗', u: p.githubUrl, ...(p.mainUrl ? {} : { p: 1 as const }) });
-    items[PROJECT_SLOTS[i]] = {
+    items[slot] = {
       cat: 'display',
       kind: 'project',
-      ch: printGlyph(p.subtitle, p.title),
       k: `Side Project · ${[...p.platforms, p.status].filter(Boolean).join(' · ')}`,
       t: p.subtitle ? `${p.title} · ${p.subtitle}` : p.title,
       b: p.description ? [p.description] : [],
       tech: p.tags,
-      m: ['展示架 · 大相框', '展示架 · 座鐘', '展示架 · 棋盤'][i],
+      m: spot,
       links,
     };
+    modelled.push(slot);
   });
 
   /* ── display shelves: a bear for every Ironman run, a tape for every talk ── */
@@ -426,7 +423,7 @@ export async function buildStudyData(): Promise<StudyData> {
     if (racked) add(IRONMAN_SLOTS[i], racked);
     if (series === items.mb.t) add(IRONMAN_SLOTS[i], 'mb');
   });
-  PROJECT_SLOTS.forEach((slot, i) => i > 0 && add(slot, PROJECT_SLOTS[i - 1]));
+  modelled.forEach((slot, i) => i > 0 && add(slot, modelled[i - 1]));
 
   const firstYear = articles.length ? new Date(articles[articles.length - 1].createdTime).getFullYear() : new Date().getFullYear();
   return {
