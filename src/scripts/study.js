@@ -386,7 +386,7 @@ const weld = g => { g.updateMatrixWorld(true); const inv = g.matrixWorld.clone()
     by.has(o.material) ? by.get(o.material).push(c) : by.set(o.material, [c]); });
   g.clear(); by.forEach((gs, m) => g.add(mk(mergeGeometries(gs), m, m.name))); return g; };
 /* Lorescape, as its mark: two peaks leaning back on one slope, snow on both, and a trail of stepping stones down from the pass between them */
-const peaks = new THREE.Group(); peaks.name = 'lorescape-peaks';
+const peaks = new THREE.Group(); peaks.name = 'lorescape-peaks'; peaks.scale.setScalar(.85);
 { // drawn on the mark's own artboard — x to the right, y down, the ground line at y = 215 — and stood up on the slope
   const S = .0019, LEAN = .3, cL = Math.cos(LEAN), sL = Math.sin(LEAN), PH = .016, ZF = .092, LR = 5 * S, V3 = (...p) => new THREE.Vector3(...p);
   const blue = pbr('lore-blue', '#2f6bbd', { roughness:.42, clearcoat:.5, clearcoatRoughness:.3 }), rock = pbr('lore-rock', '#c6cedb', { roughness:.75 }), snow = pbr('lore-snow', '#ffffff', { roughness:.5, clearcoat:.3, clearcoatRoughness:.4 });
