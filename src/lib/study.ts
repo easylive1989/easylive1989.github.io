@@ -24,7 +24,7 @@ import type { Article, Book } from './notion';
  *   s1–s3  series, racked on the desk   w1–w6  newest articles, in the same rack
  *   d1–d3  older articles on the desk   mb  the book I wrote, on the display shelves
  *   p1 p3 g2  side projects on the display shelves
- *   g1 g3 g4 t2 p2  Playbox games   aw  awards & talks   cab  the cabinet
+ *   aw  awards & talks   cab  the cabinet
  *   tv  the game cabinet beside the desk: every Playbox game
  */
 
@@ -90,7 +90,6 @@ const BASE = import.meta.env.BASE_URL;
 const WRITING_SLOTS = ['w1', 'w2', 'w3', 'w4', 'w5', 'w6'];
 const SERIES_SLOTS = ['s1', 's2', 's3'];
 const DESK_SLOTS = ['d1', 'd2', 'd3'];
-const GAME_SLOTS = ['g3', 't2', 'g4', 'g1', 'p2'];
 const PROJECT_SLOTS = ['p1', 'p3', 'g2'];
 
 // Spine text for series whose full title is too long to stand on a spine.
@@ -114,15 +113,6 @@ const TALKS: [string, string, string, string, string][] = [
   ['2023', '鐵人賽佳作', '30 天輕鬆學會 Flutter 測試', 'iThome', 'https://ithelp.ithome.com.tw/users/20129825/ironman/5974'],
   ['2022', '鐵人賽佳作', 'Flutter 開發設計雜談', 'iThome', 'https://ithelp.ithome.com.tw/users/20129825/ironman/4992'],
   ['2020', '鐵人賽完賽', '在 Kata 中尋找 Clean Code', 'iThome', 'https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1'],
-];
-
-// Which framed object / figure a Playbox game gets, by what its name says.
-const GAME_FITS: [RegExp, string][] = [
-  [/tiny\s*swords|rts|戰/i, 'g3'],
-  [/stock|股/i, 't2'],
-  [/bottle|瓶/i, 'g4'],
-  [/sokoban|推箱/i, 'g1'],
-  [/moon|月/i, 'p2'],
 ];
 
 const isCJK = (ch: string) => /[㐀-鿿]/.test(ch);
@@ -347,35 +337,6 @@ export async function buildStudyData(): Promise<StudyData> {
     };
   });
 
-  /* ── display shelves: Playbox games, matched to the object that suits their name ── */
-  const free = [...GAME_SLOTS];
-  const placed: [string, (typeof games)[number]][] = [];
-  const rest: (typeof games)[number][] = [];
-  for (const g of games) {
-    const fit = GAME_FITS.find(([re, slot]) => re.test(g.name) && free.includes(slot));
-    if (fit) {
-      free.splice(free.indexOf(fit[1]), 1);
-      placed.push([fit[1], g]);
-    } else rest.push(g);
-  }
-  for (const g of rest) {
-    const slot = free.shift();
-    if (slot) placed.push([slot, g]);
-  }
-  const objectName: Record<string, string> = { g3: '戰場畫', t2: '小相框', g4: '水瓶', g1: '木箱', p2: '銅像' };
-  for (const [slot, g] of placed) {
-    items[slot] = {
-      cat: 'display',
-      kind: 'play',
-      ch: printGlyph(g.name),
-      k: 'Playbox · 小遊戲',
-      t: g.name,
-      b: [`Playbox 裡的小遊戲：${g.name}。`],
-      m: `展示架 · ${objectName[slot]}`,
-      links: [{ l: '▶ 玩', u: g.url, p: 1 }, { l: 'Playbox ↗', u: PLAYBOX_REPO }],
-    };
-  }
-
   items.aw = {
     cat: 'display',
     kind: 'award',
@@ -404,17 +365,16 @@ export async function buildStudyData(): Promise<StudyData> {
     };
   }
 
-  /* ── the cabinet under the display shelves: everything that has no shelf space of its own ── */
-  const cabinetRows: StudyItem['list'] = [
-    ...projects.map((p): [string, string, string, string, string] => [
+  /* ── the cabinet under the display shelves: every side project, with or without shelf space of its own ── */
+  const cabinetRows: StudyItem['list'] = projects
+    .map((p): [string, string, string, string, string] => [
       'Side Project',
       p.status || '作品',
       p.title,
       p.subtitle || p.description.slice(0, 40),
       p.mainUrl ?? p.githubUrl ?? '',
-    ]),
-    ...games.map((g): [string, string, string, string, string] => ['Playbox', '小遊戲', g.name, '', g.url]),
-  ].filter((r) => r[4]);
+    ])
+    .filter((r) => r[4]);
   if (cabinetRows.length) {
     items.cab = {
       cat: 'display',
@@ -424,7 +384,6 @@ export async function buildStudyData(): Promise<StudyData> {
       b: ['展示架放不下的，都收在這裡。'],
       list: cabinetRows,
       m: '展示架 · 櫃子',
-      links: [{ l: 'Playbox ↗', u: PLAYBOX_REPO }],
     };
   }
 
@@ -447,7 +406,6 @@ export async function buildStudyData(): Promise<StudyData> {
   if (flutterSeries) add('mb', flutterSeries);
   add('aw', 'mb');
   add('w1', 'd3');
-  placed.forEach(([slot], i) => i > 0 && add(slot, placed[i - 1][0]));
   PROJECT_SLOTS.forEach((slot, i) => i > 0 && add(slot, PROJECT_SLOTS[i - 1]));
 
   const firstYear = articles.length ? new Date(articles[articles.length - 1].createdTime).getFullYear() : new Date().getFullYear();

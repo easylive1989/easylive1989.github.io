@@ -77,7 +77,7 @@ const M = {
   cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
   cat:std('cat', C.cat, { roughness:.95 }), catL:std('cat-light', '#efc394', { roughness:.95 }),
   glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
-  alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }), bronze:std('bronze', '#5a3a24', { roughness:.4, metalness:.6 }),
+  alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }),
 };
 const mk = (geo, m, name, p, r) => { const o = new THREE.Mesh(geo, m); o.name = name; if (p) o.position.set(...p); if (r) o.rotation.set(...r); o.castShadow = true; o.receiveShadow = true; return o; };
 // `ax` forces the grain along x/y/z (0/1/2); each part is slid to its own patch of the texture so twins don't share a grain
@@ -174,7 +174,7 @@ Object.assign(M, {
   wallL: std('wall-light', '#665645', { ...plasterTex, roughness:1 }), ceil: std('ceiling', '#7d6f5e', { ...plasterTex, map:null, roughness:1 }), // painted flat: the walls' mottling would be most of a phone's screen
   fabric: pbr('fabric', '#9a917a', { ...fabricTex, sheenColor:col('#cfc7ae') }),
   fabricD: pbr('fabric-dark', '#7a7262', { ...fabricTex, sheenColor:col('#aaa290') }),
-  brass: pbr('brass', '#d2a868', { ...metalTex, roughness:.43 }), bronze: pbr('bronze', '#6a442a', { ...metalTex, metalness:.9, roughness:.63 }),
+  brass: pbr('brass', '#d2a868', { ...metalTex, roughness:.43 }),
   alu: pbr('aluminium', '#b4b2ad', { ...metalTex, map:null, roughness:.53 }),
   cat: pbr('cat', '#ffffff', { map:sheet('tabby', 'color'), ...coatTex }), catL: pbr('cat-light', '#f7dcb8', coatTex),
   cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }),
@@ -388,12 +388,6 @@ const exh = {};
 if (has('cab')) exh.cab = cabinet;
 const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { if (!has(id)) return; g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); disp.add(g); exh[id] = g; tag(g, { type:'item', id, view:'display' }); };
 place(frame(.5, .32, glyph('p1'), C.c800, 'frame-large'), 'p1', -.14, on(3) + .17, .105, 0, -.05);
-const statue = new THREE.Group(); statue.name = 'statue';
-const sPts = [[0,0],[.06,0],[.06,.02],[.035,.04],[.04,.12],[.05,.2],[.035,.27],[.045,.31],[.03,.36],[0,.38]].map(([a,b]) => new THREE.Vector2(a, b));
-statue.add(mk(new THREE.LatheGeometry(sPts, 32), M.bronze, 'statue-body'));
-statue.add(mk(new THREE.SphereGeometry(.03, 16, 12), M.bronze, 'statue-head', [0,.41,0]));
-statue.scale.setScalar(.82); // the top shelf is a little lower than the statue was cast for
-place(statue, 'p2', .41, on(3), .18, 0, 0);
 place(frame(.4, .32, glyph('aw'), C.m800, 'frame-mid'), 'aw', -.28, on(2) + .16, .09, .08, -.08);
 const deskClock = new THREE.Group(); deskClock.name = 'clock';
 const clockTex = ctex(256, 256, (x, w, h) => { const d = new Date(); x.fillStyle = C.cream; x.fillRect(0,0,w,h); x.strokeStyle = '#3a2a18'; x.lineWidth = 8; x.beginPath(); x.arc(128,128,118,0,Math.PI*2); x.stroke();
@@ -417,14 +411,6 @@ candle.add(cyl(.018, .018, .14, 16, M.cream, 'candle-wax', [0,.155,0]));
 const flame = mk(new THREE.SphereGeometry(.012, 12, 8), new THREE.MeshBasicMaterial({ name:'flame', color:col('#ffd27a') }), 'flame', [0,.24,0]); flame.scale.set(1, 2.2, 1); flame.castShadow = false; candle.add(flame);
 candle.position.set(-.45, on(1), .19); disp.add(candle);
 const candleLight = new THREE.PointLight(0xffb45a, .5, 1.6, 2); candleLight.position.set(...dispAt(-.45, on(1) + .28, .27)); room.add(candleLight);
-place(frame(.2, .25, glyph('t2'), C.c700, 'frame-small'), 't2', -.07, on(1) + .125, .12, .15, -.12);
-const bottle = new THREE.Group(); bottle.name = 'water-bottle';
-const btPts = [[0,0],[.032,0],[.034,.01],[.034,.12],[.026,.15],[.013,.17],[.013,.19],[0,.19]].map(([a,b]) => new THREE.Vector2(a, b));
-bottle.add(mk(new THREE.LatheGeometry(btPts, 32), new THREE.MeshStandardMaterial({ name:'bottle-plastic', color:col('#b9d8e6'), transparent:true, opacity:.55, roughness:.1 }), 'bottle'));
-bottle.add(cyl(.031, .031, .06, 24, std('bottle-water', '#5aa8cc', { transparent:true, opacity:.6, roughness:.1 }), 'bottle-water', [0,.04,0]));
-bottle.add(cyl(.015, .015, .025, 16, std('bottle-cap', C.cyan, { roughness:.4 }), 'bottle-cap', [0,.2,0]));
-bottle.add(cyl(.0345, .0345, .035, 32, std('bottle-label', C.cream), 'bottle-label', [0,.09,0], null, true));
-place(bottle, 'g4', .24, on(1), .23, 0, 0);
 // the book I wrote, face out and leaning on the back of the shelf: built like any other book, then turned so its front board faces the room
 if (has('mb')) { const g = bookOf('mb', .17, .24, .03), [bg, fg] = fCols.mb;
   g.children[0].material[5] = new THREE.MeshStandardMaterial({ name:'cover-mb-front', roughness:.7, map:ctex(340, 480, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h);
@@ -434,11 +420,6 @@ if (has('mb')) { const g = bookOf('mb', .17, .24, .03), [bg, fg] = fCols.mb;
     lines.forEach((l, i) => x.fillText(l.trim(), w/2, h * .4 + (i - (lines.length - 1) / 2) * 56));
     x.font = `400 19px ${SERIF}`; x.fillText(ABOUT.name, w/2, h - 84); }) });
   place(g, 'mb', .5, on(1) + .12, .055, Math.PI, -.1); }
-const woodBox = new THREE.Group(); woodBox.name = 'wooden-box';
-woodBox.add(box(.3, .14, .2, M.woodD, 'box-body', [0,.07,0])); woodBox.add(box(.31, .035, .21, M.wood, 'box-lid', [0,.155,0]));
-woodBox.add(box(.04, .03, .01, M.brass, 'box-latch', [0,.12,.105]));
-place(woodBox, 'g1', -.345, on(0), .2, .1, 0);
-place(frame(.38, .3, glyph('g3'), C.ink, 'frame-landscape'), 'g3', .4, on(0) + .15, .105, -.05, -.1);
 
 /* ================= game cabinet: console + CRT, between the door and the desk ================= */
 const tvc = new THREE.Group(); tvc.name = 'tv-cabinet'; tvc.position.set(.055, 0, -2.2); room.add(tvc);
@@ -817,7 +798,7 @@ function mark(id) { if (!st.seen[id]) { st.seen[id] = true; const c = ITEMS[id].
 function openItem(id) { const it = ITEMS[id];
   if (books[id] || libOf[id]) return openBook(id);
   if (drafts[id]) return openDraft(id);
-  if (it.kind === 'play' && GAMES.length) { if (id !== 'tv') mark(id); return openTV(id === 'tv' ? 0 : Math.max(0, gameAt(id))); }
+  if (it.kind === 'play' && GAMES.length) return openTV();
   st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, o.userData.pick.view); renderPanel('item'); }
 function openList() { focus(laptop, 'desk'); renderPanel('list'); }
 function openAbout() { focus(portrait, 'desk'); renderPanel('about'); }
@@ -836,7 +817,6 @@ let lockCam = false;
 const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', older:'較早的文章', cabinet:'作品櫃', project:'Side Project', play:'Playbox', award:'競賽與演講' };
 const DRAFTS = IDS.filter(k => drafts[k]);
 const GAMES = has('tv') ? ITEMS.tv.list : [];
-const gameAt = id => GAMES.findIndex(r => r[4] === ((ITEMS[id].links || [])[0] || {}).u);
 const TV = { on:false, vis:false, play:false, sel:0 };
 const RD = { mode:null, busy:false, id:null }, BK = { pages:[], i:0, single:false, D:null, art:null, ret:null };
 const LF = { obj:null, anim:0, t:0, dur:.8, cb:null };
@@ -1060,7 +1040,7 @@ function tvMenu() {
 }
 function tvSel(i) { TV.sel = i; crt.querySelectorAll('.gi').forEach((b, j) => { b.classList.toggle('on', j === i); if (j === i) b.scrollIntoView({ block:'nearest' }); }); }
 function tvPlay() {
-  TV.play = true; const g = GAMES[TV.sel], slot = IDS.find(k => k !== 'tv' && ITEMS[k].kind === 'play' && gameAt(k) === TV.sel); if (slot) mark(slot);
+  TV.play = true; const g = GAMES[TV.sel];
   crt.innerHTML = '<iframe src="' + esc(g[4]) + '" title="' + esc(g[2]) + '" allow="autoplay; fullscreen; gamepad"></iframe><div class="ld"><span>插入卡帶中…<br>' + esc(g[2]) + '</span></div><div class="scan" style="opacity:.4"></div>';
   crt.querySelector('iframe').addEventListener('load', () => { const l = crt.querySelector('.ld'); l && l.remove(); });
   tvBar(); positionTV();
