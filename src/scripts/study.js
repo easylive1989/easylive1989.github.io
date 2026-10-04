@@ -255,6 +255,8 @@ inst.count = ni; shelf.add(inst);
 /* the bay beside the display shelves: every finished book of the reading list, filed by category */
 const CJK = '\u2e80-\u9fff\uff00-\uffef', cjkRun = new RegExp('[' + CJK + ']|[^' + CJK + ']+', 'g');
 const VERT = { '「':'﹁', '」':'﹂', '『':'﹃', '』':'﹄', '（':'︵', '）':'︶', '《':'︽', '》':'︾', '：':'︰' }; // what turns with the line when it is set downwards
+// a title broken into lines no wider than `max` in the context's font: between CJK characters, or at either end of a run of Latin
+const wrapText = (x, s, max) => (s.match(cjkRun) || []).reduce((ls, tok) => { const cur = ls[ls.length - 1]; if (x.measureText((cur + tok).trim()).width > max && cur.trim()) ls.push(tok); else ls[ls.length - 1] = cur + tok; return ls; }, ['']).map(l => l.trim());
 // One spine, head up, in the w×h box at (x0, y0): cloth that rounds away at its edges, a double rule at head and foot, and the title set down
 // its length — CJK upright one under another, a run of Latin on its side. `asp` is the spine's own width over its height, so the lettering
 // keeps its shape however the box is stretched over the book.
@@ -388,7 +390,6 @@ const exh = {};
 if (has('cab')) exh.cab = cabinet;
 const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { if (!has(id)) return; g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); disp.add(g); exh[id] = g; tag(g, { type:'item', id, view:'display' }); };
 place(frame(.5, .32, glyph('p1'), C.c800, 'frame-large'), 'p1', -.14, on(3) + .17, .105, 0, -.05);
-place(frame(.4, .32, glyph('aw'), C.m800, 'frame-mid'), 'aw', -.28, on(2) + .16, .09, .08, -.08);
 const deskClock = new THREE.Group(); deskClock.name = 'clock';
 const clockTex = ctex(256, 256, (x, w, h) => { const d = new Date(); x.fillStyle = C.cream; x.fillRect(0,0,w,h); x.strokeStyle = '#3a2a18'; x.lineWidth = 8; x.beginPath(); x.arc(128,128,118,0,Math.PI*2); x.stroke();
   for (let i = 0; i < 12; i++) { const a = i/12*Math.PI*2; x.lineWidth = i % 3 ? 3 : 7; x.beginPath(); x.moveTo(128 + Math.sin(a)*96, 128 - Math.cos(a)*96); x.lineTo(128 + Math.sin(a)*110, 128 - Math.cos(a)*110); x.stroke(); }
@@ -416,10 +417,84 @@ if (has('mb')) { const g = bookOf('mb', .17, .24, .03), [bg, fg] = fCols.mb;
   g.children[0].material[5] = new THREE.MeshStandardMaterial({ name:'cover-mb-front', roughness:.7, map:ctex(340, 480, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h);
     x.fillStyle = fg; [[30, 4], [40, 1.5]].forEach(([y, t]) => { x.fillRect(24, y, w - 48, t); x.fillRect(24, h - y - t, w - 48, t); });
     x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `600 40px ${SERIF}`;
-    const lines = (ITEMS.mb.t.match(cjkRun) || []).reduce((ls, tok) => { const cur = ls[ls.length - 1]; if (x.measureText((cur + tok).trim()).width > w - 60 && cur.trim()) ls.push(tok); else ls[ls.length - 1] = cur + tok; return ls; }, ['']);
-    lines.forEach((l, i) => x.fillText(l.trim(), w/2, h * .4 + (i - (lines.length - 1) / 2) * 56));
+    const lines = wrapText(x, ITEMS.mb.t, w - 60);
+    lines.forEach((l, i) => x.fillText(l, w/2, h * .4 + (i - (lines.length - 1) / 2) * 56));
     x.font = `400 19px ${SERIF}`; x.fillText(ABOUT.name, w/2, h - 84); }) });
   place(g, 'mb', .5, on(1) + .12, .055, Math.PI, -.1); }
+
+/* the Ironman bears: one for every run, between the candle and the book the last run became; a run that took a prize has a cup in its raised hand */
+// a box rolled over a radius at every edge and corner, its six faces keeping their own UVs and material slots; `warp` reshapes it afterwards
+function softBox(w, h, d, r, seg, warp) {
+  const g = new THREE.BoxGeometry(w, h, d, seg, seg, seg), p = g.attributes.position, n = g.attributes.normal, v = new THREE.Vector3(), c = new THREE.Vector3(), cl = THREE.MathUtils.clamp;
+  for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); c.set(cl(v.x, r - w/2, w/2 - r), cl(v.y, r - h/2, h/2 - r), cl(v.z, r - d/2, d/2 - r)); v.sub(c).normalize(); n.setXYZ(i, v.x, v.y, v.z);
+    v.multiplyScalar(r).add(c); if (warp) warp(v); p.setXYZ(i, v.x, v.y, v.z); }
+  if (warp) { g.computeVertexNormals(); smoothNormals(g, 1); }
+  return g;
+}
+const ironBear = (() => {
+  const FUR = '#895629', MUZZLE = '#eec069', vinyl = (name, c, o) => pbr(name, c, { roughness:.45, clearcoat:.5, clearcoatRoughness:.3, ...o });
+  const fur = vinyl('bear-fur', FUR), white = vinyl('bear-white', '#f6f1e6'), stand = pbr('bear-stand', '#24160f', { roughness:.35, clearcoat:.6, clearcoatRoughness:.2 }), printed = (name, map) => vinyl(name, '#ffffff', { map });
+  const cape = vinyl('bear-cape', '#d22d25', { roughness:.6, clearcoat:.2, side:THREE.DoubleSide }), gold = pbr('cup-gold', '#f2c14e', { ...metalTex, roughness:.3 });
+  // the head: narrower at the crown, a face printed on the front. The muzzle's colour runs round under the jaw and stops short of the back
+  const HW = .09, HH = .105, HD = .078, headGeo = softBox(HW, HH, HD, .022, 14, v => { const t = v.y / HH + .5; v.x *= 1 - .2 * t; v.z *= 1 - .1 * t; });
+  const face = ctex(256, 300, (x, w, h) => { x.fillStyle = FUR; x.fillRect(0, 0, w, h);
+    x.fillStyle = MUZZLE; x.beginPath(); x.moveTo(0, h*.7); x.lineTo(w/2, h*.56); x.lineTo(w, h*.7); x.lineTo(w, h); x.lineTo(0, h); x.fill();
+    x.fillStyle = '#c6302a'; x.beginPath(); x.moveTo(w*.27, h*.8); x.bezierCurveTo(w*.27, h*.72, w*.34, h*.675, w*.41, h*.68); x.quadraticCurveTo(w*.56, h*.69, w*.71, h*.74);
+    x.bezierCurveTo(w*.76, h*.78, w*.77, h*.85, w*.73, h*.89); x.bezierCurveTo(w*.62, h*.93, w*.4, h*.93, w*.33, h*.89); x.bezierCurveTo(w*.29, h*.86, w*.27, h*.83, w*.27, h*.8); x.fill();
+    x.fillStyle = '#ffffff'; [0, 1].forEach(m => { const X = f => m ? w - f*w : f*w; x.beginPath(); x.moveTo(X(.13), h*.29); x.lineTo(X(.46), h*.35); x.bezierCurveTo(X(.44), h*.46, X(.19), h*.48, X(.13), h*.29); x.fill(); }); }, false);
+  const cheek = back => ctex(128, 150, (x, w, h) => { x.setTransform(back ? -1 : 1, 0, 0, 1, back ? w : 0, 0); x.fillStyle = FUR; x.fillRect(0, 0, w, h); // drawn front edge first; `back` mirrors it for the side whose u runs the other way
+    x.fillStyle = MUZZLE; x.beginPath(); x.moveTo(0, h*.7); x.bezierCurveTo(w*.4, h*.72, w*.62, h*.8, w*.62, h); x.lineTo(0, h); x.fill(); }, false);
+  const jaw = ctex(64, 64, (x, w, h) => { x.fillStyle = FUR; x.fillRect(0, 0, w, h); x.fillStyle = MUZZLE; x.fillRect(0, 0, w, h*.62); }, false);
+  const headMat = [printed('bear-cheek', cheek(false)), printed('bear-cheek', cheek(true)), fur, printed('bear-jaw', jaw), printed('bear-face', face), fur];
+  const chest = ctex(128, 128, (x, w, h) => { x.fillStyle = FUR; x.fillRect(0, 0, w, h); x.fillStyle = x.strokeStyle = '#fbef4f'; x.font = '900 96px "Arial Rounded MT Bold", "Helvetica Neue", Arial, sans-serif';
+    x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round'; x.lineWidth = 6; x.strokeText('B', w/2, h/2 + 6); x.fillText('B', w/2, h/2 + 6); }, false);
+  const bodyGeo = softBox(.054, .05, .04, .018, 8), bodyMat = [fur, fur, fur, fur, printed('bear-chest', chest), fur];
+  const earGeo = new THREE.SphereGeometry(.019, 20, 14).scale(1, 1, .5), earInGeo = new THREE.SphereGeometry(.009, 16, 10).scale(1, 1, .5), legGeo = new THREE.CapsuleGeometry(.0085, .014, 6, 12);
+  const limb = (pts, r) => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p))), 20, r, 10);
+  const armUp = limb([[.018,.054,0], [.05,.05,.003], [.074,.06,.005], [.079,.09,.007], [.079,.112,.008]], .0115), armHip = limb([[-.02,.055,0], [-.04,.052,.006], [-.043,.04,.012], [-.038,.033,.016]], .0085);
+  const fistGeo = softBox(.058, .05, .046, .021, 8), thumbGeo = new THREE.CapsuleGeometry(.0075, .02, 4, 10), handGeo = new THREE.SphereGeometry(.0115, 16, 12);
+  // the cape: a sheet from the collar, blown out past the bear's right hand; its upper edge runs to the tip, its lower edge comes round from behind the back, so the sheet faces the room
+  const capeGeo = new THREE.PlaneGeometry(1, 1, 10, 8), V = (...p) => new THREE.Vector3(...p);
+  { const upper = new THREE.QuadraticBezierCurve3(V(-.026,.066,-.012), V(-.06,.07,-.016), V(-.105,.058,-.026)), lower = new THREE.QuadraticBezierCurve3(V(.02,.064,-.02), V(0,.034,-.036), V(-.056,.012,-.04));
+    const p = capeGeo.attributes.position, uv = capeGeo.attributes.uv;
+    for (let i = 0; i < p.count; i++) { const s = uv.getX(i), t = 1 - uv.getY(i), belly = Math.sin(Math.PI * s), v = upper.getPoint(t).lerp(lower.getPoint(t), s);
+      p.setXYZ(i, v.x - .008 * belly * t * t, v.y, v.z - .006 * belly * (1 - t) - (.006 * belly + .003 * Math.sin(s * 9)) * t); }
+    capeGeo.computeVertexNormals(); }
+  const cupGeo = new THREE.LatheGeometry([[0,0],[.0045,0],[.0045,.026],[.008,.03],[.0045,.034],[.006,.038],[.014,.043],[.021,.054],[.0245,.07],[.0255,.088],[.0235,.088],[.022,.07],[.0185,.056],[.01,.047],[0,.045]].map(([a, b]) => new THREE.Vector2(a, b)), 28);
+  const handleGeo = new THREE.TorusGeometry(.011, .0022, 8, 14, Math.PI);
+  const standGeo = new THREE.LatheGeometry([[0,0],[.05,0],[.052,.003],[.052,.008],[.047,.012],[0,.012]].map(([a, b]) => new THREE.Vector2(a, b)), 32);
+  return cup => { const g = new THREE.Group(), b = new THREE.Group(); g.name = 'ironman-bear'; g.scale.setScalar(1.1); b.position.y = .012; g.add(mk(standGeo, stand, 'bear-stand'), b);
+    [-1, 1].forEach(s => { b.add(mk(legGeo, fur, 'bear-leg', [s*.013, .0155, 0], [0, 0, s*.12]));
+      b.add(mk(earGeo, fur, 'bear-ear', [s*.027, .173, 0])); b.add(mk(earInGeo, white, 'bear-ear-inner', [s*.027, .173, .0062])); });
+    b.add(mk(bodyGeo, bodyMat, 'bear-body', [0, .043, 0])); b.add(mk(headGeo, headMat, 'bear-head', [0, .1145, 0])); b.add(mk(capeGeo, cape, 'bear-cape'));
+    b.add(mk(armHip, fur, 'bear-arm')); b.add(mk(handGeo, fur, 'bear-hand', [-.038, .032, .016]));
+    b.add(mk(armUp, fur, 'bear-arm')); b.add(mk(fistGeo, fur, 'bear-fist', [.079, .13, .008])); b.add(mk(thumbGeo, fur, 'bear-thumb', [.074, .121, .03], [0, 0, 1.45]));
+    if (cup) { const c = new THREE.Group(); c.name = 'cup'; c.position.set(.079, .148, .008); c.add(mk(cupGeo, gold, 'cup-bowl'));
+      [-1, 1].forEach(s => c.add(mk(handleGeo, gold, 'cup-handle', [s*.023, .066, 0], [0, 0, -s*Math.PI/2]))); b.add(c); }
+    return g; };
+})();
+['ir1', 'ir2', 'ir3'].forEach((id, i) => has(id) && place(ironBear(ITEMS[id].cup), id, -.25 + i*.24, on(1), .2, -.18, 0));
+
+/* the talks, kept on tape where the certificates used to hang: a cassette each, stood on its long edge, the talk written on the label between its reels */
+const VW = .215, VH = .118, VD = .029, tapeShell = pbr('tape-shell', '#1d1c1e', { ...plasticTex, roughness:.7, clearcoat:.3 });
+const tapeOf = (id, ink) => { const it = ITEMS[id], g = new THREE.Group(); g.name = 'tape-' + id; g.add(mk(rboxGeo(VW, VH, VD, .004), tapeShell, 'tape-shell'));
+  const faceTex = ctex(640, 340, (x, w, h) => { x.fillStyle = '#1d1c1e'; x.fillRect(0, 0, w, h); x.strokeStyle = '#2f2d30'; x.lineWidth = 3; x.strokeRect(10, 10, w - 20, h - 20);
+    const pane = (px, py, pw, ph, r) => { x.beginPath(); x.roundRect ? x.roundRect(px, py, pw, ph, r) : x.rect(px, py, pw, ph); };
+    // a window over each reel: the full one on the left, the empty one on the right
+    [[36, 78], [462, 46]].forEach(([wx, pack]) => { x.save(); pane(wx, 62, 142, 176, 12); x.fillStyle = '#0c0b0c'; x.fill(); x.clip(); const cx = wx + (wx < 300 ? 86 : 56), cy = 150;
+      x.fillStyle = '#2b1a12'; x.beginPath(); x.arc(cx, cy, pack, 0, 6.283); x.fill(); x.fillStyle = '#e6e2d8'; x.beginPath(); x.arc(cx, cy, 36, 0, 6.283); x.fill();
+      x.fillStyle = '#0c0b0c'; x.beginPath(); x.arc(cx, cy, 13, 0, 6.283); x.fill(); x.strokeStyle = '#e6e2d8'; x.lineWidth = 5; for (let i = 0; i < 3; i++) { const a = i * 2.094 + .5; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(a) * 13, cy + Math.sin(a) * 13); x.stroke(); }
+      x.fillStyle = 'rgba(255,255,255,.07)'; x.beginPath(); x.moveTo(wx + 20, 62); x.lineTo(wx + 70, 62); x.lineTo(wx + 10, 238); x.lineTo(wx - 40, 238); x.fill(); x.restore(); });
+    x.fillStyle = C.cream; pane(196, 50, 248, 200, 5); x.fill(); x.fillStyle = ink; x.fillRect(196, 50, 248, 44);
+    x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = C.cream; x.font = `700 24px ${SERIF}`; x.fillText('TALK · ' + (it.sp || ''), 320, 73);
+    x.fillStyle = '#2a1d0e'; x.font = `600 25px ${SERIF}`; const lines = wrapText(x, it.t, 228); lines.forEach((l, i) => x.fillText(l, 320, 152 + (i - (lines.length - 1) / 2) * 32));
+    x.font = `400 17px ${SERIF}`; x.fillStyle = ink; x.fillText(it.by || '', 320, 230);
+    x.fillStyle = '#6d6b67'; x.font = '700 20px sans-serif'; x.textAlign = 'right'; x.fillText('VHS', w - 34, h - 40); x.textAlign = 'left'; x.fillText('E-180', 34, h - 40); });
+  g.add(mk(new THREE.PlaneGeometry(VW - .01, VH - .01), std('tape-face-' + id, '#ffffff', { map:faceTex, roughness:.6 }), 'tape-face', [0, 0, VD/2 + .0004]));
+  const spineTex = ctex(420, 48, (x, w, h) => { x.fillStyle = C.cream; x.fillRect(0, 0, w, h); x.fillStyle = ink; x.fillRect(0, 0, 12, h); x.fillStyle = '#2a1d0e'; x.font = `600 22px ${SERIF}`; x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText((it.sp ? it.sp + '　' : '') + it.t, 24, h/2 + 1, w - 36); });
+  g.add(mk(new THREE.PlaneGeometry(.16, .018), std('tape-spine-' + id, '#ffffff', { map:spineTex, roughness:.7 }), 'tape-spine', [0, VH/2 + .0004, 0], [-Math.PI/2, 0, 0]));
+  return g; };
+[['tk1', C.c800, -.47, .16, .14], ['tk2', C.m800, -.235, .13, -.1]].forEach(([id, ink, x, z, ry]) => has(id) && place(tapeOf(id, ink), id, x, on(2) + VH/2, z, ry, 0));
 
 /* ================= game cabinet: console + CRT, between the door and the desk ================= */
 const tvc = new THREE.Group(); tvc.name = 'tv-cabinet'; tvc.position.set(.055, 0, -2.2); room.add(tvc);
@@ -814,7 +889,7 @@ addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) 
 // (or the camera goes to it), and a DOM stand-in takes over from the mesh once it is close enough to read.
 scene.add(camera);
 let lockCam = false;
-const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', older:'較早的文章', cabinet:'作品櫃', project:'Side Project', play:'Playbox', award:'競賽與演講' };
+const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', older:'較早的文章', cabinet:'作品櫃', project:'Side Project', play:'Playbox' };
 const DRAFTS = IDS.filter(k => drafts[k]);
 const GAMES = has('tv') ? ITEMS.tv.list : [];
 const TV = { on:false, vis:false, play:false, sel:0 };
@@ -1067,7 +1142,7 @@ const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = $('tip');
 let hoverRoot = null, down = null;
 const rootOf = hit => hit ? hit.object.userData.roots ? hit.object.userData.roots[hit.instanceId] : hit.object.userData.root : null; // the library is one mesh: its books answer by instance
 function tipText(p) {
-  if (p.type === 'item') { const it = ITEMS[p.id]; return `${KLAB[it.kind]} · ${it.t}`; }
+  if (p.type === 'item') { const it = ITEMS[p.id]; return `${KLAB[it.kind] || it.k} · ${it.t}`; } // a bear or a tape is told apart by its own kicker
   if (p.type === 'list') return '筆電 · GitHub 活動';
   if (p.type === 'about') return '自畫像 · 關於 Paul';
   return '';

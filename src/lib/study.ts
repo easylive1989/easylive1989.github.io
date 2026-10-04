@@ -24,7 +24,7 @@ import type { Article, Book } from './notion';
  *   s1–s3  series, racked on the desk   w1–w6  newest articles, in the same rack
  *   d1–d3  older articles on the desk   mb  the book I wrote, on the display shelves
  *   p1 p3 g2  side projects on the display shelves
- *   aw  awards & talks   cab  the cabinet
+ *   ir1–ir3  the Ironman bears   tk1 tk2  talks, on videotape   cab  the cabinet
  *   tv  the game cabinet beside the desk: every Playbox game
  */
 
@@ -37,7 +37,7 @@ export interface StudyLink {
 export interface StudyItem {
   cat: 'shelf' | 'display' | 'desk';
   kind: string;
-  /** Short text printed on a spine. */
+  /** Short text printed on a spine or a label. */
   sp?: string;
   /** Glyph printed on a framed print. */
   ch?: string;
@@ -58,6 +58,8 @@ export interface StudyItem {
   toc?: [string, string, string][];
   /** Cover image of a book on the reading list. */
   cover?: string;
+  /** An Ironman bear whose run took a prize holds a cup. */
+  cup?: 1;
 }
 
 export interface StudyData {
@@ -91,6 +93,8 @@ const WRITING_SLOTS = ['w1', 'w2', 'w3', 'w4', 'w5', 'w6'];
 const SERIES_SLOTS = ['s1', 's2', 's3'];
 const DESK_SLOTS = ['d1', 'd2', 'd3'];
 const PROJECT_SLOTS = ['p1', 'p3', 'g2'];
+const IRONMAN_SLOTS = ['ir1', 'ir2', 'ir3'];
+const TALK_SLOTS = ['tk1', 'tk2'];
 
 // Spine text for series whose full title is too long to stand on a spine.
 const SERIES_SPINE: Record<string, string> = {
@@ -107,12 +111,17 @@ const ITHOME_SERIES: Record<string, string> = {
 const MY_BOOK_URL = 'https://www.tenlong.com.tw/products/9786264140010?list_name=srh';
 const PLAYBOX_REPO = 'https://github.com/easylive1989/paul-playbox';
 
-const TALKS: [string, string, string, string, string][] = [
-  ['2025', '演講', '實踐 Flutter 測試的眉眉角角', 'Agile.Taichung', 'https://www.accupass.com/event/2503031416141112169743'],
-  ['2024', '演講', 'Flutter Widget Test 深度探索', 'iThome 鐵人講堂', 'https://itplus.ithome.com.tw/webinar-page/237'],
-  ['2023', '鐵人賽佳作', '30 天輕鬆學會 Flutter 測試', 'iThome', 'https://ithelp.ithome.com.tw/users/20129825/ironman/5974'],
-  ['2022', '鐵人賽佳作', 'Flutter 開發設計雜談', 'iThome', 'https://ithelp.ithome.com.tw/users/20129825/ironman/4992'],
-  ['2020', '鐵人賽完賽', '在 Kata 中尋找 Clean Code', 'iThome', 'https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1'],
+// The iThome Ironman runs, oldest first, a bear for each: [year, result, series, url, took a prize].
+const IRONMAN: [string, string, string, string, boolean][] = [
+  ['2020', '鐵人練成', '在 Kata 中尋找 Clean Code', 'https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1', false],
+  ['2022', '佳作', 'Flutter 開發設計雜談', ITHOME_SERIES['Flutter 開發設計雜談'], true],
+  ['2023', '佳作', '30 天輕鬆學會 Flutter 測試', ITHOME_SERIES['30 天輕鬆學會 Flutter 測試'], true],
+];
+
+// Talks, newest first, a videotape for each: [year, title, host, url].
+const TALKS: [string, string, string, string][] = [
+  ['2025', '實踐 Flutter 測試的眉眉角角', 'Agile.Taichung', 'https://www.accupass.com/event/2503031416141112169743'],
+  ['2024', 'Flutter Widget Test 深度探索', 'iThome 鐵人講堂', 'https://itplus.ithome.com.tw/webinar-page/237'],
 ];
 
 const isCJK = (ch: string) => /[㐀-鿿]/.test(ch);
@@ -337,16 +346,32 @@ export async function buildStudyData(): Promise<StudyData> {
     };
   });
 
-  items.aw = {
-    cat: 'display',
-    kind: 'award',
-    ch: '獎',
-    k: '競賽與演講 · Awards & Talks',
-    t: '獎狀與講稿',
-    b: [],
-    list: TALKS,
-    m: '展示架 · 獎狀',
-  };
+  /* ── display shelves: a bear for every Ironman run, a tape for every talk ── */
+  IRONMAN.forEach(([year, result, series, url, prize], i) => {
+    items[IRONMAN_SLOTS[i]] = {
+      cat: 'display',
+      kind: 'ironman',
+      k: `鐵人賽 · ${year} ${result}`,
+      t: series,
+      b: [prize ? `連續三十天、一天一篇，拿下${result}。` : `連續三十天、一天一篇，完賽，${result}。`],
+      m: '展示架 · 鐵人熊',
+      links: [{ l: 'iThome 鐵人賽 ↗', u: url, p: 1 }],
+      ...(prize ? { cup: 1 as const } : {}),
+    };
+  });
+  TALKS.forEach(([year, title, host, url], i) => {
+    items[TALK_SLOTS[i]] = {
+      cat: 'display',
+      kind: 'talk',
+      sp: year,
+      k: `演講 · ${year}`,
+      t: title,
+      by: host,
+      b: [],
+      m: '展示架 · 錄影帶',
+      links: [{ l: '活動頁 ↗', u: url, p: 1 }],
+    };
+  });
 
   /* ── the game cabinet between the door and the desk: the whole Playbox ── */
   const gameRows = games
@@ -404,7 +429,12 @@ export async function buildStudyData(): Promise<StudyData> {
     .forEach((a, i) => owner[a.id] && add(DESK_SLOTS[i], owner[a.id]));
   const flutterSeries = SERIES_SLOTS.find((s) => items[s]?.t === '30 天輕鬆學會 Flutter 測試');
   if (flutterSeries) add('mb', flutterSeries);
-  add('aw', 'mb');
+  // a bear points at its series in the rack, and at the book the series became
+  IRONMAN.forEach(([, , series], i) => {
+    const racked = SERIES_SLOTS.find((s) => items[s]?.t === series);
+    if (racked) add(IRONMAN_SLOTS[i], racked);
+    if (series === items.mb.t) add(IRONMAN_SLOTS[i], 'mb');
+  });
   add('w1', 'd3');
   PROJECT_SLOTS.forEach((slot, i) => i > 0 && add(slot, PROJECT_SLOTS[i - 1]));
 
