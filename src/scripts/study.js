@@ -206,7 +206,7 @@ room.add(box(6, .12, .08, M.cream, 'crown', [0,2.74,-2.48]));
 /* ================= bookshelf (left wall) ================= */
 const shelf = new THREE.Group(); shelf.name = 'bookshelf'; room.add(shelf);
 const SX = -2.62, SZ0 = -2.47, SZ1 = 1.6, LV = [.1, .45, .8, 1.15, 1.5, 1.85, 2.2, 2.55];
-const bays = [SZ0, -1.13, 1, SZ1], BZ = bays[1]; // the corner bay is the display shelves; the books start at BZ, and the wide bay is the reading list's, with room to grow
+const bays = [SZ0, -1.13, .44, SZ1], BZ = bays[1]; // the corner bay is the display shelves; the books start at BZ. The reading list's bay is as wide as the camera can still see to the end of, turned as far left as it goes
 shelf.add(box(.4, 2.72, SZ1 - BZ + .03, M.woodD, 'shelf-carcass-back', [-2.98,1.36,(BZ+SZ1)/2]));
 bays.forEach(z => shelf.add(box(.4, 2.72, .05, M.wood, 'shelf-divider', [-2.81,1.36,z])));
 LV.forEach((y, i) => { const z0 = i === LV.length - 1 ? SZ0 : BZ; shelf.add(box(.4, .035, SZ1 - z0, M.wood, 'shelf-board', [-2.81,y,(z0+SZ1)/2])); }); // only the top board runs the whole length
@@ -287,11 +287,11 @@ const bookOf = (id, d, h, th, keep = true) => { const [bg, fg] = fCols[id];
   const cm = std('cover-' + id, bg, { roughness:.7 }), pm = pagesMat;
   const g = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(d, h, th), [sm, pm, pm, pm, cm, cm], 'book-' + id)); return books[id] = g; };
 // The shelves are filled in reading order, top to bottom, and left to right as you face them, so z runs down. A section opens with a brass
-// plate on the edge of its board. The whole list has to stand in this one bay: the shelves it has not reached yet stay bare, and once
-// it outgrows them the books are made slimmer until it fits again.
+// plate on the edge of its board. The whole list has to stand in this one bay, so its books are made slimmer until it does — on all
+// but the bottom shelf, which is kept bare for what is read next for as long as that does not make them too slim.
 const PLATE = .16, PLATE_H = .042;
-const cells = [6, 5, 4, 3, 2, 1, 0].map(lv => ({ lv, z0:bays[2] - .045, z1:bays[1] + .045 }));
-function shelve(k, cram) { // `k` scales every book's thickness; with `cram`, whatever is left over when the bay is full stays off the shelf
+function shelve(k, rows, cram) { // `k` scales every book's thickness; with `cram`, whatever is left over when the shelves are full stays off them
+  const cells = [6, 5, 4, 3, 2, 1, 0].slice(0, rows).map(lv => ({ lv, z0:bays[2] - .045, z1:bays[1] + .045 }));
   const R = rng(97), bk = [], pl = []; let ci = 0, z = cells[0].z0, clear = z, last = -1; // `clear`: where the last plate ends
   for (const [name, ids] of DATA.library || []) {
     if (z < cells[ci].z0) { z = Math.min(z - .035, clear - .015); if (z - PLATE < cells[ci].z1) { if (!cells[ci + 1]) return cram ? { bk, pl } : null; z = cells[++ci].z0; } }
@@ -305,8 +305,9 @@ function shelve(k, cram) { // `k` scales every book's thickness; with `cram`, wh
   }
   return { bk, pl };
 }
-let fit = null; for (let k = 1; !fit && k > .6; k -= .04) fit = shelve(k);
-const { bk:shelved, pl:plates } = fit || shelve(.6, true); shelved.forEach(b => fCols[b.id] = libPal[b.p]);
+let fit = null; for (let k = 1; !fit && k > .82; k -= .04) fit = shelve(k, 6);
+for (let k = 1; !fit && k > .6; k -= .04) fit = shelve(k, 7);
+const { bk:shelved, pl:plates } = fit || shelve(.6, 7, true); shelved.forEach(b => fCols[b.id] = libPal[b.p]);
 // Every shelved book is one instance of a unit block, and all their spines are cells of one sheet, so the whole library is a single draw.
 // Each has a stand-in the room's hover and picking treat as an object of its own.
 let lib = null; const libOf = {};
