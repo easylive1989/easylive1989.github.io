@@ -151,23 +151,23 @@ const BASE = import.meta.env.BASE_URL;
   #intro a { color: var(--color-accent-300); }
   #intro .door { position: relative; width: calc(var(--dr)*26); height: calc(var(--dr)*54); transform-origin: 60% 50%; transition: transform 1.6s cubic-bezier(.5,0,.8,.4); }
   #intro[data-s="4"] .door { transform: scale(2.6); } /* and you walk in */
-  #intro .way { position: absolute; inset: calc(var(--dr)*-1.1) calc(var(--dr)*-1.1) 0; border: calc(var(--dr)*1.1) solid #2b1a10; border-bottom: 0; background: radial-gradient(ellipse at 50% 45%, #fff6dc, #ffd48a 55%, #f0a850) padding-box; perspective: calc(var(--dr)*90); }
+  #intro .way { position: absolute; inset: calc(var(--dr)*-1.1) calc(var(--dr)*-1.1) 0; border: calc(var(--dr)*1.1) solid #2b1a10; border-bottom: 0; background: radial-gradient(ellipse at 50% 45%, #ecd3a2, #d3a25c 55%, #a96c2c) padding-box; perspective: calc(var(--dr)*90); }
   /* the leaf stops short of the floor, so a line of light shows under the shut door */
   #intro .leaf { position: absolute; inset: 0 0 calc(var(--dr)*.4); transform-origin: 0 50%; transform: rotateY(var(--a)); transition: transform var(--sw); }
   #intro .leaf svg { display: block; width: 100%; height: 100%; }
   #intro .pn { fill: #33200f; stroke: #24160b; stroke-width: 2; }
   #intro .pi { fill: #4a2c1c; stroke: #5f3b26; stroke-width: 1.5; }
-  #intro .key { fill: #ffd9a0; }
+  #intro .key { fill: #e8c48a; }
   #intro .shade { fill: #0a0603; opacity: calc(var(--r)*.4); transition: opacity var(--sw); }
-  #intro .rim { fill: #ffdca0; opacity: min(1, var(--r)*2); transition: opacity var(--sw); }
+  #intro .rim { fill: #e8c48a; opacity: min(1, var(--r)*2); transition: opacity var(--sw); }
   #intro .rays { position: absolute; left: calc(50% - var(--dr)*75); top: calc(50% - var(--dr)*75); width: calc(var(--dr)*150); height: calc(var(--dr)*150); opacity: min(1, var(--r)*1.25); transform: scale(calc(.35 + var(--r)*.75)); transition: opacity var(--sw), transform var(--sw); }
-  #intro .rays::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,214,150,.5), rgba(255,190,110,.18) 22%, transparent 48%), repeating-conic-gradient(from 8deg, transparent 0 7deg, rgba(255,206,134,.22) 10deg, transparent 13deg 18deg), repeating-conic-gradient(transparent 0 22deg, rgba(255,226,170,.18) 29deg, transparent 36deg 40deg); -webkit-mask-image: radial-gradient(circle, #000 12%, transparent 70%); mask-image: radial-gradient(circle, #000 12%, transparent 70%); animation: door-rays 90s linear infinite; }
-  #intro .sill { position: absolute; left: -10%; width: 120%; top: calc(100% - var(--dr)*.4); height: calc(var(--dr)*3); background: radial-gradient(ellipse at 50% 0, rgba(255,205,130,.55), transparent 70%); }
+  #intro .rays::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,214,150,.28), rgba(255,190,110,.1) 22%, transparent 48%), repeating-conic-gradient(from 8deg, transparent 0 7deg, rgba(255,206,134,.13) 10deg, transparent 13deg 18deg), repeating-conic-gradient(transparent 0 22deg, rgba(255,226,170,.1) 29deg, transparent 36deg 40deg); -webkit-mask-image: radial-gradient(circle, #000 12%, transparent 70%); mask-image: radial-gradient(circle, #000 12%, transparent 70%); animation: door-rays 90s linear infinite; }
+  #intro .sill { position: absolute; left: -10%; width: 120%; top: calc(100% - var(--dr)*.4); height: calc(var(--dr)*3); background: radial-gradient(ellipse at 50% 0, rgba(255,205,130,.38), transparent 70%); }
   /* the light on the floor: hung from the latch-side jamb and scaled to the gap, so it fans out from wherever the leaf's edge is */
   #intro .pool { position: absolute; left: -90%; width: 280%; top: 100%; height: calc(var(--dr)*40); transform-origin: 67.86% 0; transform: scaleX(var(--g)); filter: blur(calc(var(--dr)*.5)); transition: transform var(--sw); }
-  #intro .pool::before { content: ""; position: absolute; inset: 0; clip-path: polygon(32.14% 0, 67.86% 0, 100% 100%, 0 100%); background: linear-gradient(to bottom, rgba(255,214,150,.8), rgba(255,190,110,0)); }
-  #intro .flood { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, #fff3d6, rgba(255,214,150,.85) 60%, rgba(240,168,80,.6)); opacity: 0; transition: opacity .7s ease-in; }
-  #intro[data-s="4"] .flood { opacity: 1; }
+  #intro .pool::before { content: ""; position: absolute; inset: 0; clip-path: polygon(32.14% 0, 67.86% 0, 100% 100%, 0 100%); background: linear-gradient(to bottom, rgba(236,196,130,.5), rgba(255,190,110,0)); }
+  #intro .flood { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, #e6c995, rgba(205,155,90,.8) 60%, rgba(150,95,40,.6)); opacity: 0; transition: opacity .7s ease-in; }
+  #intro[data-s="4"] .flood { opacity: .7; }
   #intro .cap { position: absolute; left: 0; right: 0; top: calc(50% + var(--dr)*32); margin: 0; transition: opacity .4s; }
   #intro[data-s="4"] .cap { opacity: 0; }
   @keyframes door-rays { to { transform: rotate(360deg); } }
