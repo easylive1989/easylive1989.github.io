@@ -270,17 +270,22 @@ function drawSpine(x, x0, y0, w, h, title, bg, fg, asp = w / h) {
   x.fillStyle = bg; x.fillRect(0, 0, lw, h);
   const g = x.createLinearGradient(0, 0, lw, 0); [[0,.3],[.2,0],[.8,0],[1,.3]].forEach(([p, a]) => g.addColorStop(p, 'rgba(0,0,0,' + a + ')')); x.fillStyle = g; x.fillRect(0, 0, lw, h);
   x.fillStyle = fg; [[26, 4], [35, 1.5]].forEach(([y, t]) => { x.fillRect(0, y*u, lw, t*u); x.fillRect(0, h - (y + t)*u, lw, t*u); });
+  setDown(x, title, lw, h);
+  x.restore();
+}
+// The lettering alone, in whatever the context is filling with: a title set down a spine `lw` wide and `h` long, in the face `font` gives for a size.
+function setDown(x, title, lw, h, font = px => `600 ${px}px ${SERIF}`) {
+  const u = h / 512;
   // each run and the length it takes, in ems: a CJK character or a pair of figures is a square, a longer run of Latin lies along the spine
-  x.font = `600 100px ${SERIF}`; x.textBaseline = 'middle';
+  x.font = font(100); x.textBaseline = 'middle';
   const runs = (title.replace(/[《》]/g, '').match(cjkRun) || []).map(s => { const r = s.trim(); return !r ? [null, .35] : r.length < 3 ? [VERT[r] || r, 1.05, 1] : [r, x.measureText(r).width / 100 + .18]; });
   const len = runs.reduce((a, r) => a + r[1], 0), fs = Math.min(lw * .62, h * .125, (h - 112*u) / len);
   let y = runs.some(r => r[2]) ? 58*u : (h - len * fs) / 2; // a title that is all Latin sits mid-spine
-  x.font = `600 ${fs}px ${SERIF}`;
+  x.font = font(fs);
   runs.forEach(([s, l, upright]) => {
     if (upright) { x.textAlign = 'center'; x.fillText(s, lw/2, y + fs * .52, fs); }
     else if (s) { x.save(); x.translate(lw/2, y + fs * .09); x.rotate(Math.PI/2); x.textAlign = 'left'; x.fillText(s, 0, fs * .04); x.restore(); }
     y += l * fs; });
-  x.restore();
 }
 const fPal = [[C.c800,C.cream],[C.m800,C.cream],['#2e4a3a',C.cream],[C.cream,C.ink],['#6b3a26',C.cream],[C.c900,C.yel],[C.cream,C.m700],['#1f2c3d',C.cream]];
 const libPal = [...fPal, ['#8a6b45',C.cream], ['#3d2a1e','#e3cf98'], ['#c9b88f',C.ink], ['#5a1f1f',C.cream], ['#24402f','#e3cf98'], [C.n800,C.cream]];
@@ -435,15 +440,43 @@ const board = new THREE.Group(); board.name = 'game-board';
   lean.add(box(.03, .17, .01, M.wood, 'stand-back', [0, .085, -.021]));
   board.add(box(.15, .012, .085, M.wood, 'stand-base', [0, .006, 0])); board.add(box(.15, .012, .01, M.wood, 'stand-lip', [0, .018, .0375])); }
 place(board, 'g2', .4, on(3), .15, -.15, 0);
-// the book I wrote, face out and leaning on the back of the shelf: built like any other book, then turned so its front board faces the room
-if (has('mb')) { const g = bookOf('mb', .17, .24, .03), [bg, fg] = fCols.mb;
-  g.children[0].material[5] = new THREE.MeshStandardMaterial({ name:'cover-mb-front', roughness:.7, map:ctex(340, 480, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h);
-    x.fillStyle = fg; [[30, 4], [40, 1.5]].forEach(([y, t]) => { x.fillRect(24, y, w - 48, t); x.fillRect(24, h - y - t, w - 48, t); });
-    x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `600 40px ${SERIF}`;
-    const lines = wrapText(x, ITEMS.mb.t, w - 60);
-    lines.forEach((l, i) => x.fillText(l, w/2, h * .4 + (i - (lines.length - 1) / 2) * 56));
-    x.font = `400 19px ${SERIF}`; x.fillText(ABOUT.name, w/2, h - 84); }) });
-  place(g, 'mb', .5, on(1) + .12, .055, Math.PI, -.1); }
+// the book I wrote, face out and leaning on the back of the shelf: a book like any other, the size of the one in the shops, turned so its front board faces the room.
+// Its front board and its spine are drawn after the real ones — white, an orange strip across the head and an orange band at the foot, the title in a heavy sans.
+// The back board is against the wall and stays plain.
+const fronts = {}; // the books with a front board drawn for them: the cover the reader opens is drawn by the same hand
+if (has('mb')) { const BW = .17, BH = .23, BT = .0186, it = ITEMS.mb, px = Q.low ? 520 : 1040, BAND = .762, ORANGE = '#f18845', INK = '#231815', SLATE = '#1f3a44', GREEN = '#63b958';
+  const sans = wt => s => `${wt} ${s}px "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif`, bold = sans(700), heavy = sans(800);
+  // Laid out 1000 across and as far down as that makes the board, so the lettering keeps its measure on a board of another shape and the white takes up the difference.
+  fronts.mb = (x, w, h) => { const u = w / 1000, H = h / u, B = BAND * H, L = 120, { sub, head, foot, seal } = it.front;
+    const rr = (c, x0, y0, rw, rh, r) => { x.fillStyle = c; x.beginPath(); x.roundRect ? x.roundRect(x0, y0, rw, rh, r) : x.rect(x0, y0, rw, rh); x.fill(); };
+    const say = (s, c, font, x0, y0, max) => { x.fillStyle = c; x.font = font; x.fillText(s, x0, y0, max); };
+    x.save(); x.scale(u, u); x.textAlign = 'left'; x.textBaseline = 'middle';
+    x.fillStyle = '#fff'; x.fillRect(0, 0, 1000, H); x.fillStyle = ORANGE; x.fillRect(L, .042 * H, 1000 - L, 62); x.fillRect(0, B, 1000, H - B);
+    say(head, '#fff', bold(29), L + 24, .042 * H + 33, 830);
+    // the title, a line to each run of CJK or of Latin and the Latin set larger — and stroked as well as filled, few machines having a CJK sans as heavy as the
+    // real cover's; under it the subtitle, then who wrote it
+    let y = .14 * H; x.strokeStyle = INK; x.lineJoin = 'round';
+    it.t.split(/\s*([A-Za-z][A-Za-z ]*)\s*/).filter(Boolean).forEach(l => { const fs = /[A-Za-z]/.test(l) ? 114 : 78; say(l.trim(), INK, heavy(fs), L, y + fs * .575, 820); x.lineWidth = fs * .028; x.strokeText(l.trim(), L, y + fs * .575, 820); y += fs * 1.15; });
+    y += 18; x.font = bold(44); wrapText(x, sub, 600).forEach(l => { say(l, ORANGE, bold(44), L, y + 23, 820); y += 47; });
+    say(it.by + ' 著', INK, `400 31px ${SERIF}`, L, y + 42, 820);
+    // where the real cover has its picture, the short of it: a monitor with the tests ticked off, and a phone that has passed
+    const m = B - 330;
+    rr(SLATE, 560, m, 280, 196, 14); rr('#eef6f3', 574, m + 14, 252, 168, 6); rr(GREEN, 574, m + 14, 252, 34, [6, 6, 0, 0]);
+    [0, 1, 2].forEach(i => { rr(GREEN, 592, m + 68 + i * 38, 18, 18, 4); rr('#c3d0cc', 624, m + 72 + i * 38, 150 - i * 26, 10, 5); });
+    rr(SLATE, 686, m + 196, 28, 36, 0); rr(SLATE, 634, m + 230, 132, 14, 7); rr(SLATE, 856, m + 96, 100, 176, 14); rr(GREEN, 866, m + 110, 80, 148, 6);
+    x.strokeStyle = '#fff'; x.lineWidth = 11; x.lineCap = x.lineJoin = 'round'; x.beginPath(); x.moveTo(886, m + 186); x.lineTo(901, m + 201); x.lineTo(927, m + 168); x.stroke();
+    // the band: what the book is for, said twice, and the prize its series took as a seal
+    const bh = H - B, sy = B + .47 * bh;
+    say(foot[0], '#fff', heavy(54), 93, B + .34 * bh, 660); rr('#fff', 92, B + .62 * bh - 23, 658, 46, 23);
+    x.fillStyle = '#ecdc72'; x.beginPath(); x.arc(850, sy, 72, 0, 6.283); x.fill(); x.strokeStyle = INK; x.lineWidth = 3; x.beginPath(); x.arc(850, sy, 62, 0, 6.283); x.stroke();
+    x.textAlign = 'center'; say(foot[1], INK, bold(31), 421, B + .62 * bh + 1, 620); say(seal[0], INK, bold(22), 850, sy - 30); say(seal[1], INK, heavy(50), 850, sy + 8);
+    x.restore(); };
+  // the spine in the same colours: the title down the white, the author down the band
+  const spine = (x, w, h) => { const B = BAND * h; x.save(); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.fillStyle = ORANGE; x.fillRect(0, B, w, h - B);
+    x.fillStyle = INK; setDown(x, it.t, w, B, bold); x.translate(0, B); x.fillStyle = '#fff'; setDown(x, it.by + '著', w, h - B, bold); x.restore(); };
+  const face = (name, across, draw) => new THREE.MeshStandardMaterial({ name, roughness:.7, map:ctex(Math.round(px * across / BH), px, draw) });
+  const g = books.mb = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(BW, BH, BT), [face('spine-mb', BT, spine), pagesMat, pagesMat, pagesMat, std('cover-mb', '#ffffff', { roughness:.7 }), face('cover-mb-front', BW, fronts.mb)], 'book-mb'));
+  place(g, 'mb', .5, on(1) + BH/2, .049, Math.PI, -.1); }
 
 /* the award ceremony: a black-and-gold podium with the star on its top step, and beside it the envelope — seal broken, the winner's card half drawn */
 const podium = new THREE.Group(); podium.name = 'award-podium';
@@ -1167,7 +1200,9 @@ function showBook(id, D, b) {
   setTimeout(() => LF.obj && (LF.obj.visible = false), 220);
   if (BK.single) { el.animate([{ transform:flipT(F, P), opacity:0 }, { opacity:1, offset:.3 }, { transform:'none', opacity:1 }], { duration:650, easing:'cubic-bezier(.2,.7,.2,1)' }).onfinish = () => { RD.busy = false; }; return; }
   const cov = document.createElement('div'); cov.className = 'lf cov';
-  cov.innerHTML = '<div class="pf cvr">' + coverHTML(it) + '</div><div class="pf back cvb"><div style="position:absolute;top:' + m + 'px;bottom:' + m + 'px;left:' + m + 'px;right:0">' + BK.pages[0] + '</div></div>';
+  const own = fronts[id], dpr = Math.min(devicePixelRatio, 2); // a front board drawn for the book on the shelf is drawn again here, at the size it is read at
+  cov.innerHTML = '<div class="pf cvr' + (own ? ' own' : '') + '">' + (own ? '' : coverHTML(it)) + '</div><div class="pf back cvb"><div style="position:absolute;top:' + m + 'px;bottom:' + m + 'px;left:' + m + 'px;right:0">' + BK.pages[0] + '</div></div>';
+  if (own) cov.firstChild.appendChild(cnv(Math.round(bw / 2 * dpr), Math.round(bh * dpr), own));
   el.appendChild(cov);
   const sc = P.h / F.height, T = 1300;
   el.animate([{ transform:'translate(' + (P.x - F.left - F.width / 2 * sc) + 'px, ' + (P.y - F.top) + 'px) scale(' + sc + ')', opacity:0, easing:'cubic-bezier(.2,.7,.3,1)' }, { opacity:1, offset:.12 }, { transform:'translate(' + (-F.width / 4) + 'px, 0px) scale(1)', offset:.42, easing:'cubic-bezier(.45,.05,.35,1)' }, { transform:'translate(0px, 0px) scale(1)', opacity:1 }], { duration:T });

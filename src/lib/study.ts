@@ -59,6 +59,8 @@ export interface StudyItem {
   toc?: [string, string, string][];
   /** Cover image of a book on the reading list. */
   cover?: string;
+  /** The cover of the book I wrote, besides its title and author: the subtitle, the line across its head, the two lines on the band at its foot, the prize on its seal. */
+  front?: { sub: string; head: string; foot: [string, string]; seal: [string, string] };
   /** An Ironman bear whose run took a prize holds a cup. */
   cup?: 1;
 }
@@ -312,11 +314,17 @@ export async function buildStudyData(): Promise<StudyData> {
   items.mb = {
     cat: 'display',
     kind: 'mybook',
-    sp: 'Flutter 測試',
     k: '我出的書 · Book',
-    t: '30 天輕鬆學會 Flutter 測試',
+    t: '不可不知的 Flutter App 自動化測試實戰攻略',
+    by: '吳政樺（Paul）',
     b: ['由 2023 iThome 鐵人賽佳作改寫成書，從基礎到進階一次到位。'],
     links: [{ l: '看書 ↗', u: MY_BOOK_URL, p: 1 }],
+    front: {
+      sub: '從設計到測試、維持產品品質的高效實踐',
+      head: '打造自動化測試策略，完美交付高品質 App！',
+      foot: ['開發者必學自動化測試技術', '開發不只是做出功能，更要確保未來正常運作'],
+      seal: ['2023', '佳作'],
+    },
   };
 
   /* ── display shelves: side projects ── */
