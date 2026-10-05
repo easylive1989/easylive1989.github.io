@@ -20,7 +20,42 @@ const BASE = import.meta.env.BASE_URL;
     <div id="stage"></div>
     <div id="vig"></div>
     <div id="grain"></div>
-    <div id="intro"><div>推開書房的門……</div></div>
+    <!-- The loading screen: the study's door, pushed a little wider at each stage of the load (study.js counts them into data-s) -->
+    <div id="intro" data-s="0">
+      <div class="door" aria-hidden="true">
+        <div class="rays"></div>
+        <div class="sill"></div>
+        <div class="pool"></div>
+        <div class="way">
+          <div class="leaf">
+            <svg viewBox="0 0 260 536" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="door-wood" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#553321" /><stop offset="1" stop-color="#43281a" /></linearGradient>
+                <radialGradient id="door-brass" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#e6c482" /><stop offset=".6" stop-color="#b38b4b" /><stop offset="1" stop-color="#6e5228" /></radialGradient>
+              </defs>
+              <rect width="260" height="536" fill="url(#door-wood)" />
+              <g class="pn">
+                <rect x="30" y="30" width="88" height="92" /><rect x="142" y="30" width="88" height="92" />
+                <rect x="30" y="148" width="88" height="170" /><rect x="142" y="148" width="88" height="170" />
+                <rect x="30" y="344" width="88" height="162" /><rect x="142" y="344" width="88" height="162" />
+              </g>
+              <g class="pi">
+                <rect x="40" y="40" width="68" height="72" /><rect x="152" y="40" width="68" height="72" />
+                <rect x="40" y="158" width="68" height="150" /><rect x="152" y="158" width="68" height="150" />
+                <rect x="40" y="354" width="68" height="142" /><rect x="152" y="354" width="68" height="142" />
+              </g>
+              <rect x="239" y="262" width="12" height="62" rx="3" fill="#6e5228" />
+              <circle cx="245" cy="282" r="8" fill="url(#door-brass)" />
+              <circle class="key" cx="245" cy="308" r="2.2" />
+              <rect class="shade" width="260" height="536" />
+              <rect class="rim" x="256" width="4" height="536" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="flood"></div>
+      <p class="cap">推開書房的門……</p>
+    </div>
     <div id="toast" class="hud"></div>
     <div id="tip"></div>
     <!-- A book or a page picked up and held in front of the camera -->
@@ -104,10 +139,42 @@ const BASE = import.meta.env.BASE_URL;
   #toast.on { opacity: 1; transform: translate(-50%, 0); }
   body.reading #toast { left: calc(50% - 230px); }
 
-  #intro { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: #140e0a; transition: opacity 1.2s; pointer-events: none; }
+  /* The loading door. --dr is its unit (the doorway is 26 × 54 of them); each stage sets how far the leaf has swung (--a),
+     how much of the doorway that uncovers (--g, which the light on the floor is scaled by) and how far the rays reach (--r).
+     Only transforms and opacity move, so it keeps swinging smoothly while the room is being built on the main thread. */
+  #intro { --dr: min(1vh, 1.5vw); --a: 0deg; --g: 0; --r: 0; --sw: .9s cubic-bezier(.3,.1,.2,1); position: fixed; inset: 0; z-index: 50; overflow: hidden; display: grid; place-items: center; background: linear-gradient(to bottom, #17100b calc(50% + var(--dr)*27), #0e0906 0); transition: opacity 1s .45s; pointer-events: none; color: var(--color-bg); font-family: var(--font-heading); font-size: 20px; font-style: italic; letter-spacing: .04em; text-align: center; }
+  #intro[data-s="1"] { --a: 14deg; --g: .06; --r: .3; }
+  #intro[data-s="2"] { --a: 32deg; --g: .2; --r: .55; }
+  #intro[data-s="3"] { --a: 54deg; --g: .43; --r: .8; }
+  #intro[data-s="4"] { --a: 86deg; --g: .83; --r: 1.5; }
   #intro.off { opacity: 0; }
-  #intro div { color: var(--color-bg); font-family: var(--font-heading); font-size: 20px; font-style: italic; letter-spacing: .04em; text-align: center; }
   #intro a { color: var(--color-accent-300); }
+  #intro .door { position: relative; width: calc(var(--dr)*26); height: calc(var(--dr)*54); transform-origin: 60% 50%; transition: transform 1.6s cubic-bezier(.5,0,.8,.4); }
+  #intro[data-s="4"] .door { transform: scale(2.6); } /* and you walk in */
+  #intro .way { position: absolute; inset: calc(var(--dr)*-1.1) calc(var(--dr)*-1.1) 0; border: calc(var(--dr)*1.1) solid #2b1a10; border-bottom: 0; background: radial-gradient(ellipse at 50% 45%, #fff6dc, #ffd48a 55%, #f0a850) padding-box; perspective: calc(var(--dr)*90); }
+  /* the leaf stops short of the floor, so a line of light shows under the shut door */
+  #intro .leaf { position: absolute; inset: 0 0 calc(var(--dr)*.4); transform-origin: 0 50%; transform: rotateY(var(--a)); transition: transform var(--sw); }
+  #intro .leaf svg { display: block; width: 100%; height: 100%; }
+  #intro .pn { fill: #33200f; stroke: #24160b; stroke-width: 2; }
+  #intro .pi { fill: #4a2c1c; stroke: #5f3b26; stroke-width: 1.5; }
+  #intro .key { fill: #ffd9a0; }
+  #intro .shade { fill: #0a0603; opacity: calc(var(--r)*.4); transition: opacity var(--sw); }
+  #intro .rim { fill: #ffdca0; opacity: min(1, var(--r)*2); transition: opacity var(--sw); }
+  #intro .rays { position: absolute; left: calc(50% - var(--dr)*75); top: calc(50% - var(--dr)*75); width: calc(var(--dr)*150); height: calc(var(--dr)*150); opacity: min(1, var(--r)*1.25); transform: scale(calc(.35 + var(--r)*.75)); transition: opacity var(--sw), transform var(--sw); }
+  #intro .rays::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,214,150,.5), rgba(255,190,110,.18) 22%, transparent 48%), repeating-conic-gradient(from 8deg, transparent 0 7deg, rgba(255,206,134,.22) 10deg, transparent 13deg 18deg), repeating-conic-gradient(transparent 0 22deg, rgba(255,226,170,.18) 29deg, transparent 36deg 40deg); -webkit-mask-image: radial-gradient(circle, #000 12%, transparent 70%); mask-image: radial-gradient(circle, #000 12%, transparent 70%); animation: door-rays 90s linear infinite; }
+  #intro .sill { position: absolute; left: -10%; width: 120%; top: calc(100% - var(--dr)*.4); height: calc(var(--dr)*3); background: radial-gradient(ellipse at 50% 0, rgba(255,205,130,.55), transparent 70%); }
+  /* the light on the floor: hung from the latch-side jamb and scaled to the gap, so it fans out from wherever the leaf's edge is */
+  #intro .pool { position: absolute; left: -90%; width: 280%; top: 100%; height: calc(var(--dr)*40); transform-origin: 67.86% 0; transform: scaleX(var(--g)); filter: blur(calc(var(--dr)*.5)); transition: transform var(--sw); }
+  #intro .pool::before { content: ""; position: absolute; inset: 0; clip-path: polygon(32.14% 0, 67.86% 0, 100% 100%, 0 100%); background: linear-gradient(to bottom, rgba(255,214,150,.8), rgba(255,190,110,0)); }
+  #intro .flood { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, #fff3d6, rgba(255,214,150,.85) 60%, rgba(240,168,80,.6)); opacity: 0; transition: opacity .7s ease-in; }
+  #intro[data-s="4"] .flood { opacity: 1; }
+  #intro .cap { position: absolute; left: 0; right: 0; top: calc(50% + var(--dr)*32); margin: 0; transition: opacity .4s; }
+  #intro[data-s="4"] .cap { opacity: 0; }
+  @keyframes door-rays { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    #intro .rays::before { animation: none; }
+    #intro[data-s="4"] .door { transform: none; }
+  }
 
   .noscript { position: fixed; inset: 0; z-index: 60; display: grid; place-content: center; text-align: center; background: #140e0a; color: var(--color-bg); font-style: italic; }
   .noscript a { color: var(--color-accent-300); }

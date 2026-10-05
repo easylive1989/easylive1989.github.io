@@ -1267,9 +1267,13 @@ function loop(ts) {
   renderer.render(scene, camera);
 }
 // the shaders are built while the sheets are still being painted; the room opens once both are done
-renderer.compileAsync(scene, camera).catch(() => {}).then(() => renderer.setAnimationLoop(loop));
+// the door on the loading screen swings a little wider as each of the three is done: the room built, its shaders, its sheets
+const introEl = $('intro'), door = n => { introEl.dataset.s = Math.max(n, +introEl.dataset.s || 0); }; let doorN = 0; const ajar = () => door(++doorN);
+ajar();
+renderer.compileAsync(scene, camera).catch(() => {}).then(() => { ajar(); renderer.setAnimationLoop(loop); });
+sheetsReady.then(ajar);
 window.__study = { loop, openItem, openList, openAbout, openTV, exitTV, flip, closeReader, switchDraft, state:{ RD, BK, TV, LF } };
-Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { flyTo(HOME.tgt, HOME.pos, 2.2); Q.armed = true; $('intro').classList.add('off'); });
+Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { flyTo(HOME.tgt, HOME.pos, 2.2); Q.armed = true; door(4); introEl.classList.add('off'); });
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
 const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
 addEventListener('resize', fitCamera); fitCamera();
