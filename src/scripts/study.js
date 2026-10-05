@@ -9,7 +9,6 @@ const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTextu
 // slots — a spine on the shelf, a spot on the display shelves, a page on the desk.
 const DATA = JSON.parse(document.getElementById('study-data').textContent);
 const { items: ITEMS, about: ABOUT, github: GH, site: SITE } = DATA;
-const related = id => DATA.links.filter(l => l.includes(id)).map(l => l[0] === id ? l[1] : l[0]);
 const IDS = Object.keys(ITEMS);
 const CATS = [{ id:'shelf', name:'書架' }, { id:'display', name:'展示架' }, { id:'desk', name:'書桌' }];
 const has = id => !!ITEMS[id];
@@ -866,7 +865,6 @@ const $ = id => document.getElementById(id);
 let toastT; const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); };
 const panel = $('panel'), pbody = $('pbody');
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
-const where = id => ({ shelf:'書架', display:'展示架', desk:'書桌' }[ITEMS[id].cat]);
 const ghostBtn = 'justify-content:flex-start;margin-left:-6px;text-align:left;text-decoration:none';
 const linkBtns = ls => ls && ls.length ? `<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-4) 0">${ls.map(l => `<a class="btn ${l.p ? 'btn-primary' : 'btn-secondary'}" href="${esc(l.u)}"${linkAttrs(l.u)} style="text-decoration:none">${esc(l.l)}</a>`).join('')}</div>` : '';
 function renderPanel(mode) {
@@ -888,15 +886,12 @@ function renderPanel(mode) {
     h += `<div class="body">${it.b.map(p => `<p${p.startsWith('（') ? ' style="font-style:italic"' : ''}>${esc(p)}</p>`).join('')}</div>`;
     h += linkBtns(it.links);
     h += `<div class="meta">${esc(it.m)}</div>`;
-    const rel = related(st.cur);
-    if (rel.length) h += `<div class="rel"><span class="lab card-kicker">順手再翻 →</span>${rel.map(r => `<button class="btn btn-ghost" data-rel="${r}" style="${ghostBtn}">${where(r)}：${esc(ITEMS[r].t)}</button>`).join('')}</div>`;
   }
   pbody.innerHTML = h; panel.scrollTop = 0; panel.classList.add('open'); document.body.classList.add('reading');
 }
 panel.addEventListener('click', e => {
-  const a = e.target.closest('[data-act],[data-item],[data-rel]'); if (!a) return;
+  const a = e.target.closest('[data-act],[data-item]'); if (!a) return;
   if (a.dataset.item) return openItem(a.dataset.item);
-  if (a.dataset.rel) return openItem(a.dataset.rel);
   if (a.dataset.act === 'close') closePanel();
 });
 
@@ -1033,34 +1028,32 @@ async function countCols(html, D) {
   const n = Math.max(1, Math.round((el.scrollWidth + FG) / (D.fw + FG))); el.remove(); return n;
 }
 const endpaper = kind => '<div class="endp"><div class="exlib"><span>EX LIBRIS</span><b>' + esc(ABOUT.name.split(' ')[0]) + ' 的書房</b><span>' + KLAB[kind] + '</span></div></div>';
-function closePages(P, id) {
-  const rel = id ? related(id) : [];
-  if (rel.length) P.push('<span class="sec">順手再翻</span><div class="rel">' + rel.map(r => '<button class="btn btn-ghost" data-rel="' + r + '">' + where(r) + '：' + esc(ITEMS[r].t) + ' →</button>').join('') + '</div>');
+function closePages(P) {
   if (P.length % 2) P.push('<div class="colo">— 完 —</div>');
   return P;
 }
-function articlePages(it, html, n, id) {
+function articlePages(it, html, n) {
   const by = it.by || (it.b && it.b[0]);
   const P = [endpaper(it.kind), (it.cover ? '<img class="cover-img" src="' + esc(it.cover) + '" alt="">' : '') + '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + (by ? '<p class="by">' + esc(by) + '</p>' : '') + '<span class="foot">' + esc(it.m) + '</span>'];
   if (html) for (let k = 0; k < n; k++) P.push({ col:k });
   else P.push('<span class="sec">內容</span><div class="body"><p><em>（全文暫時讀不到。）</em></p></div>');
-  return closePages(P, id);
+  return closePages(P);
 }
 async function bookPages(id, D) {
   const it = ITEMS[id];
-  if (it.aid) { const html = await loadArticle(it.aid); return { art:{ t:it.t, html }, pages:articlePages(it, html, html ? await countCols(html, D) : 0, id) }; }
+  if (it.aid) { const html = await loadArticle(it.aid); return { art:{ t:it.t, html }, pages:articlePages(it, html, html ? await countCols(html, D) : 0) }; }
   const body = '<div class="body">' + it.b.map(p => '<p>' + esc(p) + '</p>').join('') + '</div>';
   if (it.toc) {
     const P = [endpaper(it.kind), '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + body + linkBtns(it.links) + '<span class="foot">' + esc(it.m) + '</span>'];
     for (let a = 0; a < it.toc.length; a += TOC_ROWS) P.push('<span class="sec">目錄 · ' + (a + 1) + '–' + Math.min(a + TOC_ROWS, it.toc.length) + ' / ' + it.toc.length + '</span><div class="toc">'
       + it.toc.slice(a, a + TOC_ROWS).map(([aid, t, d]) => '<button data-art="' + aid + '"><span>' + esc(d) + '</span><b>' + esc(t) + '</b></button>').join('') + '</div>');
-    return { art:null, pages:closePages(P, id) };
+    return { art:null, pages:closePages(P) };
   }
   // a book from the reading list: its title page, and a card after it when there is something to put on one
   const card = it.b.length || it.pct != null || (it.links && it.links.length);
   return { art:null, pages:closePages([endpaper(it.kind),
     (it.cover ? '<img class="cover-img" src="' + esc(it.cover) + '" alt="">' : '') + '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + (it.by ? '<p class="by">' + esc(it.by) + '</p>' : '') + '<span class="foot">' + esc(ABOUT.name) + ' 的書單</span>',
-    ...(card ? ['<span class="sec">書卡</span>' + body + (it.pct != null ? '<div><div class="prog"><i style="width:' + it.pct + '%"></i></div><span style="font-size:13px">已讀 ' + it.pct + '%</span></div>' : '') + linkBtns(it.links) + '<span class="foot">' + esc(it.m) + '</span>'] : [])], id) };
+    ...(card ? ['<span class="sec">書卡</span>' + body + (it.pct != null ? '<div><div class="prog"><i style="width:' + it.pct + '%"></i></div><span style="font-size:13px">已讀 ' + it.pct + '%</span></div>' : '') + linkBtns(it.links) + '<span class="foot">' + esc(it.m) + '</span>'] : [])]) };
 }
 function openBook(id) {
   if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; mark(id); st.cur = id;
@@ -1136,9 +1129,9 @@ function closeReader(cb) {
   a.onfinish = () => { reader.classList.remove('on'); robj.innerHTML = ''; rnav.innerHTML = ''; RD.mode = null; LF.t = 1; LF.anim = -1; LF.cb = () => { RD.busy = false; unimmerse(); cb && cb(); }; };
 }
 reader.addEventListener('click', e => {
-  const a = e.target.closest('a,[data-act],[data-rel],[data-tab],[data-art]');
+  const a = e.target.closest('a,[data-act],[data-tab],[data-art]');
   if (a && a.tagName === 'A') return;
-  if (a) { if (a.dataset.tab) return switchDraft(a.dataset.tab); if (a.dataset.art) return readEntry(a.dataset.art); if (a.dataset.rel) { const r = a.dataset.rel; return closeReader(() => openItem(r)); }
+  if (a) { if (a.dataset.tab) return switchDraft(a.dataset.tab); if (a.dataset.art) return readEntry(a.dataset.art);
     const act = a.dataset.act; if (act === 'shelve' || act === 'rclose') return closeReader(); if (act === 'toc') return backToContents(); if (act === 'next' || act === 'prev') { const d = act === 'next' ? 1 : -1; return RD.mode === 'book' ? flip(d) : stepDraft(d); } return; }
   if (e.target.classList.contains('bd')) return closeReader();
   if (RD.mode === 'book') { const p = e.target.closest('.page'); if (!p) return; if (BK.single) { const r = p.getBoundingClientRect(); flip(e.clientX < r.left + r.width * .35 ? -1 : 1); } else flip(p.classList.contains('L') ? -1 : 1); }

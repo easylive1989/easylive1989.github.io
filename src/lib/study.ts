@@ -62,7 +62,6 @@ export interface StudyItem {
 
 export interface StudyData {
   items: Record<string, StudyItem>;
-  links: [string, string][];
   /** The bookshelf, section by section in shelving order: [category, the slots of its books]. */
   library: [string, string[]][];
   about: {
@@ -262,7 +261,6 @@ export async function buildStudyData(): Promise<StudyData> {
   const contrib = await getGithubContributions(username);
 
   const items: Record<string, StudyItem> = {};
-  const owner: Record<string, string> = {}; // article id → series slot, for "順手再翻"
 
   /* ── desk, the book rack: one book per series, newest series first ── */
   const categories: string[] = [];
@@ -282,7 +280,6 @@ export async function buildStudyData(): Promise<StudyData> {
       links,
       toc: inSeries.map((a) => [a.id, a.title, dotted(a.createdTime)]),
     };
-    for (const a of inSeries) owner[a.id] = slot;
   });
 
   /* ── the bookshelf: every finished book of the reading list, filed by category ── */
@@ -310,7 +307,6 @@ export async function buildStudyData(): Promise<StudyData> {
   };
 
   /* ── display shelves: side projects ── */
-  const modelled: string[] = [];
   projects.forEach((p) => {
     const [slot, spot] = PROJECT_SLOTS[p.title] ?? [];
     if (!slot) return;
@@ -327,7 +323,6 @@ export async function buildStudyData(): Promise<StudyData> {
       m: spot,
       links,
     };
-    modelled.push(slot);
   });
 
   /* ── display shelves: a bear for every Ironman run, a tape for every talk ── */
@@ -383,24 +378,9 @@ export async function buildStudyData(): Promise<StudyData> {
     };
   });
 
-  /* ── "順手再翻" ── */
-  const links: [string, string][] = [];
-  const add = (a: string, b: string) => items[a] && items[b] && links.push([a, b]);
-  newest.forEach((a, i) => owner[a.id] && add(DESK_SLOTS[i], owner[a.id]));
-  const flutterSeries = SERIES_SLOTS.find((s) => items[s]?.t === '30 天輕鬆學會 Flutter 測試');
-  if (flutterSeries) add('mb', flutterSeries);
-  // a bear points at its series in the rack, and at the book the series became
-  IRONMAN.forEach(([, , series], i) => {
-    const racked = SERIES_SLOTS.find((s) => items[s]?.t === series);
-    if (racked) add(IRONMAN_SLOTS[i], racked);
-    if (series === items.mb.t) add(IRONMAN_SLOTS[i], 'mb');
-  });
-  modelled.forEach((slot, i) => i > 0 && add(slot, modelled[i - 1]));
-
   const firstYear = articles.length ? new Date(articles[articles.length - 1].createdTime).getFullYear() : new Date().getFullYear();
   return {
     items,
-    links,
     library,
     about: {
       name: config.author.name,
