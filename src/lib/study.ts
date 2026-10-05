@@ -43,7 +43,8 @@ export interface StudyItem {
   t: string;
   by?: string;
   b: string[];
-  m: string;
+  /** A footer line in the reader; the exhibits on the display shelves have none. */
+  m?: string;
   links?: StudyLink[];
   tech?: string[];
   /** Reading progress, 0–100. */
@@ -89,11 +90,11 @@ const BASE = import.meta.env.BASE_URL;
 const SERIES_SLOTS = ['s1', 's2', 's3'];
 const DESK_SLOTS = ['d1', 'd2', 'd3'];
 // A side project's exhibit is modelled after it, so the slots go by title, not by order; a project with no model is not shown.
-const PROJECT_SLOTS: Record<string, [slot: string, spot: string]> = {
-  Lorescape: ['p1', '展示架 · 山徑模型'],
-  'YouTube 運動計時器': ['p3', '展示架 · 座鐘'],
-  小遊戲機器人: ['g2', '展示架 · 棋盤'],
-  有趣頒獎動畫: ['aw', '展示架 · 頒獎台'],
+const PROJECT_SLOTS: Record<string, string> = {
+  Lorescape: 'p1',
+  'YouTube 運動計時器': 'p3',
+  小遊戲機器人: 'g2',
+  有趣頒獎動畫: 'aw',
 };
 const IRONMAN_SLOTS = ['ir1', 'ir2', 'ir3'];
 const TALK_SLOTS = ['tk1', 'tk2'];
@@ -302,13 +303,12 @@ export async function buildStudyData(): Promise<StudyData> {
     k: '我出的書 · Book',
     t: '30 天輕鬆學會 Flutter 測試',
     b: ['由 2023 iThome 鐵人賽佳作改寫成書，從基礎到進階一次到位。'],
-    m: '展示架 · 出版書籍',
     links: [{ l: '看書 ↗', u: MY_BOOK_URL, p: 1 }],
   };
 
   /* ── display shelves: side projects ── */
   projects.forEach((p) => {
-    const [slot, spot] = PROJECT_SLOTS[p.title] ?? [];
+    const slot = PROJECT_SLOTS[p.title];
     if (!slot) return;
     const links: StudyLink[] = [];
     if (p.mainUrl) links.push({ l: '玩玩看 ↗', u: p.mainUrl, p: 1 });
@@ -320,7 +320,6 @@ export async function buildStudyData(): Promise<StudyData> {
       t: p.subtitle ? `${p.title} · ${p.subtitle}` : p.title,
       b: p.description ? [p.description] : [],
       tech: p.tags,
-      m: spot,
       links,
     };
   });
@@ -333,7 +332,6 @@ export async function buildStudyData(): Promise<StudyData> {
       k: `鐵人賽 · ${year} ${result}`,
       t: series,
       b: [prize ? `連續三十天、一天一篇，拿下${result}。` : `連續三十天、一天一篇，完賽，${result}。`],
-      m: '展示架 · 鐵人熊',
       links: [{ l: 'iThome 鐵人賽 ↗', u: url, p: 1 }],
       ...(prize ? { cup: 1 as const } : {}),
     };
@@ -347,7 +345,6 @@ export async function buildStudyData(): Promise<StudyData> {
       t: title,
       by: host,
       b: [],
-      m: '展示架 · 錄影帶',
       links: [{ l: '活動頁 ↗', u: url, p: 1 }],
     };
   });
@@ -364,7 +361,6 @@ export async function buildStudyData(): Promise<StudyData> {
       t: `${config.author.name.split(' ')[0]} 的 Playbox`,
       b: ['窗邊小櫃子上的老電視，接著一台遊戲機。所有小遊戲都收在 Playbox 裡，按下開關就能玩。'],
       list: gameRows,
-      m: '窗邊 · 遊戲櫃',
       links: [{ l: 'Playbox GitHub ↗', u: PLAYBOX_REPO, p: 1 }],
     };
   }

@@ -904,7 +904,6 @@ function renderPanel(mode) {
     if (it.pct != null) h += `<div style="margin:var(--space-4) 0 var(--space-3)"><div class="prog"><i style="width:${it.pct}%"></i></div><span style="font-size:13px">已讀 ${it.pct}%</span></div>`;
     h += `<div class="body">${it.b.map(p => `<p${p.startsWith('（') ? ' style="font-style:italic"' : ''}>${esc(p)}</p>`).join('')}</div>`;
     h += linkBtns(it.links);
-    h += `<div class="meta">${esc(it.m)}</div>`;
   }
   pbody.innerHTML = h; panel.scrollTop = 0; panel.classList.add('open'); document.body.classList.add('reading');
 }
@@ -1072,7 +1071,7 @@ async function bookPages(id, D) {
   const card = it.b.length || it.pct != null || (it.links && it.links.length);
   return { art:null, pages:closePages([endpaper(it.kind),
     (it.cover ? '<img class="cover-img" src="' + esc(it.cover) + '" alt="">' : '') + '<span class="kick">' + esc(it.k) + '</span><h2>' + esc(it.t) + '</h2>' + (it.by ? '<p class="by">' + esc(it.by) + '</p>' : '') + '<span class="foot">' + esc(ABOUT.name) + ' 的書單</span>',
-    ...(card ? ['<span class="sec">書卡</span>' + body + (it.pct != null ? '<div><div class="prog"><i style="width:' + it.pct + '%"></i></div><span style="font-size:13px">已讀 ' + it.pct + '%</span></div>' : '') + linkBtns(it.links) + '<span class="foot">' + esc(it.m) + '</span>'] : [])]) };
+    ...(card ? ['<span class="sec">書卡</span>' + body + (it.pct != null ? '<div><div class="prog"><i style="width:' + it.pct + '%"></i></div><span style="font-size:13px">已讀 ' + it.pct + '%</span></div>' : '') + linkBtns(it.links) + (it.m ? '<span class="foot">' + esc(it.m) + '</span>' : '')] : [])]) };
 }
 function openBook(id) {
   if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; mark(id); st.cur = id;
