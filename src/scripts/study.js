@@ -697,6 +697,25 @@ rack.add(box(RKW, .018, RKD, M.woodL, 'rack-base', [0, .009, 0])); rack.add(box(
 [-1, 1].forEach(k => rack.add(box(.018, .19, RKD, M.woodL, 'rack-end', [k * (RKW/2 - .009), .113, 0])));
 SERIES.forEach((id, i) => { const g = bookOf(id, .2, BH, BT); g.position.set((i - 1) * (BT + .006), .018 + BH/2, .006); g.rotation.y = -Math.PI/2; rack.add(g);
   tag(g, { type:'item', id, view:'desk' }, [0, .02, .06]); });
+// a snake plant at the rack's left end: a glazed pot on its saucer, and a rosette of blades, the inner ones tallest
+const plant = new THREE.Group(); plant.name = 'potted-plant'; plant.position.set(.74, DY + .025, -2.2); desk.add(plant);
+const potM = pbr('pot', C.cream, { roughness:.4, clearcoat:.8, clearcoatRoughness:.15 });
+plant.add(cyl(.06, .05, .012, 32, potM, 'saucer', [0,.006,0])); plant.add(cyl(.058, .042, .1, 32, potM, 'pot', [0,.062,0]));
+plant.add(mk(new THREE.TorusGeometry(.057, .006, 10, 32), potM, 'pot-rim', [0,.112,0], [Math.PI/2,0,0]));
+plant.add(cyl(.054, .054, .004, 24, std('soil', '#2a1d14', { roughness:1 }), 'soil', [0,.106,0]));
+// each blade is a strip pinched to a point, creased down its middle and bowed away from the heart of the plant; banded across, with a pale margin
+const bladeTex = texOf(cnv(32, 128, (x, w, h) => { const R = rng(7); x.fillStyle = '#2c5733'; x.fillRect(0, 0, w, h);
+  for (let y = 0; y < h; y += 3 + R()*6) { x.fillStyle = 'rgba(132,170,112,' + (.25 + R()*.4) + ')'; x.fillRect(0, y, w, 1 + R()*3); }
+  x.fillStyle = '#c9b65a'; x.fillRect(0, 0, 4, h); x.fillRect(w - 4, 0, 4, h); }));
+const bladeR = rng(31), blades = [];
+for (let i = 0; i < 11; i++) {
+  const inner = i < 4, H = inner ? .26 + bladeR()*.08 : .15 + bladeR()*.1, W = .046 + bladeR()*.014, a = i*2.4 + bladeR()*.5, bow = inner ? .05 + bladeR()*.08 : .18 + bladeR()*.16, tw = (bladeR() - .5)*.9;
+  const g = new THREE.PlaneGeometry(1, 1, 2, 8), p = g.attributes.position;
+  for (let k = 0; k < p.count; k++) { const u = p.getX(k), v = p.getY(k) + .5, w = W * Math.min(1, .55 + v*1.5) * Math.pow(1 - Math.pow(v, 2.2), .8), c = Math.cos(tw*v), s = Math.sin(tw*v), z = -Math.abs(u)*w*.5;
+    p.setXYZ(k, u*w*c + z*s, v*H, z*c - u*w*s + bow*Math.pow(v, 1.6)*H); }
+  g.computeVertexNormals(); g.rotateY(a); const r = inner ? .008 : .024 + bladeR()*.01; g.translate(Math.sin(a)*r, .106, Math.cos(a)*r); blades.push(g);
+}
+plant.add(mk(mergeGeometries(blades), std('blade', '#fff', { map:bladeTex, roughness:.55, side:THREE.DoubleSide }), 'blades'));
 // laptop (mermer)
 const laptop = new THREE.Group(); laptop.name = 'laptop'; laptop.position.set(1.78, DY + .025, -2.08); laptop.rotation.y = -.05; desk.add(laptop);
 laptop.add(box(.5, .016, .34, M.alu, 'laptop-base', [0,.008,0]));
