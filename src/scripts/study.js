@@ -79,7 +79,7 @@ const M = {
   wood:std('wood', C.wood, { roughness:.55 }), woodD:std('wood-dark', C.woodD, { roughness:.6 }), woodL:std('wood-light', C.woodL, { roughness:.5 }),
   fabric:std('fabric', C.fabric, { roughness:1 }), fabricD:std('fabric-dark', C.fabricD, { roughness:1 }),
   cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
-  dog:std('dog', '#241d18', { roughness:.6 }), dogT:std('dog-tan', '#9a7452', { roughness:.7 }),
+  dog:std('dog', '#1a1714', { roughness:.75 }), dogT:std('dog-tan', '#8f5e36', { roughness:.75 }), dogP:std('dog-paw', '#b59470', { roughness:.75 }),
   glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
   alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }),
 };
@@ -163,8 +163,8 @@ const woodTex = { map:sheet('wood', 'color', [.5, 1]), normalMap:sheet('wood', '
 const plasterTex = { map:sheet('plaster', 'color', [.4, .4]), normalMap:sheet('plaster', 'normal', [.4, .4]), roughnessMap:sheet('plaster', 'rough', [.4, .4]), normalScale:new THREE.Vector2(.55, .55) };
 // upholstery: one 12.5 cm swatch of 4 mm threads
 const fabricTex = { map:sheet('fabric', 'color', [8, 8]), normalMap:sheet('fabric', 'normal', [8, 8]), normalScale:new THREE.Vector2(.8, .8), roughness:1, sheen:.4, sheenRoughness:.75 };
-// a short, close coat: the hairs of the fur sheet, laid flatter, with the soft shine of a smooth-haired dog
-const coatTex = { normalMap:sheet('tabby', 'normal'), normalScale:new THREE.Vector2(.3, .3), roughness:.55, sheen:.35, sheenRoughness:.5, sheenColor:col('#8a7560'), clearcoat:.1, clearcoatRoughness:.5 };
+// a short, close coat: matt, with the faintest trace of the fur sheet's hairs and a soft sheen along the edges
+const coatTex = { normalMap:sheet('tabby', 'normal'), normalScale:new THREE.Vector2(.08, .08), roughness:.75, sheen:.25, sheenRoughness:.7, sheenColor:col('#6a5a4c') };
 // small things: metal that has been handled, and a fine grit for paper and hardboard
 const metalTex = { map:sheet('metal', 'color'), roughnessMap:sheet('metal', 'rough'), metalness:1 };
 const grit = sheet('plaster', 'normal');
@@ -181,7 +181,7 @@ Object.assign(M, {
   fabricD: pbr('fabric-dark', '#7a7262', { ...fabricTex, sheenColor:col('#aaa290') }),
   brass: pbr('brass', '#d2a868', { ...metalTex, roughness:.43 }),
   alu: pbr('aluminium', '#b4b2ad', { ...metalTex, map:null, roughness:.53 }),
-  dog: pbr('dog', '#241d18', coatTex), dogT: pbr('dog-tan', '#9a7452', coatTex),
+  dog: pbr('dog', '#1a1714', coatTex), dogT: pbr('dog-tan', '#8f5e36', coatTex), dogP: pbr('dog-paw', '#b59470', coatTex),
   cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }),
   glass: new THREE.MeshPhysicalMaterial(lite({ name:'glass', color:col('#c8d8d4'), transparent:true, opacity:.14, roughness:.04, metalness:0, depthWrite:false, clearcoat:1 })),
 });
@@ -786,27 +786,42 @@ chair.add(mk(rboxGeo(.72, .14, .7, .04), M.fabricD, 'chair-frame', [0,.36,0]));
 const seatCushion = mk(rboxGeo(.6, .11, .6, .045), M.fabric, 'seat-cushion', [0,.47,.02]); chair.add(seatCushion);
 chair.add(mk(rboxGeo(.66, .62, .14, .05), M.fabric, 'chair-back', [0,.8,-.31], [-.12,0,0]));
 [-.34, .34].forEach(x => { chair.add(mk(rboxGeo(.09, .22, .62, .035), M.fabricD, 'chair-arm', [x,.55,0])); chair.add(box(.1, .04, .66, M.woodL, 'arm-rest', [x,.66,.01])); });
-// A black-and-tan smooth dachshund asleep on the cushion, curled nose to tail: the long body is one bent tube, the head is laid along
-// the flank with the forepaws under the chin, and the ears hang down the cheeks. Tan at the jaw, the brows and the paws.
+// A black-and-tan smooth dachshund asleep on the cushion, curled nose to tail: the long body is one bent tube, thickest at the chest
+// and thinning to the rump, the head laid along the flank with its chin on the forepaws, and the ears hang down the cheeks. Tan on the
+// lower half of the muzzle, the cheeks, the brows and the paws, and a khaki collar.
 const dog = new THREE.Group(); dog.name = 'dog'; dog.position.set(-.02, .525, .03); dog.rotation.y = .05; chair.add(dog); // turned so the head is seen side-on from the room, nose to the left
-const v3 = (x, y, z) => new THREE.Vector3(x, y, z), limb = (pts, r, m, name) => mk(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, r, 10), m, name);
-const dogBody = mk(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([v3(-.11,.062,0), v3(-.035,.062,-.105), v3(.085,.064,-.07), v3(.105,.07,.035)]), 32, .07, 14), M.dog, 'dog-body'); dog.add(dogBody);
-dog.add(mk(new THREE.SphereGeometry(.07, 20, 14), M.dog, 'dog-rump', [-.11,.062,0]));
-const chest = mk(new THREE.SphereGeometry(.08, 24, 16), M.dog, 'dog-chest', [.105,.072,.035]); chest.scale.set(1, .95, 1); dog.add(chest);
-const belly = mk(new THREE.SphereGeometry(.1, 24, 16), M.dog, 'dog-belly', [0,.04,-.01]); belly.scale.set(1, .5, 1); dog.add(belly); // fills the curl, so no cushion shows through it
-dog.add(limb([v3(.105,.072,.035), v3(.07,.085,.07), v3(.02,.09,.085)], .04, M.dog, 'dog-neck'));
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+// a tube along `pts` whose radius runs from r0 at the start to r1 at the end: the rings are scaled about the curve after the fact
+const limb = (pts, r0, r1, m, name, seg = 16) => { const c = new THREE.CatmullRomCurve3(pts), g = new THREE.TubeGeometry(c, seg, 1, 10), P = g.attributes.position, o = new THREE.Vector3();
+  for (let i = 0; i <= seg; i++) { const t = i / seg, r = r0 + (r1 - r0) * t; c.getPointAt(t, o); for (let j = 0; j <= 10; j++) { const k = i * 11 + j; P.setXYZ(k, o.x + (P.getX(k) - o.x) * r, o.y + (P.getY(k) - o.y) * r, o.z + (P.getZ(k) - o.z) * r); } }
+  P.needsUpdate = true; g.computeVertexNormals(); return mk(g, m, name); };
+const dogBody = limb([v3(-.11,.046,0), v3(-.035,.052,-.105), v3(.085,.062,-.07), v3(.105,.068,.035)], .045, .068, M.dog, 'dog-body', 32); dog.add(dogBody);
+dog.add(mk(new THREE.SphereGeometry(.045, 18, 12), M.dog, 'dog-rump', [-.11,.046,0]));
+const chest = mk(new THREE.SphereGeometry(.07, 24, 16), M.dog, 'dog-chest', [.105,.068,.035]); chest.scale.set(1, .95, 1); dog.add(chest);
+const belly = mk(new THREE.SphereGeometry(.1, 24, 16), M.dog, 'dog-belly', [0,.035,-.01]); belly.scale.set(1, .45, 1); dog.add(belly); // fills the curl, so no cushion shows through it
+dog.add(limb([v3(.105,.068,.035), v3(.07,.078,.07), v3(.02,.075,.085)], .042, .036, M.dog, 'dog-neck'));
+dog.add(mk(new THREE.TorusGeometry(.044, .005, 8, 24), std('collar', '#b7a67a', { roughness:.6 }), 'dog-collar', [.062,.074,.064], [0,-1.04,0])); // its axis along the neck
 // the head: +x is the nose, laid back along the flank towards the tail
 const HEAD_YAW = -2.59;
-const dogHead = new THREE.Group(); dogHead.name = 'dog-head'; dogHead.position.set(.02, .028, .085); dogHead.rotation.y = HEAD_YAW; dog.add(dogHead);
+const dogHead = new THREE.Group(); dogHead.name = 'dog-head'; dogHead.position.set(.02, .02, .085); dogHead.rotation.y = HEAD_YAW; dog.add(dogHead);
 const skull = mk(new THREE.SphereGeometry(.045, 20, 14), M.dog, 'dog-skull', [0,.046,0]); skull.scale.set(1.15, .95, .9); dogHead.add(skull);
-const muzzle = mk(new THREE.SphereGeometry(.03, 16, 12), M.dog, 'dog-muzzle', [.062,.04,0]); muzzle.scale.set(2, 1, .9); dogHead.add(muzzle);
-const jaw = mk(new THREE.SphereGeometry(.03, 16, 12), M.dogT, 'dog-jaw', [.062,.027,0]); jaw.scale.set(1.8, .72, .95); dogHead.add(jaw);
-dogHead.add(mk(new THREE.SphereGeometry(.013, 12, 8), std('dog-nose', '#0a0806', { roughness:.25 }), 'dog-nose', [.122,.044,0]));
-[-1, 1].forEach(k => { dogHead.add(mk(new THREE.SphereGeometry(.007, 8, 6), M.dogT, 'dog-brow', [.03,.076,k*.022]));
-  const ear = mk(new THREE.SphereGeometry(.04, 14, 12), M.dog, 'dog-ear', [-.022,.026,k*.044], [k*.2,0,.1]); ear.scale.set(.5, 1.15, .16); dogHead.add(ear); });
-// the forepaws peep out under the chin; the hind legs are tucked away in the curl but for one paw
-[[-.025,.125],[-.005,.155],[-.07,.095]].forEach(([x,z]) => { const paw = mk(new THREE.SphereGeometry(.021, 10, 8), M.dogT, 'dog-paw', [x,.016,z]); paw.scale.set(1.3, .65, 1); dog.add(paw); });
-dog.add(limb([v3(-.11,.055,0), v3(-.115,.035,.06), v3(-.09,.025,.1), v3(-.06,.022,.125)], .011, M.dog, 'dog-tail'));
+const crown = mk(new THREE.SphereGeometry(.04, 18, 12), M.dog, 'dog-crown', [-.012,.056,0]); crown.scale.set(1.05, 1, .95); dogHead.add(crown); // the dome of the skull, so the brows sit on a brow ridge
+// the muzzle tapers to the nose; a tan sleeve a touch lower and narrower shows on its underside and cheeks
+dogHead.add(mk(new THREE.CylinderGeometry(.017, .03, .08, 14), M.dog, 'dog-muzzle', [.07,.042,0], [0,0,-Math.PI/2]));
+dogHead.add(mk(new THREE.CylinderGeometry(.0165, .0292, .079, 14), M.dogT, 'dog-jaw', [.07,.038,0], [0,0,-Math.PI/2])); // set a hair narrower and lower, so the tan is the underside of the same muzzle
+dogHead.add(mk(new THREE.SphereGeometry(.016, 12, 8), M.dog, 'dog-muzzle-tip', [.11,.042,0]));
+dogHead.add(mk(new THREE.SphereGeometry(.013, 12, 8), std('dog-nose', '#0a0806', { roughness:.25 }), 'dog-nose', [.118,.042,0]));
+[-1, 1].forEach(k => {
+  const cheek = mk(new THREE.SphereGeometry(.02, 12, 8), M.dogT, 'dog-cheek', [.02,.03,k*.035]); cheek.scale.set(1.3, .7, .35); dogHead.add(cheek);
+  const earRoot = mk(new THREE.SphereGeometry(.009, 8, 6), M.dogT, 'dog-ear-root', [.004,.072,k*.04], [0,0,0]); earRoot.scale.set(1.2, .5, .5); dogHead.add(earRoot); // the spot of tan above each ear
+  const brow = mk(new THREE.SphereGeometry(.008, 8, 6), M.dogT, 'dog-brow', [.04,.07,k*.031], [0,k*.5,0]); brow.scale.set(1.3, .6, .4); dogHead.add(brow); // just above the eye, flat to the skull
+  const eye = mk(new THREE.SphereGeometry(.007, 8, 6), std('dog-eye', '#332b26', { roughness:.8 }), 'dog-eye', [.041,.058,k*.035], [0,k*.6,0]); eye.scale.set(1.8, .3, .5); dogHead.add(eye); // shut
+  // a leaf of an ear hung from the back of the skull, lying down the cheek and reaching below the jaw
+  const ear = mk(new THREE.SphereGeometry(.04, 14, 12), M.dog, 'dog-ear', [-.004,.034,k*.047], [k*.22,0,.12]); ear.scale.set(.62, 1.3, .3); dogHead.add(ear); });
+// short forelegs out from the chest, the paws under the chin; the hind legs are tucked away in the curl; the tail follows the curl round to the nose
+[[v3(.06,.026,.09), v3(0,.017,.115)], [v3(.07,.026,.115), v3(.01,.017,.14)]].forEach(([a, b]) => { dog.add(limb([a, b], .016, .013, M.dog, 'dog-leg', 4));
+  const paw = mk(new THREE.SphereGeometry(.019, 10, 8), M.dogP, 'dog-paw', [b.x - .006, .015, b.z]); paw.scale.set(1.05, .6, .95); dog.add(paw); });
+dog.add(limb([v3(-.11,.045,0), v3(-.15,.022,.05), v3(-.125,.012,.12), v3(-.075,.01,.16)], .016, .006, M.dog, 'dog-tail'));
 // side table + books stack front right
 const side = new THREE.Group(); side.position.set(2.6, 0, .9); room.add(side);
 side.add(box(.6, .04, .5, M.wood, 'side-top', [0,.6,0])); [[-.26,-.21],[.26,-.21],[-.26,.21],[.26,.21]].forEach(([x,z]) => side.add(box(.04, .58, .04, M.woodD, 'side-leg', [x,.29,z])));
