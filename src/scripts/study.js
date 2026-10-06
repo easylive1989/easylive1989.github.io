@@ -79,7 +79,7 @@ const M = {
   wood:std('wood', C.wood, { roughness:.55 }), woodD:std('wood-dark', C.woodD, { roughness:.6 }), woodL:std('wood-light', C.woodL, { roughness:.5 }),
   fabric:std('fabric', C.fabric, { roughness:1 }), fabricD:std('fabric-dark', C.fabricD, { roughness:1 }),
   cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
-  cat:std('cat', C.cat, { roughness:.95 }), catL:std('cat-light', '#efc394', { roughness:.95 }),
+  dog:std('dog', '#241d18', { roughness:.6 }), dogT:std('dog-tan', '#9a7452', { roughness:.7 }),
   glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
   alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }),
 };
@@ -163,7 +163,8 @@ const woodTex = { map:sheet('wood', 'color', [.5, 1]), normalMap:sheet('wood', '
 const plasterTex = { map:sheet('plaster', 'color', [.4, .4]), normalMap:sheet('plaster', 'normal', [.4, .4]), roughnessMap:sheet('plaster', 'rough', [.4, .4]), normalScale:new THREE.Vector2(.55, .55) };
 // upholstery: one 12.5 cm swatch of 4 mm threads
 const fabricTex = { map:sheet('fabric', 'color', [8, 8]), normalMap:sheet('fabric', 'normal', [8, 8]), normalScale:new THREE.Vector2(.8, .8), roughness:1, sheen:.4, sheenRoughness:.75 };
-const coatTex = { normalMap:sheet('tabby', 'normal'), normalScale:new THREE.Vector2(.6, .6), roughness:1, sheen:.6, sheenRoughness:.6, sheenColor:col('#ffd9b0') };
+// a short, close coat: the hairs of the fur sheet, laid flatter, with the soft shine of a smooth-haired dog
+const coatTex = { normalMap:sheet('tabby', 'normal'), normalScale:new THREE.Vector2(.3, .3), roughness:.55, sheen:.35, sheenRoughness:.5, sheenColor:col('#8a7560'), clearcoat:.1, clearcoatRoughness:.5 };
 // small things: metal that has been handled, and a fine grit for paper and hardboard
 const metalTex = { map:sheet('metal', 'color'), roughnessMap:sheet('metal', 'rough'), metalness:1 };
 const grit = sheet('plaster', 'normal');
@@ -180,7 +181,7 @@ Object.assign(M, {
   fabricD: pbr('fabric-dark', '#7a7262', { ...fabricTex, sheenColor:col('#aaa290') }),
   brass: pbr('brass', '#d2a868', { ...metalTex, roughness:.43 }),
   alu: pbr('aluminium', '#b4b2ad', { ...metalTex, map:null, roughness:.53 }),
-  cat: pbr('cat', '#ffffff', { map:sheet('tabby', 'color'), ...coatTex }), catL: pbr('cat-light', '#f7dcb8', coatTex),
+  dog: pbr('dog', '#241d18', coatTex), dogT: pbr('dog-tan', '#9a7452', coatTex),
   cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }),
   glass: new THREE.MeshPhysicalMaterial(lite({ name:'glass', color:col('#c8d8d4'), transparent:true, opacity:.14, roughness:.04, metalness:0, depthWrite:false, clearcoat:1 })),
 });
@@ -778,21 +779,34 @@ const glaze = pbr('mug', C.mag, { map:texOf(cnv(8, 64, (x, w, h) => { const g = 
 mug.add(cyl(.035, .032, .085, 32, glaze, 'mug', [0,.043,0])); mug.add(mk(new THREE.TorusGeometry(.022, .006, 10, 24), glaze, 'mug-handle', [.038,.045,0]));
 mug.add(cyl(.031, .031, .002, 24, std('coffee', '#2a160c', { roughness:.06 }), 'coffee', [0,.075,0]));
 
-/* ================= armchair + cat ================= */
+/* ================= armchair + dachshund ================= */
 const chair = new THREE.Group(); chair.name = 'armchair'; chair.position.set(2.4, 0, -.55); chair.rotation.y = -.6; room.add(chair); // by the right wall, in front of the desk's far end, turned to the room
 [[-.3,-.28],[.3,-.28],[-.3,.3],[.3,.3]].forEach(([x,z]) => chair.add(box(.05, .32, .05, M.woodD, 'chair-leg', [x,.16,z])));
 chair.add(mk(rboxGeo(.72, .14, .7, .04), M.fabricD, 'chair-frame', [0,.36,0]));
 const seatCushion = mk(rboxGeo(.6, .11, .6, .045), M.fabric, 'seat-cushion', [0,.47,.02]); chair.add(seatCushion);
 chair.add(mk(rboxGeo(.66, .62, .14, .05), M.fabric, 'chair-back', [0,.8,-.31], [-.12,0,0]));
 [-.34, .34].forEach(x => { chair.add(mk(rboxGeo(.09, .22, .62, .035), M.fabricD, 'chair-arm', [x,.55,0])); chair.add(box(.1, .04, .66, M.woodL, 'arm-rest', [x,.66,.01])); });
-const cat = new THREE.Group(); cat.name = 'cat'; cat.position.set(-.02, .52, .03); cat.rotation.y = .4; chair.add(cat);
-const catBody = mk(new THREE.SphereGeometry(.13, 40, 24), M.cat, 'cat-body', [0,.06,0]); catBody.scale.set(1.35, .55, 1); cat.add(catBody);
-const head = mk(new THREE.SphereGeometry(.07, 20, 14), M.cat, 'cat-head', [.15,.06,.08]); head.scale.set(1, .85, 1); cat.add(head);
-[[.02],[-.02]].forEach(([dz], i) => cat.add(mk(new THREE.ConeGeometry(.022, .05, 4), M.cat, 'cat-ear', [.17, .12, .08 + (i ? -.035 : .035)], [0,0,-.3])));
-cat.add(mk(new THREE.SphereGeometry(.035, 12, 10), M.catL, 'cat-muzzle', [.205,.045,.1]));
-const tailCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(-.16,.04,0), new THREE.Vector3(-.17,.03,.12), new THREE.Vector3(-.05,.025,.17), new THREE.Vector3(.08,.025,.16)]);
-cat.add(mk(new THREE.TubeGeometry(tailCurve, 24, .022, 10), M.cat, 'cat-tail'));
-[[.08,.13],[.0,.14]].forEach(([x,z]) => { const p = mk(new THREE.SphereGeometry(.025, 10, 8), M.catL, 'cat-paw', [x,.02,z]); p.scale.set(1.4,.6,1); cat.add(p); });
+// A black-and-tan smooth dachshund asleep on the cushion, curled nose to tail: the long body is one bent tube, the head is laid along
+// the flank with the forepaws under the chin, and the ears hang down the cheeks. Tan at the jaw, the brows and the paws.
+const dog = new THREE.Group(); dog.name = 'dog'; dog.position.set(-.02, .525, .03); dog.rotation.y = .05; chair.add(dog); // turned so the head is seen side-on from the room, nose to the left
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z), limb = (pts, r, m, name) => mk(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, r, 10), m, name);
+const dogBody = mk(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([v3(-.11,.062,0), v3(-.035,.062,-.105), v3(.085,.064,-.07), v3(.105,.07,.035)]), 32, .07, 14), M.dog, 'dog-body'); dog.add(dogBody);
+dog.add(mk(new THREE.SphereGeometry(.07, 20, 14), M.dog, 'dog-rump', [-.11,.062,0]));
+const chest = mk(new THREE.SphereGeometry(.08, 24, 16), M.dog, 'dog-chest', [.105,.072,.035]); chest.scale.set(1, .95, 1); dog.add(chest);
+const belly = mk(new THREE.SphereGeometry(.1, 24, 16), M.dog, 'dog-belly', [0,.04,-.01]); belly.scale.set(1, .5, 1); dog.add(belly); // fills the curl, so no cushion shows through it
+dog.add(limb([v3(.105,.072,.035), v3(.07,.085,.07), v3(.02,.09,.085)], .04, M.dog, 'dog-neck'));
+// the head: +x is the nose, laid back along the flank towards the tail
+const HEAD_YAW = -2.59;
+const dogHead = new THREE.Group(); dogHead.name = 'dog-head'; dogHead.position.set(.02, .028, .085); dogHead.rotation.y = HEAD_YAW; dog.add(dogHead);
+const skull = mk(new THREE.SphereGeometry(.045, 20, 14), M.dog, 'dog-skull', [0,.046,0]); skull.scale.set(1.15, .95, .9); dogHead.add(skull);
+const muzzle = mk(new THREE.SphereGeometry(.03, 16, 12), M.dog, 'dog-muzzle', [.062,.04,0]); muzzle.scale.set(2, 1, .9); dogHead.add(muzzle);
+const jaw = mk(new THREE.SphereGeometry(.03, 16, 12), M.dogT, 'dog-jaw', [.062,.027,0]); jaw.scale.set(1.8, .72, .95); dogHead.add(jaw);
+dogHead.add(mk(new THREE.SphereGeometry(.013, 12, 8), std('dog-nose', '#0a0806', { roughness:.25 }), 'dog-nose', [.122,.044,0]));
+[-1, 1].forEach(k => { dogHead.add(mk(new THREE.SphereGeometry(.007, 8, 6), M.dogT, 'dog-brow', [.03,.076,k*.022]));
+  const ear = mk(new THREE.SphereGeometry(.04, 14, 12), M.dog, 'dog-ear', [-.022,.026,k*.044], [k*.2,0,.1]); ear.scale.set(.5, 1.15, .16); dogHead.add(ear); });
+// the forepaws peep out under the chin; the hind legs are tucked away in the curl but for one paw
+[[-.025,.125],[-.005,.155],[-.07,.095]].forEach(([x,z]) => { const paw = mk(new THREE.SphereGeometry(.021, 10, 8), M.dogT, 'dog-paw', [x,.016,z]); paw.scale.set(1.3, .65, 1); dog.add(paw); });
+dog.add(limb([v3(-.11,.055,0), v3(-.115,.035,.06), v3(-.09,.025,.1), v3(-.06,.022,.125)], .011, M.dog, 'dog-tail'));
 // side table + books stack front right
 const side = new THREE.Group(); side.position.set(2.6, 0, .9); room.add(side);
 side.add(box(.6, .04, .5, M.wood, 'side-top', [0,.6,0])); [[-.26,-.21],[.26,-.21],[-.26,.21],[.26,.21]].forEach(([x,z]) => side.add(box(.04, .58, .04, M.woodD, 'side-leg', [x,.29,z])));
@@ -932,7 +946,7 @@ function flyTo(tgt, pos, d = 1, az = AZ.home) { const o = pos.clone().sub(tgt); 
   tween = { t:0, d, ft:controls.target.clone(), tt:tgt.clone(), fp:camera.position.clone(), tp:tgt.clone().add(o.setFromSpherical(_sph)) }; controls.enabled = false; }
 function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()); const dir = VIEWS[view].clone(); if ((view === 'display' || view === 'back') && c.y < 1.5) dir.y = .55; dir.normalize(); flyTo(c, c.clone().addScaledVector(dir, DIST[view]), 1, AZ[view] || AZ.home); focused = true; }
 function goHome() { flyTo(HOME.tgt, HOME.pos, 1.1); focused = false; }
-function mark(id) { if (!st.seen[id]) { st.seen[id] = true; const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。貓表示佩服。'), 2700); } } }
+function mark(id) { if (!st.seen[id]) { st.seen[id] = true; const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。狗表示佩服。'), 2700); } } }
 function openItem(id) { const it = ITEMS[id];
   if (books[id] || libOf[id]) return openBook(id);
   if (drafts[id]) return openDraft(id);
@@ -1253,7 +1267,7 @@ function loop(ts) {
   let moved = LF.anim !== 0; // the only things that cast moving shadows: an object sliding out under the cursor, or one being lifted
   roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; if (r.position.distanceToSquared(want) > 1e-10) { r.position.lerp(want, Math.min(1, dt * 10)); moved = true; if (r.userData.inst != null) seat(r); } });
   if (moved) renderer.shadowMap.needsUpdate = true;
-  catBody.scale.y = .55 + Math.sin(t*1.6) * .02; head.rotation.z = Math.sin(t*.4) * .03;
+  dogBody.scale.y = 1 + Math.sin(t*1.3) * .03; dogHead.rotation.y = HEAD_YAW + Math.sin(t*.4) * .02;
   const w = SKY[season], pa = pGeo.attributes.position.array;
   for (let i = 0; i < partN; i++) { const s = pSeed[i]; pa[i*3+1] -= w.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * w.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
   pGeo.attributes.position.needsUpdate = true;
