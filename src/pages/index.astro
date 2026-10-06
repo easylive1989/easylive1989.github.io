@@ -58,6 +58,23 @@ const BASE = import.meta.env.BASE_URL;
     </div>
     <div id="toast" class="hud"></div>
     <div id="tip"></div>
+    <!-- The dock: the room's four corners and the way back to its middle, where the content pages keep "回書房" -->
+    <nav id="hud" class="hud sheet" aria-label="書房導覽">
+      <button class="btn btn-ghost hz home" data-home disabled title="回到房間中心" style="--i:0"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10l8-6 8 6v10H4zM10 20v-6h4v6" /></svg><span>回中心</span></button>
+      <span class="sep" style="--i:1"></span>
+      <button class="btn btn-ghost hz" data-zone="shelf" title="讀過的書" style="--i:2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 5l3.8-1 3.7 15-3.8 1z" /></svg><span>書架</span></button>
+      <button class="btn btn-ghost hz" data-zone="display" title="演講、鐵人賽、side project" style="--i:3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v3a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 3M17 6h3a3 3 0 0 1-3 3M12 12v4M8 20h8M9 16h6" /></svg><span>展示架</span></button>
+      <button class="btn btn-ghost hz" data-zone="desk" title="最新文章與系列" style="--i:4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18M5 9v10M19 9v10M8 9V6h8v3M13 13h4v3h-4z" /></svg><span>書桌</span></button>
+      <button class="btn btn-ghost hz" data-zone="tv" title="做著玩的遊戲" style="--i:5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM8 21h8M6 9h9v6H6zM18 9v1M18 12v1" /></svg><span>電視</span></button>
+      <span class="sep" style="--i:6"></span>
+      <button class="btn btn-ghost hz more" data-more aria-label="更多" aria-expanded="false" style="--i:7">⋯</button>
+      <div class="menu sheet">
+        <span class="card-kicker">離開書房</span>
+        <a class="btn btn-ghost" href={`${BASE}reading/`}>書單</a>
+        <a class="btn btn-ghost" href={`${BASE}archive/`}>文章</a>
+        <a class="btn btn-ghost" href="/rss.xml">RSS</a>
+      </div>
+    </nav>
     <!-- A book or a page picked up and held in front of the camera -->
     <div id="reader">
       <div class="bd"></div>
@@ -138,6 +155,42 @@ const BASE = import.meta.env.BASE_URL;
   #toast { left: 50%; top: var(--space-8); transform: translate(-50%, -8px); padding: var(--space-2) var(--space-4); background: var(--color-text); color: var(--color-bg); font-size: 16px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
   #toast.on { opacity: 1; transform: translate(-50%, 0); }
   body.reading #toast { left: calc(50% - 230px); }
+
+  /* The dock. On a desk it sits where the content pages keep "回書房"; on a phone, whose view never takes in the whole room,
+     it is a bar along the bottom. It comes in one button at a time once the door has opened, and steps aside while something
+     is held up to read. */
+  #hud { top: var(--space-4); left: var(--space-6); display: flex; align-items: center; gap: 2px; padding: 6px; transition: opacity .35s, transform .35s; }
+  #hud .hz { position: relative; padding: 6px 10px; gap: 6px; }
+  #hud .hz svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  #hud .hz.on { background: var(--color-text); color: var(--color-bg); }
+  #hud .hz:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+  #hud .home { color: var(--color-text); }
+  #hud .home:hover:not(:disabled) { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+  #hud .home:disabled { opacity: .4; }
+  #hud .sep { width: 1px; height: 18px; background: color-mix(in srgb, var(--color-text) 18%, transparent); margin: 0 3px; flex: none; }
+  #hud .more { color: color-mix(in srgb, var(--color-text) 60%, transparent); letter-spacing: .1em; padding-inline: 8px; }
+  #hud .more[aria-expanded="true"] { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+  #hud .menu { position: absolute; top: 100%; right: 0; margin-top: 6px; padding: 6px; display: none; flex-direction: column; min-width: 120px; box-shadow: var(--shadow-md); }
+  #hud .menu.open { display: flex; }
+  #hud .menu .card-kicker { padding: 4px 10px 2px; color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+  #hud .menu .btn { justify-content: flex-start; padding: 6px 10px; }
+  /* not shown until the door is open: then each button slides in on its turn, after the door has faded */
+  #hud .hz, #hud .sep { opacity: 0; }
+  body.in #hud .hz, body.in #hud .sep { animation: hud-in .5s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(1.2s + var(--i) * 80ms); }
+  @keyframes hud-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+  body.immerse #hud { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+  @media (max-width: 760px) {
+    #hud { top: auto; left: var(--space-2); right: var(--space-2); bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); padding: 6px 4px; justify-content: space-between; gap: 0; }
+    #hud .hz { flex-direction: column; gap: 4px; font-size: 11px; padding: 6px 4px; flex: 1; }
+    #hud .hz svg { width: 20px; height: 20px; }
+    #hud .sep { display: none; }
+    #hud .more { flex: 0 0 auto; font-size: 14px; }
+    #hud .menu { bottom: 100%; top: auto; margin: 0 0 8px; }
+    body.immerse #hud { transform: translateY(6px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body.in #hud .hz, body.in #hud .sep { animation: none; opacity: 1; }
+  }
 
   /* The loading door. --dr is its unit (the doorway is 26 × 54 of them); each stage sets how far the leaf has swung (--a),
      how much of the doorway that uncovers (--g, which the light on the floor is scaled by) and how far the rays reach (--r).

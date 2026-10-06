@@ -980,21 +980,48 @@ const _sph = new THREE.Spherical();
 function flyTo(tgt, pos, d = 1, az = AZ.home) { const o = pos.clone().sub(tgt); _sph.setFromVector3(o); _sph.theta = Math.max(az[0], Math.min(az[1], _sph.theta)); azWin = az;
   tween = { t:0, d, ft:controls.target.clone(), tt:tgt.clone(), fp:camera.position.clone(), tp:tgt.clone().add(o.setFromSpherical(_sph)) }; controls.enabled = false; }
 function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()); const dir = VIEWS[view].clone(); if ((view === 'display' || view === 'back') && c.y < 1.5) dir.y = .55; dir.normalize(); flyTo(c, c.clone().addScaledVector(dir, DIST[view]), 1, AZ[view] || AZ.home); focused = true; }
-function goHome() { flyTo(HOME.tgt, HOME.pos, 1.1); focused = false; }
+function goHome() { flyTo(HOME.tgt, HOME.pos, 1.1); focused = false; setZone(null); }
 function mark(id) { if (!st.seen[id]) { st.seen[id] = true; const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。狗表示佩服。'), 2700); } } }
 function openItem(id) { const it = ITEMS[id];
   if (books[id] || libOf[id]) return openBook(id);
   if (drafts[id]) return openDraft(id);
   if (it.kind === 'play' && GAMES.length) return openTV();
-  st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, o.userData.pick.view); renderPanel('item'); }
-function openList() { focus(laptop, 'desk'); renderPanel('list'); }
-function openAbout() { focus(portrait, 'desk'); renderPanel('about'); }
+  st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, o.userData.pick.view); setZone(id === 'tv' ? 'tv' : it.cat); renderPanel('item'); }
+function openList() { focus(laptop, 'desk'); setZone('desk'); renderPanel('list'); }
+function openAbout() { focus(portrait, 'desk'); setZone('desk'); renderPanel('about'); }
 function closePanel() { panel.classList.remove('open'); document.body.classList.remove('reading'); goHome(); }
 addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
   if (TV.on) { if (e.key === 'Escape') TV.play ? tvMenu() : exitTV(); else if (!TV.play && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); tvSel((TV.sel + (e.key === 'ArrowDown' ? 1 : -1) + GAMES.length) % GAMES.length); } else if (!TV.play && e.key === 'Enter') tvPlay(); return; }
   if (RD.mode) { const nx = e.key === 'ArrowRight', pv = e.key === 'ArrowLeft';
     if (e.key === 'Escape') closeReader(); else if (nx || pv) { e.preventDefault(); RD.mode === 'book' ? flip(nx ? 1 : -1) : stepDraft(nx ? 1 : -1); } return; }
-  if (e.key === 'Escape') closePanel(); });
+  if (e.key === 'Escape') { closeMenu(); closePanel(); } });
+
+/* ================= dock ================= */
+// The four corners of the room, each seen whole: the point looked at, the bearing it is seen from and how far back. The two on
+// the left wall are faced from across the room, in the display shelves' own range of bearings. A phone's orbit is shorter, so
+// there the camera stops as far back as it may go.
+const ZONES = {
+  shelf:   { at:[-2.75, 1.35, (BZ + SZ1)/2 - .15], from:[1, .12, .25], d:3.5, az:AZ.display },
+  display: { at:[-2.9, 1.5, (SZ0 + BZ)/2], from:[1, .1, .12], d:2.5, az:AZ.display },
+  desk:    { at:[DX, DY + .2, DZ], from:[-.1, .6, 1], d:2.2 },
+  tv:      { at:[.055, CH, -2.2], from:[.12, .35, 1], d:1.7 },
+};
+const hud = $('hud'), homeBtn = hud.querySelector('[data-home]'), moreBtn = hud.querySelector('[data-more]'), menu = hud.querySelector('.menu');
+let hudAway = false;
+// which corner the camera was last sent to, by the dock or by picking something up there; cleared once it is turned by hand
+function setZone(id) { hud.querySelectorAll('[data-zone]').forEach(b => b.classList.toggle('on', b.dataset.zone === id)); }
+function goZone(id) { const z = ZONES[id], at = new THREE.Vector3(...z.at), dir = new THREE.Vector3(...z.from).normalize();
+  if (panel.classList.contains('open')) { panel.classList.remove('open'); document.body.classList.remove('reading'); }
+  flyTo(at, at.clone().addScaledVector(dir, Math.min(z.d, controls.maxDistance)), 1.1, z.az || AZ.home); focused = true; setZone(id); }
+function closeMenu() { menu.classList.remove('open'); moreBtn.setAttribute('aria-expanded', 'false'); }
+hud.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b === moreBtn) { const open = !menu.classList.contains('open'); menu.classList.toggle('open', open); moreBtn.setAttribute('aria-expanded', open); return; }
+  closeMenu(); if (TV.on || RD.mode || RD.busy) return;
+  if (b === homeBtn) closePanel(); else if (b.dataset.zone) goZone(b.dataset.zone);
+});
+addEventListener('pointerdown', e => { if (!hud.contains(e.target)) closeMenu(); }, { capture:true });
+controls.addEventListener('start', () => setZone(null));
 
 /* ================= pick-up readers + TV ================= */
 // Books, the pages on the desk and the TV don't open the side panel: the thing itself comes to the camera
@@ -1332,6 +1359,9 @@ function loop(ts) {
   controls.minAzimuthAngle = tween ? -Infinity : azWin[0]; controls.maxAzimuthAngle = tween ? Infinity : azWin[1];
   controls.minPolarAngle = Math.max(.95, Math.acos(Math.min(1, (CAM_TOP - controls.target.y) / camera.position.distanceTo(controls.target)))); // the further out, the less it can climb
   controls.update();
+  // the way back to the middle of the room lights up once the camera has left it, or is on its way out
+  const away = (tween ? tween.tp : camera.position).distanceToSquared(HOME.pos) > .01 || (tween ? tween.tt : controls.target).distanceToSquared(HOME.tgt) > .01;
+  if (away !== hudAway) { hudAway = away; homeBtn.disabled = !away; }
   outside.position.y = outsideL.position.y = 1.75 + Math.min(0, camera.position.y - HOME.pos.y); // the far shore keeps level with a low eye
   if (TV.on) { positionTV(); if (!tween && !TV.vis) { TV.vis = true; tvui.classList.add('vis'); } }
   renderer.render(scene, camera);
@@ -1343,7 +1373,7 @@ ajar();
 renderer.compileAsync(scene, camera).catch(() => {}).then(() => { ajar(); renderer.setAnimationLoop(loop); });
 sheetsReady.then(ajar);
 window.__study = { loop, openItem, openList, openAbout, openTV, exitTV, flip, closeReader, switchDraft, state:{ RD, BK, TV, LF } };
-Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { flyTo(HOME.tgt, HOME.pos, 2.2); Q.armed = true; door(4); introEl.classList.add('off'); });
+Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { flyTo(HOME.tgt, HOME.pos, 2.2); Q.armed = true; door(4); introEl.classList.add('off'); document.body.classList.add('in'); });
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
 const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); stillFor = null; lastDraw = -Infinity; stir(); }; // resizing wipes the canvas, so the very next frame is drawn, even in a room standing still
 addEventListener('resize', fitCamera); fitCamera();
