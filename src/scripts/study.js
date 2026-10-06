@@ -79,7 +79,7 @@ const M = {
   wood:std('wood', C.wood, { roughness:.55 }), woodD:std('wood-dark', C.woodD, { roughness:.6 }), woodL:std('wood-light', C.woodL, { roughness:.5 }),
   fabric:std('fabric', C.fabric, { roughness:1 }), fabricD:std('fabric-dark', C.fabricD, { roughness:1 }),
   cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
-  dog:std('dog', '#1a1714', { roughness:.75 }), dogT:std('dog-tan', '#8f5e36', { roughness:.75 }), dogP:std('dog-paw', '#b59470', { roughness:.75 }),
+  dog:std('dog', '#1a1714', { roughness:.75 }), dogT:std('dog-tan', '#8f5e36', { roughness:.75 }), dogP:std('dog-paw', '#b59470', { roughness:.75 }), dogH:std('dog-head', '#ffffff', { roughness:.75, vertexColors:true }),
   glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
   alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }),
 };
@@ -181,7 +181,7 @@ Object.assign(M, {
   fabricD: pbr('fabric-dark', '#7a7262', { ...fabricTex, sheenColor:col('#aaa290') }),
   brass: pbr('brass', '#d2a868', { ...metalTex, roughness:.43 }),
   alu: pbr('aluminium', '#b4b2ad', { ...metalTex, map:null, roughness:.53 }),
-  dog: pbr('dog', '#1a1714', coatTex), dogT: pbr('dog-tan', '#8f5e36', coatTex), dogP: pbr('dog-paw', '#b59470', coatTex),
+  dog: pbr('dog', '#1a1714', coatTex), dogT: pbr('dog-tan', '#8f5e36', coatTex), dogP: pbr('dog-paw', '#b59470', coatTex), dogH: pbr('dog-head', '#ffffff', { ...coatTex, vertexColors:true }),
   cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }),
   glass: new THREE.MeshPhysicalMaterial(lite({ name:'glass', color:col('#c8d8d4'), transparent:true, opacity:.14, roughness:.04, metalness:0, depthWrite:false, clearcoat:1 })),
 });
@@ -788,7 +788,7 @@ chair.add(mk(rboxGeo(.66, .62, .14, .05), M.fabric, 'chair-back', [0,.8,-.31], [
 [-.34, .34].forEach(x => { chair.add(mk(rboxGeo(.09, .22, .62, .035), M.fabricD, 'chair-arm', [x,.55,0])); chair.add(box(.1, .04, .66, M.woodL, 'arm-rest', [x,.66,.01])); });
 // A black-and-tan smooth dachshund asleep on the cushion, curled nose to tail: the long body is one bent tube, thickest at the chest
 // and thinning to the rump, the head laid along the flank with its chin on the forepaws, and the ears hang down the cheeks. Tan on the
-// lower half of the muzzle, the cheeks, the brows and the paws, and a khaki collar.
+// cheeks, the underside of the muzzle, the brows and the paws, and a khaki collar.
 const dog = new THREE.Group(); dog.name = 'dog'; dog.position.set(-.02, .525, .03); dog.rotation.y = .05; chair.add(dog); // turned so the head is seen side-on from the room, nose to the left
 const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
 // a tube along `pts` whose radius runs from r0 at the start to r1 at the end: the rings are scaled about the curve after the fact
@@ -801,23 +801,42 @@ const chest = mk(new THREE.SphereGeometry(.07, 24, 16), M.dog, 'dog-chest', [.10
 const belly = mk(new THREE.SphereGeometry(.1, 24, 16), M.dog, 'dog-belly', [0,.035,-.01]); belly.scale.set(1, .45, 1); dog.add(belly); // fills the curl, so no cushion shows through it
 dog.add(limb([v3(.105,.068,.035), v3(.07,.078,.07), v3(.02,.075,.085)], .042, .036, M.dog, 'dog-neck'));
 dog.add(mk(new THREE.TorusGeometry(.044, .005, 8, 24), std('collar', '#b7a67a', { roughness:.6 }), 'dog-collar', [.062,.074,.064], [0,-1.04,0])); // its axis along the neck
-// the head: +x is the nose, laid back along the flank towards the tail
+// The head: +x is the nose, laid back along the flank towards the tail. It is one wedge turned on a lathe — broad domed skull, a slight
+// stop, a long deep muzzle — and its markings are painted into the vertex colours, so the black of the crown and bridge grades into the
+// tan of the cheeks and the underside of the muzzle (gone pale and grizzled with age), with a rust spot over each eye and at each ear's root.
 const HEAD_YAW = -2.59;
-const dogHead = new THREE.Group(); dogHead.name = 'dog-head'; dogHead.position.set(.02, .02, .085); dogHead.rotation.y = HEAD_YAW; dog.add(dogHead);
-const skull = mk(new THREE.SphereGeometry(.045, 20, 14), M.dog, 'dog-skull', [0,.046,0]); skull.scale.set(1.15, .95, .9); dogHead.add(skull);
-const crown = mk(new THREE.SphereGeometry(.04, 18, 12), M.dog, 'dog-crown', [-.012,.056,0]); crown.scale.set(1.05, 1, .95); dogHead.add(crown); // the dome of the skull, so the brows sit on a brow ridge
-// the muzzle tapers to the nose; a tan sleeve a touch lower and narrower shows on its underside and cheeks
-dogHead.add(mk(new THREE.CylinderGeometry(.017, .03, .08, 14), M.dog, 'dog-muzzle', [.07,.042,0], [0,0,-Math.PI/2]));
-dogHead.add(mk(new THREE.CylinderGeometry(.0165, .0292, .079, 14), M.dogT, 'dog-jaw', [.07,.038,0], [0,0,-Math.PI/2])); // set a hair narrower and lower, so the tan is the underside of the same muzzle
-dogHead.add(mk(new THREE.SphereGeometry(.016, 12, 8), M.dog, 'dog-muzzle-tip', [.11,.042,0]));
-dogHead.add(mk(new THREE.SphereGeometry(.013, 12, 8), std('dog-nose', '#0a0806', { roughness:.25 }), 'dog-nose', [.118,.042,0]));
+const dogHead = new THREE.Group(); dogHead.name = 'dog-head'; dogHead.position.set(.02, .058, .085); dogHead.rotation.y = HEAD_YAW; dog.add(dogHead);
+{
+  const prof = [[.001,-.05],[.028,-.046],[.041,-.032],[.046,-.012],[.045,.008],[.041,.024],[.034,.04],[.029,.06],[.026,.08],[.024,.1],[.02,.113],[.012,.121],[.001,.124]]; // (radius, along), skull to nose
+  const pts = new THREE.CatmullRomCurve3(prof.map(([r, a]) => v3(r, a, 0))).getPoints(40).map(q => new THREE.Vector2(Math.max(.001, q.x), q.y));
+  const g = new THREE.LatheGeometry(pts, 36), P = g.attributes.position, N = P.count, colr = new Float32Array(N * 3);
+  const black = col('#1a1714'), rust = col('#86592f'), brow = col('#a0724a'), pale = col('#80705f'), c = new THREE.Color(), sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const spot = (ax, up, sd, x, y, z, rx, ry = rx) => sm(1.15, .85, Math.sqrt((ax - x) ** 2 / (rx * rx) + ((up - y) ** 2 + (Math.abs(sd) - z) ** 2) / (ry * ry))); // a crisp-edged oval
+  const bump = (x, c, w) => Math.exp(-(((x - c) / w) ** 2));
+  for (let i = 0; i < N; i++) {
+    let ax = P.getY(i), up = -P.getX(i); const sd = P.getZ(i), r = Math.hypot(up, sd), th = Math.atan2(Math.abs(sd), up); // along the head, up, sideways; th is the angle down from the crown
+    // not quite a surface of revolution: a brow ridge and a stop along the top, and the underside of the muzzle flattened into a jaw
+    if (r > .002) { const top = Math.max(0, up / r); up += (.006 * bump(ax, .012, .014) - .0045 * bump(ax, .036, .008)) * top * top; if (ax > .03 && up < -.018) up = -.018 + (up + .018) * .45; P.setX(i, -up); }
+    // the black runs down the bridge of the muzzle and over the crown; it covers less and less of the head towards the nose
+    const thr = ax < -.01 ? 1.8 : ax < .03 ? 1.8 - (ax + .01) / .04 * .4 : ax < .06 ? 1.4 - (ax - .03) / .03 * .2 : 1.2; // the mask keeps the eyes; tan from below them
+    const tan = sm(thr - .09, thr + .09, th) * sm(-.045, -.03, ax);
+    c.copy(black).lerp(c.clone().copy(rust).lerp(pale, sm(.02, .07, ax)), tan);
+    const bw = spot(ax, up, sd, .036, .031, .028, .011, .006), root = spot(ax, up, sd, -.022, .043, .022, .007); // a long oval over each eye; a spot on the crown beside each ear's root
+    c.lerp(brow, bw).lerp(rust, root);
+    colr[i*3] = c.r; colr[i*3+1] = c.g; colr[i*3+2] = c.b;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(colr, 3));
+  const head = mk(g, M.dogH, 'dog-head-wedge', [0,0,0], [0,0,-Math.PI/2]); head.scale.set(1.08, 1, 1); dogHead.add(head); // the lathe's axis turned to +x; a little deeper than it is wide
+}
+dogHead.add(mk(new THREE.SphereGeometry(.017, 14, 10), std('dog-nose', '#141210', { roughness:.3 }), 'dog-nose', [.119,.005,0])); // big, and the shiniest thing on the head
+// the ears: long leaves hung from the top of the skull behind the eyes, lying flat down the cheeks to below the jaw, their lower halves curling in under it
+// a leaf: narrow at the root, widest two-thirds of the way down, round at the tip, and curved a little to lie along the head
+const earGeo = new THREE.SphereGeometry(.05, 16, 14); earGeo.scale(.6, 1.2, .12);
+{ const P = earGeo.attributes.position, sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let i = 0; i < P.count; i++) { const y = P.getY(i); P.setX(i, P.getX(i) * (.5 + .5 * sm(.06, -.025, y))); P.setZ(i, P.getZ(i) - 1.2 * (y - .06) ** 2); } P.needsUpdate = true; earGeo.computeVertexNormals(); }
 [-1, 1].forEach(k => {
-  const cheek = mk(new THREE.SphereGeometry(.02, 12, 8), M.dogT, 'dog-cheek', [.02,.03,k*.035]); cheek.scale.set(1.3, .7, .35); dogHead.add(cheek);
-  const earRoot = mk(new THREE.SphereGeometry(.009, 8, 6), M.dogT, 'dog-ear-root', [.004,.072,k*.04], [0,0,0]); earRoot.scale.set(1.2, .5, .5); dogHead.add(earRoot); // the spot of tan above each ear
-  const brow = mk(new THREE.SphereGeometry(.008, 8, 6), M.dogT, 'dog-brow', [.04,.07,k*.031], [0,k*.5,0]); brow.scale.set(1.3, .6, .4); dogHead.add(brow); // just above the eye, flat to the skull
-  const eye = mk(new THREE.SphereGeometry(.007, 8, 6), std('dog-eye', '#332b26', { roughness:.8 }), 'dog-eye', [.041,.058,k*.035], [0,k*.6,0]); eye.scale.set(1.8, .3, .5); dogHead.add(eye); // shut
-  // a leaf of an ear hung from the back of the skull, lying down the cheek and reaching below the jaw
-  const ear = mk(new THREE.SphereGeometry(.04, 14, 12), M.dog, 'dog-ear', [-.004,.034,k*.047], [k*.22,0,.12]); ear.scale.set(.62, 1.3, .3); dogHead.add(ear); });
+  const eye = mk(new THREE.SphereGeometry(.007, 8, 6), std('dog-eye', '#3d3430', { roughness:.8 }), 'dog-eye', [.036,.016,k*.034], [0,k*.6,0]); eye.scale.set(2, .35, .6); dogHead.add(eye); // shut
+  const ear = mk(earGeo, M.dog, 'dog-ear', [-.016,-.008,k*.046], [-k*.12,0,.05]); ear.scale.z = k; dogHead.add(ear); });
 // short forelegs out from the chest, the paws under the chin; the hind legs are tucked away in the curl; the tail follows the curl round to the nose
 [[v3(.06,.026,.09), v3(0,.017,.115)], [v3(.07,.026,.115), v3(.01,.017,.14)]].forEach(([a, b]) => { dog.add(limb([a, b], .016, .013, M.dog, 'dog-leg', 4));
   const paw = mk(new THREE.SphereGeometry(.019, 10, 8), M.dogP, 'dog-paw', [b.x - .006, .015, b.z]); paw.scale.set(1.05, .6, .95); dog.add(paw); });
