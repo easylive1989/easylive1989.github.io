@@ -1,24 +1,25 @@
 ---
 import NotionRenderer from '../../components/notion/NotionRenderer.astro';
-import { getArticle, getAllArticlesForStaticPaths, getBookNotes, getBookNoteBlocks } from '../../lib/data';
+import { getArticle, getAllArticlesForStaticPaths, getBookNotes, getBookNoteBlocks, getNoteBodies, getNoteBlocks } from '../../lib/data';
 
-// The body of one article, or the notes kept in one book of the reading list, and
-// nothing else: the study fetches this when a book is pulled off the shelf or a
-// page is picked up from the desk, and typesets it there. The full article page
-// still lives at /{category}/{id}/; a book's notes live only here.
+// The body of one article, the notes kept in one book of the reading list, or one
+// of the notes on the desk, and nothing else: the study fetches this when a book is
+// pulled off the shelf or a page is picked up from the desk, and typesets it there.
+// The full article page still lives at /{category}/{id}/; the notes live only here.
 export const partial = true;
 
 export async function getStaticPaths() {
-  const [paths, notes] = await Promise.all([getAllArticlesForStaticPaths(), getBookNotes()]);
+  const [paths, notes, desk] = await Promise.all([getAllArticlesForStaticPaths(), getBookNotes(), getNoteBodies()]);
   return [
-    ...paths.map((p) => ({ params: { id: p.articleId }, props: { cat: p.categorySlug, book: false } })),
-    ...[...notes.keys()].map((id) => ({ params: { id }, props: { cat: '', book: true } })),
+    ...paths.map((p) => ({ params: { id: p.articleId }, props: { cat: p.categorySlug, kind: 'article' } })),
+    ...[...notes.keys()].map((id) => ({ params: { id }, props: { cat: '', kind: 'book' } })),
+    ...[...desk.keys()].map((id) => ({ params: { id }, props: { cat: '', kind: 'note' } })),
   ];
 }
 
-const { cat, book } = Astro.props;
+const { cat, kind } = Astro.props;
 const id = Astro.params.id!;
-const blocks = book ? await getBookNoteBlocks(id) : (await getArticle(cat, id))?.blocks;
+const blocks = kind === 'book' ? await getBookNoteBlocks(id) : kind === 'note' ? await getNoteBlocks(id) : (await getArticle(cat, id))?.blocks;
 ---
 
 {blocks && <NotionRenderer blocks={blocks} />}

@@ -20,6 +20,14 @@ export interface Book {
   coverUrl?: string | null;    // populated by enrichBookCovers at build time
 }
 
+/** A short note from the "碎碎念" database: a title and whatever is written on the page. */
+export interface Note {
+  id: string;
+  title: string;
+  createdTime: string;
+  lastEditedTime: string;
+}
+
 export interface NotionBlock {
   id: string;
   type: string;
@@ -218,6 +226,44 @@ export async function fetchBooksDatabase(
   }
 
   return books;
+}
+
+export async function fetchNotesDatabase(
+  client: Client,
+  databaseId: string,
+): Promise<Note[]> {
+  const notes: Note[] = [];
+  let cursor: string | undefined = undefined;
+
+  try {
+    do {
+      const response = await withRetry(`Query notes database ${databaseId}`, () =>
+        client.databases.query({
+          database_id: databaseId,
+          sorts: [{ timestamp: 'created_time', direction: 'descending' }],
+          start_cursor: cursor,
+        }),
+      );
+
+      for (const page of response.results) {
+        const p = page as any;
+        notes.push({
+          id: p.id,
+          title: getTitleText(p.properties),
+          createdTime: p.created_time,
+          lastEditedTime: p.last_edited_time,
+        });
+      }
+
+      cursor = response.has_more ? (response as any).next_cursor : undefined;
+    } while (cursor);
+  } catch (err: any) {
+    // not fatal: the desk falls back to the newest articles
+    console.warn(`Failed to fetch notes database ${databaseId}: ${err.message}`);
+    return [];
+  }
+
+  return notes;
 }
 
 export async function fetchPageBlocks(

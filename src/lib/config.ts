@@ -27,6 +27,7 @@ export interface SiteConfig {
     booksDatabaseId?: string;
     sideProjectsDatabaseId?: string;
     playboxDatabaseId?: string;
+    notesDatabaseId?: string;
     defaultCategory: string;
   };
   build: {

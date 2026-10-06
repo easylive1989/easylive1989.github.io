@@ -949,9 +949,9 @@ function renderPanel(mode) {
   else if (mode === 'list') { const recent = DRAFTS;
     h = '<span class="card-kicker">書桌 · 筆電</span><h2>GitHub 活動</h2><p class="intro">' + (GH.ok ? `過去 18 週，${GH.year} 年共 ${GH.total.toLocaleString()} 次 contributions。目前連續 ${GH.current} 天，最長 ${GH.longest} 天。` : '活動統計暫時讀不到，直接去 GitHub 看吧。') + '</p>'
       + linkBtns(ABOUT.channels.filter(c => c[0] === 'GitHub' || c[0] === 'Threads').map(c => c[0] === 'GitHub' ? { l:`GitHub · ${c[1]} ↗`, u:c[2], p:1 } : { l:'Threads ↗', u:c[2] }))
-      + (recent.length ? '<div class="rel"><span class="lab card-kicker">最近 ' + recent.length + ' 篇 →</span>' + recent.map(k => '<button class="btn btn-ghost" data-item="' + k + '" style="' + ghostBtn + '">' + esc(ITEMS[k].t) + '</button>').join('') + '</div>' : ''); }
+      + (recent.length ? '<div class="rel"><span class="lab card-kicker">桌上的稿紙 →</span>' + recent.map(k => '<button class="btn btn-ghost" data-item="' + k + '" style="' + ghostBtn + '">' + esc(ITEMS[k].t) + '</button>').join('') + '</div>' : ''); }
   else { const it = ITEMS[st.cur];
-    const accent2 = it.kind === 'latest';
+    const accent2 = it.kind === 'latest' || it.kind === 'note';
     h += `<div style="margin-top:var(--space-2)"><span class="card-kicker"${accent2 ? ' style="color:var(--color-accent-2-700)"' : ''}>${esc(it.k)}</span><h3>${esc(it.t)}</h3>${it.by ? `<div style="font-size:15px;font-style:italic;margin-top:-6px">${esc(it.by)}</div>` : ''}</div>`;
     if (it.tech && it.tech.length) h += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:var(--space-2) 0 var(--space-3)">${it.tech.map(t => `<span class="tag tag-neutral">${esc(t)}</span>`).join('')}</div>`;
     if (it.list) h += `<div class="list" style="gap:var(--space-4);margin-bottom:var(--space-4)">${it.list.map(([y, kind, t, org, u]) => `<a href="${esc(u)}"${linkAttrs(u)} style="display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--color-text)"><span class="card-kicker">${esc(y)} · ${esc(kind)}</span><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.3">${esc(t)} ↗</span>${org ? `<span style="font-size:14px">${esc(org)}</span>` : ''}</a>`).join('')}</div>`;
@@ -1001,7 +1001,7 @@ addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) 
 // (or the camera goes to it), and a DOM stand-in takes over from the mesh once it is close enough to read.
 scene.add(camera);
 let lockCam = false;
-const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', latest:'最新文章', project:'Side Project', play:'Playbox' };
+const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', latest:'最新文章', note:'碎碎念', project:'Side Project', play:'Playbox' };
 const DRAFTS = IDS.filter(k => drafts[k]);
 const GAMES = has('tv') ? ITEMS.tv.list : [];
 const TV = { on:false, vis:false, play:false, sel:0 };

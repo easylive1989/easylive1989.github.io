@@ -4,9 +4,9 @@ import type { NotionBlock } from './notion';
 
 const CACHE_DIR = path.resolve(process.cwd(), '.notion-cache');
 
-// Articles and the reading list's notes are kept apart, so pruning one never
-// throws the other away.
-export type BlockBucket = 'blocks' | 'book-blocks';
+// Articles, the reading list's notes and the desk's notes are kept apart, so
+// pruning one never throws the others away.
+export type BlockBucket = 'blocks' | 'book-blocks' | 'note-blocks';
 const dirOf = (bucket: BlockBucket) => path.join(CACHE_DIR, bucket);
 
 interface CachedBlocks {

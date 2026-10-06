@@ -5,6 +5,8 @@ import {
   fetchDatabase,
   fetchPageBlocks,
   fetchBooksDatabase,
+  fetchNotesDatabase,
+  type Note,
   type Article,
   type NotionBlock,
   type Book,
@@ -199,6 +201,66 @@ export async function getBookNoteBlocks(bookId: string): Promise<NotionBlock[]> 
   const raw = (await getBookNotes()).get(bookId);
   if (!raw) return [];
   const { blocks, imageMap } = replaceImageUrls(raw, 'reading', bookId);
+  const publicDir = path.resolve(process.cwd(), 'public');
+  const distDir = path.resolve(process.cwd(), 'dist');
+  await downloadImages(imageMap, publicDir, distDir);
+  return blocks;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// The desk's notes — the "碎碎念" database, newest first
+// ─────────────────────────────────────────────────────────────────
+
+let cachedNotes: Note[] | null = null;
+
+export async function getAllNotes(): Promise<Note[]> {
+  if (cachedNotes) return cachedNotes;
+  const config = loadConfig();
+  const client = getNotionClient();
+  if (!client || !config.notion.notesDatabaseId) return (cachedNotes = []);
+  cachedNotes = await fetchNotesDatabase(client, config.notion.notesDatabaseId);
+  if (isProductionBuild()) pruneBlockCache(new Set(cachedNotes.map((n) => n.id)), 'note-blocks');
+  return cachedNotes;
+}
+
+let cachedNoteBodies: Promise<Map<string, NotionBlock[]>> | null = null;
+
+/** The body of every note that has one, by note id. */
+export function getNoteBodies(): Promise<Map<string, NotionBlock[]>> {
+  return (cachedNoteBodies ??= loadNoteBodies());
+}
+
+async function loadNoteBodies(): Promise<Map<string, NotionBlock[]>> {
+  const bodies = new Map<string, NotionBlock[]>();
+  const client = getNotionClient();
+  if (!client) return bodies;
+  const queue = [...(await getAllNotes())];
+
+  const worker = async () => {
+    for (let note = queue.shift(); note; note = queue.shift()) {
+      let blocks = loadCachedBlocks(note.id, note.lastEditedTime, 'note-blocks');
+      if (!blocks) {
+        try {
+          blocks = await fetchPageBlocks(client, note.id);
+        } catch (err: any) {
+          if (isProductionBuild()) throw new Error(`Failed to fetch the note 「${note.title}」: ${err.message}`);
+          console.warn(`Failed to fetch the note 「${note.title}」: ${err.message}`);
+          continue;
+        }
+        saveCachedBlocks(note.id, note.lastEditedTime, blocks, 'note-blocks');
+      }
+      if (hasContent(blocks)) bodies.set(note.id, blocks);
+    }
+  };
+  await Promise.all(Array.from({ length: NOTES_CONCURRENCY }, worker));
+  return bodies;
+}
+
+/** One note's body, ready to render: its pictures downloaded and pointed at their local copies. */
+export async function getNoteBlocks(noteId: string): Promise<NotionBlock[]> {
+  const raw = (await getNoteBodies()).get(noteId);
+  if (!raw) return [];
+  const { blocks, imageMap } = replaceImageUrls(raw, 'notes', noteId);
   const publicDir = path.resolve(process.cwd(), 'public');
   const distDir = path.resolve(process.cwd(), 'dist');
   await downloadImages(imageMap, publicDir, distDir);

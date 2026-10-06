@@ -5,10 +5,12 @@ import {
   getBookNotes,
   getAllSideProjects,
   getAllPlayboxGames,
+  getAllNotes,
+  getNoteBodies,
 } from './data';
 import { getGithubContributions } from './github';
 import { bookStatus } from './bookCover';
-import type { Article, Book } from './notion';
+import type { Article, Book, NotionBlock } from './notion';
 
 /**
  * Everything the 3D study room shows, shaped for study.js. Item ids are the
@@ -22,7 +24,7 @@ import type { Article, Book } from './notion';
  *
  *   b1…    every finished book of the reading list, by category, in the bookshelf's bay beside the display shelves
  *   s1–s3  series, racked on the desk
- *   d1–d3  newest articles on the desk  mb  the book I wrote, on the display shelves
+ *   d1–d3  the newest notes of the 碎碎念 database, loose pages on the desk  mb  the book I wrote, on the display shelves
  *   p1 p3 g2 aw  side projects on the display shelves, each one a model of its project
  *   ir1–ir3  the Ironman bears   tk1 tk2  talks, on videotape
  *   tv  the game cabinet beside the desk: every Playbox game
@@ -146,6 +148,15 @@ export function spineLabel(title: string, max = 8): string {
   return out.trim() || title.slice(0, max);
 }
 
+/** The first line of a note's body, in plain text, for the lead of the page before the rest is fetched. */
+function firstLine(blocks: NotionBlock[]): string {
+  for (const b of blocks) {
+    const text = (((b as any)[b.type]?.rich_text ?? []) as { plain_text?: string }[]).map((t) => t.plain_text ?? '').join('').trim();
+    if (text) return text;
+  }
+  return '';
+}
+
 function dotted(iso: string | null | undefined): string {
   if (!iso) return '';
   const d = new Date(iso);
@@ -251,12 +262,14 @@ function githubLabel(config: ReturnType<typeof loadConfig>): { username: string;
 
 export async function buildStudyData(): Promise<StudyData> {
   const config = loadConfig();
-  const [articles, books, notes, projects, games] = await Promise.all([
+  const [articles, books, notes, projects, games, noteList, noteBodies] = await Promise.all([
     getAllArticles(),
     getAllBooks(),
     getBookNotes(),
     getAllSideProjects(),
     getAllPlayboxGames(),
+    getAllNotes(),
+    getNoteBodies(),
   ]);
   const { username, channels } = githubLabel(config);
   const contrib = await getGithubContributions(username);
@@ -365,14 +378,28 @@ export async function buildStudyData(): Promise<StudyData> {
     };
   }
 
-  /* ── desk: the three newest articles, as loose pages ── */
-  const newest = articles.slice(0, DESK_SLOTS.length);
-  newest.forEach((a, i) => {
-    items[DESK_SLOTS[i]] = {
-      ...articleItem(a, `最新文章 · ${a.category} · ${dotted(a.createdTime)}`, 'latest', 'desk'),
-      m: `桌上的稿紙 · ${dotted(a.createdTime)}`,
-    };
-  });
+  /* ── desk: the newest notes with something written on them, as loose pages; the newest articles if there are none ── */
+  const written = noteList.filter((n) => noteBodies.has(n.id)).slice(0, DESK_SLOTS.length);
+  if (written.length) {
+    written.forEach((n, i) => {
+      items[DESK_SLOTS[i]] = {
+        cat: 'desk',
+        kind: 'note',
+        k: `碎碎念 · ${dotted(n.createdTime)}`,
+        t: n.title,
+        b: [firstLine(noteBodies.get(n.id)!)],
+        m: `桌上的稿紙 · ${dotted(n.createdTime)}`,
+        aid: n.id,
+      };
+    });
+  } else {
+    articles.slice(0, DESK_SLOTS.length).forEach((a, i) => {
+      items[DESK_SLOTS[i]] = {
+        ...articleItem(a, `最新文章 · ${a.category} · ${dotted(a.createdTime)}`, 'latest', 'desk'),
+        m: `桌上的稿紙 · ${dotted(a.createdTime)}`,
+      };
+    });
+  }
 
   const firstYear = articles.length ? new Date(articles[articles.length - 1].createdTime).getFullYear() : new Date().getFullYear();
   return {
