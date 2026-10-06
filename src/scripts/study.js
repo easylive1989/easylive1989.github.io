@@ -290,7 +290,7 @@ function setDown(x, title, lw, h, font = px => `600 ${px}px ${SERIF}`) {
 const fPal = [[C.c800,C.cream],[C.m800,C.cream],['#2e4a3a',C.cream],[C.cream,C.ink],['#6b3a26',C.cream],[C.c900,C.yel],[C.cream,C.m700],['#1f2c3d',C.cream]];
 const libPal = [...fPal, ['#8a6b45',C.cream], ['#3d2a1e','#e3cf98'], ['#c9b88f',C.ink], ['#5a1f1f',C.cream], ['#24402f','#e3cf98'], [C.n800,C.cream]];
 const SERIES = ['s1','s2','s3'].filter(has); // these stand in the rack on the desk
-const fCols = { mb:[C.cyan, C.paper] }; SERIES.forEach((id, i) => fCols[id] = fPal[i % fPal.length]);
+const fCols = {}; SERIES.forEach((id, i) => fCols[id] = fPal[i % fPal.length]);
 const books = {}, pagesMat = std('pages', '#ffffff', { map:texOf(pageEdges()), roughness:.9 });
 // a book with its spine on +x, `d` from spine to fore-edge
 const bookOf = (id, d, h, th, keep = true) => { const [bg, fg] = fCols[id];
@@ -442,12 +442,12 @@ const board = new THREE.Group(); board.name = 'game-board';
 place(board, 'g2', .4, on(3), .15, -.15, 0);
 // the book I wrote, face out and leaning on the back of the shelf: a book like any other, the size of the one in the shops, turned so its front board faces the room.
 // Its front board and its spine are drawn after the real ones — white, an orange strip across the head and an orange band at the foot, the title in a heavy sans.
-// The back board is against the wall and stays plain.
-const fronts = {}; // the books with a front board drawn for them: the cover the reader opens is drawn by the same hand
+// The back board is against the wall and stays plain. It is not taken down and opened like the others: picking it brings up the
+// panel, with the way to the shop that sells it.
 if (has('mb')) { const BW = .17, BH = .23, BT = .0186, it = ITEMS.mb, px = Q.low ? 520 : 1040, BAND = .762, ORANGE = '#f18845', INK = '#231815', SLATE = '#1f3a44', GREEN = '#63b958';
   const sans = wt => s => `${wt} ${s}px "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif`, bold = sans(700), heavy = sans(800);
   // Laid out 1000 across and as far down as that makes the board, so the lettering keeps its measure on a board of another shape and the white takes up the difference.
-  fronts.mb = (x, w, h) => { const u = w / 1000, H = h / u, B = BAND * H, L = 120, { sub, head, foot, seal } = it.front;
+  const front = (x, w, h) => { const u = w / 1000, H = h / u, B = BAND * H, L = 120, { sub, head, foot, seal } = it.front;
     const rr = (c, x0, y0, rw, rh, r) => { x.fillStyle = c; x.beginPath(); x.roundRect ? x.roundRect(x0, y0, rw, rh, r) : x.rect(x0, y0, rw, rh); x.fill(); };
     const say = (s, c, font, x0, y0, max) => { x.fillStyle = c; x.font = font; x.fillText(s, x0, y0, max); };
     x.save(); x.scale(u, u); x.textAlign = 'left'; x.textBaseline = 'middle';
@@ -475,7 +475,7 @@ if (has('mb')) { const BW = .17, BH = .23, BT = .0186, it = ITEMS.mb, px = Q.low
   const spine = (x, w, h) => { const B = BAND * h; x.save(); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.fillStyle = ORANGE; x.fillRect(0, B, w, h - B);
     x.fillStyle = INK; setDown(x, it.t, w, B, bold); x.translate(0, B); x.fillStyle = '#fff'; setDown(x, it.by + '著', w, h - B, bold); x.restore(); };
   const face = (name, across, draw) => new THREE.MeshStandardMaterial({ name, roughness:.7, map:ctex(Math.round(px * across / BH), px, draw) });
-  const g = books.mb = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(BW, BH, BT), [face('spine-mb', BT, spine), pagesMat, pagesMat, pagesMat, std('cover-mb', '#ffffff', { roughness:.7 }), face('cover-mb-front', BW, fronts.mb)], 'book-mb'));
+  const g = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(BW, BH, BT), [face('spine-mb', BT, spine), pagesMat, pagesMat, pagesMat, std('cover-mb', '#ffffff', { roughness:.7 }), face('cover-mb-front', BW, front)], 'book-mb'));
   place(g, 'mb', .5, on(1) + BH/2, .049, Math.PI, -.1); }
 
 /* the award ceremony: a black-and-gold podium with the star on its top step, and beside it the envelope — seal broken, the winner's card half drawn */
@@ -1050,7 +1050,7 @@ controls.addEventListener('start', () => setZone(null));
 // (or the camera goes to it), and a DOM stand-in takes over from the mesh once it is close enough to read.
 scene.add(camera);
 let lockCam = false;
-const KLAB = { reading:'書單', mybook:'我出的書', writing:'文章', series:'系列', latest:'最新文章', note:'碎碎念', project:'Side Project', play:'Playbox' };
+const KLAB = { reading:'書單', writing:'文章', series:'系列', latest:'最新文章', note:'碎碎念', project:'Side Project', play:'Playbox' };
 const DRAFTS = IDS.filter(k => drafts[k]);
 const GAMES = has('tv') ? ITEMS.tv.list : [];
 const TV = { on:false, vis:false, play:false, sel:0 };
@@ -1199,9 +1199,7 @@ function showBook(id, D, b) {
   setTimeout(() => LF.obj && (LF.obj.visible = false), 220);
   if (BK.single) { el.animate([{ transform:flipT(F, P), opacity:0 }, { opacity:1, offset:.3 }, { transform:'none', opacity:1 }], { duration:650, easing:'cubic-bezier(.2,.7,.2,1)' }).onfinish = () => { RD.busy = false; }; return; }
   const cov = document.createElement('div'); cov.className = 'lf cov';
-  const own = fronts[id], dpr = Math.min(devicePixelRatio, 2); // a front board drawn for the book on the shelf is drawn again here, at the size it is read at
-  cov.innerHTML = '<div class="pf cvr' + (own ? ' own' : '') + '">' + (own ? '' : coverHTML(it)) + '</div><div class="pf back cvb"><div style="position:absolute;top:' + m + 'px;bottom:' + m + 'px;left:' + m + 'px;right:0">' + BK.pages[0] + '</div></div>';
-  if (own) cov.firstChild.appendChild(cnv(Math.round(bw / 2 * dpr), Math.round(bh * dpr), own));
+  cov.innerHTML = '<div class="pf cvr">' + coverHTML(it) + '</div><div class="pf back cvb"><div style="position:absolute;top:' + m + 'px;bottom:' + m + 'px;left:' + m + 'px;right:0">' + BK.pages[0] + '</div></div>';
   el.appendChild(cov);
   const sc = P.h / F.height, T = 1300;
   el.animate([{ transform:'translate(' + (P.x - F.left - F.width / 2 * sc) + 'px, ' + (P.y - F.top) + 'px) scale(' + sc + ')', opacity:0, easing:'cubic-bezier(.2,.7,.3,1)' }, { opacity:1, offset:.12 }, { transform:'translate(' + (-F.width / 4) + 'px, 0px) scale(1)', offset:.42, easing:'cubic-bezier(.45,.05,.35,1)' }, { transform:'translate(0px, 0px) scale(1)', opacity:1 }], { duration:T });

@@ -318,7 +318,7 @@ export async function buildStudyData(): Promise<StudyData> {
     t: '不可不知的 Flutter App 自動化測試實戰攻略',
     by: '吳政樺（Paul）',
     b: ['由 2023 iThome 鐵人賽佳作改寫成書，從基礎到進階一次到位。'],
-    links: [{ l: '看書 ↗', u: MY_BOOK_URL, p: 1 }],
+    links: [{ l: '購書 ↗', u: MY_BOOK_URL, p: 1 }],
     front: {
       sub: '從設計到測試、維持產品品質的高效實踐',
       head: '打造自動化測試策略，完美交付高品質 App！',
