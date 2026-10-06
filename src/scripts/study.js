@@ -10,7 +10,6 @@ const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTextu
 const DATA = JSON.parse(document.getElementById('study-data').textContent);
 const { items: ITEMS, about: ABOUT, github: GH, site: SITE } = DATA;
 const IDS = Object.keys(ITEMS);
-const CATS = [{ id:'shelf', name:'書架' }, { id:'display', name:'展示架' }, { id:'desk', name:'書桌' }];
 const has = id => !!ITEMS[id];
 const isExt = u => /^(https?:)?\/\/|^mailto:/.test(u);
 const linkAttrs = u => isExt(u) ? ' target="_blank" rel="noopener"' : '';
@@ -773,12 +772,6 @@ new THREE.TextureLoader().setCrossOrigin('anonymous').load(AVATAR, t => { t.colo
 [[.1,0],[-.1,0]].forEach(([x]) => pf.add(box(.012, .25, .02, M.brass, 'frame-edge', [x,0,.003]))); [[.125],[-.125]].forEach(([y]) => pf.add(box(.21, .012, .02, M.brass, 'frame-edge', [0,y,.003])));
 portrait.add(rod([0,.01,-.07], [0,.2,-.005], .006, M.brass, 'easel-leg'));
 tag(portrait, { type:'about', view:'desk' }, [0,.03,0]);
-// mug
-const mug = new THREE.Group(); mug.position.set(1.18, DY + .025, -1.75); desk.add(mug);
-// glazed ceramic: the glaze breaks paler over the rim and pools darker at the foot
-const glaze = pbr('mug', C.mag, { map:texOf(cnv(8, 64, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); [[0,'#fff'],[.07,'#dcdcdc'],[.8,'#d2d2d2'],[1,'#a8a8a8']].forEach(([p, c]) => g.addColorStop(p, c)); x.fillStyle = g; x.fillRect(0, 0, w, h); })), roughness:.3, clearcoat:1, clearcoatRoughness:.06 });
-mug.add(cyl(.035, .032, .085, 32, glaze, 'mug', [0,.043,0])); mug.add(mk(new THREE.TorusGeometry(.022, .006, 10, 24), glaze, 'mug-handle', [.038,.045,0]));
-mug.add(cyl(.031, .031, .002, 24, std('coffee', '#2a160c', { roughness:.06 }), 'coffee', [0,.075,0]));
 
 /* ================= armchair + dachshund ================= */
 const chair = new THREE.Group(); chair.name = 'armchair'; chair.position.set(2.4, 0, -.55); chair.rotation.y = -.6; room.add(chair); // by the right wall, in front of the desk's far end, turned to the room
@@ -909,31 +902,23 @@ const DT = DY + .0265;
 LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - BZ, .12, [-2.788, y - .02, (BZ + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
 [...DL.slice(1), LV[7]].forEach(y => decal(aoLin, DW, .12, [-2.957, y - .02, (SZ0 + BZ)/2], [0, Math.PI/2, Math.PI], .55));
 
-/* ================= seasons ================= */
-const SKY = {
-  '春': { trees:['#6aa35a','#87b86b','#e6a3bd','#f1c2d2','#4f8a4a'], part:'#f1b8cc', shape:'petal', n:140, speed:.35, sway:.5, size:.035 },
-  '夏': { trees:['#3f7a3e','#2f6232','#5c9550','#264f2a','#4b8746'], part:'#b8d4e4', shape:'rain', n:500, speed:4.5, sway:0, size:.06 },
-  '秋': { trees:['#c46a2c','#d9932f','#a8432a','#e2b246','#6f6a35'], part:'#d4782e', shape:'leaf', n:90, speed:.45, sway:.7, size:.05 },
-  '冬': { trees:['#e9eef1','#c5cfd5','#8a979e','#f4f6f7','#a7b3b9'], part:'#ffffff', shape:'snow', n:420, speed:.5, sway:.25, size:.03 },
-};
-const season = (() => { const mo = new Date().getMonth() + 1; return mo >= 3 && mo <= 5 ? '春' : mo >= 6 && mo <= 8 ? '夏' : mo >= 9 && mo <= 11 ? '秋' : '冬'; })();
-const shapeTex = kind => ctex(64, 64, (x, w, h) => { x.clearRect(0,0,w,h); x.fillStyle = '#fff'; x.beginPath();
-  if (kind === 'rain') x.fillRect(30, 2, 3, 60); else if (kind === 'leaf') { x.ellipse(32,32,26,13,.6,0,Math.PI*2); x.fill(); } else if (kind === 'petal') { x.ellipse(32,32,20,12,0,0,Math.PI*2); x.fill(); } else { x.arc(32,32,18,0,Math.PI*2); x.fill(); } }, false);
-const PN = 500, pPos = new Float32Array(PN*3), pSeed = new Float32Array(PN);
+/* ================= autumn outside ================= */
+const FALL = { trees:['#c46a2c','#d9932f','#a8432a','#e2b246','#6f6a35'], part:'#d4782e', n:90, speed:.45, sway:.7, size:.05 };
+const leafTex = ctex(64, 64, (x, w, h) => { x.clearRect(0,0,w,h); x.fillStyle = '#fff'; x.beginPath(); x.ellipse(32,32,26,13,.6,0,Math.PI*2); x.fill(); }, false);
+const PN = FALL.n, pPos = new Float32Array(PN*3), pSeed = new Float32Array(PN);
 const OUT = { x0:-3.3, x1:3.3, z0:-4.3, z1:-2.75, y0:0, y1:3.2 };
 for (let i = 0; i < PN; i++) { pPos[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); pPos[i*3+1] = Math.random()*OUT.y1; pPos[i*3+2] = OUT.z0 + Math.random()*(OUT.z1-OUT.z0); pSeed[i] = Math.random(); }
 const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-const pMat = new THREE.PointsMaterial({ size:.05, transparent:true, depthWrite:false, alphaTest:.2 });
+const pMat = new THREE.PointsMaterial({ map:leafTex, color:col(FALL.part), size:FALL.size, transparent:true, depthWrite:false, alphaTest:.2 });
 const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.add(points);
-let partN = 0;
-{ const w = SKY[season], bare = season === '冬'; // dress the window and the door for the season: the lake outside, and what falls past them
-  paintLakeView(outsideTex.image, { trees:w.trees, bare }); outsideTex.needsUpdate = true;
-  paintLakeView(sideTex.image, { trees:w.trees, bare, seed:23, boathouse:false, feather:.1 }); sideTex.needsUpdate = true;
-  paintNearWater(waterTex.image, outsideTex.image, { trees:w.trees, bare }); waterTex.needsUpdate = true;
-  pMat.map = shapeTex(w.shape); pMat.color.set(w.part); pMat.size = w.size; pMat.needsUpdate = true; partN = Q.low ? Math.ceil(w.n / 2) : w.n; pGeo.setDrawRange(0, partN); }
+// the lake outside the window and the door, and the leaves that fall past them
+paintLakeView(outsideTex.image, { trees:FALL.trees }); outsideTex.needsUpdate = true;
+paintLakeView(sideTex.image, { trees:FALL.trees, seed:23, boathouse:false, feather:.1 }); sideTex.needsUpdate = true;
+paintNearWater(waterTex.image, outsideTex.image, { trees:FALL.trees }); waterTex.needsUpdate = true;
+let partN = Q.low ? Math.ceil(PN / 2) : PN; pGeo.setDrawRange(0, partN);
 
 /* ================= UI ================= */
-const st = { seen:{}, cur:null };
+const st = { cur:null };
 const $ = id => document.getElementById(id);
 let toastT; const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); };
 const panel = $('panel'), pbody = $('pbody');
@@ -981,12 +966,11 @@ function flyTo(tgt, pos, d = 1, az = AZ.home) { const o = pos.clone().sub(tgt); 
   tween = { t:0, d, ft:controls.target.clone(), tt:tgt.clone(), fp:camera.position.clone(), tp:tgt.clone().add(o.setFromSpherical(_sph)) }; controls.enabled = false; }
 function focus(obj, view) { obj.updateMatrixWorld(); const c = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()); const dir = VIEWS[view].clone(); if ((view === 'display' || view === 'back') && c.y < 1.5) dir.y = .55; dir.normalize(); flyTo(c, c.clone().addScaledVector(dir, DIST[view]), 1, AZ[view] || AZ.home); focused = true; }
 function goHome() { flyTo(HOME.tgt, HOME.pos, 1.1); focused = false; setZone(null); }
-function mark(id) { if (!st.seen[id]) { st.seen[id] = true; const c = ITEMS[id].cat, ids = IDS.filter(k => ITEMS[k].cat === c); if (ids.every(k => st.seen[k])) toast(`${CATS.find(x => x.id === c).name}的東西都翻過了`); if (IDS.every(k => st.seen[k]) && !st.allDone) { st.allDone = true; setTimeout(() => toast('整間書房都翻遍了。狗表示佩服。'), 2700); } } }
 function openItem(id) { const it = ITEMS[id];
   if (books[id] || libOf[id]) return openBook(id);
   if (drafts[id]) return openDraft(id);
   if (it.kind === 'play' && GAMES.length) return openTV();
-  st.cur = id; mark(id); const o = objOf(id); if (o) focus(o, o.userData.pick.view); setZone(id === 'tv' ? 'tv' : it.cat); renderPanel('item'); }
+  st.cur = id; const o = objOf(id); if (o) focus(o, o.userData.pick.view); setZone(id === 'tv' ? 'tv' : it.cat); renderPanel('item'); }
 function openList() { focus(laptop, 'desk'); setZone('desk'); renderPanel('list'); }
 function openAbout() { focus(portrait, 'desk'); setZone('desk'); renderPanel('about'); }
 function closePanel() { panel.classList.remove('open'); document.body.classList.remove('reading'); goHome(); }
@@ -1081,7 +1065,7 @@ function immerse() { if (panel.classList.contains('open')) { panel.classList.rem
 function unimmerse() { lockCam = false; if (!tween) controls.enabled = true; document.body.classList.remove('immerse'); }
 
 /* pages off the desk: lift one, read it top to bottom, bookmarks switch to the others */
-function openDraft(id) { if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; mark(id); st.cur = id; loadArticle(ITEMS[id].aid); grab(drafts[id], 'paper'); LF.t = 0; LF.anim = 1; LF.cb = () => showPaper(id); }
+function openDraft(id) { if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; st.cur = id; loadArticle(ITEMS[id].aid); grab(drafts[id], 'paper'); LF.t = 0; LF.anim = 1; LF.cb = () => showPaper(id); }
 function fillPaper(id) {
   const it = ITEMS[id], p = $('paper'), pg = p.querySelector('.pg'), lead = '<p>' + esc(it.b[0] || '') + '</p>';
   pg.innerHTML = '<span class="kick">' + esc(it.k) + '</span><h3 class="ttl">' + esc(it.t) + '</h3><div class="prose paper">' + lead + '<p class="loading">翻開稿紙……</p></div><div class="foot"><span>' + esc(it.m) + '</span><span>' + (DRAFTS.indexOf(id) + 1) + ' / ' + DRAFTS.length + '</span></div>';
@@ -1101,7 +1085,7 @@ function showPaper(id) {
   setTimeout(() => LF.obj && (LF.obj.visible = false), 200);
 }
 function switchDraft(id) {
-  if (RD.mode !== 'paper' || RD.busy || id === RD.id) return; RD.busy = true; mark(id); st.cur = id;
+  if (RD.mode !== 'paper' || RD.busy || id === RD.id) return; RD.busy = true; st.cur = id;
   const dir = DRAFTS.indexOf(id) > DRAFTS.indexOf(RD.id) ? 1 : -1; RD.id = id;
   release(); grab(drafts[id], 'paper'); LF.obj.position.copy(LF.e); LF.obj.quaternion.copy(LF.qe); LF.t = 1; LF.obj.visible = false;
   const pg = $('paper').querySelector('.pg');
@@ -1155,7 +1139,7 @@ async function bookPages(id, D) {
     ...(card ? ['<span class="sec">書卡</span>' + body + (it.pct != null ? '<div><div class="prog"><i style="width:' + it.pct + '%"></i></div><span style="font-size:13px">已讀 ' + it.pct + '%</span></div>' : '') + linkBtns(it.links) + (it.m ? '<span class="foot">' + esc(it.m) + '</span>' : '')] : [])]) };
 }
 function openBook(id) {
-  if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; mark(id); st.cur = id;
+  if (RD.mode || RD.busy || LF.anim || TV.on) return; immerse(); RD.busy = true; st.cur = id;
   const D = bookDims(), prep = bookPages(id, D); grab(books[id] || takeDown(id), 'book'); LF.t = 0; LF.anim = 1; LF.cb = () => prep.then(b => showBook(id, D, b));
 }
 function pageHTML(i) {
@@ -1239,7 +1223,7 @@ reader.addEventListener('click', e => {
 /* TV: push in on the CRT, pick a cartridge, the game plays on the screen */
 function openTV(sel = 0) {
   if (RD.mode || RD.busy || LF.anim) return; immerse();
-  Object.assign(TV, { on:true, vis:false, play:false, sel }); mark('tv'); st.cur = 'tv';
+  Object.assign(TV, { on:true, vis:false, play:false, sel }); st.cur = 'tv';
   scr.updateWorldMatrix(true, false); const c = scr.getWorldPosition(new THREE.Vector3()), n = new THREE.Vector3(0, 0, 1).applyQuaternion(scr.getWorldQuaternion(new THREE.Quaternion()));
   const th = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), d = Math.max((.22 / .6) / th, (.27 / .84) / (th * camera.aspect));
   flyTo(c, c.clone().addScaledVector(n, d), 1.4); tvui.classList.add('on'); tvMenu();
@@ -1316,7 +1300,7 @@ function judge(dt) {
 function demote() {
   Q.low = true; document.body.classList.add('lite');
   renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight);
-  dustN = DN / 2; dGeo.setDrawRange(0, dustN); partN = Math.ceil(SKY[season].n / 2); pGeo.setDrawRange(0, partN);
+  dustN = DN / 2; dGeo.setDrawRange(0, dustN); partN = Math.ceil(PN / 2); pGeo.setDrawRange(0, partN);
   try { localStorage.setItem(QKEY, 'low'); } catch {}
   toast('這台電腦跑得有點吃力，書房已切到輕量模式');
 }
@@ -1344,8 +1328,8 @@ function loop(ts) {
   roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; if (r.position.distanceToSquared(want) > 1e-10) { r.position.lerp(want, Math.min(1, dt * 10)); moved = true; if (r.userData.inst != null) seat(r); } });
   if (moved) renderer.shadowMap.needsUpdate = true;
   dogBody.scale.y = 1 + Math.sin(t*1.3) * .03; dogHead.rotation.y = HEAD_YAW + Math.sin(t*.4) * .02;
-  const w = SKY[season], pa = pGeo.attributes.position.array;
-  for (let i = 0; i < partN; i++) { const s = pSeed[i]; pa[i*3+1] -= w.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * w.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
+  const pa = pGeo.attributes.position.array;
+  for (let i = 0; i < partN; i++) { const s = pSeed[i]; pa[i*3+1] -= FALL.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * FALL.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
   pGeo.attributes.position.needsUpdate = true;
   const f = dt * 60; // the dust's steps were tuned per frame at 60 a second; scaled, it drifts no slower when frames are fewer
   const da = dGeo.attributes.position.array; for (let i = 0; i < dustN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009 * f; da[i*3+1] += (Math.sin(t*.21 + s0*30) * .0006 - .00012) * f; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008 * f; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
@@ -1372,7 +1356,6 @@ const introEl = $('intro'), door = n => { introEl.dataset.s = Math.max(n, +intro
 ajar();
 renderer.compileAsync(scene, camera).catch(() => {}).then(() => { ajar(); renderer.setAnimationLoop(loop); });
 sheetsReady.then(ajar);
-window.__study = { loop, openItem, openList, openAbout, openTV, exitTV, flip, closeReader, switchDraft, state:{ RD, BK, TV, LF } };
 Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { flyTo(HOME.tgt, HOME.pos, 2.2); Q.armed = true; door(4); introEl.classList.add('off'); document.body.classList.add('in'); });
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
 const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); stillFor = null; lastDraw = -Infinity; stir(); }; // resizing wipes the canvas, so the very next frame is drawn, even in a room standing still
