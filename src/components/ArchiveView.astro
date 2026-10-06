@@ -1,5 +1,5 @@
 ---
-import type { Article } from '../lib/notion';
+import type { Article, Note } from '../lib/notion';
 import type { Category } from '../lib/data';
 import { categorySlug } from '../lib/category';
 import '../styles/archive.css';
@@ -8,10 +8,13 @@ interface Props {
   articles: Article[];
   allCategories: Category[];
   scopeCategoryName?: string;
+  /** 碎碎念 to list among the articles. They are left out of the figures in the masthead, and a note with nothing written under its title gets no link. */
+  notes?: (Note & { hasBody: boolean })[];
 }
 
 const BASE = import.meta.env.BASE_URL;
-const { articles, allCategories, scopeCategoryName } = Astro.props;
+const NOTE_CAT = '碎碎念';
+const { articles, allCategories, scopeCategoryName, notes = [] } = Astro.props;
 const isScoped = Boolean(scopeCategoryName);
 
 function fmtMonthDay(iso: string): string {
@@ -23,13 +26,21 @@ function estimateMin(title: string): number {
   return Math.max(3, Math.min(15, Math.round(title.length / 8) + 3));
 }
 
+interface Row {
+  title: string;
+  cat: string;
+  createdTime: string;
+  href: string | null;
+}
+
 interface YearGroup {
   year: number;
   count: number;
   peak: boolean;
-  items: Article[];
+  items: Row[];
 }
 
+// The figures in the masthead count the articles alone.
 const grouped = new Map<number, Article[]>();
 for (const a of articles) {
   const year = new Date(a.createdTime).getFullYear();
@@ -44,7 +55,19 @@ for (const [year, items] of grouped.entries()) {
     peakYear = year;
   }
 }
-const yearGroups: YearGroup[] = Array.from(grouped.entries())
+
+// The list below them holds the 碎碎念 too, each by its date.
+const rows: Row[] = [
+  ...articles.map((a) => ({ title: a.title, cat: a.category, createdTime: a.createdTime, href: `${BASE}${categorySlug(a.category)}/${a.id}/` })),
+  ...notes.map((n) => ({ title: n.title, cat: NOTE_CAT, createdTime: n.createdTime, href: n.hasBody ? `${BASE}notes/${n.id}/` : null })),
+].sort((a, b) => b.createdTime.localeCompare(a.createdTime));
+const listed = new Map<number, Row[]>();
+for (const r of rows) {
+  const year = new Date(r.createdTime).getFullYear();
+  if (!listed.has(year)) listed.set(year, []);
+  listed.get(year)!.push(r);
+}
+const yearGroups: YearGroup[] = Array.from(listed.entries())
   .sort((a, b) => b[0] - a[0])
   .map(([year, items]) => ({
     year,
@@ -53,7 +76,7 @@ const yearGroups: YearGroup[] = Array.from(grouped.entries())
     items,
   }));
 
-const years = yearGroups.map((g) => g.year);
+const years = Array.from(grouped.keys());
 const oldestYear = years.length ? Math.min(...years) : new Date().getFullYear();
 const newestYear = years.length ? Math.max(...years) : new Date().getFullYear();
 const yearSpan = Math.max(1, newestYear - oldestYear + 1);
@@ -91,6 +114,7 @@ const chipData = allCategories.map((c) => ({
   count: articles.filter((a) => a.category === c.name).length,
   color: catColor(c.name),
 }));
+if (notes.length) chipData.push({ name: NOTE_CAT, count: notes.length, color: catColor(NOTE_CAT) });
 
 const heroTitle = isScoped ? scopeCategoryName! : '所有文章';
 const heroDesc = isScoped
@@ -185,12 +209,12 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
         <span class="sort-prefix">排序</span>
         <span class="sort-label">↓ 新到舊</span>
       </button>
-      <span class="result-count num" id="archive-count" data-total={totalPosts} aria-live="polite">共 {totalPosts} 篇</span>
+      <span class="result-count num" id="archive-count" data-total={rows.length} aria-live="polite">共 {rows.length} 篇</span>
     </div>
     {!isScoped && (
       <div class="chips" id="archive-chips" role="group" aria-label="依分類篩選">
         <button class="chip tag tag-accent" type="button" data-cat="*" aria-pressed="true">
-          全部 <span class="ct num">{totalPosts}</span>
+          全部 <span class="ct num">{rows.length}</span>
         </button>
         {chipData.map((c) => (
           <button class="chip tag tag-outline" type="button" data-cat={c.name} aria-pressed="false">
@@ -214,24 +238,27 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
           {yearNotes[g.year] && <div class="yr-note">{yearNotes[g.year]}</div>}
         </div>
         <div class="rows">
-          {g.items.map((a, i) => (
-            <a
-              class:list={['archive-row', { 'is-first': i === 0 }]}
-              href={`${BASE}${categorySlug(a.category)}/${a.id}/`}
-              data-cat={a.category}
-              data-title={a.title}
-              data-date={a.createdTime}
-            >
-              <span class="row-date num">{fmtMonthDay(a.createdTime)}</span>
-              <span class="row-title">{a.title}</span>
-              <span class="row-cat" title={a.category}>
-                <span class="dot" style={`--c:${catColor(a.category)}`}></span>
-                <span class="row-cat-name">{a.category}</span>
-              </span>
-              <span class="row-min num">{estimateMin(a.title)} min</span>
-              <span class="row-arrow" aria-hidden="true">↗</span>
-            </a>
-          ))}
+          {g.items.map((r, i) => {
+            const Tag = r.href ? 'a' : 'div';
+            return (
+              <Tag
+                class:list={['archive-row', { 'is-first': i === 0 }]}
+                href={r.href ?? undefined}
+                data-cat={r.cat}
+                data-title={r.title}
+                data-date={r.createdTime}
+              >
+                <span class="row-date num">{fmtMonthDay(r.createdTime)}</span>
+                <span class="row-title">{r.title}</span>
+                <span class="row-cat" title={r.cat}>
+                  <span class="dot" style={`--c:${catColor(r.cat)}`}></span>
+                  <span class="row-cat-name">{r.cat}</span>
+                </span>
+                <span class="row-min num">{estimateMin(r.title)} min</span>
+                {r.href && <span class="row-arrow" aria-hidden="true">↗</span>}
+              </Tag>
+            );
+          })}
         </div>
       </div>
     ))}

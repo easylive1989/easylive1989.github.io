@@ -321,13 +321,15 @@
   transform: translate(-6px, 5px);
   transition: opacity 0.15s, transform 0.18s;
 }
-.archive-sheet .archive-row:hover .row-title,
-.archive-sheet .archive-row:focus-visible .row-title {
+.archive-sheet a.archive-row:hover .row-title,
+.archive-sheet a.archive-row:focus-visible .row-title {
   color: var(--color-accent-700);
   text-decoration-color: currentColor;
 }
 .archive-sheet .archive-row:hover .row-arrow,
 .archive-sheet .archive-row:focus-visible .row-arrow { opacity: 1; transform: none; }
+/* a 碎碎念 with nothing written under its title has no page to go to */
+.archive-sheet div.archive-row .row-title { font-weight: 400; color: var(--muted); }
 .archive-sheet .archive-row:focus-visible { outline-offset: -2px; }
 
 /* a category page: every row has the same category, so give the title the room */

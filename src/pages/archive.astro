@@ -1,12 +1,14 @@
 ---
 import DeskLayout from '../layouts/DeskLayout.astro';
 import ArchiveView from '../components/ArchiveView.astro';
-import { getAllArticles, getAllCategories } from '../lib/data';
+import { getAllArticles, getAllCategories, getAllNotes, getNoteBodies } from '../lib/data';
 
 const articles = await getAllArticles();
 const categories = await getAllCategories();
+const notes = await getAllNotes();
+const bodies = await getNoteBodies();
 ---
 
 <DeskLayout title="所有文章" width="reading" crumbs={[{ label: '所有文章' }]}>
-  <ArchiveView articles={articles} allCategories={categories} />
+  <ArchiveView articles={articles} allCategories={categories} notes={notes.map((n) => ({ ...n, hasBody: bodies.has(n.id) }))} />
 </DeskLayout>
