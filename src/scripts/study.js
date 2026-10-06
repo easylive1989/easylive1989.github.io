@@ -956,26 +956,27 @@ const $ = id => document.getElementById(id);
 let toastT; const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); };
 const panel = $('panel'), pbody = $('pbody');
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
-const ghostBtn = 'justify-content:flex-start;margin-left:-6px;text-align:left;text-decoration:none';
+// the panel's links are the options of an RPG menu: the main one ("p") starts out under the cursor
+const optLinks = ls => ls && ls.length ? `<div class="acts">${ls.map(l => `<a class="opt${l.p ? ' p' : ''}" href="${esc(l.u)}"${linkAttrs(l.u)}>${esc(l.l)}</a>`).join('')}</div>` : '';
 const linkBtns = ls => ls && ls.length ? `<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-4) 0">${ls.map(l => `<a class="btn ${l.p ? 'btn-primary' : 'btn-secondary'}" href="${esc(l.u)}"${linkAttrs(l.u)} style="text-decoration:none">${esc(l.l)}</a>`).join('')}</div>` : '';
 function renderPanel(mode) {
   let h = '';
   if (mode === 'about') { h = '<span class="card-kicker">書桌 · 自畫像</span><div style="display:flex;gap:var(--space-4);align-items:center;margin:var(--space-3) 0 var(--space-4)"><img src="' + esc(AVATAR) + '" alt="' + esc(ABOUT.name) + '" style="width:88px;height:88px;object-fit:cover;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)"><div><div style="font-size:14px;font-style:italic">Hi, I&#39;m</div><h2 style="margin:0">' + esc(ABOUT.name) + '</h2><div style="font-size:14px;margin-top:4px">' + esc(ABOUT.tagline) + '</div></div></div>'
       + '<div class="body"><p>' + esc(ABOUT.bio) + '</p><p>' + esc(ABOUT.summary) + '</p></div>'
-      + '<div class="rel"><span class="lab card-kicker">Find me at</span>' + ABOUT.channels.map(([k, v, u]) => '<a class="btn btn-ghost" href="' + esc(u) + '"' + linkAttrs(u) + ' style="' + ghostBtn + '">' + esc(k) + '：' + esc(v) + '</a>').join('') + '</div>'
+      + '<div class="rel"><span class="lab card-kicker">Find me at</span>' + ABOUT.channels.map(([k, v, u]) => '<a class="opt" href="' + esc(u) + '"' + linkAttrs(u) + '>' + esc(k) + '：' + esc(v) + '</a>').join('') + '</div>'
 ; }
   else if (mode === 'list') { const recent = DRAFTS;
     h = '<span class="card-kicker">書桌 · 筆電</span><h2>GitHub 活動</h2><p class="intro">' + (GH.ok ? `過去 18 週，${GH.year} 年共 ${GH.total.toLocaleString()} 次 contributions。目前連續 ${GH.current} 天，最長 ${GH.longest} 天。` : '活動統計暫時讀不到，直接去 GitHub 看吧。') + '</p>'
-      + linkBtns(ABOUT.channels.filter(c => c[0] === 'GitHub' || c[0] === 'Threads').map(c => c[0] === 'GitHub' ? { l:`GitHub · ${c[1]} ↗`, u:c[2], p:1 } : { l:'Threads ↗', u:c[2] }))
-      + (recent.length ? '<div class="rel"><span class="lab card-kicker">桌上的稿紙 →</span>' + recent.map(k => '<button class="btn btn-ghost" data-item="' + k + '" style="' + ghostBtn + '">' + esc(ITEMS[k].t) + '</button>').join('') + '</div>' : ''); }
+      + optLinks(ABOUT.channels.filter(c => c[0] === 'GitHub' || c[0] === 'Threads').map(c => c[0] === 'GitHub' ? { l:`GitHub · ${c[1]} ↗`, u:c[2], p:1 } : { l:'Threads ↗', u:c[2] }))
+      + (recent.length ? '<div class="rel"><span class="lab card-kicker">桌上的稿紙 →</span>' + recent.map(k => '<button class="opt" data-item="' + k + '">' + esc(ITEMS[k].t) + '</button>').join('') + '</div>' : ''); }
   else { const it = ITEMS[st.cur];
     const accent2 = it.kind === 'latest' || it.kind === 'note';
-    h += `<div style="margin-top:var(--space-2)"><span class="card-kicker"${accent2 ? ' style="color:var(--color-accent-2-700)"' : ''}>${esc(it.k)}</span><h3>${esc(it.t)}</h3>${it.by ? `<div style="font-size:15px;font-style:italic;margin-top:-6px">${esc(it.by)}</div>` : ''}</div>`;
+    h += `<div style="margin-top:var(--space-2)"><span class="card-kicker${accent2 ? ' k2' : ''}">${esc(it.k)}</span><h3>${esc(it.t)}</h3>${it.by ? `<div style="font-size:15px;font-style:italic;margin-top:-6px">${esc(it.by)}</div>` : ''}</div>`;
     if (it.tech && it.tech.length) h += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:var(--space-2) 0 var(--space-3)">${it.tech.map(t => `<span class="tag tag-neutral">${esc(t)}</span>`).join('')}</div>`;
-    if (it.list) h += `<div class="list" style="gap:var(--space-4);margin-bottom:var(--space-4)">${it.list.map(([y, kind, t, org, u]) => `<a href="${esc(u)}"${linkAttrs(u)} style="display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--color-text)"><span class="card-kicker">${esc(y)} · ${esc(kind)}</span><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.3">${esc(t)} ↗</span>${org ? `<span style="font-size:14px">${esc(org)}</span>` : ''}</a>`).join('')}</div>`;
-    if (it.pct != null) h += `<div style="margin:var(--space-4) 0 var(--space-3)"><div class="prog"><i style="width:${it.pct}%"></i></div><span style="font-size:13px">已讀 ${it.pct}%</span></div>`;
+    if (it.list) h += `<div class="list" style="gap:var(--space-4);margin-bottom:var(--space-4)">${it.list.map(([y, kind, t, org, u]) => `<a class="opt li" href="${esc(u)}"${linkAttrs(u)}><span class="card-kicker">${esc(y)} · ${esc(kind)}</span><b>${esc(t)} ↗</b>${org ? `<span class="org">${esc(org)}</span>` : ''}</a>`).join('')}</div>`;
+    if (it.pct != null) h += `<div style="margin:var(--space-4) 0 var(--space-3)"><div class="prog"><i style="width:${it.pct}%"></i></div><span class="pct">已讀 ${it.pct}%</span></div>`;
     h += `<div class="body">${it.b.map(p => `<p${p.startsWith('（') ? ' style="font-style:italic"' : ''}>${esc(p)}</p>`).join('')}</div>`;
-    h += linkBtns(it.links);
+    h += optLinks(it.links);
   }
   pbody.innerHTML = h; panel.scrollTop = 0; panel.classList.add('open'); document.body.classList.add('reading');
 }
@@ -1241,8 +1242,8 @@ function readEntry(aid) {
 function backToContents() { if (RD.mode !== 'book' || RD.busy || !BK.ret) return; RD.busy = true; Object.assign(BK, BK.ret, { ret:null }); swapSpread(); }
 function updNav() {
   if (RD.mode === 'book') { const N = BK.pages.length, a = BK.single ? BK.i <= 1 : BK.i <= 0, z = BK.single ? BK.i >= N - 1 : BK.i + 2 >= N;
-    rnav.innerHTML = (BK.ret ? '<button class="btn btn-ghost" data-act="toc">‹ 回目錄</button>' : '') + '<button class="btn btn-ghost" data-act="prev"' + (a ? ' disabled' : '') + '>‹ 上一頁</button><span class="cnt">' + (BK.single ? BK.i + ' / ' + (N - 1) : (BK.i / 2 + 1) + ' / ' + (N / 2)) + '</span><button class="btn btn-ghost" data-act="next"' + (z ? ' disabled' : '') + '>下一頁 ›</button><button class="btn btn-secondary" data-act="shelve">放回書架</button>'; }
-  else if (RD.mode === 'paper') rnav.innerHTML = '<button class="btn btn-ghost" data-act="prev">‹</button><span class="cnt">第 ' + (DRAFTS.indexOf(RD.id) + 1) + ' / ' + DRAFTS.length + ' 張</span><button class="btn btn-ghost" data-act="next">›</button><button class="btn btn-secondary" data-act="shelve">放回桌上</button>';
+    rnav.innerHTML = (BK.ret ? '<button class="opt" data-act="toc">« 回目錄</button><span class="sep"></span>' : '') + '<button class="opt" data-act="prev"' + (a ? ' disabled' : '') + '>← 上一頁</button><span class="cnt">' + (BK.single ? BK.i + ' / ' + (N - 1) : (BK.i / 2 + 1) + ' / ' + (N / 2)) + '</span><button class="opt" data-act="next"' + (z ? ' disabled' : '') + '>下一頁 →</button><span class="sep"></span><button class="opt" data-act="shelve">放回書架</button>'; }
+  else if (RD.mode === 'paper') rnav.innerHTML = '<button class="opt" data-act="prev" aria-label="上一張">←</button><span class="cnt">第 ' + (DRAFTS.indexOf(RD.id) + 1) + ' / ' + DRAFTS.length + ' 張</span><button class="opt" data-act="next" aria-label="下一張">→</button><span class="sep"></span><button class="opt" data-act="shelve">放回桌上</button>';
 }
 function closeReader(cb) {
   if (!RD.mode || RD.busy) return; RD.busy = true;
@@ -1286,8 +1287,8 @@ function tvPlay() {
 function tvBar() {
   const repo = (ITEMS.tv.links || [])[0];
   tvbar.innerHTML = (TV.play
-    ? '<button class="btn btn-ghost" data-tv="menu">‹ 換卡帶</button><a class="btn btn-ghost" href="' + esc(GAMES[TV.sel][4]) + '" target="_blank" rel="noopener" style="text-decoration:none">開新分頁玩 ↗</a>'
-    : repo ? '<a class="btn btn-ghost" href="' + esc(repo.u) + '" target="_blank" rel="noopener" style="text-decoration:none">' + esc(repo.l) + '</a>' : '') + '<button class="btn btn-secondary" data-tv="exit">關電視 ✕</button>';
+    ? '<button class="opt" data-tv="menu">« 換卡帶</button><a class="opt" href="' + esc(GAMES[TV.sel][4]) + '" target="_blank" rel="noopener">開新分頁玩 ↗</a><span class="sep"></span>'
+    : repo ? '<a class="opt" href="' + esc(repo.u) + '" target="_blank" rel="noopener">' + esc(repo.l) + '</a><span class="sep"></span>' : '') + '<button class="opt" data-tv="exit">關電視 ×</button>';
 }
 function positionTV() {
   camera.updateMatrixWorld(); scr.updateWorldMatrix(true, false); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;

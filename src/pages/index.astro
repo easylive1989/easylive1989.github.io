@@ -56,37 +56,37 @@ const BASE = import.meta.env.BASE_URL;
       <div class="flood"></div>
       <p class="cap">推開書房的門……</p>
     </div>
-    <div id="toast" class="hud"></div>
+    <div id="toast" class="hud rpg"></div>
     <div id="tip"></div>
     <!-- The dock: the room's four corners and the way back to its middle, where the content pages keep "回書房" -->
-    <nav id="hud" class="hud sheet" aria-label="書房導覽">
-      <button class="btn btn-ghost hz home" data-home disabled title="回到房間中心" style="--i:0"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10l8-6 8 6v10H4zM10 20v-6h4v6" /></svg><span>回中心</span></button>
+    <nav id="hud" class="hud rpg" aria-label="書房導覽">
+      <button class="opt hz home" data-home disabled title="回到房間中心" style="--i:0"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10l8-6 8 6v10H4zM10 20v-6h4v6" /></svg><span>回中心</span></button>
       <span class="sep" style="--i:1"></span>
-      <button class="btn btn-ghost hz" data-zone="shelf" title="讀過的書" style="--i:2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 5l3.8-1 3.7 15-3.8 1z" /></svg><span>書架</span></button>
-      <button class="btn btn-ghost hz" data-zone="display" title="演講、鐵人賽、side project" style="--i:3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v3a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 3M17 6h3a3 3 0 0 1-3 3M12 12v4M8 20h8M9 16h6" /></svg><span>展示架</span></button>
-      <button class="btn btn-ghost hz" data-zone="desk" title="最新文章與系列" style="--i:4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18M5 9v10M19 9v10M8 9V6h8v3M13 13h4v3h-4z" /></svg><span>書桌</span></button>
-      <button class="btn btn-ghost hz" data-zone="tv" title="做著玩的遊戲" style="--i:5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM8 21h8M6 9h9v6H6zM18 9v1M18 12v1" /></svg><span>電視</span></button>
+      <button class="opt hz" data-zone="shelf" title="讀過的書" style="--i:2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 5l3.8-1 3.7 15-3.8 1z" /></svg><span>書架</span></button>
+      <button class="opt hz" data-zone="display" title="演講、鐵人賽、side project" style="--i:3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v3a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 3M17 6h3a3 3 0 0 1-3 3M12 12v4M8 20h8M9 16h6" /></svg><span>展示架</span></button>
+      <button class="opt hz" data-zone="desk" title="最新文章與系列" style="--i:4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18M5 9v10M19 9v10M8 9V6h8v3M13 13h4v3h-4z" /></svg><span>書桌</span></button>
+      <button class="opt hz" data-zone="tv" title="做著玩的遊戲" style="--i:5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM8 21h8M6 9h9v6H6zM18 9v1M18 12v1" /></svg><span>電視</span></button>
       <span class="sep" style="--i:6"></span>
-      <button class="btn btn-ghost hz more" data-more aria-label="更多" aria-expanded="false" style="--i:7">⋯</button>
-      <div class="menu sheet">
-        <span class="card-kicker">離開書房</span>
-        <a class="btn btn-ghost" href={`${BASE}reading/`}>書單</a>
-        <a class="btn btn-ghost" href={`${BASE}archive/`}>文章</a>
-        <a class="btn btn-ghost" href={`${BASE}notes/`}>碎碎念</a>
-        <a class="btn btn-ghost" href="/rss.xml">RSS</a>
+      <button class="opt hz more" data-more aria-label="更多" aria-expanded="false" style="--i:7">⋯</button>
+      <div class="menu rpg">
+        <span class="lab">離開書房</span>
+        <a class="opt" href={`${BASE}reading/`}>書單</a>
+        <a class="opt" href={`${BASE}archive/`}>文章</a>
+        <a class="opt" href={`${BASE}notes/`}>碎碎念</a>
+        <a class="opt" href="/rss.xml">RSS</a>
       </div>
     </nav>
     <!-- A book or a page picked up and held in front of the camera -->
     <div id="reader">
       <div class="bd"></div>
       <div id="robj"></div>
-      <button class="btn btn-secondary x" data-act="rclose">收起 ✕</button>
-      <div id="rnav" class="rnav sheet"></div>
+      <div class="x rpg"><button class="opt" data-act="rclose">收起 ×</button></div>
+      <div id="rnav" class="rnav rpg"></div>
     </div>
     <!-- The CRT, once the camera has pushed in on it -->
-    <div id="tvui"><div id="crt"></div><div id="tvbar" class="sheet"></div></div>
-    <aside id="panel" aria-live="polite">
-      <button class="btn btn-ghost close" data-act="close">收起 ✕</button>
+    <div id="tvui"><div id="crt"></div><div id="tvbar" class="rpg"></div></div>
+    <aside id="panel" class="rpg" aria-live="polite">
+      <button class="opt close" data-act="close">收起 ×</button>
       <div id="pbody"></div>
     </aside>
 
@@ -133,9 +133,10 @@ const BASE = import.meta.env.BASE_URL;
 
 <style is:global>
   html, body.study-body { margin: 0; height: 100%; overflow: hidden; background: #140e0a; font-family: var(--font-body); color: var(--color-text); }
-  /* :not(.btn) keeps these from outranking the button colours (a primary button is cyan with paper text) */
-  body.study-body a:not(.btn) { color: var(--color-accent-700); }
-  body.study-body a:not(.btn):hover { color: var(--color-accent-800); }
+  /* :not(.btn, .opt) keeps these from outranking the button colours (a primary button is cyan with paper text) and the
+     options in the room's windows */
+  body.study-body a:not(.btn, .opt) { color: var(--color-accent-700); }
+  body.study-body a:not(.btn, .opt):hover { color: var(--color-accent-800); }
   body.study-body button { font-family: inherit; }
 
   #stage { position: fixed; inset: 0; }
@@ -149,45 +150,61 @@ const BASE = import.meta.env.BASE_URL;
   .hud { position: fixed; z-index: 10; }
   .sheet { background: var(--color-bg); box-shadow: var(--shadow-sm); border-radius: var(--radius-md); }
 
+  /* The room's own windows, after an old console RPG: black, a white frame, a pixel face, and a ▶ that stands in front of
+     whatever is pointed at and blinks on what is chosen. Cubic 11 is drawn on a 12px grid, so it is set at 12, 18 or 24px
+     to stay sharp on a 2x screen, and the cursor is cut in the same 1.5px steps as the letters beside it at 18px. */
+  @font-face { font-family: "Cubic 11"; src: url("/fonts/cubic-11/Cubic_11.woff2") format("woff2"); font-display: swap; }
+  body.study-body { --pixel: "Cubic 11", var(--font-body); --rpg-bg: rgba(12,9,20,.93); --rpg-ink: #f6f2e8; --rpg-hi: #ffd76a; --rpg-dim: #77718a; --rpg-sky: #8fd3ff; }
+  .rpg { background: var(--rpg-bg); color: var(--rpg-ink); border: 3px solid var(--rpg-ink); border-radius: 7px; box-shadow: 0 0 0 3px #0c0914, 6px 6px 0 3px rgba(0,0,0,.35); font-family: var(--pixel); }
+  .rpg .opt { all: unset; position: relative; box-sizing: border-box; display: inline-flex; font-family: var(--pixel); align-items: center; gap: 6px; padding: 6px 10px 6px 22px; color: var(--rpg-ink); white-space: nowrap; cursor: pointer; }
+  .rpg .opt::before { content: ""; position: absolute; left: 8px; top: 50%; width: 6px; height: 10.5px; margin-top: -5.25px; background: var(--rpg-hi); visibility: hidden;
+    clip-path: polygon(0 0, 1.5px 0, 1.5px 1.5px, 3px 1.5px, 3px 3px, 4.5px 3px, 4.5px 4.5px, 6px 4.5px, 6px 6px, 4.5px 6px, 4.5px 7.5px, 3px 7.5px, 3px 9px, 1.5px 9px, 1.5px 10.5px, 0 10.5px); }
+  .rpg .opt:is(:hover, :focus-visible):not(:disabled)::before, .rpg .opt.on::before { visibility: visible; }
+  .rpg .opt:focus-visible, .rpg .opt.on { color: var(--rpg-hi); }
+  .rpg .opt.on::before { animation: rpg-blink 1s steps(2) infinite; }
+  .rpg .opt:disabled { color: var(--rpg-dim); cursor: default; }
+  .rpg .sep { width: 3px; height: 18px; margin: 0 4px; flex: none; background: repeating-linear-gradient(color-mix(in srgb, var(--rpg-ink) 55%, transparent) 0 3px, transparent 3px 6px); }
+  @keyframes rpg-blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .rpg .opt.on::before { animation: none; } }
+
   body.immerse #tip { opacity: 0 !important; }
 
-  #tip { position: fixed; z-index: 30; pointer-events: none; font-size: 13px; padding: 6px 10px; background: var(--color-text); color: var(--color-bg); border-radius: var(--radius-md); opacity: 0; transition: opacity .15s; white-space: nowrap; }
+  /* the name of what is under the pointer, in a window of the room's kind cut down to a label */
+  #tip { position: fixed; z-index: 30; pointer-events: none; font: 12px/1.3 var(--pixel); padding: 5px 8px; background: var(--rpg-bg); color: var(--rpg-ink); border: 2px solid var(--rpg-ink); border-radius: 4px; box-shadow: 0 0 0 2px #0c0914; opacity: 0; transition: opacity .15s; white-space: nowrap; }
 
-  #toast { left: 50%; top: var(--space-8); transform: translate(-50%, -8px); padding: var(--space-2) var(--space-4); background: var(--color-text); color: var(--color-bg); font-size: 16px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
+  #toast { left: 50%; top: var(--space-8); transform: translate(-50%, -8px); padding: 10px 18px; font-size: 18px; line-height: 1.4; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
   #toast.on { opacity: 1; transform: translate(-50%, 0); }
   body.reading #toast { left: calc(50% - 230px); }
 
   /* The dock. On a desk it sits where the content pages keep "回書房"; on a phone, whose view never takes in the whole room,
      it is a bar along the bottom. It comes in one button at a time once the door has opened, and steps aside while something
      is held up to read. */
-  #hud { top: var(--space-4); left: var(--space-6); display: flex; align-items: center; gap: 2px; padding: 6px; transition: opacity .35s, transform .35s; }
-  #hud .hz { position: relative; padding: 6px 10px; gap: 6px; }
-  #hud .hz svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-  #hud .hz.on { background: var(--color-text); color: var(--color-bg); }
-  #hud .hz:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-  #hud .home { color: var(--color-text); }
-  #hud .home:hover:not(:disabled) { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
-  #hud .home:disabled { opacity: .4; }
-  #hud .sep { width: 1px; height: 18px; background: color-mix(in srgb, var(--color-text) 18%, transparent); margin: 0 3px; flex: none; }
-  #hud .more { color: color-mix(in srgb, var(--color-text) 60%, transparent); letter-spacing: .1em; padding-inline: 8px; }
-  #hud .more[aria-expanded="true"] { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
-  #hud .menu { position: absolute; top: 100%; right: 0; margin-top: 6px; padding: 6px; display: none; flex-direction: column; min-width: 120px; box-shadow: var(--shadow-md); }
+  #hud { top: var(--space-4); left: var(--space-6); display: flex; align-items: center; padding: 3px 6px 3px 2px; font-size: 18px; line-height: 1.2; transition: opacity .35s, transform .35s; }
+  /* on a desk it is a plain menu of words; the icons only come out for the phone's bar */
+  #hud .hz svg { display: none; width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  #hud .more { padding-left: 10px; letter-spacing: .1em; }
+  #hud .more::before { display: none; }
+  #hud .more[aria-expanded="true"] { color: var(--rpg-hi); }
+  #hud .menu { position: absolute; top: 100%; right: -3px; margin-top: 12px; padding: 6px 6px 6px 2px; display: none; flex-direction: column; min-width: 132px; }
   #hud .menu.open { display: flex; }
-  #hud .menu .card-kicker { padding: 4px 10px 2px; color: color-mix(in srgb, var(--color-text) 55%, transparent); }
-  #hud .menu .btn { justify-content: flex-start; padding: 6px 10px; }
+  #hud .menu .lab { padding: 2px 10px 6px 22px; font-size: 12px; letter-spacing: .08em; color: var(--rpg-sky); }
   /* not shown until the door is open: then each button slides in on its turn, after the door has faded */
   #hud .hz, #hud .sep { opacity: 0; }
   body.in #hud .hz, body.in #hud .sep { animation: hud-in .5s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(1.2s + var(--i) * 80ms); }
   @keyframes hud-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
   body.immerse #hud { opacity: 0; transform: translateY(-6px); pointer-events: none; }
   @media (max-width: 760px) {
-    #hud { top: auto; left: var(--space-2); right: var(--space-2); bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); padding: 6px 4px; justify-content: space-between; gap: 0; }
-    #hud .hz { flex-direction: column; gap: 4px; font-size: 11px; padding: 6px 4px; flex: 1; }
-    #hud .hz svg { width: 20px; height: 20px; }
+    #hud { top: auto; left: var(--space-2); right: var(--space-2); bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); padding: 3px 2px; justify-content: space-between; font-size: 12px; }
+    /* no pointer to follow on a phone, so no cursor: the corner the camera went to turns gold */
+    #hud .hz { flex-direction: column; justify-content: center; gap: 4px; padding: 6px 2px; flex: 1; }
+    #hud .hz::before { display: none; }
+    #hud .hz svg { display: block; }
     #hud .sep { display: none; }
-    #hud .more { flex: 0 0 auto; font-size: 14px; }
-    #hud .menu { bottom: 100%; top: auto; margin: 0 0 8px; }
+    #hud .more { flex: 0 0 auto; font-size: 18px; padding: 6px 10px; }
+    #hud .menu { bottom: 100%; top: auto; margin: 0 0 12px; font-size: 18px; }
     body.immerse #hud { transform: translateY(6px); }
+    /* the panel's dialogue box takes the bottom of the screen, so the bar steps aside for it too */
+    body.reading #hud { opacity: 0; transform: translateY(6px); pointer-events: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     body.in #hud .hz, body.in #hud .sep { animation: none; opacity: 1; }
@@ -234,16 +251,42 @@ const BASE = import.meta.env.BASE_URL;
   .noscript a { color: var(--color-accent-300); }
 
   /* Reading panel */
-  #panel { position: fixed; top: 0; right: 0; bottom: 0; width: 460px; z-index: 20; background: var(--color-bg); box-shadow: var(--shadow-lg); transform: translateX(105%); transition: transform .45s cubic-bezier(.2,.7,.2,1); overflow: auto; box-sizing: border-box; padding: var(--space-8) var(--space-6) var(--space-8) var(--space-8); }
+  /* A window of the room's kind, standing at the right (a dialogue box along the bottom on a phone). Its headings, labels and
+     options are in the pixel face; what is there to be read stays in the book face. */
+  #panel { position: fixed; top: var(--space-4); right: var(--space-4); width: 440px; max-height: calc(100% - var(--space-4) * 2); z-index: 20; box-sizing: border-box; overflow: auto; overscroll-behavior: contain; padding: 52px 28px 28px 30px; font-family: var(--font-body); transform: translateX(calc(100% + 40px)); transition: transform .45s cubic-bezier(.2,.7,.2,1); scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--rpg-ink) 45%, transparent) transparent; }
   #panel.open { transform: none; }
-  #panel .close { position: absolute; right: var(--space-4); top: var(--space-4); }
-  #panel h2 { margin: 6px 0 var(--space-3); font-family: var(--font-heading); font-weight: 600; font-size: 44px; line-height: 1.08; text-wrap: pretty; }
-  #panel h3 { margin: 6px 0 var(--space-3); font-family: var(--font-heading); font-weight: 600; font-size: 34px; line-height: 1.15; text-wrap: pretty; }
-  #panel .intro { font-size: 17px; font-style: italic; line-height: 1.55; margin: 0 0 var(--space-6); }
-  #panel .list { display: flex; flex-direction: column; gap: var(--space-6); }
-  #panel .body p { font-size: 17px; line-height: 1.7; margin: 0 0 var(--space-3); text-wrap: pretty; }
-  #panel .rel { display: flex; flex-direction: column; gap: 4px; margin-top: var(--space-6); }
-  #panel .rel .lab { font-size: 12px; letter-spacing: .08em; }
+  #panel .close { position: absolute; right: 8px; top: 8px; font-size: 18px; }
+  #panel h2, #panel h3 { margin: 8px 0 var(--space-3); font-family: var(--pixel); font-weight: 400; line-height: 1.3; color: #fff; text-wrap: pretty; }
+  #panel h2 { font-size: 36px; }
+  #panel h3 { font-size: 30px; }
+  #panel .card-kicker { font-family: var(--pixel); font-size: 12px; letter-spacing: .08em; color: var(--rpg-sky); }
+  #panel .card-kicker.k2 { color: #ffab91; } /* the newest article and the 碎碎念 notes */
+  #panel .tag { font-family: var(--pixel); font-size: 12px; padding: 2px 8px; border: 2px solid var(--rpg-ink); border-radius: 4px; background: none; color: var(--rpg-ink); }
+  #panel img { border: 3px solid var(--rpg-ink); }
+  #panel .intro { font-size: 17px; font-style: italic; line-height: 1.6; margin: 0 0 var(--space-4); color: #e6e0d2; }
+  #panel .body:not(:empty) { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 2px dashed color-mix(in srgb, var(--rpg-ink) 30%, transparent); }
+  #panel .body p { font-size: 17px; line-height: 1.75; margin: 0 0 var(--space-3); color: #e6e0d2; text-wrap: pretty; }
+  /* a game's rows: the cursor stands at the title line */
+  #panel .list { display: flex; flex-direction: column; margin-left: -8px; }
+  #panel .li { flex-direction: column; align-items: flex-start; gap: 2px; white-space: normal; }
+  #panel .li::before { top: 36px; }
+  #panel .li b { font-family: var(--font-body); font-weight: 600; font-size: 18px; line-height: 1.35; }
+  #panel .li .org { font-family: var(--font-body); font-size: 14px; color: #c9c2b3; }
+  /* the reading progress is an HP bar */
+  #panel .prog { height: 16px; margin: 0 0 6px; padding: 2px; box-sizing: border-box; background: #0c0914; border: 2px solid var(--rpg-ink); border-radius: 3px; }
+  #panel .prog i { height: 100%; background: repeating-linear-gradient(90deg, var(--rpg-hi) 0 6px, #d9a93a 6px 8px); }
+  #panel .pct { font-family: var(--pixel); font-size: 12px; color: var(--rpg-hi); }
+  /* the links are a menu, one cursor at a time: it starts on the main one and follows the pointer */
+  #panel :is(.acts, .rel) { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: var(--space-4) 0 0 -8px; font-size: 18px; }
+  #panel .rel { margin-top: var(--space-6); }
+  #panel .rel .lab { margin: 0 0 4px 8px; }
+  #panel :is(.acts, .rel) .opt { white-space: normal; text-align: left; }
+  #panel .acts .opt:hover, #panel .acts .p { color: var(--rpg-hi); }
+  #panel .acts .p::before { visibility: visible; animation: rpg-blink 1s steps(2) infinite; }
+  #panel .acts:hover .p:not(:hover) { color: var(--rpg-ink); }
+  #panel .acts:hover .p:not(:hover)::before { visibility: hidden; }
+  #panel .li:hover b { color: var(--rpg-hi); }
+  @media (prefers-reduced-motion: reduce) { #panel .acts .p::before { animation: none; } }
 
   /* — reader: the thing in your hands. Everything inside is sized in --u so it scales with the object — */
   body.study-body { --brass: #b38b4b; --brass-light: #d9b573; --brass-dark: #6e5228; --font-reading: "Source Serif 4", "Noto Serif TC", "Songti TC", "PMingLiU", serif; } /* what prose.css borrows from desk.css */
@@ -253,10 +296,11 @@ const BASE = import.meta.env.BASE_URL;
   #reader.vis .bd { opacity: 1; }
   #robj { position: absolute; inset: 0; pointer-events: none; }
   .obj { position: absolute; transform-origin: 0 0; pointer-events: auto; }
-  #reader .x { position: absolute; right: var(--space-6); top: var(--space-6); opacity: 0; transition: opacity .3s; background: var(--color-bg); }
-  #reader .rnav { position: absolute; left: 50%; bottom: var(--space-6); transform: translateX(-50%); display: flex; gap: 6px; align-items: center; padding: 6px; opacity: 0; transition: opacity .3s; white-space: nowrap; }
+  /* the way out and the page controls are small windows of the room's kind */
+  #reader .x { position: absolute; right: var(--space-6); top: var(--space-6); padding-right: 4px; font-size: 18px; opacity: 0; transition: opacity .3s; }
+  #reader .rnav { position: absolute; left: 50%; bottom: var(--space-6); transform: translateX(-50%); display: flex; align-items: center; padding: 3px 6px 3px 2px; font-size: 18px; line-height: 1.2; opacity: 0; transition: opacity .3s; white-space: nowrap; }
   #reader.vis .x, #reader.vis .rnav { opacity: 1; }
-  .rnav .cnt { font-size: 14px; padding: 0 var(--space-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .rnav .cnt { padding: 0 var(--space-2); color: var(--rpg-sky); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
   /* a page off the desk: one long sheet you scroll, bookmarks down its edge for the other pages */
   #paper .stack { position: absolute; inset: 0; background: #e4d9c3; box-shadow: var(--shadow-md); border-radius: 2px; }
@@ -268,6 +312,8 @@ const BASE = import.meta.env.BASE_URL;
   #paper .tab:hover { transform: translateX(4px); background: var(--color-accent-2-200); }
   #paper .tab.on { background: var(--color-accent-2-500); color: #f3f2f2; z-index: 3; transform: translateX(8px); }
   #paper .tab:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  /* the sheet is handed the focus as it comes up, so the keys scroll it; a ring round the whole of it would say nothing */
+  #paper .pg:focus-visible { outline: none; }
 
   /* a book off the shelf: two boards, a spread of pages, leaves that turn on the spine */
   #book { perspective: 2800px; }
@@ -370,7 +416,7 @@ const BASE = import.meta.env.BASE_URL;
   #crt .ht { margin-top: auto; font-size: .62em; opacity: .65; letter-spacing: .06em; }
   #crt iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: #000; z-index: 1; }
   #crt .ld { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; text-align: center; line-height: 1.6; background: #0e1622; }
-  #tvbar { position: absolute; pointer-events: auto; display: flex; gap: 6px; padding: 6px; transform: translateX(-50%); opacity: 0; transition: opacity .4s; white-space: nowrap; }
+  #tvbar { position: absolute; pointer-events: auto; display: flex; align-items: center; padding: 3px 6px 3px 2px; font-size: 18px; line-height: 1.2; transform: translateX(-50%); opacity: 0; transition: opacity .4s; white-space: nowrap; }
   #tvui.vis #tvbar { opacity: 1; }
   @keyframes crt-blink { 50% { opacity: 0; } }
 
@@ -380,15 +426,25 @@ const BASE = import.meta.env.BASE_URL;
 
   /* Phones: the panel becomes a bottom sheet (study.js shifts the camera to match) */
   @media (max-width: 760px) {
-    #toast { top: 76px; font-size: 14px; max-width: calc(100vw - 24px); text-align: center; }
-    body.reading #toast { left: 50%; }
-    #panel { top: auto; left: 0; right: 0; width: auto; height: 58vh; transform: translateY(105%); padding: var(--space-6) var(--space-4) var(--space-8); box-shadow: 0 -12px 32px color-mix(in srgb, #000 40%, transparent); }
+    /* centred by its margins rather than by left:50%, which would leave it only half the screen to wrap in */
+    #toast { top: 76px; left: 0; right: 0; width: fit-content; max-width: calc(100vw - 24px); margin: 0 auto; box-sizing: border-box; transform: translateY(-8px); text-align: center; }
+    #toast.on { transform: none; }
+    #tvbar { padding: 3px 2px; font-size: 12px; }
+    #tvbar .opt { padding: 8px 6px; }
+    #tvbar .opt::before { display: none; }
+    #tvbar .sep { height: 12px; margin: 0 2px; }
+    body.reading #toast { left: 0; }
+    #panel { top: auto; left: var(--space-2); right: var(--space-2); bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px)); width: auto; max-height: 58vh; transform: translateY(calc(100% + 40px)); padding: 44px 18px 20px 20px; }
     #panel.open { transform: none; }
-    #panel h2 { font-size: 34px; }
-    #panel h3 { font-size: 26px; }
+    #panel h2 { font-size: 30px; }
+    #panel h3 { font-size: 24px; }
     #panel .intro, #panel .body p { font-size: 16px; }
     #reader .x { right: var(--space-2); top: var(--space-2); }
-    #reader .rnav { bottom: var(--space-2); }
-    #reader .rnav .btn { padding: 8px 10px; font-size: 13px; }
+    /* a phone has no pointer for the cursor to follow, and needs the room for the words */
+    #reader .rnav { bottom: var(--space-2); padding: 3px 2px; font-size: 12px; }
+    #reader .rnav .opt { padding: 8px 6px; }
+    #reader .rnav .cnt { padding: 0 4px; }
+    #reader .rnav .opt::before { display: none; }
+    #reader .rnav .sep { height: 12px; margin: 0 2px; }
   }
 </style>
