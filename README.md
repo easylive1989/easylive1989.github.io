@@ -28,7 +28,9 @@ src/
 │   ├── index.astro          # 首頁：3D 書房
 │   ├── archive.astro        # 文章彙整
 │   ├── reading.astro        # 書單（書架）
-│   ├── study/[id].astro     # 書房裡翻開的內文：文章全文，或書單裡一本書的筆記
+│   ├── reading/[id].astro   # 一本讀完的書的筆記
+│   ├── notes/               # 碎碎念：列表與單則
+│   ├── study/[id].astro     # 書房裡翻開的內文（裸片段，給書房 fetch；不進 sitemap）
 │   ├── rss.xml.ts           # RSS feed
 │   └── [category]/
 │       ├── index.astro      # 分類文章列表

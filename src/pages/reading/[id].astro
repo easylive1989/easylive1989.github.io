@@ -1,0 +1,75 @@
+---
+import DeskLayout from '../../layouts/DeskLayout.astro';
+import NotionRenderer from '../../components/notion/NotionRenderer.astro';
+import '../../styles/prose.css';
+import { getAllBooks, getBookNotes, getBookNoteBlocks } from '../../lib/data';
+import { bookStatus } from '../../lib/bookCover';
+
+// The notes kept in a finished book, as a page of their own. The room shows the same
+// notes inside the book pulled off the shelf (through /study/{id}/); this is where a
+// search engine, a feed reader or a shared link lands.
+export async function getStaticPaths() {
+  const [books, notes] = await Promise.all([getAllBooks(), getBookNotes()]);
+  return books
+    .filter((b) => bookStatus(b) === 'read' && notes.has(b.id))
+    .map((book) => ({ params: { id: book.id }, props: { book } }));
+}
+
+const { book } = Astro.props;
+const blocks = await getBookNoteBlocks(book.id);
+const cats = book.categories.filter(Boolean);
+const BASE = import.meta.env.BASE_URL;
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+const crumbs = [
+  { label: '書單', href: `${BASE}reading/` },
+  { label: book.title },
+];
+---
+
+<DeskLayout title={`${book.title} 的筆記`} description={`讀完《${book.title}》留下的筆記。`} width="reading" crumbs={crumbs}>
+  <article class="paper note">
+    <header class="masthead note-masthead">
+      <div class="rules" aria-hidden="true"><i></i><i></i></div>
+      <div class="kicker note-kicker">
+        <a class="card-kicker" href={`${BASE}reading/`}>書單 · 筆記</a>
+        {cats.length > 0 && <><span class="dot" aria-hidden="true">·</span><span>{cats.join(' / ')}</span></>}
+        {book.finishedDate && <><span class="dot" aria-hidden="true">·</span><time class="num" datetime={book.finishedDate}>{fmtDate(book.finishedDate)} 讀完</time></>}
+      </div>
+      <div class="note-head">
+        {book.coverUrl && <img class="note-cover" src={book.coverUrl} alt="" width="96" loading="lazy" />}
+        <h1 class="note-title">{book.title}</h1>
+      </div>
+    </header>
+
+    <div class="prose">
+      <NotionRenderer blocks={blocks} />
+    </div>
+
+    <footer class="note-end">
+      <a class="btn btn-secondary" href={`${BASE}reading/`}>← 回書單</a>
+      <a class="btn btn-ghost" href={BASE}>回書房看看 →</a>
+    </footer>
+  </article>
+</DeskLayout>
+
+<style>
+  .note { padding: 48px 56px 56px; }
+  .note-masthead { margin-bottom: 40px; }
+  .note-kicker { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-700); }
+  .note-kicker .card-kicker { font-size: 11px; font-weight: 600; text-decoration: none; }
+  .note-kicker .dot { color: var(--color-neutral-400); }
+  .note-head { display: flex; align-items: flex-end; gap: var(--space-5); margin-top: var(--space-3); }
+  .note-cover { width: 96px; height: auto; border-radius: 2px; box-shadow: var(--shadow-md); flex: none; }
+  .note-title { font-family: var(--font-reading); font-size: 40px; line-height: 1.2; letter-spacing: -0.02em; text-wrap: balance; overflow-wrap: break-word; }
+  .note-end { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: 3em; padding-top: var(--space-4); border-top: 1px solid var(--color-divider); }
+  @media (max-width: 640px) {
+    .note { padding: 28px 20px 36px; }
+    .note-head { flex-direction: column; align-items: flex-start; }
+    .note-title { font-size: 30px; }
+  }
+</style>

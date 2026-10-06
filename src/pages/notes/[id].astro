@@ -1,0 +1,66 @@
+---
+import DeskLayout from '../../layouts/DeskLayout.astro';
+import NotionRenderer from '../../components/notion/NotionRenderer.astro';
+import '../../styles/prose.css';
+import { getAllNotes, getNoteBodies, getNoteBlocks } from '../../lib/data';
+
+// One of the 碎碎念, as a page of its own. The room lays the newest of them on the desk
+// (through /study/{id}/); this is where a search engine or a shared link lands.
+export async function getStaticPaths() {
+  const [notes, bodies] = await Promise.all([getAllNotes(), getNoteBodies()]);
+  const sorted = notes.filter((n) => bodies.has(n.id)).sort((a, b) => b.createdTime.localeCompare(a.createdTime));
+  return sorted.map((note, i) => ({ params: { id: note.id }, props: { note, newer: sorted[i - 1] ?? null, older: sorted[i + 1] ?? null } }));
+}
+
+const { note, newer, older } = Astro.props;
+const blocks = await getNoteBlocks(note.id);
+const BASE = import.meta.env.BASE_URL;
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const crumbs = [
+  { label: '碎碎念', href: `${BASE}notes/` },
+  { label: note.title },
+];
+---
+
+<DeskLayout title={note.title} description={`碎碎念：${note.title}`} width="reading" crumbs={crumbs}>
+  <article class="paper note">
+    <header class="masthead note-masthead">
+      <div class="rules" aria-hidden="true"><i></i><i></i></div>
+      <div class="kicker note-kicker">
+        <a class="card-kicker" href={`${BASE}notes/`}>碎碎念</a>
+        <span class="dot" aria-hidden="true">·</span>
+        <time class="num" datetime={note.createdTime}>{fmtDate(note.createdTime)}</time>
+      </div>
+      <h1 class="note-title">{note.title}</h1>
+    </header>
+
+    <div class="prose">
+      <NotionRenderer blocks={blocks} />
+    </div>
+
+    <footer class="note-end">
+      {older && <a class="btn btn-secondary" href={`${BASE}notes/${older.id}/`} rel="prev">← {older.title}</a>}
+      {newer && <a class="btn btn-secondary" href={`${BASE}notes/${newer.id}/`} rel="next">{newer.title} →</a>}
+      <a class="btn btn-ghost" href={BASE}>回書房看看 →</a>
+    </footer>
+  </article>
+</DeskLayout>
+
+<style>
+  .note { padding: 48px 56px 56px; }
+  .note-masthead { margin-bottom: 40px; }
+  .note-kicker { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-bottom: var(--space-3); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-700); }
+  .note-kicker .card-kicker { font-size: 11px; font-weight: 600; text-decoration: none; }
+  .note-kicker .dot { color: var(--color-neutral-400); }
+  .note-title { font-family: var(--font-reading); font-size: 40px; line-height: 1.2; letter-spacing: -0.02em; text-wrap: balance; overflow-wrap: break-word; }
+  .note-end { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: 3em; padding-top: var(--space-4); border-top: 1px solid var(--color-divider); }
+  @media (max-width: 640px) {
+    .note { padding: 28px 20px 36px; }
+    .note-title { font-size: 30px; }
+  }
+</style>

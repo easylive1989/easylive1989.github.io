@@ -621,6 +621,9 @@
   overflow: hidden;
   font-weight: 600;
 }
+/* a title that is a link leads to the notes kept in the book */
+a.t { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; }
+a.t:hover { text-decoration-color: currentColor; }
 .cap .ks {
   display: flex;
   gap: 2px 9px;

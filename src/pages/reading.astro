@@ -1,7 +1,7 @@
 ---
 import DeskLayout from '../layouts/DeskLayout.astro';
 import '../styles/reading.css';
-import { getAllBooks } from '../lib/data';
+import { getAllBooks, getBookNotes } from '../lib/data';
 import {
   bookStatus,
   bookFinishedYear,
@@ -13,6 +13,8 @@ import {
 import type { Book } from '../lib/notion';
 
 const allBooks = await getAllBooks();
+const noted = await getBookNotes(); // the books with notes in them get a page of their own
+const BASE = import.meta.env.BASE_URL;
 
 const totalCount = allBooks.length;
 const readCount = allBooks.filter((b) => bookStatus(b) === 'read').length;
@@ -366,7 +368,7 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
                         </div>
                         <div class="cap">
                           {status === 'reading' && <span class="now">● 閱讀中</span>}
-                          <span class="t">{b.title}</span>
+                          {noted.has(b.id) ? <a class="t" href={`${BASE}reading/${b.id}/`}>{b.title}</a> : <span class="t">{b.title}</span>}
                           {rawCats.length > 0 && (
                             <span class="ks">
                               {rawCats.slice(0, 2).map((c) => (
