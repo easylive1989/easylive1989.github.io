@@ -1297,7 +1297,21 @@ function demote() {
 /* ================= loop ================= */
 const clock = new THREE.Timer(); let viewX = 0, viewY = 0;
 const roots = [...new Set(pickables.flatMap(m => m.userData.roots || m.userData.root))];
+// A room left open on a desk should not keep the fans running. It is never drawn more than 60 times a second, however fast the screen;
+// once nobody has touched it for a few seconds and nothing is on its way anywhere, only the dust, the weather and the dog are left
+// moving, and 20 is enough for those; and while something is being read the room behind the page is not drawn at all.
+const FRAME = 1000 / 60, IDLE_FRAME = 1000 / 20, IDLE_AFTER = 4000;
+let lastDraw = -Infinity, lastStir = performance.now(), sliding = false, stillFor = null;
+const stir = () => { lastStir = performance.now(); };
+['pointermove', 'pointerdown', 'wheel', 'keydown'].forEach(e => addEventListener(e, stir, { capture:true, passive:true }));
 function loop(ts) {
+  // the lifted page or book is hidden once its paper twin has taken its place; that frame is the last one drawn until it is put back or swapped
+  const still = reader.classList.contains('vis') && LF.obj && !LF.obj.visible;
+  if (still && stillFor === LF.obj) return;
+  // the frame times being judged have to be full-speed ones, so the room does not settle before the verdict is in
+  const live = tween || LF.anim || sliding || (Q.armed && !Q.low && !Q.judged) || ts - lastStir < IDLE_AFTER;
+  if (ts - lastDraw < (live ? FRAME : IDLE_FRAME) - 4) return; // 4 ms of slack, so a frame that arrives a hair early is not put off to the next
+  lastDraw = ts; stillFor = still ? LF.obj : null;
   clock.update(ts); const dt = Math.min(clock.getDelta(), .05), t = clock.getElapsed(); judge(dt);
   let moved = LF.anim !== 0; // the only things that cast moving shadows: an object sliding out under the cursor, or one being lifted
   roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; if (r.position.distanceToSquared(want) > 1e-10) { r.position.lerp(want, Math.min(1, dt * 10)); moved = true; if (r.userData.inst != null) seat(r); } });
@@ -1306,13 +1320,15 @@ function loop(ts) {
   const w = SKY[season], pa = pGeo.attributes.position.array;
   for (let i = 0; i < partN; i++) { const s = pSeed[i]; pa[i*3+1] -= w.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * w.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
   pGeo.attributes.position.needsUpdate = true;
-  const da = dGeo.attributes.position.array; for (let i = 0; i < dustN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009; da[i*3+1] += Math.sin(t*.21 + s0*30) * .0006 - .00012; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
+  const f = dt * 60; // the dust's steps were tuned per frame at 60 a second; scaled, it drifts no slower when frames are fewer
+  const da = dGeo.attributes.position.array; for (let i = 0; i < dustN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009 * f; da[i*3+1] += (Math.sin(t*.21 + s0*30) * .0006 - .00012) * f; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008 * f; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
   if (tween) { tween.t = Math.min(1, tween.t + dt / tween.d); const k = 1 - Math.pow(1 - tween.t, 3); controls.target.lerpVectors(tween.ft, tween.tt, k); camera.position.lerpVectors(tween.fp, tween.tp, k); if (tween.t >= 1) { tween = null; controls.enabled = !lockCam; } }
   liftStep(dt);
   // the panel covers the right 460px, or the bottom 58% on a phone — slide the view so the subject stays in the open part
   const open = panel.classList.contains('open'), phone = innerWidth <= 760, k = Math.min(1, dt * 6);
   viewX += ((open && !phone ? 230 : 0) - viewX) * k; viewY += ((open && phone ? innerHeight * .29 : 0) - viewY) * k;
   if (Math.abs(viewX) > .5 || Math.abs(viewY) > .5) camera.setViewOffset(innerWidth, innerHeight, viewX, viewY, innerWidth, innerHeight); else camera.clearViewOffset();
+  sliding = moved || Math.abs((open && !phone ? 230 : 0) - viewX) > .5 || Math.abs((open && phone ? innerHeight * .29 : 0) - viewY) > .5;
   controls.minAzimuthAngle = tween ? -Infinity : azWin[0]; controls.maxAzimuthAngle = tween ? Infinity : azWin[1];
   controls.minPolarAngle = Math.max(.95, Math.acos(Math.min(1, (CAM_TOP - controls.target.y) / camera.position.distanceTo(controls.target)))); // the further out, the less it can climb
   controls.update();
@@ -1329,6 +1345,6 @@ sheetsReady.then(ajar);
 window.__study = { loop, openItem, openList, openAbout, openTV, exitTV, flip, closeReader, switchDraft, state:{ RD, BK, TV, LF } };
 Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { flyTo(HOME.tgt, HOME.pos, 2.2); Q.armed = true; door(4); introEl.classList.add('off'); });
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
-const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
+const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); stillFor = null; lastDraw = -Infinity; stir(); }; // resizing wipes the canvas, so the very next frame is drawn, even in a room standing still
 addEventListener('resize', fitCamera); fitCamera();
 document.fonts && document.fonts.ready.then(() => texts.forEach(t => t.redraw()));
