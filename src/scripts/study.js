@@ -58,14 +58,19 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure
 stage.appendChild(renderer.domElement);
 const scene = new THREE.Scene(); scene.background = col('#b4bfca');
 const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .02, 60);
+// The view orbits a point across the room. A phone's screen is too narrow for that: however far the orbit turns, the bookshelf stays off
+// its left edge. So there the pivot is a metre in front of the eye, along the same line of sight — the view turns in place, the way a
+// person standing in the doorway turns their head — and it may turn far enough left to take in the whole shelf.
+const PHONE = innerWidth <= 760;
 const HOME = { pos:new THREE.Vector3(1.05, 1.72, 2.1), tgt:new THREE.Vector3(-0.2, 1.22, -1.7) };
+if (PHONE) HOME.tgt.sub(HOME.pos).setLength(1).add(HOME.pos);
 camera.position.set(1.6, 1.9, 3.6);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.tgt); controls.enableDamping = true; controls.enablePan = false; controls.rotateSpeed = .45;
-controls.minDistance = .35; controls.maxDistance = 4.4; controls.minPolarAngle = .95; controls.maxPolarAngle = 1.8;
+controls.minDistance = .35; controls.maxDistance = PHONE ? 2 : 4.4; controls.minPolarAngle = .95; controls.maxPolarAngle = 1.8; // the short orbit must not back out through the wall behind
 const CAM_TOP = 2.6; // as high as the camera goes: the ceiling is at 2.8
 const az0 = Math.atan2(HOME.pos.x - HOME.tgt.x, HOME.pos.z - HOME.tgt.z);
-controls.minAzimuthAngle = az0 - .62; controls.maxAzimuthAngle = az0 + .42;
+controls.minAzimuthAngle = az0 - .62; controls.maxAzimuthAngle = az0 + (PHONE ? .9 : .42);
 
 /* ================= helpers ================= */
 const std = (name, c, o = {}) => new THREE.MeshStandardMaterial({ name, color:col(c), roughness:.8, metalness:0, ...o });
