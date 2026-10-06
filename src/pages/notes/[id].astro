@@ -22,7 +22,7 @@ function fmtDate(iso: string): string {
 }
 
 const crumbs = [
-  { label: '碎碎念', href: `${BASE}notes/` },
+  { label: '文章', href: `${BASE}archive/` },
   { label: note.title },
 ];
 ---
@@ -32,7 +32,7 @@ const crumbs = [
     <header class="masthead note-masthead">
       <div class="rules" aria-hidden="true"><i></i><i></i></div>
       <div class="kicker note-kicker">
-        <a class="card-kicker" href={`${BASE}notes/`}>碎碎念</a>
+        <a class="card-kicker" href={`${BASE}archive/`}>碎碎念</a>
         <span class="dot" aria-hidden="true">·</span>
         <time class="num" datetime={note.createdTime}>{fmtDate(note.createdTime)}</time>
       </div>
