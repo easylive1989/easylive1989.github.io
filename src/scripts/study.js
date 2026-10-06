@@ -965,10 +965,9 @@ function renderPanel(mode) {
       + '<div class="body"><p>' + esc(ABOUT.bio) + '</p><p>' + esc(ABOUT.summary) + '</p></div>'
       + '<div class="rel"><span class="lab card-kicker">Find me at</span>' + ABOUT.channels.map(([k, v, u]) => '<a class="opt" href="' + esc(u) + '"' + linkAttrs(u) + '>' + esc(k) + '：' + esc(v) + '</a>').join('') + '</div>'
 ; }
-  else if (mode === 'list') { const recent = DRAFTS;
+  else if (mode === 'list') {
     h = '<span class="card-kicker">書桌 · 筆電</span><h2>GitHub 活動</h2><p class="intro">' + (GH.ok ? `過去 18 週，${GH.year} 年共 ${GH.total.toLocaleString()} 次 contributions。目前連續 ${GH.current} 天，最長 ${GH.longest} 天。` : '活動統計暫時讀不到，直接去 GitHub 看吧。') + '</p>'
-      + optLinks(ABOUT.channels.filter(c => c[0] === 'GitHub' || c[0] === 'Threads').map(c => c[0] === 'GitHub' ? { l:`GitHub · ${c[1]} ↗`, u:c[2], p:1 } : { l:'Threads ↗', u:c[2] }))
-      + (recent.length ? '<div class="rel"><span class="lab card-kicker">桌上的稿紙 →</span>' + recent.map(k => '<button class="opt" data-item="' + k + '">' + esc(ITEMS[k].t) + '</button>').join('') + '</div>' : ''); }
+      + optLinks(ABOUT.channels.filter(c => c[0] === 'GitHub').map(c => ({ l:`GitHub · ${c[1]} ↗`, u:c[2], p:1 }))); }
   else { const it = ITEMS[st.cur];
     const accent2 = it.kind === 'latest' || it.kind === 'note';
     h += `<div style="margin-top:var(--space-2)"><span class="card-kicker${accent2 ? ' k2' : ''}">${esc(it.k)}</span><h3>${esc(it.t)}</h3>${it.by ? `<div style="font-size:15px;font-style:italic;margin-top:-6px">${esc(it.by)}</div>` : ''}</div>`;
@@ -981,8 +980,7 @@ function renderPanel(mode) {
   pbody.innerHTML = h; panel.scrollTop = 0; panel.classList.add('open'); document.body.classList.add('reading');
 }
 panel.addEventListener('click', e => {
-  const a = e.target.closest('[data-act],[data-item]'); if (!a) return;
-  if (a.dataset.item) return openItem(a.dataset.item);
+  const a = e.target.closest('[data-act]'); if (!a) return;
   if (a.dataset.act === 'close') closePanel();
 });
 
