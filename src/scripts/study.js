@@ -984,8 +984,14 @@ addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) 
 // The four corners of the room, each seen whole: the point looked at, the bearing it is seen from and how far back. The two on
 // the left wall are faced from across the room, in the display shelves' own range of bearings. A phone's orbit is shorter, so
 // there the camera stops as far back as it may go.
+// The bookshelf is framed on the reading list alone, not the bay of decoration beside it: as near as the camera can be and
+// still take in every book that has been read, so the spines are as large as they can be. The rest of the shelf is a turn away.
+const shelfFit = () => { if (!shelved.length) return { at:[-2.63, 1.35, (bays[1] + bays[2])/2], d:2.4 };
+  let y0 = 1e9, y1 = -1e9, z0 = 1e9, z1 = -1e9; shelved.forEach(b => { y0 = Math.min(y0, b.y - b.h/2); y1 = Math.max(y1, b.y + b.h/2); z0 = Math.min(z0, b.z - b.t/2); z1 = Math.max(z1, b.z + b.t/2); });
+  const th = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+  return { at:[-2.63, (y0 + y1)/2, (z0 + z1)/2], d:Math.max((y1 - y0) / (2 * th), (z1 - z0) / (2 * th * camera.aspect)) * 1.22 }; }; // the margin keeps the top row clear of the dock
 const ZONES = {
-  shelf:   { at:[-2.75, 1.35, (BZ + SZ1)/2 - .15], from:[1, .12, .25], d:3.5, az:AZ.display },
+  shelf:   { fit:shelfFit, from:[1, .03, .2], az:AZ.display },
   display: { at:[-2.9, 1.5, (SZ0 + BZ)/2], from:[1, .1, .12], d:2.5, az:AZ.display },
   desk:    { at:[DX, DY + .2, DZ], from:[-.1, .6, 1], d:2.2 },
   tv:      { at:[.055, CH, -2.2], from:[.12, .35, 1], d:1.7 },
@@ -994,9 +1000,9 @@ const hud = $('hud'), homeBtn = hud.querySelector('[data-home]'), moreBtn = hud.
 let hudAway = false;
 // which corner the camera was last sent to, by the dock or by picking something up there; cleared once it is turned by hand
 function setZone(id) { hud.querySelectorAll('[data-zone]').forEach(b => b.classList.toggle('on', b.dataset.zone === id)); }
-function goZone(id) { const z = ZONES[id], at = new THREE.Vector3(...z.at), dir = new THREE.Vector3(...z.from).normalize();
+function goZone(id) { const z = ZONES[id], f = z.fit ? z.fit() : z, at = new THREE.Vector3(...f.at), dir = new THREE.Vector3(...z.from).normalize();
   if (panel.classList.contains('open')) { panel.classList.remove('open'); document.body.classList.remove('reading'); }
-  flyTo(at, at.clone().addScaledVector(dir, Math.min(z.d, controls.maxDistance)), 1.1, z.az || AZ.home); focused = true; setZone(id); }
+  flyTo(at, at.clone().addScaledVector(dir, Math.min(f.d, controls.maxDistance)), 1.1, z.az || AZ.home); focused = true; setZone(id); }
 function closeMenu() { menu.classList.remove('open'); moreBtn.setAttribute('aria-expanded', 'false'); }
 hud.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
