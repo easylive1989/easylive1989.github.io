@@ -426,7 +426,7 @@ setInterval(() => clockTex.redraw(), 30000);
 deskClock.add(box(.22, .06, .12, M.woodD, 'clock-base', [0,.03,0]));
 deskClock.add(cyl(.075, .075, .05, 32, M.brass, 'clock-case', [0,.14,0], [Math.PI/2,0,0]));
 deskClock.add(mk(new THREE.CircleGeometry(.066, 32), new THREE.MeshStandardMaterial({ name:'clock-face', map:clockTex, roughness:.5 }), 'clock-face', [0,.14,.026]));
-place(deskClock, 'p3', .07, on(2), .21, 0, 0);
+place(deskClock, 'p3', -.26, on(2), .21, .08, 0);
 // the game bot's board: chequered, stood on a plate stand beside the print — the top shelf is above eye level, where a board laid flat would only show its edge
 const board = new THREE.Group(); board.name = 'game-board';
 { const BS = .26, lean = new THREE.Group(); lean.position.set(0, .012, .028); lean.rotation.x = -.16; board.add(lean);
@@ -472,7 +472,7 @@ const podium = new THREE.Group(); podium.name = 'award-podium';
   for (let i = 0; i < 18; i++) { const x = (fr() - .5) * .3, z = (fr() - .35) * .16, st = steps.find(s => Math.abs(x - s[0]) < s[1]/2);
     podium.add(mk(fleck, gold, 'confetti', [x, (st && Math.abs(z) < SD/2 ? st[2] + .005 : 0) + .0006, z], [0, fr() * 3, 0])); }
   weld(podium); }
-place(podium, 'aw', .42, on(2), .19, -.15, 0);
+place(podium, 'aw', .3, on(2), .19, -.15, 0);
 
 /* the Ironman bears: one for every run, beside the book the last run became; a run that took a prize has a cup in its raised hand */
 // a box rolled over a radius at every edge and corner, its six faces keeping their own UVs and material slots; `warp` reshapes it afterwards
