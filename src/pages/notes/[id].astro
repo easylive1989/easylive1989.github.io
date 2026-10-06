@@ -43,11 +43,12 @@ const crumbs = [
       <NotionRenderer blocks={blocks} />
     </div>
 
-    <footer class="note-end">
-      {older && <a class="btn btn-secondary" href={`${BASE}notes/${older.id}/`} rel="prev">← {older.title}</a>}
-      {newer && <a class="btn btn-secondary" href={`${BASE}notes/${newer.id}/`} rel="next">{newer.title} →</a>}
-      <a class="btn btn-ghost" href={BASE}>回書房看看 →</a>
-    </footer>
+    {(older || newer) && (
+      <footer class="note-end">
+        {older && <a class="btn btn-secondary" href={`${BASE}notes/${older.id}/`} rel="prev">← {older.title}</a>}
+        {newer && <a class="btn btn-secondary" href={`${BASE}notes/${newer.id}/`} rel="next">{newer.title} →</a>}
+      </footer>
+    )}
   </article>
 </DeskLayout>
 

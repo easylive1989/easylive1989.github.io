@@ -124,7 +124,6 @@ const crumbs = [
       <strong class="strip-name">{config.author.name}</strong>
       <p class="strip-bio">{bioLines.map((line, i) => i === 0 ? line : [<br />, line])}</p>
     </div>
-    <a class="btn btn-ghost strip-link" href={BASE}>回書房看看 →</a>
   </section>
 
   <nav class="pn" aria-label="上一篇與下一篇">
@@ -349,7 +348,7 @@ const crumbs = [
   /* — author strip — */
   .author-strip {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr;
     align-items: center;
     gap: var(--space-4);
     padding: var(--space-4) var(--space-6);
@@ -364,7 +363,6 @@ const crumbs = [
   }
   .strip-name { display: block; font-size: 16px; line-height: 1.3; }
   .strip-bio { margin: 2px 0 0; font-size: 13px; line-height: 1.6; color: var(--color-neutral-700); }
-  .strip-link { white-space: nowrap; }
 
   /* — previous / next — */
   .pn {
@@ -408,8 +406,7 @@ const crumbs = [
     .end-block { margin-top: 2.6em; }
     .end-actions { flex-direction: column; align-items: stretch; }
     .end-actions .btn { width: 100%; }
-    .author-strip { grid-template-columns: auto 1fr; gap: var(--space-3); padding: var(--space-3) 16px; }
-    .strip-link { grid-column: 1 / -1; justify-self: start; padding-inline: 0; }
+    .author-strip { gap: var(--space-3); padding: var(--space-3) 16px; }
     .pn { grid-template-columns: 1fr; gap: var(--space-3); }
     .pn-empty { display: none; }
     .pn-next { text-align: left; }
