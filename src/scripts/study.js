@@ -527,7 +527,7 @@ const ironBear = (() => {
 })();
 ['ir1', 'ir2', 'ir3'].forEach((id, i) => has(id) && place(ironBear(ITEMS[id].cup), id, -.45 + i*.24, on(1), .2, -.18, 0));
 
-/* the talks, kept on tape where the certificates used to hang: a cassette each, stood on its long edge, the talk written on the label between its reels */
+/* the talks, kept on tape on the bottom shelf: a cassette each, stood on its long edge, the talk written on the label between its reels */
 const VW = .215, VH = .118, VD = .029, tapeShell = pbr('tape-shell', '#1d1c1e', { ...plasticTex, roughness:.7, clearcoat:.3 });
 const tapeOf = (id, ink) => { const it = ITEMS[id], g = new THREE.Group(); g.name = 'tape-' + id; g.add(mk(rboxGeo(VW, VH, VD, .004), tapeShell, 'tape-shell'));
   const faceTex = ctex(640, 340, (x, w, h) => { x.fillStyle = '#1d1c1e'; x.fillRect(0, 0, w, h); x.strokeStyle = '#2f2d30'; x.lineWidth = 3; x.strokeRect(10, 10, w - 20, h - 20);
@@ -546,7 +546,7 @@ const tapeOf = (id, ink) => { const it = ITEMS[id], g = new THREE.Group(); g.nam
   const spineTex = ctex(420, 48, (x, w, h) => { x.fillStyle = C.cream; x.fillRect(0, 0, w, h); x.fillStyle = ink; x.fillRect(0, 0, 12, h); x.fillStyle = '#2a1d0e'; x.font = `600 22px ${SERIF}`; x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText((it.sp ? it.sp + '　' : '') + it.t, 24, h/2 + 1, w - 36); });
   g.add(mk(new THREE.PlaneGeometry(.16, .018), std('tape-spine-' + id, '#ffffff', { map:spineTex, roughness:.7 }), 'tape-spine', [0, VH/2 + .0004, 0], [-Math.PI/2, 0, 0]));
   return g; };
-[['tk1', C.c800, -.47, .16, .14], ['tk2', C.m800, -.235, .13, -.1]].forEach(([id, ink, x, z, ry]) => has(id) && place(tapeOf(id, ink), id, x, on(2) + VH/2, z, ry, 0));
+[['tk1', C.c800, -.47, .16, .14], ['tk2', C.m800, -.235, .13, -.1]].forEach(([id, ink, x, z, ry]) => has(id) && place(tapeOf(id, ink), id, x, on(0) + VH/2, z, ry, 0)); // the bottom shelf, on the cabinet
 
 /* ================= game cabinet: console + CRT, between the door and the desk ================= */
 const tvc = new THREE.Group(); tvc.name = 'tv-cabinet'; tvc.position.set(.055, 0, -2.2); room.add(tvc);
