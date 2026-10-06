@@ -29,11 +29,7 @@ const { title, description, ogImage, crumbs = [], width = 'reading', bodyClass }
     <SiteHead title={title} description={description} ogImage={ogImage} />
   </head>
   <body class:list={['desk-body', bodyClass]}>
-    <div class="desk-light" aria-hidden="true"></div>
-    <div id="vig" aria-hidden="true"></div>
-    <div id="grain" aria-hidden="true"></div>
-
-    <!-- The one fixture on every page: the way back into the room -->
+    <!-- The one fixture on every page: the way into the room -->
     <nav class="desk-hud" aria-label="站內導覽">
       <div class="hud-cluster sheet">
         <a class="btn btn-primary" href={BASE}>← 回書房</a>
@@ -45,40 +41,10 @@ const { title, description, ogImage, crumbs = [], width = 'reading', bodyClass }
           </ol>
         )}
       </div>
-      <div class="hud-cluster hud-links sheet">
-        <a class="btn btn-ghost" href={`${BASE}reading/`}>書單</a>
-        <a class="btn btn-ghost" href={`${BASE}archive/`}>文章</a>
-        <a class="btn btn-ghost" href={`${BASE}notes/`}>碎碎念</a>
-        <a class="btn btn-ghost" href="/rss.xml">RSS</a>
-      </div>
     </nav>
 
     <main class:list={['desk-main', `desk-${width}`]}>
       <slot />
     </main>
-
-    <!-- Film grain, the same jittering noise canvas the room uses -->
-    <script is:inline>
-      (() => {
-        const c = document.createElement('canvas');
-        c.width = c.height = 160;
-        const x = c.getContext('2d');
-        const d = x.createImageData(160, 160);
-        for (let i = 0; i < d.data.length; i += 4) {
-          const v = Math.random() * 255;
-          d.data[i] = d.data[i + 1] = d.data[i + 2] = v;
-          d.data[i + 3] = 255;
-        }
-        x.putImageData(d, 0, 0);
-        const g = document.getElementById('grain');
-        g.style.backgroundImage = 'url(' + c.toDataURL() + ')';
-        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        let k = 0;
-        setInterval(() => {
-          k = (k + 1) % 8;
-          g.style.transform = 'translate(' + ((k * 37) % 50) + 'px,' + ((k * 53) % 50) + 'px)';
-        }, 90);
-      })();
-    </script>
   </body>
 </html>

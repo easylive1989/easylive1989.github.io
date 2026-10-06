@@ -1,11 +1,12 @@
 /* The desk — shared chrome for every page that isn't the room itself.
-   Idea: each content page is what you see after walking up to something in the
-   study. So: the same warm-dark ground and lamplight as the room, the same
-   Broadsheet paper to read on, and one fixed way back (the HUD's "回書房").
-   Page-specific layout lives with each page; the primitives below are shared. */
+   Nobody walks here from the room (everything in it is read in it); these pages
+   are where a search, a feed or a shared link lands. So: a plain light ground,
+   the Broadsheet paper to read on, and one fixed way into the room (the HUD's
+   "回書房"). Page-specific layout lives with each page; the primitives below
+   are shared. */
 
 :root {
-  --desk-ground: #140e0a;
+  --desk-ground: #e6e4e2;
 
   /* Materials lifted from the room (study.js palette) */
   --wood: #5b3522;
@@ -30,33 +31,6 @@ body.desk-body {
   min-height: 100vh;
   background: var(--desk-ground);
   font-family: var(--font-reading);
-}
-
-/* — ground: lamplight pooled on a dark desk — */
-.desk-light {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(900px 620px at 16% -6%, rgba(255, 176, 102, 0.22), transparent 70%),
-    radial-gradient(760px 520px at 104% 104%, rgba(255, 150, 80, 0.09), transparent 70%),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.014) 0 2px, transparent 2px 9px);
-}
-#vig {
-  position: fixed;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.3) 100%);
-}
-#grain {
-  position: fixed;
-  inset: -50px;
-  z-index: 4;
-  pointer-events: none;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
 }
 
 /* — HUD: the room's dock, kept on every page — */
@@ -121,7 +95,7 @@ body.desk-body {
   background: var(--color-bg);
   color: var(--color-text);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 .paper + .paper { margin-top: var(--space-6); }
 
@@ -150,7 +124,7 @@ body.desk-body {
   box-shadow:
     inset 0 0 0 3px var(--brass),
     inset 0 0 0 4px var(--brass-dark),
-    0 2px 5px rgba(0, 0, 0, 0.5);
+    0 2px 5px rgba(0, 0, 0, 0.25);
 }
 
 /* — tabular numerals for dates and counts — */
@@ -159,12 +133,11 @@ body.desk-body {
 @media (max-width: 760px) {
   .desk-hud { top: var(--space-2); left: var(--space-2); right: var(--space-2); }
   .desk-hud .crumbs { display: none; }
-  .hud-links .btn { padding-inline: var(--space-2); }
   .desk-main { padding: 68px var(--space-2) var(--space-6); }
 }
 
 @media print {
-  .desk-light, #vig, #grain, .desk-hud { display: none; }
+  .desk-hud { display: none; }
   html, body.desk-body { background: #fff; }
   .paper { box-shadow: none; }
 }
