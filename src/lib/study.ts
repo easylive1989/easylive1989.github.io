@@ -9,7 +9,7 @@ import {
   getNoteBodies,
 } from './data';
 import { getGithubContributions } from './github';
-import { bookStatus } from './bookCover';
+import { bookStatus, categoryRank } from './bookCover';
 import type { Article, Book, NotionBlock } from './notion';
 
 /**
@@ -182,8 +182,6 @@ function articleItem(a: Article, kicker: string, kind = 'writing', cat: StudyIte
 }
 
 const UNFILED = '未分類';
-// Sections that are a remainder rather than a subject go to the end of the shelf.
-const LAST_SECTIONS = ['其他', UNFILED];
 const SPINE_MAX = 14;
 const SPINE_MAX_LATIN = 20;
 
@@ -232,7 +230,7 @@ function bookItem(b: Book, hasNotes: boolean): StudyItem {
   };
 }
 
-/** Finished books in shelving order: the fullest category first, and within one the latest read first. */
+/** Finished books in shelving order: the categories in their fixed order, and within one the latest read first. */
 function shelveBooks(books: Book[]): [string, Book[]][] {
   const sections = new Map<string, Book[]>();
   const read = books
@@ -243,9 +241,8 @@ function shelveBooks(books: Book[]): [string, Book[]][] {
     if (!sections.has(name)) sections.set(name, []);
     sections.get(name)!.push(b);
   }
-  const last = (name: string) => LAST_SECTIONS.indexOf(name);
-  // the sort is stable, so equally full sections keep the order of their latest book
-  return [...sections].sort(([a, x], [b, y]) => last(a) - last(b) || y.length - x.length);
+  // a category the list does not know, or a book with none, comes after all of them; the sort is stable, so those keep the order of their latest book
+  return [...sections].sort(([a], [b]) => categoryRank(a) - categoryRank(b));
 }
 
 function githubLabel(config: ReturnType<typeof loadConfig>): { username: string; channels: [string, string, string][] } {
