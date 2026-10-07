@@ -441,14 +441,13 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
       });
     }
 
-    // The bar sticks under the HUD on desktop; paint a mask above it only while it is stuck,
-    // so rows scrolling past never show between the HUD and the bar.
+    // The bar sticks to the top of the window on desktop; give it its edge only while it is stuck.
     if (bar) {
       var desktop = window.matchMedia('(min-width: 761px)');
       var queued = false;
       var update = function () {
         queued = false;
-        var stuck = desktop.matches && bar.getBoundingClientRect().top <= 72.5 && window.scrollY > 0;
+        var stuck = desktop.matches && bar.getBoundingClientRect().top <= 0.5 && window.scrollY > 0;
         bar.classList.toggle('is-stuck', stuck);
       };
       var onScroll = function () {

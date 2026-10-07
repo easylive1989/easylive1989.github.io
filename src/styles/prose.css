@@ -6,7 +6,7 @@
 .prose {
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   --paper-edge: 0 0 0 1px color-mix(in srgb, var(--color-text) 12%, transparent), 0 2px 8px color-mix(in srgb, var(--color-text) 14%, transparent);
-  --anchor-offset: 92px; /* clears the HUD when jumping to a heading */
+  --anchor-offset: 32px; /* a little air above a heading jumped to */
 
   max-width: 660px;
   font-family: var(--font-reading);

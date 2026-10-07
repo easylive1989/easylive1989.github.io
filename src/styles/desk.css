@@ -1,8 +1,8 @@
 /* The desk — shared chrome for every page that isn't the room itself.
    Nobody walks here from the room (everything in it is read in it); these pages
    are where a search, a feed or a shared link lands. So: a plain light ground,
-   the Broadsheet paper to read on, and one fixed way into the room (the HUD's
-   "回書房"). Page-specific layout lives with each page; the primitives below
+   the Broadsheet paper to read on, and one way into the room at the top (the
+   HUD's "回書房"). Page-specific layout lives with each page; the primitives below
    are shared. */
 
 :root {
@@ -39,9 +39,10 @@ body.desk-body {
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md);
 }
-/* It takes the page frame's width and side padding, so the cluster lines up with the paper's left edge. */
+/* It takes the page frame's width and side padding, so the cluster lines up with the paper's left edge,
+   and it sits at the top of the page, scrolling away with it. */
 .desk-hud {
-  position: fixed;
+  position: absolute;
   z-index: 10;
   top: var(--space-4);
   left: 0;

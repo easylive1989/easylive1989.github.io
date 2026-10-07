@@ -8,7 +8,6 @@
   --cat-1: var(--color-accent);
   --cat-2: var(--color-accent-2);
   --cat-3: #b58a00; /* process yellow, darkened so a dot still reads on paper */
-  --hud-offset: 72px;
 
   padding: 34px var(--pad) 26px;
   font-family: var(--font-reading);
@@ -150,27 +149,16 @@
 /* — filter bar — */
 .archive-sheet .filter-bar {
   position: sticky;
-  top: var(--hud-offset);
+  top: 0;
   z-index: 5;
   margin: 0 calc(var(--pad) * -1);
   padding: 14px var(--pad) 14px;
   background: var(--color-bg);
 }
-/* while stuck: paper above (behind the HUD) and a soft edge beneath */
-.archive-sheet .filter-bar::before {
-  content: "";
-  display: none;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 100%;
-  height: var(--hud-offset);
-  background: var(--color-bg);
-}
+/* while stuck: a soft edge beneath */
 .archive-sheet .filter-bar.is-stuck {
   box-shadow: 0 1px 0 var(--color-text), 0 10px 14px -10px color-mix(in srgb, var(--color-text) 40%, transparent);
 }
-.archive-sheet .filter-bar.is-stuck::before { display: block; }
 
 .archive-sheet .filter-main { display: flex; align-items: center; gap: var(--space-2); }
 .archive-sheet .search { position: relative; flex: 1 1 260px; max-width: 360px; min-width: 0; }
