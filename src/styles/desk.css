@@ -39,12 +39,15 @@ body.desk-body {
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md);
 }
+/* It takes the page frame's width and side padding, so the cluster lines up with the paper's left edge. */
 .desk-hud {
   position: fixed;
   z-index: 10;
   top: var(--space-4);
-  left: var(--space-6);
-  right: var(--space-6);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -131,7 +134,7 @@ body.desk-body {
 .num { font-variant-numeric: tabular-nums lining-nums; }
 
 @media (max-width: 760px) {
-  .desk-hud { top: var(--space-2); left: var(--space-2); right: var(--space-2); }
+  .desk-hud { top: var(--space-2); padding: 0 var(--space-2); }
   .desk-hud .crumbs { display: none; }
   .desk-main { padding: 68px var(--space-2) var(--space-6); }
 }

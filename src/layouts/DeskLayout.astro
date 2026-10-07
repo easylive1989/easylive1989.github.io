@@ -29,8 +29,8 @@ const { title, description, ogImage, crumbs = [], width = 'reading', bodyClass }
     <SiteHead title={title} description={description} ogImage={ogImage} />
   </head>
   <body class:list={['desk-body', bodyClass]}>
-    <!-- The one fixture on every page: the way into the room -->
-    <nav class="desk-hud" aria-label="站內導覽">
+    <!-- The one fixture on every page: the way into the room, lined up with the page's left edge -->
+    <nav class:list={['desk-hud', `desk-${width}`]} aria-label="站內導覽">
       <div class="hud-cluster sheet">
         <a class="btn btn-primary" href={BASE}>← 回書房</a>
         {crumbs.length > 0 && (
