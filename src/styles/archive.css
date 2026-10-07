@@ -257,14 +257,6 @@
   color: var(--color-accent-2-800);
   font-weight: 600;
 }
-.archive-sheet .yr-note {
-  margin-top: 12px;
-  max-width: 12em;
-  font-size: 13px;
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--muted);
-}
 
 .archive-sheet .rows { min-width: 0; padding-left: 24px; border-left: 1px solid var(--hair); }
 
@@ -392,7 +384,6 @@
   .archive-sheet .yr-l,
   .archive-sheet .tag-peak { margin-top: 0; }
   .archive-sheet .tag-peak { align-self: center; }
-  .archive-sheet .yr-note { margin-top: 0; max-width: none; flex-basis: 100%; }
 
   .archive-sheet .rows { padding-left: 0; border-left: 0; }
   .archive-sheet .archive-row,

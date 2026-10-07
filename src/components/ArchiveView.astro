@@ -91,16 +91,6 @@ const histogram = years.length
   : [];
 const maxYearCount = histogram.reduce((m, g) => Math.max(m, g.count), 0);
 
-const yearNotes: Record<number, string> = {
-  2026: '回歸更新',
-  2025: '思考程式設計的本質',
-  2024: '深入 Widget 底層',
-  2023: '工作流與細節',
-  2022: '工作、轉折',
-  2021: '第一年',
-  2020: '入門 Kata 練習',
-};
-
 // Process-ink palette for categories: cyan, magenta, and a darkened yellow that holds up on paper.
 const palette = ['var(--cat-1)', 'var(--cat-2)', 'var(--cat-3)'];
 function catColor(name: string): string {
@@ -235,7 +225,6 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
           <div class="yr-n num">{g.year}</div>
           <div class="yr-l num" data-total={g.count}>{g.count} 篇</div>
           {g.peak && yearGroups.length > 1 && <div class="tag tag-peak">★ 高峰年</div>}
-          {yearNotes[g.year] && <div class="yr-note">{yearNotes[g.year]}</div>}
         </div>
         <div class="rows">
           {g.items.map((r, i) => {
