@@ -74,7 +74,7 @@ const yearShelves: Shelf[] = Array.from(byYear.entries())
 
 const wishShelf: Shelf | null =
   wishlistBooks.length > 0
-    ? { id: 'wish', label: '想讀', count: wishlistBooks.length, books: wishlistBooks, wish: true, note: '等著翻開' }
+    ? { id: 'wish', label: '想讀', count: wishlistBooks.length, books: wishlistBooks, wish: true }
     : null;
 
 const views = [
