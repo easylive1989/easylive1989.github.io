@@ -268,10 +268,9 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
     </div>
   </section>
 
-  <!-- Quiet colophon; the HUD already has the way back -->
+  <!-- Quiet colophon; the HUD has the way back, the desk's corner button the way up -->
   <footer class="archive-foot">
     <span>paul-learning.dev · © {new Date().getFullYear()} Paul Wu · built with Astro</span>
-    <a href="#top" id="archive-top">↑ 回到頂部</a>
   </footer>
 </div>
 
@@ -287,9 +286,7 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
     var countEl = document.getElementById('archive-count');
     var bar = document.getElementById('archive-bar');
     var kbd = document.getElementById('archive-kbd');
-    var topLink = document.getElementById('archive-top');
     var sections = Array.prototype.slice.call(list.querySelectorAll('.year-block'));
-    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     var activeCat = '*';
     var kw = '';
@@ -433,13 +430,6 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
         }
       }
     });
-
-    if (topLink) {
-      topLink.addEventListener('click', function (e) {
-        e.preventDefault();
-        window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
-      });
-    }
 
     // The bar sticks to the top of the window on desktop; give it its edge only while it is stuck.
     if (bar) {

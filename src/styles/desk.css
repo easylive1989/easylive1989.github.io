@@ -84,6 +84,29 @@ body.desk-body {
   white-space: nowrap;
 }
 
+/* — back to the top: the HUD scrolls away, so this corner button brings the page back up — */
+.desk-top {
+  position: fixed;
+  z-index: 10;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  color: var(--color-accent-700);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s, visibility 0.2s, background 0.15s, color 0.15s;
+}
+.desk-top.is-shown { opacity: 1; visibility: visible; transform: none; }
+.desk-top:hover { background: var(--color-accent); color: #fff; }
+.desk-top:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
 /* — page frame — */
 .desk-main {
   position: relative; /* no z-index: it would trap fixed children (the reading progress bar) under the vignette */
@@ -138,10 +161,15 @@ body.desk-body {
   .desk-hud { top: var(--space-2); padding: 0 var(--space-2); }
   .desk-hud .crumbs { display: none; }
   .desk-main { padding: 68px var(--space-2) var(--space-6); }
+  .desk-top { right: var(--space-3); bottom: var(--space-3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desk-top { transition: none; }
 }
 
 @media print {
-  .desk-hud { display: none; }
+  .desk-hud, .desk-top { display: none; }
   html, body.desk-body { background: #fff; }
   .paper { box-shadow: none; }
 }
