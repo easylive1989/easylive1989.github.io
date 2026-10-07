@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, LAKE_SKY, crtMask } from './studyTextures.js';
+import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, SKY, crtMask } from './studyTextures.js';
 const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
 
 /* ================= content ================= */
@@ -55,7 +55,7 @@ renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
 stage.appendChild(renderer.domElement);
-const scene = new THREE.Scene(); scene.background = col('#b4bfca');
+const scene = new THREE.Scene(); scene.background = col('#4f8fd0'); // clear blue, for anything the room and the paintings leave uncovered
 const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .02, 60);
 // The view orbits a point across the room. A phone's screen is too narrow for that: however far the orbit turns, the bookshelf stays off
 // its left edge. So there the pivot is a metre in front of the eye, along the same line of sight — the view turns in place, the way a
@@ -681,7 +681,7 @@ const sideTex = ctex(1024, 600, () => {}, false); sideTex.wrapS = THREE.Mirrored
 const outsideL = mk(new THREE.PlaneGeometry(14, 4.2), new THREE.MeshBasicMaterial({ name:'garden-side', map:sideTex, transparent:true }), 'garden-side', [-8.45, 1.75, -4.59]); outsideL.castShadow = false; outsideL.receiveShadow = false; room.add(outsideL);
 // The far shore is a long way off, so it should stay level with the eye. When the camera drops, both paintings sink with it (the loop
 // does that), and this strip of their own sky stands behind to show above them.
-const sky = mk(new THREE.PlaneGeometry(22, 3), new THREE.MeshBasicMaterial({ name:'sky', color:col(LAKE_SKY) }), 'sky', [-5.6, 3.6, -4.61]); sky.castShadow = false; sky.receiveShadow = false; room.add(sky);
+const sky = mk(new THREE.PlaneGeometry(22, 3), new THREE.MeshBasicMaterial({ name:'sky', color:col(SKY.top) }), 'sky', [-5.6, 3.6, -4.61]); sky.castShadow = false; sky.receiveShadow = false; room.add(sky);
 // the lake itself, from under the house out to the foot of the painting
 const waterTex = ctex(256, 256, () => {}, false); waterTex.wrapS = THREE.RepeatWrapping; waterTex.repeat.x = 10;
 const water = mk(new THREE.PlaneGeometry(22, 2.2), new THREE.MeshBasicMaterial({ name:'water', map:waterTex }), 'water', [-5.6, -.35, -3.5], [-Math.PI/2,0,0]); water.castShadow = false; water.receiveShadow = false; room.add(water);
@@ -875,15 +875,15 @@ side.add(box(.5, .12, .04, M.woodD, 'side-drawer', [0,.52,.23]));
 [[C.c900,.035],[C.m800,.04],[C.cream,.03]].forEach(([c, t], i) => side.add(box(.22 - i*.02, t, .3 - i*.02, std('stack-book', c), 'stack-book', [-.05, .62 + .02 + i*.038, 0], [0, i*.2, 0])));
 
 /* ================= lighting ================= */
-const hemi = new THREE.HemisphereLight(0xc6d2dc, 0x6b5440, 1); scene.add(hemi); // daylight off the walls from above, lamplight off the floor from below
+const hemi = new THREE.HemisphereLight(0xbdd4ee, 0x6b5440, 1); scene.add(hemi); // daylight off the walls from above, lamplight off the floor from below
 const amb = new THREE.AmbientLight(0x5a5048, .6); scene.add(amb);
 const lampLight2 = new THREE.PointLight(0xffa850, .8, 3.5, 1.6); lampLight2.position.set(2.42, DY + .5, -2.25); room.add(lampLight2);
 // every point light is paid for on every pixel, so the shelf strip and the display downlights are each one light, placed between the fittings they stand for
 const shelfLight = new THREE.PointLight(0xffc27a, 1.2, 4.2, 1.5); shelfLight.position.set(-2.4, 1.9, .1); room.add(shelfLight);
 const displayLight = new THREE.PointLight(0xffd29a, .8, 1.9, 1.8); displayLight.position.set(...dispAt(0, 2.05, DD + .06)); room.add(displayLight);
-// an overcast day's light through the window: cool, soft-edged, from high over the lake
-const sunLight = new THREE.DirectionalLight(0xe6edf5, 2.2); sunLight.position.set(2.2, 3.4, -6); sunLight.castShadow = true; sunLight.shadow.mapSize.set(1024, 1024);
-Object.assign(sunLight.shadow.camera, { left:-4, right:4, top:4, bottom:-4, near:1, far:14 }); sunLight.shadow.bias = -.0008; sunLight.shadow.radius = 5; sunLight.target.position.set(0, 0, 0); scene.add(sunLight, sunLight.target);
+// a clear day's light through the window: warm, a little sharper-edged, from high over the lake
+const sunLight = new THREE.DirectionalLight(0xfff0d4, 2.6); sunLight.position.set(2.2, 3.4, -6); sunLight.castShadow = true; sunLight.shadow.mapSize.set(1024, 1024);
+Object.assign(sunLight.shadow.camera, { left:-4, right:4, top:4, bottom:-4, near:1, far:14 }); sunLight.shadow.bias = -.0008; sunLight.shadow.radius = 3; sunLight.target.position.set(0, 0, 0); scene.add(sunLight, sunLight.target);
 const roomFill = new THREE.PointLight(0xffd8b0, 2.3, 8, 1.2); roomFill.position.set(.5, 2.4, .5); room.add(roomFill);
 
 /* environment reflections */
@@ -892,8 +892,8 @@ const pmrem = new THREE.PMREMGenerator(renderer);
   const es = new THREE.Scene();
   es.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2.9, 6), new THREE.MeshBasicMaterial({ color:0x6e5a48, side:THREE.BackSide })));
   const add = (geo, c, k, p) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:new THREE.Color(c).multiplyScalar(k) })); m.position.set(...p); es.add(m); };
-  add(new THREE.PlaneGeometry(2.6, 1.5), '#dfeaf0', 3.5, [1.35, .35, -2.9]);
-  add(new THREE.PlaneGeometry(1.1, 2.15), '#dfeaf0', 3.5, [DCX, -.325, -2.9]);
+  add(new THREE.PlaneGeometry(2.6, 1.5), '#d6e6f6', 3.5, [1.35, .35, -2.9]);
+  add(new THREE.PlaneGeometry(1.1, 2.15), '#d6e6f6', 3.5, [DCX, -.325, -2.9]);
   add(new THREE.SphereGeometry(.14, 12, 8), '#ffb066', 3, [2.42, -.45, -2.25]);
   add(new THREE.BoxGeometry(.05, 2.4, 2.7), '#ffbe78', .8, [-2.7, .1, .24]);
   add(new THREE.BoxGeometry(.3, .05, 1.2), '#ffd8a0', 1, [-2.8, 1.1, -1.8]);

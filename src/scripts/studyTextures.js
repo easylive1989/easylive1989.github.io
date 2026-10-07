@@ -251,7 +251,7 @@ export function brushedMetal({ size = 256, seed = 17 } = {}) {
 // The lake behind the window, after an autumn morning in the Alps: a low overcast, snow on the far peaks, mist along the slopes,
 // a wooded hillside running down from the left to a boathouse on the shore, a strip of meadow, and all of it again in the still
 // water. Each depth is drawn small and scaled up, so the farthest is the softest — a blur that needs no canvas filter.
-export const LAKE_SKY = '#8794a4'; // the overcast at the top of the view, and of the strip of sky that stands behind it
+export const SKY = { top:'#3a78bf', mid:'#7eb2e2', horizon:'#dbe9f4' }; // a clear day: deep overhead, paling down to the haze over the far range; the strip of sky behind the paintings is its top
 export function paintLakeView(c, { trees, seed = 11, boathouse = true, feather = 0 }) {
   const x = c.getContext('2d'), w = c.width, h = c.height, R = rng(seed), pick = () => trees[Math.floor(R() * trees.length)];
   const SHORE = h * .55; // where the water begins
@@ -278,9 +278,15 @@ export function paintLakeView(c, { trees, seed = 11, boathouse = true, feather =
   const ridge = t => h * curve(RIDGE, t);
 
   x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
-  // sky: a low overcast, brighter where the cloud thins above the peaks
-  x.fillStyle = fade(x, 0, 0, 0, h * .46, LAKE_SKY, '#b4bec8', '#dde2e6'); x.fillRect(0, 0, w, h);
-  depth(.08, lx => { for (let i = 0; i < 80; i++) { const t = R(); blob(lx, R() * w, h * R() * .34, 50 + R() * 90, t < .45 ? '#78859a' : t < .8 ? '#aab4bf' : '#eef1f3', .3 + R() * .3, 30 + R() * 40); } }); // cloud bellies, and a few bright tears
+  // sky: clear blue, deepest overhead and paling into the haze over the range, with fair-weather cumulus sailing across it
+  x.fillStyle = fade(x, 0, 0, 0, h * .46, SKY.top, SKY.mid, SKY.horizon); x.fillRect(0, 0, w, h);
+  depth(.3, lx => {
+    for (let i = 0; i < 6; i++) blob(lx, R() * w, h * R() * .12, 90 + R() * 120, '#eef3f8', .2 + R() * .2, 5 + R() * 6, (R() - .5) * .2); // high thin wisps
+    for (let i = 0; i < 13; i++) { // each cloud a flat grey belly with a heap of white puffs on it, highest in the middle and lit from the upper left
+      const cx = R() * w * 1.1 - w * .05, base = h * (.07 + R() * .24), s = 30 + R() * 70, wide = 1.2 + R() * .9, n = 7 + Math.floor(R() * 6);
+      blob(lx, cx, base + s * .04, s * wide * .5, '#cdd8e3', .7, s * .2);
+      for (let k = 0; k < n; k++) { const px = cx + (R() - .5) * s * wide, r = s * (.2 + R() * .22), py = base - r * (.4 + .9 * Math.max(0, 1 - Math.abs(px - cx) / (s * wide * .55)));
+        blob(lx, px, py, r, '#fbfcfd', 1, r * .92); blob(lx, px - r * .25, py - r * .25, r * .5, '#ffffff', .5, r * .42); blob(lx, px + r * .3, py + r * .4, r * .55, '#bccad8', .3, r * .3); } } });
 
   // the far range: a jagged ridge, snow above the snowline, rock showing through, and haze gathering at its foot
   depth(.5, lx => {
@@ -291,9 +297,9 @@ export function paintLakeView(c, { trees, seed = 11, boathouse = true, feather =
     poly(lx, jag, fade(lx, 0, h * .18, 0, h * .52, '#46576c', '#5e6f84', '#8795a6'));
     pts.forEach(([px, py], i) => { if (i && i < pts.length - 1 && py < pts[i - 1][1] && py < pts[i + 1][1]) poly(lx, [[px, py], [pts[i + 1][0] + w * .02, h * .55], [px - w * .01, h * .55]], '#2f3d4f', .35); }); // the faces turned from the light
     wash(lx, fade(lx, 0, h * .18, 0, h * .36, 'rgba(244,247,250,.95)', 'rgba(244,247,250,.55)', 'rgba(244,247,250,0)')); // snow, thinning down the slopes
-    lx.strokeStyle = '#3e4c5d'; for (let i = 0; i < 70; i++) { const sx = w * (.24 + R() * .82), sy = h * (.2 + R() * .14), dx = (R() - .5) * 18; lx.globalAlpha = .2 + R() * .3; lx.lineWidth = 1.5 + R() * 2; lx.beginPath(); lx.moveTo(sx, sy); lx.lineTo(sx + dx, sy + 8 + R() * 16); lx.stroke(); } // rock showing through
-    wash(lx, fade(lx, 0, h * .36, 0, h * .52, 'rgba(190,200,212,0)', 'rgba(190,200,212,.45)')); });
-  depth(.06, lx => { for (let i = 0; i < 14; i++) blob(lx, w * (.4 + R() * .62), h * (.38 + R() * .12), 60 + R() * 110, '#e4e9ee', .22 + R() * .28, 10 + R() * 14); }); // mist along the slopes
+    lx.globalCompositeOperation = 'source-atop'; lx.strokeStyle = '#3e4c5d'; for (let i = 0; i < 70; i++) { const sx = w * (.24 + R() * .82), sy = h * (.2 + R() * .14), dx = (R() - .5) * 18; lx.globalAlpha = .2 + R() * .3; lx.lineWidth = 1.5 + R() * 2; lx.beginPath(); lx.moveTo(sx, sy); lx.lineTo(sx + dx, sy + 8 + R() * 16); lx.stroke(); } lx.globalCompositeOperation = 'source-over'; // rock showing through, kept to the range so none of it streaks the sky
+    wash(lx, fade(lx, 0, h * .36, 0, h * .52, 'rgba(186,204,224,0)', 'rgba(186,204,224,.45)')); });
+  depth(.06, lx => { for (let i = 0; i < 14; i++) blob(lx, w * (.4 + R() * .62), h * (.38 + R() * .12), 60 + R() * 110, '#e8eef5', .22 + R() * .28, 10 + R() * 14); }); // mist along the slopes
 
   // the hillside behind: a wooded slope in haze
   depth(.18, lx => {
@@ -301,7 +307,7 @@ export function paintLakeView(c, { trees, seed = 11, boathouse = true, feather =
     poly(lx, pts, '#33503a');
     for (let i = 0; i < 420; i++) { const tx = R() * w, top = ridge(tx / w), ty = top + R() * (SHORE - top), s = 10 + R() * 16;
       if (R() < .6) conifer(lx, tx, ty, s * 2.2, conif()); else crown(lx, tx, ty - s * .6, s, pick()); }
-    wash(lx, fade(lx, 0, 0, 0, SHORE, 'rgba(175,188,200,.5)', 'rgba(175,188,200,.3)', 'rgba(175,188,200,.05)')); });
+    wash(lx, fade(lx, 0, 0, 0, SHORE, 'rgba(168,193,220,.5)', 'rgba(168,193,220,.3)', 'rgba(168,193,220,.05)')); });
   // the trees along the shore, and the tall ones at the right edge: nearer, so sharper and darker under the crowns
   depth(.28, lx => {
     const mx0 = w * .56, mx1 = w * .985, mp = [[mx0, SHORE]]; for (let i = 0; i <= 12; i++) mp.push([mx0 + (mx1 - mx0) * i / 12, SHORE - h * (.012 + R() * .012)]); mp.push([mx1, SHORE]);
@@ -337,8 +343,8 @@ export function paintLakeView(c, { trees, seed = 11, boathouse = true, feather =
   for (let i = 0; i < 260; i++) { const k = Math.pow(R(), .55), ly = SHORE + h * .04 + k * (h - SHORE - h * .04), r = 1.2 + k * 4;
     blob(x, R() * w, ly, r, R() < .3 ? '#e8c06a' : pick(), .6 + R() * .35, r * .45, R() * 3); }
   x.globalAlpha = 1;
-  // the top runs out into plain overcast, so the view has no edge against the sky behind it: cloud, or a hillside lost in it
-  x.fillStyle = fade(x, 0, 0, 0, h * .1, LAKE_SKY, LAKE_SKY + '00'); x.fillRect(0, 0, w, h * .1);
+  // the top runs out into plain sky, so the view has no edge against the strip of sky behind it
+  x.fillStyle = fade(x, 0, 0, 0, h * .1, SKY.top, SKY.top + '00'); x.fillRect(0, 0, w, h * .1);
   // a view that is laid over the edge of another gives way to it along its own left edge
   if (feather) { x.globalCompositeOperation = 'destination-out'; x.fillStyle = fade(x, 0, 0, w * feather, 0, 'rgba(0,0,0,1)', 'rgba(0,0,0,0)'); x.fillRect(0, 0, w * feather, h); x.globalCompositeOperation = 'source-over'; }
 }
