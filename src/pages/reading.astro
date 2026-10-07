@@ -61,16 +61,6 @@ for (const [year, items] of byYear) {
   }
 }
 
-const yearNotes: Record<number, string> = {
-  2026: '架構年',
-  2025: '雜食年',
-  2024: '高峰年',
-  2023: '工作轉折',
-  2022: '入門年',
-  2021: '起點',
-  2020: '前夜',
-};
-
 const yearShelves: Shelf[] = Array.from(byYear.entries())
   .sort((a, b) => b[0] - a[0])
   .map(([year, items]) => ({
@@ -80,7 +70,6 @@ const yearShelves: Shelf[] = Array.from(byYear.entries())
     count: items.length,
     books: items,
     peak: year === peakYear && items.length > 0,
-    note: yearNotes[year],
   }));
 
 const wishShelf: Shelf | null =
