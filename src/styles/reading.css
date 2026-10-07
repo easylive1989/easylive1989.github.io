@@ -7,12 +7,14 @@
   --cream: #eadfc6;
   --cream-dim: rgba(234, 223, 198, 0.68);
 
-  /* One colour per kind of book. The same dots sit on paper (chips) and on the
+  /* One colour per category of book, all from the three process inks: each one
+     alone, or two of them mixed. The same dots sit on paper (chips) and on the
      dark back panel (captions), so they use the brighter end of each ramp. */
-  --k-tech: var(--color-accent);
-  --k-design: var(--color-accent-2);
-  --k-non: var(--color-process-yellow);
-  --k-fic: color-mix(in srgb, var(--color-accent) 45%, var(--color-accent-2));
+  --k-eng: var(--color-accent);
+  --k-mind: var(--color-accent-2);
+  --k-growth: color-mix(in srgb, var(--color-accent) 45%, var(--color-accent-2));
+  --k-biz: var(--color-process-yellow);
+  --k-life: color-mix(in srgb, var(--color-accent) 50%, var(--color-process-yellow));
   --k-other: var(--color-neutral-500);
 
   color: var(--color-text);
@@ -29,10 +31,11 @@
   border-radius: 50%;
   background: var(--k-other);
 }
-.reading .dot-tech { background: var(--k-tech); }
-.reading .dot-design { background: var(--k-design); }
-.reading .dot-non { background: var(--k-non); }
-.reading .dot-fic { background: var(--k-fic); }
+.reading .dot-eng { background: var(--k-eng); }
+.reading .dot-mind { background: var(--k-mind); }
+.reading .dot-growth { background: var(--k-growth); }
+.reading .dot-biz { background: var(--k-biz); }
+.reading .dot-life { background: var(--k-life); }
 .reading .dot-other { background: var(--k-other); }
 
 /* ───────────────────────── 1 · masthead ───────────────────────── */

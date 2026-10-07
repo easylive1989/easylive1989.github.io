@@ -8,7 +8,7 @@ import {
   bookFinishedQuarter,
   coverGradient,
   normaliseKind,
-  type BookKind,
+  categoryRank,
 } from '../lib/bookCover';
 import type { Book } from '../lib/notion';
 
@@ -104,15 +104,8 @@ function heatLevel(v: number): number {
   return Math.min(4, Math.max(1, Math.round((v / maxCell) * 4)));
 }
 
-const kindMeta: Record<BookKind, { name: string; dotClass: string }> = {
-  tech:   { name: '技術',   dotClass: 'dot-tech' },
-  design: { name: '設計',   dotClass: 'dot-design' },
-  non:    { name: '非虛構', dotClass: 'dot-non' },
-  fic:    { name: '小說',   dotClass: 'dot-fic' },
-  other:  { name: '其他',   dotClass: 'dot-other' },
-};
-
 // Raw Notion 類型 counts — books appear in every category they're tagged with.
+// The chips run in the shelving order of the categories, not by how many books each has.
 const rawCatCounts = new Map<string, number>();
 for (const b of allBooks) {
   for (const c of b.categories) {
@@ -121,11 +114,11 @@ for (const b of allBooks) {
   }
 }
 const chipsData = Array.from(rawCatCounts.entries())
-  .sort((a, b) => b[1] - a[1])
+  .sort((a, b) => categoryRank(a[0]) - categoryRank(b[0]) || b[1] - a[1])
   .map(([name, count]) => ({
     name,
     count,
-    dotClass: kindMeta[normaliseKind(name)].dotClass,
+    dotClass: `dot-${normaliseKind(name)}`,
   }));
 
 // Books on a real shelf are never quite the same height. Every cover keeps the
@@ -224,7 +217,7 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
                         <h2>{book.title}</h2>
                         {book.categories[0] && (
                           <div class="cur-cat">
-                            <i class={`dot ${kindMeta[cv.kind].dotClass}`}></i>
+                            <i class={`dot dot-${cv.kind}`}></i>
                             {book.categories[0]}
                           </div>
                         )}
@@ -362,7 +355,7 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
                             <span class="ks">
                               {rawCats.slice(0, 2).map((c) => (
                                 <span class="k">
-                                  <i class={`dot ${kindMeta[normaliseKind(c)].dotClass}`}></i>
+                                  <i class={`dot dot-${normaliseKind(c)}`}></i>
                                   {c}
                                 </span>
                               ))}
