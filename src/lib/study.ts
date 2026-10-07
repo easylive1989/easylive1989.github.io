@@ -43,6 +43,8 @@ export interface StudyItem {
   sp?: string;
   k: string;
   t: string;
+  /** What the hover tooltip says, when it isn't the title. */
+  tip?: string;
   by?: string;
   b: string[];
   /** A footer line in the reader; the exhibits on the display shelves have none. */
@@ -380,6 +382,7 @@ export async function buildStudyData(): Promise<StudyData> {
       kind: 'play',
       k: `Playbox · 電視遊樂器 · ${gameRows.length} 款`,
       t: `${config.author.name.split(' ')[0]} 的 Playbox`,
+      tip: '遊樂器',
       b: ['窗邊小櫃子上的老電視，接著一台遊戲機。所有小遊戲都收在 Playbox 裡，按下開關就能玩。'],
       list: gameRows,
       links: [{ l: 'Playbox GitHub ↗', u: PLAYBOX_REPO, p: 1 }],

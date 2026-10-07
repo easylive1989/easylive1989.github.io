@@ -1302,7 +1302,7 @@ const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = $('tip');
 let hoverRoot = null, down = null;
 const rootOf = hit => hit ? hit.object.userData.roots ? hit.object.userData.roots[hit.instanceId] : hit.object.userData.root : null; // the library is one mesh: its books answer by instance
 function tipText(p) {
-  if (p.type === 'item') return ITEMS[p.id].t; // everything in the room goes by its title alone
+  if (p.type === 'item') return ITEMS[p.id].tip || ITEMS[p.id].t; // everything in the room goes by its title, unless it has a name of its own
   if (p.type === 'list') return 'GitHub 活動';
   if (p.type === 'about') return '關於 Paul';
   return '';
