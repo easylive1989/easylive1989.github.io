@@ -118,7 +118,9 @@ export async function fetchDatabase(
           id: p.id,
           title: getTitleText(props),
           category: props.Category?.select?.name ?? '',
-          createdTime: p.created_time,
+          // "Created time" is a date property set by hand (the pages were
+          // imported, so Notion's own created_time is the import date).
+          createdTime: props['Created time']?.date?.start ?? p.created_time,
           lastEditedTime: p.last_edited_time,
           summary: getSummaryText(props),
         });
