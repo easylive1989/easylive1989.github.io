@@ -278,17 +278,11 @@ export function paintLakeView(c, { trees, seed = 11, boathouse = true, feather =
   const ridge = t => h * curve(RIDGE, t);
 
   x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
-  // sky: clear blue, deepest overhead and paling into the haze over the range, with a few fair-weather cumulus sailing across it.
-  // The clouds draw on their own run of chance, so how many there are does not move the trees below.
+  // sky: clear blue, deepest overhead and paling into the haze over the range, with nothing on it but a few thin streaks of cloud.
+  // They draw on their own run of chance, so how many there are does not move the trees below.
   x.fillStyle = fade(x, 0, 0, 0, h * .46, SKY.top, SKY.mid, SKY.horizon); x.fillRect(0, 0, w, h);
   const C = rng(seed * 7 + 3);
-  depth(.3, lx => {
-    for (let i = 0; i < 3; i++) blob(lx, C() * w, h * C() * .12, 90 + C() * 120, '#eef3f8', .2 + C() * .2, 5 + C() * 6, (C() - .5) * .2); // high thin wisps
-    for (let i = 0; i < 6; i++) { // each cloud a flat grey belly with a heap of white puffs on it, highest in the middle and lit from the upper left
-      const cx = C() * w * 1.1 - w * .05, base = h * (.07 + C() * .24), s = 30 + C() * 70, wide = 1.2 + C() * .9, n = 7 + Math.floor(C() * 6);
-      blob(lx, cx, base + s * .04, s * wide * .5, '#cdd8e3', .7, s * .2);
-      for (let k = 0; k < n; k++) { const px = cx + (C() - .5) * s * wide, r = s * (.2 + C() * .22), py = base - r * (.4 + .9 * Math.max(0, 1 - Math.abs(px - cx) / (s * wide * .55)));
-        blob(lx, px, py, r, '#fbfcfd', 1, r * .92); blob(lx, px - r * .25, py - r * .25, r * .5, '#ffffff', .5, r * .42); blob(lx, px + r * .3, py + r * .4, r * .55, '#bccad8', .3, r * .3); } } });
+  depth(.3, lx => { for (let i = 0; i < 3; i++) blob(lx, C() * w, h * C() * .12, 90 + C() * 120, '#eef3f8', .2 + C() * .2, 5 + C() * 6, (C() - .5) * .2); });
 
   // the far range: a jagged ridge, snow above the snowline, rock showing through, and haze gathering at its foot
   depth(.5, lx => {
