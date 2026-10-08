@@ -68,6 +68,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.tgt); controls.enableDamping = true; controls.enablePan = false; controls.rotateSpeed = .45;
 controls.minDistance = .35; controls.maxDistance = PHONE ? 2 : 4.4; controls.minPolarAngle = .95; controls.maxPolarAngle = 1.8; // the short orbit must not back out through the wall behind
 const CAM_TOP = 2.6; // as high as the camera goes: the ceiling is at 2.8
+const CAM_FRONT = 2.8; // as far back as it goes: the front wall is at 3
 const az0 = Math.atan2(HOME.pos.x - HOME.tgt.x, HOME.pos.z - HOME.tgt.z);
 controls.minAzimuthAngle = az0 - .62; controls.maxAzimuthAngle = az0 + (PHONE ? .9 : .42);
 
@@ -197,11 +198,15 @@ room.add(roomUV(box(DOOR.x1 - DOOR.x0, 2.8 - DOOR.y1, .1, M.wall, 'wall-back', [
 room.add(roomUV(box(.4, 2.8, .1, M.wall, 'wall-back', [2.85,1.4,-2.55])));
 room.add(roomUV(box(2.6, 1.0, .1, M.wall, 'wall-back', [1.35,.5,-2.55])));
 room.add(roomUV(box(2.6, .3, .1, M.wall, 'wall-back', [1.35,2.65,-2.55])));
+// the front wall, behind the eye: whole, the door into the house only laid on it (it stays shut, so there is nothing to see through it)
+const FDOOR = { x0:-2.8, x1:-1.96, y1:2.05 };
+room.add(roomUV(box(6.2, 2.8, .1, M.wall, 'wall-front', [0,1.4,3.05])));
 room.add(roomUV(box(6.2, .1, 5.7, M.ceil, 'ceiling', [0,2.85,.15])));
 // crown + skirting
 [[-3,0,'x'],[3,0,'x']].forEach(([x]) => { room.add(box(.08, .12, 6, M.cream, 'crown', [x*.985,2.74,0])); room.add(box(.05, .14, 6, M.woodD, 'skirting', [x*.99,.07,0])); });
-room.add(box(6, .12, .08, M.cream, 'crown', [0,2.74,-2.48]));
+[-2.48, 2.98].forEach(z => room.add(box(6, .12, .08, M.cream, 'crown', [0,2.74,z])));
 [[-3, DOOR.x0 - .04], [DOOR.x1 + .04, 3]].forEach(([a, b]) => room.add(box(b - a, .14, .05, M.woodD, 'skirting', [(a + b)/2,.07,-2.48])));
+[[-3, FDOOR.x0 - .04], [FDOOR.x1 + .04, 3]].forEach(([a, b]) => room.add(box(b - a, .14, .05, M.woodD, 'skirting', [(a + b)/2,.07,2.98])));
 
 /* ================= bookshelf (left wall) ================= */
 const shelf = new THREE.Group(); shelf.name = 'bookshelf'; room.add(shelf);
@@ -716,6 +721,36 @@ duck.add(mk(new THREE.SphereGeometry(.032, 16, 12), dkM, 'duck-head', [0,.045,.0
 duck.add(mk(new THREE.ConeGeometry(.012, .03, 8), std('beak', '#e0742c'), 'duck-beak', [0,.042,.077], [Math.PI/2,0,0]));
 room.add(duck);
 
+/* ================= the front corner: the door into the house, and two paintings ================= */
+// The front wall is only ever seen from the bookshelf's side of the room, and then only its corner end: the door is there, and the
+// paintings hang on the stretch of the left wall between that corner and the bookshelf. No sun reaches either wall, so none of it throws
+// a shadow, and it is drawn as one mesh per material.
+const fw = new THREE.Group(); fw.name = 'front-corner'; room.add(fw);
+const FZ = 3, FCX = (FDOOR.x0 + FDOOR.x1)/2, FW = FDOOR.x1 - FDOOR.x0;
+[FDOOR.x0, FDOOR.x1].forEach(x => fw.add(box(.08, FDOOR.y1, .1, M.woodD, 'door-casing', [x, FDOOR.y1/2, FZ - .01])));
+fw.add(box(FW + .16, .08, .1, M.woodD, 'door-casing', [FCX, FDOOR.y1 + .02, FZ - .01]));
+fw.add(box(FW, FDOOR.y1, .04, M.wood, 'door-leaf', [FCX, FDOOR.y1/2, FZ - .02], null, 1));
+[[1.5, .8], [.55, .7]].forEach(([y, h]) => fw.add(box(FW - .2, h, .014, M.wood, 'door-panel', [FCX, y, FZ - .047], null, 1)));
+// the knob on the side away from the hinges, which are by the corner
+fw.add(cyl(.028, .028, .012, 16, M.brass, 'door-rose', [FDOOR.x1 - .08, .98, FZ - .046], [Math.PI/2,0,0]));
+fw.add(cyl(.01, .01, .03, 8, M.brass, 'door-knob', [FDOOR.x1 - .08, .98, FZ - .065], [Math.PI/2,0,0]));
+fw.add(mk(new THREE.SphereGeometry(.026, 16, 12), M.brass, 'door-knob', [FDOOR.x1 - .08, .98, FZ - .09]));
+// a painting is a canvas of its own at 4 px a centimetre, in a frame standing just off the left wall
+const painting = (w, h, z, y, frame, draw) => { fw.add(box(.03, h + .07, w + .07, frame, 'picture-frame', [-2.985, y, z]));
+  fw.add(mk(new THREE.PlaneGeometry(w, h), std('painting', '#fff', { map:ctex(Math.round(w*400), Math.round(h*400), draw, false), roughness:.85 }), 'painting', [-2.969, y, z], [0, Math.PI/2, 0])); };
+// hills going blue towards a low sun, in a gilt frame
+painting(.62, .44, 2.5, 1.55, M.brass, (x, w, h) => {
+  const g = x.createLinearGradient(0, 0, 0, h*.7); g.addColorStop(0, '#34506a'); g.addColorStop(.6, '#b98a73'); g.addColorStop(1, '#e8b47a'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+  x.fillStyle = '#f6dfae'; x.beginPath(); x.arc(w*.68, h*.5, h*.08, 0, Math.PI*2); x.fill();
+  [['#7b8a78', .52, .07, 1.7], ['#55665a', .64, .06, 2.9], ['#33423a', .78, .05, 4.3]].forEach(([c, b, a, f]) => { x.fillStyle = c; x.beginPath(); x.moveTo(0, h);
+    for (let i = 0; i <= 40; i++) { const u = i/40; x.lineTo(u*w, h*(b - a*Math.sin(u*f + b*9) - a*.5*Math.sin(u*f*2.3))); } x.lineTo(w, h); x.fill(); });
+  const r = rng(7); x.globalAlpha = .06; for (let i = 0; i < 300; i++) { x.fillStyle = r() < .5 ? '#fff' : '#000'; x.fillRect(r()*w, r()*h, 2 + r()*6, 1); } x.globalAlpha = 1; });
+// two soft fields of colour, one over the other, in dark wood
+painting(.28, .36, 1.92, 1.5, M.woodD, (x, w, h) => { x.fillStyle = '#3b2420'; x.fillRect(0, 0, w, h);
+  [['#b0442e', .07, .48], ['#d79a3e', .6, .32]].forEach(([c, y0, hh]) => { x.fillStyle = c; x.globalAlpha = .35; for (let k = 0; k < 4; k++) x.fillRect(w*.1 + k*1.5, h*y0 + k*1.5, w*.8 - k*3, h*hh - k*3); });
+  x.globalAlpha = 1; });
+weld(fw).traverse(o => { o.castShadow = false; });
+
 /* ================= desk ================= */
 const desk = new THREE.Group(); desk.name = 'desk'; room.add(desk);
 const DY = .76, DZ = -2.0, DX = 1.675;
@@ -840,7 +875,8 @@ const shelfLight = new THREE.PointLight(0xffc27a, 1.2, 4.2, 1.5); shelfLight.pos
 const displayLight = new THREE.PointLight(0xffd29a, .8, 1.9, 1.8); displayLight.position.set(...dispAt(0, 2.05, DD + .06)); room.add(displayLight);
 // a clear day's light through the window: warm, a little sharper-edged, from high over the lake
 const sunLight = new THREE.DirectionalLight(0xfff0d4, 2.6); sunLight.position.set(2.2, 3.4, -6); sunLight.castShadow = true; sunLight.shadow.mapSize.set(1024, 1024);
-Object.assign(sunLight.shadow.camera, { left:-4, right:4, top:4, bottom:-4, near:1, far:14 }); sunLight.shadow.bias = -.0008; sunLight.shadow.radius = 3; sunLight.target.position.set(0, 0, 0); scene.add(sunLight, sunLight.target);
+// the shadow's frame sits half a metre high, to take in the top of the front wall: what falls outside it is lit as if nothing were in the way
+Object.assign(sunLight.shadow.camera, { left:-4, right:4, top:4.5, bottom:-3.5, near:1, far:14 }); sunLight.shadow.bias = -.0008; sunLight.shadow.radius = 3; sunLight.target.position.set(0, 0, 0); scene.add(sunLight, sunLight.target);
 const roomFill = new THREE.PointLight(0xffd8b0, 2.3, 8, 1.2); roomFill.position.set(.5, 2.4, .5); room.add(roomFill);
 
 /* environment reflections */
@@ -887,6 +923,8 @@ decal(aoLin, 6, .5, [2.77, .005, 0], [-Math.PI/2, 0, Math.PI/2], .7);
 decal(aoLin, 6, .55, [2.995, .28, 0], [0, -Math.PI/2, Math.PI], .6);
 decal(aoLin, 6, .5, [0, 2.54, -2.494], [0, 0, 0], .5);
 decal(aoLin, 6, .5, [2.995, 2.54, 0], [0, -Math.PI/2, 0], .5);
+decal(aoLin, 6, .55, [0, .28, 2.994], [0, Math.PI, Math.PI], .6);
+decal(aoLin, 6, .5, [0, 2.54, 2.994], [0, Math.PI, 0], .5);
 const DT = DY + .0265;
 [[1.78, -2.08, .62, .46], [1.05, -2.24, .5, .34], [2.56, -2.33, .22, .22], [2.22, -2.33, .26, .18]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
 LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - BZ, .12, [-2.788, y - .02, (BZ + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
@@ -1341,6 +1379,8 @@ function loop(ts) {
   controls.minAzimuthAngle = tween ? -Infinity : azWin[0]; controls.maxAzimuthAngle = tween ? Infinity : azWin[1];
   controls.minPolarAngle = Math.max(.95, Math.acos(Math.min(1, (CAM_TOP - controls.target.y) / camera.position.distanceTo(controls.target)))); // the further out, the less it can climb
   controls.update();
+  const fk = (CAM_FRONT - controls.target.z) / (camera.position.z - controls.target.z); // backing out towards the front wall, it stops short of it
+  if (fk > 0 && fk < 1) camera.position.sub(controls.target).multiplyScalar(fk).add(controls.target);
   // the way back to the middle of the room lights up once the camera has left it, or is on its way out
   const away = (tween ? tween.tp : camera.position).distanceToSquared(HOME.pos) > .01 || (tween ? tween.tt : controls.target).distanceToSquared(HOME.tgt) > .01;
   if (away !== hudAway) { hudAway = away; homeBtn.disabled = !away; }
