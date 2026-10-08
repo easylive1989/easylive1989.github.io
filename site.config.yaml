@@ -6,7 +6,7 @@ site:
 author:
   name: "Paul Wu"
   avatar: "assets/avatar.jpg"
-  bio: "Driven by a love for figuring things out and creating seamless experiences.\nAlways curious, exploring — from fresh concepts to unexpected rabbit holes."
+  bio: "十多年 App 開發經驗，近幾年專注 Flutter。擅長讓產品穩得住、改得動：自動化測試、開發流程，以及把 AI 帶進團隊的日常開發。有這方面的需要，歡迎找我聊聊。"
   links:
     - type: github
       url: "https://github.com/easylive1989"

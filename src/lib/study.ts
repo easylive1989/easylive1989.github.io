@@ -416,8 +416,8 @@ export async function buildStudyData(): Promise<StudyData> {
     about: {
       name: config.author.name,
       bio: config.author.bio.replace(/\n/g, ' '),
-      tagline: '台中 · Available for chat',
-      summary: `從 ${firstYear} 寫到現在：${articles.length} 篇文章、${categories.length} 個系列，還出了一本書。`,
+      tagline: '台中 · 歡迎聊合作',
+      summary: `出了《不可不知的 Flutter App 自動化測試實戰攻略》、兩度拿下 iThome 鐵人賽佳作，也上過鐵人講堂；從 ${firstYear} 寫到現在，累積 ${articles.length} 篇文章。`,
       avatar: `${BASE}${config.author.avatar}`,
       channels,
     },
