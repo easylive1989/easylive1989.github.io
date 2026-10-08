@@ -187,29 +187,6 @@ export function weave({ size = 512, threads = 32, seed = 12 } = {}) {
 
 const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
-// A ginger tabby's coat, laid out for a sphere whose long axis is x: bands across the body, a dark line down the spine, a pale belly.
-// Returns colour and normal canvases.
-export function tabbyFur({ size = 512, seed = 8 } = {}) {
-  const W = size, H = size / 2, u = W / 512, R = rng(seed), waver = noiseField(W, H, { octaves:3, base:[4, 2], seed:seed + 1 }), patch = noiseField(W, H, { octaves:4, base:[6, 3], seed:seed + 2 });
-  const coat = new ImageData(W, H), d = coat.data;
-  for (let y = 0, k = 0; y < H; y++) { const pol = (y + .5) / H * Math.PI, sp = Math.sin(pol), sy = Math.cos(pol);
-    for (let x = 0; x < W; x++, k++) { const lon = x / W * 6.2832, sx = sp * Math.cos(lon), sz = sp * Math.sin(lon), o = k * 4;
-      // where this texel sits on the sphere decides its marking, so the bands stay parallel instead of fanning out from the pole
-      const band = sstep(.2, .65, Math.sin((sx * 6 + (waver[k] - .5) * 1.8) * Math.PI)) * sstep(-.5, .1, sy), spine = sstep(.14, .03, Math.abs(sz)) * sstep(.15, .7, sy);
-      const dark = Math.max(band, spine) * .78, belly = sstep(-.2, -.75, sy), lum = 1 + (patch[k] - .5) * .22;
-      d[o] = ((238 - 106 * dark) * lum) * (1 - belly) + 250 * belly; d[o+1] = ((159 - 97 * dark) * lum) * (1 - belly) + 229 * belly; d[o+2] = ((90 - 68 * dark) * lum) * (1 - belly) + 198 * belly; d[o+3] = 255; } }
-  const color = cnv(W, H, x => x.putImageData(coat, 0, 0)), height = cnv(W, H), c = color.getContext('2d'), hx = height.getContext('2d');
-  hx.fillStyle = '#808080'; hx.fillRect(0, 0, W, H);
-  // the fur itself: short hairs lying roughly downwards, some catching the light and some in shadow
-  [c, hx].forEach(x => { x.lineCap = 'round'; });
-  for (let i = 0; i < 9000; i++) {
-    const x0 = R() * W, y0 = R() * H, a = (R() - .5) * .8, L = (5 + R() * 9) * u, pale = R() < .5, al = .05 + R() * .16;
-    c.strokeStyle = (pale ? 'rgba(255,236,204,' : 'rgba(96,42,12,') + al + ')'; hx.strokeStyle = (pale ? 'rgba(255,255,255,' : 'rgba(0,0,0,') + al * 2 + ')'; c.lineWidth = hx.lineWidth = (.7 + R() * .8) * u;
-    for (const ox of x0 < 16 * u ? [0, W] : x0 > W - 16 * u ? [0, -W] : [0]) [c, hx].forEach(x => { x.beginPath(); x.moveTo(x0 + ox, y0); x.lineTo(x0 + ox + Math.sin(a) * L, y0 + Math.cos(a) * L); x.stroke(); });
-  }
-  return { color, normal:normalFromHeight(height, 1.6 * u) };
-}
-
 // Eight spine layouts for the shelved books, one per 64 px row, each read along the spine from its foot (x = 0) to its head.
 // The channels are masks, not colours: red is foil stamping, green a paper label, blue a darkened panel. The books' shader colours them per book.
 export const SPINES = 8;
@@ -380,7 +357,7 @@ export function agedPlastic({ size = 512, seed = 33 } = {}) {
 // time it takes to open the room.
 export function paintSheets(low) {
   const s = low ? 1 : 0;
-  return { wood:woodGrain({ size:[1024, 512][s] }), plaster:plaster({ size:[1024, 512][s] }), fabric:weave({ size:[512, 256][s] }), tabby:tabbyFur({ size:[512, 256][s] }),
+  return { wood:woodGrain({ size:[1024, 512][s] }), plaster:plaster({ size:[1024, 512][s] }), fabric:weave({ size:[512, 256][s] }),
     metal:brushedMetal(), plastic:agedPlastic(), floor:plankFloor({ size:[1536, 768][s] }) };
 }
 

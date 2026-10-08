@@ -78,7 +78,6 @@ const M = {
   wood:std('wood', C.wood, { roughness:.55 }), woodD:std('wood-dark', C.woodD, { roughness:.6 }), woodL:std('wood-light', C.woodL, { roughness:.5 }),
   fabric:std('fabric', C.fabric, { roughness:1 }), fabricD:std('fabric-dark', C.fabricD, { roughness:1 }),
   cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
-  dog:std('dog', '#1a1714', { roughness:.75 }), dogT:std('dog-tan', '#8f5e36', { roughness:.75 }), dogP:std('dog-paw', '#b59470', { roughness:.75 }), dogH:std('dog-head', '#ffffff', { roughness:.75, vertexColors:true }),
   glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
   alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }),
 };
@@ -138,7 +137,7 @@ function rboxGeo(w, h, d, r, ax) {
   grainUV(g, [w, h, d], ax); return geoCache[key] = g;
 }
 /* ================= material sheets ================= */
-// The big procedural sheets (wood, plaster, cloth, fur, the floor) are most of what it costs to open the room, so they are painted in a
+// The big procedural sheets (wood, plaster, cloth, the floor) are most of what it costs to open the room, so they are painted in a
 // worker where the browser allows it, and the page stays responsive meanwhile. Every material is built at once on a 2×2 stand-in of the
 // right kind; the finished sheets drop into those same texture objects when they arrive, so no shader is built twice.
 const STAND_IN = { color:'#bdbdbd', normal:'#8080ff', rough:'#ffffff' }, slots = [];
@@ -162,8 +161,6 @@ const woodTex = { map:sheet('wood', 'color', [.5, 1]), normalMap:sheet('wood', '
 const plasterTex = { map:sheet('plaster', 'color', [.4, .4]), normalMap:sheet('plaster', 'normal', [.4, .4]), roughnessMap:sheet('plaster', 'rough', [.4, .4]), normalScale:new THREE.Vector2(.55, .55) };
 // upholstery: one 12.5 cm swatch of 4 mm threads
 const fabricTex = { map:sheet('fabric', 'color', [8, 8]), normalMap:sheet('fabric', 'normal', [8, 8]), normalScale:new THREE.Vector2(.8, .8), roughness:1, sheen:.4, sheenRoughness:.75 };
-// a short, close coat: matt, with the faintest trace of the fur sheet's hairs and a soft sheen along the edges
-const coatTex = { normalMap:sheet('tabby', 'normal'), normalScale:new THREE.Vector2(.08, .08), roughness:.75, sheen:.25, sheenRoughness:.7, sheenColor:col('#6a5a4c') };
 // small things: metal that has been handled, and a fine grit for paper and hardboard
 const metalTex = { map:sheet('metal', 'color'), roughnessMap:sheet('metal', 'rough'), metalness:1 };
 const grit = sheet('plaster', 'normal');
@@ -180,7 +177,6 @@ Object.assign(M, {
   fabricD: pbr('fabric-dark', '#7a7262', { ...fabricTex, sheenColor:col('#aaa290') }),
   brass: pbr('brass', '#d2a868', { ...metalTex, roughness:.43 }),
   alu: pbr('aluminium', '#b4b2ad', { ...metalTex, map:null, roughness:.53 }),
-  dog: pbr('dog', '#1a1714', coatTex), dogT: pbr('dog-tan', '#8f5e36', coatTex), dogP: pbr('dog-paw', '#b59470', coatTex), dogH: pbr('dog-head', '#ffffff', { ...coatTex, vertexColors:true }),
   cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }),
   glass: new THREE.MeshPhysicalMaterial(lite({ name:'glass', color:col('#c8d8d4'), transparent:true, opacity:.14, roughness:.04, metalness:0, depthWrite:false, clearcoat:1 })),
 });
@@ -813,61 +809,22 @@ chair.add(mk(rboxGeo(.72, .14, .7, .04), M.fabricD, 'chair-frame', [0,.36,0]));
 const seatCushion = mk(rboxGeo(.6, .11, .6, .045), M.fabric, 'seat-cushion', [0,.47,.02]); chair.add(seatCushion);
 chair.add(mk(rboxGeo(.66, .62, .14, .05), M.fabric, 'chair-back', [0,.8,-.31], [-.12,0,0]));
 [-.34, .34].forEach(x => { chair.add(mk(rboxGeo(.09, .22, .62, .035), M.fabricD, 'chair-arm', [x,.55,0])); chair.add(box(.1, .04, .66, M.woodL, 'arm-rest', [x,.66,.01])); });
-// A black-and-tan smooth dachshund asleep on the cushion, curled nose to tail: the long body is one bent tube, thickest at the chest
-// and thinning to the rump, the head laid along the flank with its chin on the forepaws, and the ears hang down the cheeks. Tan on the
-// cheeks, the underside of the muzzle, the brows and the paws, and a khaki collar.
-const dog = new THREE.Group(); dog.name = 'dog'; dog.position.set(-.02, .525, .03); dog.rotation.y = .05; chair.add(dog); // turned so the head is seen side-on from the room, nose to the left
-const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
-// a tube along `pts` whose radius runs from r0 at the start to r1 at the end: the rings are scaled about the curve after the fact
-const limb = (pts, r0, r1, m, name, seg = 16) => { const c = new THREE.CatmullRomCurve3(pts), g = new THREE.TubeGeometry(c, seg, 1, 10), P = g.attributes.position, o = new THREE.Vector3();
-  for (let i = 0; i <= seg; i++) { const t = i / seg, r = r0 + (r1 - r0) * t; c.getPointAt(t, o); for (let j = 0; j <= 10; j++) { const k = i * 11 + j; P.setXYZ(k, o.x + (P.getX(k) - o.x) * r, o.y + (P.getY(k) - o.y) * r, o.z + (P.getZ(k) - o.z) * r); } }
-  P.needsUpdate = true; g.computeVertexNormals(); return mk(g, m, name); };
-const dogBody = limb([v3(-.11,.046,0), v3(-.035,.052,-.105), v3(.085,.062,-.07), v3(.105,.068,.035)], .045, .068, M.dog, 'dog-body', 32); dog.add(dogBody);
-dog.add(mk(new THREE.SphereGeometry(.045, 18, 12), M.dog, 'dog-rump', [-.11,.046,0]));
-const chest = mk(new THREE.SphereGeometry(.07, 24, 16), M.dog, 'dog-chest', [.105,.068,.035]); chest.scale.set(1, .95, 1); dog.add(chest);
-const belly = mk(new THREE.SphereGeometry(.1, 24, 16), M.dog, 'dog-belly', [0,.035,-.01]); belly.scale.set(1, .45, 1); dog.add(belly); // fills the curl, so no cushion shows through it
-dog.add(limb([v3(.105,.068,.035), v3(.07,.078,.07), v3(.02,.075,.085)], .042, .036, M.dog, 'dog-neck'));
-dog.add(mk(new THREE.TorusGeometry(.044, .005, 8, 24), std('collar', '#b7a67a', { roughness:.6 }), 'dog-collar', [.062,.074,.064], [0,-1.04,0])); // its axis along the neck
-// The head: +x is the nose, laid back along the flank towards the tail. It is one wedge turned on a lathe — broad domed skull, a slight
-// stop, a long deep muzzle — and its markings are painted into the vertex colours, so the black of the crown and bridge grades into the
-// tan of the cheeks and the underside of the muzzle (gone pale and grizzled with age), with a rust spot over each eye and at each ear's root.
-const HEAD_YAW = -2.59;
-const dogHead = new THREE.Group(); dogHead.name = 'dog-head'; dogHead.position.set(.02, .058, .085); dogHead.rotation.y = HEAD_YAW; dog.add(dogHead);
-{
-  const prof = [[.001,-.05],[.028,-.046],[.041,-.032],[.046,-.012],[.045,.008],[.041,.024],[.034,.04],[.029,.06],[.026,.08],[.024,.1],[.02,.113],[.012,.121],[.001,.124]]; // (radius, along), skull to nose
-  const pts = new THREE.CatmullRomCurve3(prof.map(([r, a]) => v3(r, a, 0))).getPoints(40).map(q => new THREE.Vector2(Math.max(.001, q.x), q.y));
-  const g = new THREE.LatheGeometry(pts, 36), P = g.attributes.position, N = P.count, colr = new Float32Array(N * 3);
-  const black = col('#1a1714'), rust = col('#86592f'), brow = col('#a0724a'), pale = col('#80705f'), c = new THREE.Color(), sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-  const spot = (ax, up, sd, x, y, z, rx, ry = rx) => sm(1.15, .85, Math.sqrt((ax - x) ** 2 / (rx * rx) + ((up - y) ** 2 + (Math.abs(sd) - z) ** 2) / (ry * ry))); // a crisp-edged oval
-  const bump = (x, c, w) => Math.exp(-(((x - c) / w) ** 2));
-  for (let i = 0; i < N; i++) {
-    let ax = P.getY(i), up = -P.getX(i); const sd = P.getZ(i), r = Math.hypot(up, sd), th = Math.atan2(Math.abs(sd), up); // along the head, up, sideways; th is the angle down from the crown
-    // not quite a surface of revolution: a brow ridge and a stop along the top, and the underside of the muzzle flattened into a jaw
-    if (r > .002) { const top = Math.max(0, up / r); up += (.006 * bump(ax, .012, .014) - .0045 * bump(ax, .036, .008)) * top * top; if (ax > .03 && up < -.018) up = -.018 + (up + .018) * .45; P.setX(i, -up); }
-    // the black runs down the bridge of the muzzle and over the crown; it covers less and less of the head towards the nose
-    const thr = ax < -.01 ? 1.8 : ax < .03 ? 1.8 - (ax + .01) / .04 * .4 : ax < .06 ? 1.4 - (ax - .03) / .03 * .2 : 1.2; // the mask keeps the eyes; tan from below them
-    const tan = sm(thr - .09, thr + .09, th) * sm(-.045, -.03, ax);
-    c.copy(black).lerp(c.clone().copy(rust).lerp(pale, sm(.02, .07, ax)), tan);
-    const bw = spot(ax, up, sd, .036, .031, .028, .011, .006), root = spot(ax, up, sd, -.022, .043, .022, .007); // a long oval over each eye; a spot on the crown beside each ear's root
-    c.lerp(brow, bw).lerp(rust, root);
-    colr[i*3] = c.r; colr[i*3+1] = c.g; colr[i*3+2] = c.b;
-  }
-  g.setAttribute('color', new THREE.BufferAttribute(colr, 3));
-  const head = mk(g, M.dogH, 'dog-head-wedge', [0,0,0], [0,0,-Math.PI/2]); head.scale.set(1.08, 1, 1); dogHead.add(head); // the lathe's axis turned to +x; a little deeper than it is wide
+// Jili, the black-and-tan dachshund, asleep on the cushion with its chin on its paws. It is a scanned model rather than one built here,
+// so it is fetched only once the room is open (a third of a megabyte the door need not wait for), and it fades in where it lies.
+// At 1.2× it is longer than the gap between the arms, so it lies across the cushion, its head towards the front corner and turned to the room
+const dog = new THREE.Group(); dog.name = 'dog'; dog.position.set(-.048, .52, .03); dog.rotation.y = .6; dog.scale.setScalar(1.2); chair.add(dog); // sunk a little into the cushion
+let jili = null; // { root, mesh, fade } once it is in
+async function loadDog() {
+  const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([import('three/addons/loaders/GLTFLoader.js'), import('three/addons/libs/meshopt_decoder.module.js')]);
+  const { scene:m } = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('/models/jili.glb');
+  // the file is unlit (the photographs' own light is in the coat); lit here instead, so the lamp warms it and the chair shades it like everything else
+  let mesh; m.traverse(o => { if (o.isMesh) mesh = o; });
+  const map = mesh.material.map; mesh.material.dispose();
+  const mat = mesh.material = std('jili', '#ffffff', { map, roughness:.85 }); mesh.receiveShadow = true; renderer.initTexture(map);
+  // the coat is uploaded now, and both shaders (the see-through one it fades in with, the solid one it ends on) built, before it shows, so none of it costs a frame
+  for (const t of [false, true]) { mat.transparent = t; mat.needsUpdate = true; await renderer.compileAsync(m, camera, scene); }
+  mat.opacity = 0; dog.add(m); jili = { root:m, mesh, fade:0 };
 }
-dogHead.add(mk(new THREE.SphereGeometry(.017, 14, 10), std('dog-nose', '#141210', { roughness:.3 }), 'dog-nose', [.119,.005,0])); // big, and the shiniest thing on the head
-// the ears: long leaves hung from the top of the skull behind the eyes, lying flat down the cheeks to below the jaw, their lower halves curling in under it
-// a leaf: narrow at the root, widest two-thirds of the way down, round at the tip, and curved a little to lie along the head
-const earGeo = new THREE.SphereGeometry(.05, 16, 14); earGeo.scale(.6, 1.2, .12);
-{ const P = earGeo.attributes.position, sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-  for (let i = 0; i < P.count; i++) { const y = P.getY(i); P.setX(i, P.getX(i) * (.5 + .5 * sm(.06, -.025, y))); P.setZ(i, P.getZ(i) - 1.2 * (y - .06) ** 2); } P.needsUpdate = true; earGeo.computeVertexNormals(); }
-[-1, 1].forEach(k => {
-  const eye = mk(new THREE.SphereGeometry(.007, 8, 6), std('dog-eye', '#3d3430', { roughness:.8 }), 'dog-eye', [.036,.016,k*.034], [0,k*.6,0]); eye.scale.set(2, .35, .6); dogHead.add(eye); // shut
-  const ear = mk(earGeo, M.dog, 'dog-ear', [-.016,-.008,k*.046], [-k*.12,0,.05]); ear.scale.z = k; dogHead.add(ear); });
-// short forelegs out from the chest, the paws under the chin; the hind legs are tucked away in the curl; the tail follows the curl round to the nose
-[[v3(.06,.026,.09), v3(0,.017,.115)], [v3(.07,.026,.115), v3(.01,.017,.14)]].forEach(([a, b]) => { dog.add(limb([a, b], .016, .013, M.dog, 'dog-leg', 4));
-  const paw = mk(new THREE.SphereGeometry(.019, 10, 8), M.dogP, 'dog-paw', [b.x - .006, .015, b.z]); paw.scale.set(1.05, .6, .95); dog.add(paw); });
-dog.add(limb([v3(-.11,.045,0), v3(-.15,.022,.05), v3(-.125,.012,.12), v3(-.075,.01,.16)], .016, .006, M.dog, 'dog-tail'));
 // side table + books stack front right
 const side = new THREE.Group(); side.position.set(2.6, 0, .9); room.add(side);
 side.add(box(.6, .04, .5, M.wood, 'side-top', [0,.6,0])); [[-.26,-.21],[.26,-.21],[-.26,.21],[.26,.21]].forEach(([x,z]) => side.add(box(.04, .58, .04, M.woodD, 'side-leg', [x,.29,z])));
@@ -1365,7 +1322,10 @@ function loop(ts) {
   let moved = LF.anim !== 0; // the only things that cast moving shadows: an object sliding out under the cursor, or one being lifted
   roots.forEach(r => { if (r.userData.lifted) return; const want = r === hoverRoot ? r.userData.base.clone().add(r.userData.pull) : r.userData.base; if (r.position.distanceToSquared(want) > 1e-10) { r.position.lerp(want, Math.min(1, dt * 10)); moved = true; if (r.userData.inst != null) seat(r); } });
   if (moved) renderer.shadowMap.needsUpdate = true;
-  dogBody.scale.y = 1 + Math.sin(t*1.3) * .03; dogHead.rotation.y = HEAD_YAW + Math.sin(t*.4) * .02;
+  if (jili) { // fading in, then breathing: the model's feet are at its origin, so stretching it upright lifts only its back (the root, as the mesh's own scale unpacks its compressed vertices)
+    if (jili.fade < 1) { const m = jili.mesh.material; m.opacity = jili.fade = Math.min(1, jili.fade + dt / .8);
+      if (jili.fade === 1) { m.transparent = false; m.needsUpdate = true; jili.mesh.castShadow = true; renderer.shadowMap.needsUpdate = true; } } // the shadow comes with the solid dog, not before it
+    jili.root.scale.y = 1 + Math.sin(t*1.3) * .015; }
   const pa = pGeo.attributes.position.array;
   for (let i = 0; i < partN; i++) { const s = pSeed[i]; pa[i*3+1] -= FALL.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * FALL.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
   pGeo.attributes.position.needsUpdate = true;
@@ -1394,7 +1354,8 @@ const introEl = $('intro'), door = n => { introEl.dataset.s = Math.max(n, +intro
 ajar();
 renderer.compileAsync(scene, camera).catch(() => {}).then(() => { ajar(); renderer.setAnimationLoop(loop); });
 sheetsReady.then(ajar);
-Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { flyTo(HOME.tgt, HOME.pos, 2.2); Q.armed = true; door(4); introEl.classList.add('off'); document.body.classList.add('in'); });
+Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { flyTo(HOME.tgt, HOME.pos, 2.2); Q.armed = true; door(4); introEl.classList.add('off'); document.body.classList.add('in');
+  loadDog().catch(err => console.warn('the dog stayed off the chair', err)); }); // the room first, then the dog
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
 const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); stillFor = null; lastDraw = -Infinity; stir(); }; // resizing wipes the canvas, so the very next frame is drawn, even in a room standing still
 addEventListener('resize', fitCamera); fitCamera();
