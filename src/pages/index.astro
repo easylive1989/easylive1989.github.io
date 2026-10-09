@@ -123,6 +123,32 @@ const BASE = import.meta.env.BASE_URL;
       })();
     </script>
 
+    <!-- If the room's script cannot be fetched (a dropped connection, or this page cached from before a deploy, asking for chunks that are
+         gone) the door would wait forever. The first failure reloads the page once by itself (at most once every five minutes); after
+         that, or when the script has still not run 20 s on (30 s on a phone), the door says so and leaves the way out -->
+    <script is:inline define:vars={{ BASE }}>
+      (() => {
+        const KEY = 'study-boot-retry', intro = document.getElementById('intro');
+        let ran = false;
+        const stuck = () => {
+          const cap = intro.querySelector('.cap'); // gone when study.js has put up its own message (no WebGL)
+          if (ran || !cap || intro.classList.contains('off')) return;
+          intro.style.pointerEvents = 'auto';
+          cap.innerHTML = '書房的門卡住了。<a href="" data-retry>再推一次</a> · <a href="' + BASE + 'reading/">書單</a> · <a href="' + BASE + 'archive/">全部文章</a>';
+          cap.querySelector('[data-retry]').onclick = e => { e.preventDefault(); location.reload(); };
+        };
+        addEventListener('error', e => {
+          if (!(e.target instanceof HTMLScriptElement) || e.target.type !== 'module') return;
+          // without sessionStorage there is no telling a first failure from a second, so no reloading by itself at all
+          let retry = false;
+          try { retry = Date.now() - (+sessionStorage.getItem(KEY) || 0) > 300000; if (retry) sessionStorage.setItem(KEY, String(Date.now())); } catch { retry = false; }
+          if (retry) location.reload(); else stuck();
+        }, true);
+        addEventListener('load', e => { if (e.target instanceof HTMLScriptElement && e.target.type === 'module') ran = true; }, true);
+        setTimeout(stuck, matchMedia('(pointer: coarse)').matches ? 30000 : 20000);
+      })();
+    </script>
+
     <script>
       import '../scripts/study.js';
     </script>
