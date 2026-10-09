@@ -10,6 +10,7 @@ import {
 } from './data';
 import { getGithubContributions } from './github';
 import { bookStatus, categoryRank } from './bookCover';
+import { MY_BOOK, IRONMAN, TALKS, ITHOME_SERIES, TAGLINE, githubUsername, channels } from './profile';
 import type { Article, Book, NotionBlock } from './notion';
 
 /**
@@ -111,27 +112,7 @@ const SERIES_SPINE: Record<string, string> = {
   'Flutter 開發設計雜談': '設計雜談',
 };
 
-// Where the two iThome Ironman series live outside this site.
-const ITHOME_SERIES: Record<string, string> = {
-  '30 天輕鬆學會 Flutter 測試': 'https://ithelp.ithome.com.tw/users/20129825/ironman/5974',
-  'Flutter 開發設計雜談': 'https://ithelp.ithome.com.tw/users/20129825/ironman/4992',
-};
-
-const MY_BOOK_URL = 'https://www.tenlong.com.tw/products/9786264140010?list_name=srh';
 const PLAYBOX_REPO = 'https://github.com/easylive1989/paul-playbox';
-
-// The iThome Ironman runs, oldest first, a bear for each: [year, result, series, url, took a prize].
-const IRONMAN: [string, string, string, string, boolean][] = [
-  ['2020', '鐵人練成', '在 Kata 中尋找 Clean Code', 'https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1', false],
-  ['2022', '佳作', 'Flutter 開發設計雜談', ITHOME_SERIES['Flutter 開發設計雜談'], true],
-  ['2023', '佳作', '30 天輕鬆學會 Flutter 測試', ITHOME_SERIES['30 天輕鬆學會 Flutter 測試'], true],
-];
-
-// Talks, newest first, a videotape for each: [year, title, host, url].
-const TALKS: [string, string, string, string][] = [
-  ['2025', '實踐 Flutter 測試的眉眉角角', 'Agile.Taichung', 'https://www.accupass.com/event/2503031416141112169743'],
-  ['2024', 'Flutter Widget Test 深度探索', 'iThome 鐵人講堂', 'https://itplus.ithome.com.tw/webinar-page/237'],
-];
 
 const isCJK = (ch: string) => /[㐀-鿿]/.test(ch);
 
@@ -245,22 +226,6 @@ function shelveBooks(books: Book[]): [string, Book[]][] {
   return [...sections].sort(([a], [b]) => categoryRank(a) - categoryRank(b));
 }
 
-function githubLabel(config: ReturnType<typeof loadConfig>): { username: string; channels: [string, string, string][] } {
-  const gh = config.author.links.find((l) => l.type === 'github');
-  const username = gh?.url.match(/github\.com\/([^/]+)/)?.[1] ?? 'easylive1989';
-  const threads = config.author.links.find((l) => l.type === 'threads')?.url ?? '';
-  const linkedin = config.author.links.find((l) => l.type === 'linkedin')?.url ?? '';
-  return {
-    username,
-    channels: [
-      ['GitHub', username, gh?.url ?? `https://github.com/${username}`],
-      ['Threads', threads.match(/@[^/?]+/)?.[0] ?? '@paul.ch.wu', threads],
-      ['LinkedIn', config.author.name, linkedin],
-      ['Email', 'easylive1989@gmail.com', 'mailto:easylive1989@gmail.com'],
-    ].filter(([, , url]) => url) as [string, string, string][],
-  };
-}
-
 export async function buildStudyData(): Promise<StudyData> {
   const config = loadConfig();
   const [articles, books, notes, projects, games, noteList, noteBodies] = await Promise.all([
@@ -272,7 +237,7 @@ export async function buildStudyData(): Promise<StudyData> {
     getAllNotes(),
     getNoteBodies(),
   ]);
-  const { username, channels } = githubLabel(config);
+  const username = githubUsername(config);
   const contrib = await getGithubContributions(username);
 
   const items: Record<string, StudyItem> = {};
@@ -314,16 +279,11 @@ export async function buildStudyData(): Promise<StudyData> {
     cat: 'display',
     kind: 'mybook',
     k: '我出的書 · Book',
-    t: '不可不知的 Flutter App 自動化測試實戰攻略',
-    by: '吳政樺（Paul）',
-    b: ['由 2023 iThome 鐵人賽佳作改寫成書，從基礎到進階一次到位。'],
-    links: [{ l: '購書 ↗', u: MY_BOOK_URL, p: 1 }],
-    front: {
-      sub: '從設計到測試、維持產品品質的高效實踐',
-      head: '打造自動化測試策略，完美交付高品質 App！',
-      foot: ['開發者必學自動化測試技術', '開發不只是做出功能，更要確保未來正常運作'],
-      seal: ['2023', '佳作'],
-    },
+    t: MY_BOOK.title,
+    by: MY_BOOK.author,
+    b: [MY_BOOK.blurb],
+    links: [{ l: '購書 ↗', u: MY_BOOK.url, p: 1 }],
+    front: MY_BOOK.front,
   };
 
   /* ── display shelves: side projects ── */
@@ -416,10 +376,10 @@ export async function buildStudyData(): Promise<StudyData> {
     about: {
       name: config.author.name,
       bio: config.author.bio.replace(/\n/g, ' '),
-      tagline: '台中 · 歡迎聊合作',
+      tagline: TAGLINE,
       summary: `出了《不可不知的 Flutter App 自動化測試實戰攻略》、兩度拿下 iThome 鐵人賽佳作，也上過鐵人講堂；從 ${firstYear} 寫到現在，累積 ${articles.length} 篇文章。`,
       avatar: `${BASE}${config.author.avatar}`,
-      channels,
+      channels: channels(config),
     },
     site: {
       reading: `${BASE}reading/`,
