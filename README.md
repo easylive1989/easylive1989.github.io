@@ -21,6 +21,7 @@ https://paul-learning.dev
 src/
 ├── components/       # SiteHead、ArchiveView、Notion block 渲染元件
 │   └── notion/       # Notion block 渲染元件
+├── integrations/     # build 後處理：把 Cubic 11 像素字型縮成書房用到的字
 ├── layouts/          # DeskLayout：內容頁共用（木桌底、紙張、「回書房」HUD）
 ├── lib/              # 工具函式 (Notion API、資料處理、圖片等)
 │   └── study.ts      # 把 Notion 資料對應到書房裡的物件（書架、展示架、書桌）
