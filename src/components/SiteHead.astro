@@ -62,3 +62,15 @@ const image = ogImage ?? new URL(`${BASE}${config.author.avatar}`, config.site.u
 
 <!-- Cloudflare Web Analytics -->
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3c65582aa3704510be97c0638201eaa0"}'></script>
+
+<!-- The service worker (public/sw.js), registered once the page has loaded so it never competes with it; then told what this page
+     fetched before it was there, so a second visit already finds those in its cache. Not in dev, where nothing is hashed -->
+{import.meta.env.PROD && (
+  <script is:inline>
+    if ('serviceWorker' in navigator) addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then(() => navigator.serviceWorker.ready).then((r) => {
+        r.active?.postMessage({ page: location.href, warm: performance.getEntriesByType('resource').map((e) => e.name) });
+      }).catch(() => {});
+    });
+  </script>
+)}

@@ -14,6 +14,7 @@ https://paul-learning.dev
   - 左牆書架靠展示架的那一格是「閱讀書單」裡讀完的書，依類型分區；書的 Notion 頁面裡有筆記的，抽出來就能翻，沒寫的只有書名頁。另一格是裝飾書
   - 寫的東西都在書桌：系列在桌上的書架，最新的幾篇是桌上的稿紙
 - **部署**: GitHub Pages
+  - GitHub Pages 每個檔案只給 10 分鐘快取，所以有 Service Worker（`public/sw.js`）：hash 過的檔案優先讀快取，頁面優先走網路，去過的書房離線也打得開。要拿掉它，就部署一個在 activate 時刪快取並 `unregister()` 的 `sw.js`
 
 ## 專案結構
 
