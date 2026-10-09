@@ -24,14 +24,9 @@ function fmtDate(iso: string): string {
   const d = new Date(iso);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
-
-const crumbs = [
-  { label: '書單', href: `${BASE}reading/` },
-  { label: book.title },
-];
 ---
 
-<DeskLayout title={`${book.title} 的筆記`} description={`讀完《${book.title}》留下的筆記。`} width="reading" crumbs={crumbs}>
+<DeskLayout title={`${book.title} 的筆記`} description={`讀完《${book.title}》留下的筆記。`} width="reading" tab="reading">
   <article class="paper note">
     <header class="masthead note-masthead">
       <div class="rules" aria-hidden="true"><i></i><i></i></div>

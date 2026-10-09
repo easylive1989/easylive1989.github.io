@@ -1,9 +1,9 @@
-/* The desk — shared chrome for every page that isn't the room itself.
-   Nobody walks here from the room (everything in it is read in it); these pages
-   are where a search, a feed or a shared link lands. So: a plain light ground,
-   the Broadsheet paper to read on, and one way into the room at the top (the
-   HUD's "回書房"). Page-specific layout lives with each page; the primitives below
-   are shared. */
+/* The desk — shared chrome for the blog, every page that isn't the room itself.
+   The blog is the site's other way of being read: reached from the room's 部落格
+   tab, or from a search, a feed or a shared link. So: a plain light ground, the
+   Broadsheet paper to read on, and a masthead with the blog's three tabs and the
+   way into the room. Page-specific layout lives with each page; the primitives
+   below are shared. */
 
 :root {
   --desk-ground: #e6e4e2;
@@ -33,58 +33,44 @@ body.desk-body {
   font-family: var(--font-reading);
 }
 
-/* — HUD: the room's dock, kept on every page — */
+/* the back-to-top button's card */
 .sheet {
   background: var(--color-bg);
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md);
 }
-/* It takes the page frame's width and side padding, so the cluster lines up with the paper's left edge,
-   and it sits at the top of the page, scrolling away with it. */
-.desk-hud {
-  position: absolute;
-  z-index: 10;
-  top: var(--space-4);
-  left: 0;
-  right: 0;
+
+/* — masthead: the blog's name, its three tabs and, set apart, the way into the room — */
+/* It takes the page frame's width and side padding, so it lines up with the paper's edges, and scrolls away with the page. */
+.blog-head {
+  display: flex;
+  align-items: center;
   margin: 0 auto;
-  padding: 0 var(--space-6);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-3);
-  pointer-events: none; /* only the clusters take the mouse, the page stays scrollable beneath */
+  padding: 26px var(--space-6) 4px;
 }
-.hud-cluster {
-  pointer-events: auto;
-  display: flex;
+.blog-head a { text-decoration: none; }
+.blog-head a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.blog-brand { font-size: 22px; font-weight: 700; letter-spacing: 0.02em; color: var(--color-text); }
+.blog-tabs { display: flex; gap: 24px; margin-left: auto; }
+.blog-tabs a { padding: 6px 0; border-bottom: 2px solid transparent; font-size: 15px; color: var(--color-neutral-700); }
+.blog-tabs a:hover { color: var(--color-text); }
+.blog-tabs a.on { border-bottom-color: var(--color-accent); color: var(--color-text); font-weight: 600; }
+.blog-split { flex: none; width: 1px; height: 20px; margin: 0 18px; background: var(--color-neutral-400); }
+.blog-room {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: 6px;
-  min-width: 0;
-}
-.crumbs {
-  display: flex;
-  align-items: center;
-  list-style: none;
-  margin: 0;
-  padding: 0 var(--space-2) 0 var(--space-1);
-  gap: var(--space-2);
-  font-size: 13px;
-  min-width: 0;
-}
-.crumbs li { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.crumbs li + li::before { content: "/"; color: color-mix(in srgb, var(--color-text) 35%, transparent); }
-.crumbs a { color: color-mix(in srgb, var(--color-text) 70%, transparent); text-decoration: none; }
-.crumbs a:hover { color: var(--color-accent-700); }
-.crumbs [aria-current] {
-  max-width: 28ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--color-accent-700);
   white-space: nowrap;
 }
+.blog-room:hover { background: var(--color-accent); color: #fff; }
+.blog-room svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
-/* — back to the top: the HUD scrolls away, so this corner button brings the page back up — */
+/* — back to the top: the masthead scrolls away, so this corner button brings the page back up — */
 .desk-top {
   position: fixed;
   z-index: 10;
@@ -111,7 +97,7 @@ body.desk-body {
 .desk-main {
   position: relative; /* no z-index: it would trap fixed children (the reading progress bar) under the vignette */
   margin: 0 auto;
-  padding: 84px var(--space-6) var(--space-8);
+  padding: var(--space-4) var(--space-6) var(--space-8);
 }
 .desk-reading { max-width: 1040px; }
 .desk-wide { max-width: 1180px; }
@@ -158,10 +144,18 @@ body.desk-body {
 .num { font-variant-numeric: tabular-nums lining-nums; }
 
 @media (max-width: 760px) {
-  .desk-hud { top: var(--space-2); padding: 0 var(--space-2); }
-  .desk-hud .crumbs { display: none; }
-  .desk-main { padding: 68px var(--space-2) var(--space-6); }
+  .blog-head { padding: 16px var(--space-2) 4px; }
+  .desk-main { padding: var(--space-3) var(--space-2) var(--space-6); }
   .desk-top { right: var(--space-3); bottom: var(--space-3); }
+}
+
+/* a phone: the name on a line of its own, the tabs and the way into the room on the next */
+@media (max-width: 640px) {
+  .blog-head { flex-wrap: wrap; row-gap: 6px; }
+  .blog-brand { flex-basis: 100%; font-size: 19px; }
+  .blog-tabs { margin-left: 0; gap: 18px; }
+  .blog-split { display: none; }
+  .blog-room { margin-left: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -169,7 +163,7 @@ body.desk-body {
 }
 
 @media print {
-  .desk-hud, .desk-top { display: none; }
+  .blog-head, .desk-top { display: none; }
   html, body.desk-body { background: #fff; }
   .paper { box-shadow: none; }
 }

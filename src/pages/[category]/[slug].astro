@@ -44,15 +44,9 @@ const config = loadConfig();
 const BASE = import.meta.env.BASE_URL;
 const articleUrl = (id: string) => `${BASE}${catSlug}/${id}/`;
 const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ?? '#';
-
-const crumbs = [
-  { label: '文章', href: `${BASE}archive/` },
-  { label: categoryName, href: `${BASE}${catSlug}/` },
-  { label: article.title },
-];
 ---
 
-<DeskLayout title={article.title} description={article.summary || undefined} width="reading" crumbs={crumbs}>
+<DeskLayout title={article.title} description={article.summary || undefined} width="reading" tab="archive">
   <div class="article-progress" aria-hidden="true"><div class="article-progress-fill" id="article-progress-fill"></div></div>
 
   <article class="paper art">

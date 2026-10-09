@@ -9,6 +9,6 @@ const notes = await getAllNotes();
 const bodies = await getNoteBodies();
 ---
 
-<DeskLayout title="所有文章" width="reading" crumbs={[{ label: '所有文章' }]}>
+<DeskLayout title="所有文章" width="reading" tab="archive">
   <ArchiveView articles={articles} allCategories={categories} notes={notes.map((n) => ({ ...n, hasBody: bodies.has(n.id) }))} />
 </DeskLayout>

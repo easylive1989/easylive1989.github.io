@@ -20,14 +20,9 @@ function fmtDate(iso: string): string {
   const d = new Date(iso);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
-
-const crumbs = [
-  { label: '文章', href: `${BASE}archive/` },
-  { label: note.title },
-];
 ---
 
-<DeskLayout title={note.title} description={`碎碎念：${note.title}`} width="reading" crumbs={crumbs}>
+<DeskLayout title={note.title} description={`碎碎念：${note.title}`} width="reading" tab="archive">
   <article class="paper note">
     <header class="masthead note-masthead">
       <div class="rules" aria-hidden="true"><i></i><i></i></div>

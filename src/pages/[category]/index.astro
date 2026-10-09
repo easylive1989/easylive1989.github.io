@@ -11,18 +11,13 @@ export async function getStaticPaths() {
   }));
 }
 
-const BASE = import.meta.env.BASE_URL;
 const { category } = Astro.params;
 const { categoryName } = Astro.props;
 const categories = await getAllCategories();
 const articles = await getArticlesByCategory(category!);
 ---
 
-<DeskLayout
-  title={categoryName}
-  width="reading"
-  crumbs={[{ label: '所有文章', href: `${BASE}archive/` }, { label: categoryName }]}
->
+<DeskLayout title={categoryName} width="reading" tab="archive">
   <ArchiveView
     articles={articles}
     allCategories={categories}

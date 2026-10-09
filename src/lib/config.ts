@@ -18,6 +18,8 @@ export interface Author {
 export interface SiteConfig {
   site: {
     title: string;
+    /** The blog's name, in its masthead and at the end of its pages' titles; the room keeps `title`. */
+    blogTitle: string;
     description: string;
     url: string;
   };
