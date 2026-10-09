@@ -98,6 +98,9 @@ const rod = (a, b, rad, m, name) => { const A = new THREE.Vector3(...a), B = new
 const texts = [];
 const ctex = (w, h, draw, keep = true) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); draw(x, w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.redraw = () => { draw(x, w, h); t.needsUpdate = true; }; if (keep) texts.push(t); return t; };
 const SERIF = '"Source Serif 4", serif';
+// settles once the deferred type sheet (SiteHead) is switched on or has failed; at once if it already is, or the page has none.
+// Its faces count only once its own onload has turned it from print to all, which runs before the listener added here
+const typeIn = new Promise(r => { const l = document.getElementById('type-sheet'); if (!l || l.media === 'all') r(); else { l.addEventListener('load', r, { once:true }); l.addEventListener('error', r, { once:true }); } });
 const room = new THREE.Group(); scene.add(room);
 const pickables = [];
 const tag = (root, data, pull = [0,.025,0]) => { root.userData.pick = data; root.userData.pull = new THREE.Vector3(...pull); root.userData.base = root.position.clone(); root.traverse(o => { if (o.isMesh) { o.userData.root = root; pickables.push(o); } }); };
@@ -1140,7 +1143,7 @@ const flowCss = D => 'width:' + D.fw + 'px;height:' + D.fh + 'px;column-width:' 
 async function countCols(html, D) {
   const el = document.createElement('div'); el.className = 'prose flow'; el.style.cssText = flowCss(D) + ';position:fixed;left:0;top:0;visibility:hidden;pointer-events:none'; el.innerHTML = html; document.body.appendChild(el);
   const imgs = [...el.querySelectorAll('img')].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }));
-  await Promise.race([Promise.all([document.fonts && document.fonts.ready, ...imgs]), new Promise(r => setTimeout(r, 2500))]);
+  await Promise.race([Promise.all([typeIn.then(() => document.fonts && document.fonts.ready), ...imgs]), new Promise(r => setTimeout(r, 2500))]);
   const n = Math.max(1, Math.round((el.scrollWidth + FG) / (D.fw + FG))); el.remove(); return n;
 }
 const endpaper = kind => '<div class="endp"><div class="exlib"><span>EX LIBRIS</span><b>' + esc(ABOUT.name.split(' ')[0]) + ' 的書房</b><span>' + KLAB[kind] + '</span></div></div>';
@@ -1399,4 +1402,6 @@ Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { fl
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
 const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); stillFor = null; lastDraw = -Infinity; stir(); }; // resizing wipes the canvas, so the very next frame is drawn, even in a room standing still
 addEventListener('resize', fitCamera); fitCamera();
-document.fonts && document.fonts.ready.then(() => texts.forEach(t => t.redraw()));
+// the type sheet is not waited for (SiteHead deferType), so it can land after the lettering was drawn in the fallback serif: once it is
+// in, the faces the canvases use are asked for (a canvas cannot be counted on to start a web font loading) and every lettered texture redrawn
+typeIn.then(() => document.fonts && Promise.all(['400', '600', '700'].map(w => document.fonts.load(`${w} 1em ${SERIF}`)))).catch(() => {}).then(() => texts.forEach(t => t.redraw()));
