@@ -30,7 +30,7 @@ for (const rel of pages) {
   if (!title.endsWith(` | ${site.blogTitle}`)) problems.push(`${rel}: title "${title}"`);
   const lit = [...html.matchAll(/data-tab="(\w+)"[^>]*aria-current="true"/g)].map((m) => m[1]);
   if (lit.length !== 1 || lit[0] !== expected(rel)) problems.push(`${rel}: lit [${lit.join(', ')}], expected ${expected(rel)}`);
-  if (/class="(desk-hud|crumbs)"/.test(html)) problems.push(`${rel}: still has the old HUD or crumbs`);
+  if (/class="[^"]*\b(desk-hud|crumbs)\b/.test(html)) problems.push(`${rel}: still has the old HUD or crumbs`);
 }
 const roomTitle = titleOf(fs.readFileSync(path.join(dist, 'index.html'), 'utf8'));
 if (roomTitle !== site.title) problems.push(`index.html: title "${roomTitle}", expected "${site.title}"`);

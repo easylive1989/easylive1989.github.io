@@ -23,13 +23,15 @@ src/
 ├── components/       # SiteHead、ArchiveView、Notion block 渲染元件
 │   └── notion/       # Notion block 渲染元件
 ├── integrations/     # build 後處理：Cubic 11 像素字型縮成書房用到的字、替拆出去的 chunk 加 modulepreload
-├── layouts/          # DeskLayout：內容頁共用（木桌底、紙張、「回書房」HUD）
+├── layouts/          # DeskLayout：內容頁共用（木桌底、紙張、部落格的刊頭：站名、三個分頁、「我的書房」回書房）
 ├── lib/              # 工具函式 (Notion API、資料處理、圖片等)
-│   └── study.ts      # 把 Notion 資料對應到書房裡的物件（書架、展示架、書桌）
+│   ├── study.ts      # 把 Notion 資料對應到書房裡的物件（書架、展示架、書桌）
+│   └── profile.ts    # 他是誰：寫的書、鐵人賽、演講、聯絡方式；書房和關於我頁共用
 ├── pages/            # 頁面路由
 │   ├── index.astro          # 首頁：3D 書房
 │   ├── archive.astro        # 文章彙整
 │   ├── reading.astro        # 書單（書架）
+│   ├── about.astro          # 關於我：書、鐵人賽、演講、哪裡找得到他
 │   ├── reading/[id].astro   # 一本讀完的書的筆記
 │   ├── notes/               # 碎碎念：列表與單則
 │   ├── study/[id].astro     # 書房裡翻開的內文（裸片段，給書房 fetch；不進 sitemap）
@@ -43,6 +45,8 @@ src/
 │   └── studyWorker.js    # 在 Worker 裡畫上面那些貼圖，開頁時主執行緒不被卡住
 └── styles/           # broadsheet.css (設計系統)、desk.css (內容頁共用)、
                       # 各頁樣式 (prose / reading / archive)
+scripts/
+└── check-blog-nav.mjs    # 建置後檢查每個部落格頁：站名、亮著的分頁，書房維持本名
 ```
 
 ## 開發
@@ -58,4 +62,5 @@ npm install          # 安裝依賴
 npm run dev          # 啟動開發伺服器
 npm run build        # 建置靜態網站
 npm run preview      # 預覽建置結果
+npm run check:nav    # 建置後檢查部落格每頁的標題與分頁（先 npm run build）
 ```
