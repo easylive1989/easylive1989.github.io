@@ -46,7 +46,7 @@ try { renderer = new THREE.WebGLRenderer({ antialias:!Q.low }); }
 catch (err) {
   // no WebGL (old browser, GPU blocklist): the room can't open, so leave the doors to the rest of the site
   const intro = byId('intro'); intro.classList.remove('off'); intro.style.pointerEvents = 'auto';
-  intro.innerHTML = '<div>這間書房需要 WebGL 才能走進去。<br><br><a href="' + SITE.reading + '">書單</a> · <a href="' + SITE.archive + '">全部文章</a> · <a href="' + SITE.rss + '">RSS</a></div>';
+  intro.innerHTML = '<div>這間書房需要 WebGL 才能走進去。<br><br><a href="' + SITE.archive + '">所有文章</a> · <a href="' + SITE.reading + '">書架</a> · <a href="' + SITE.rss + '">RSS</a></div>';
   throw err;
 }
 renderer.setPixelRatio(Q.low ? 1 : Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
@@ -1008,7 +1008,7 @@ addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) 
   if (TV.on) { if (e.key === 'Escape') TV.play ? tvMenu() : exitTV(); else if (!TV.play && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); tvSel((TV.sel + (e.key === 'ArrowDown' ? 1 : -1) + GAMES.length) % GAMES.length); } else if (!TV.play && e.key === 'Enter') tvPlay(); return; }
   if (RD.mode) { const nx = e.key === 'ArrowRight', pv = e.key === 'ArrowLeft';
     if (e.key === 'Escape') closeReader(); else if (nx || pv) { e.preventDefault(); RD.mode === 'book' ? flip(nx ? 1 : -1) : stepDraft(nx ? 1 : -1); } return; }
-  if (e.key === 'Escape') { closeMenu(); closePanel(); } });
+  if (e.key === 'Escape') closePanel(); });
 
 /* ================= dock ================= */
 // The four corners of the room, each seen whole: the point looked at, the bearing it is seen from and how far back. The two on
@@ -1026,21 +1026,19 @@ const ZONES = {
   desk:    { at:[DX, DY + .2, DZ], from:[-.1, .6, 1], d:2.2 },
   tv:      { at:[.055, CH, -2.2], from:[.12, .35, 1], d:1.7 },
 };
-const hud = $('hud'), homeBtn = hud.querySelector('[data-home]'), moreBtn = hud.querySelector('[data-more]'), menu = hud.querySelector('.menu');
+const hud = $('hud'), homeBtn = hud.querySelector('[data-home]');
 let hudAway = false;
 // which corner the camera was last sent to, by the dock or by picking something up there; cleared once it is turned by hand
 function setZone(id) { hud.querySelectorAll('[data-zone]').forEach(b => b.classList.toggle('on', b.dataset.zone === id)); }
 function goZone(id) { const z = ZONES[id], f = z.fit ? z.fit() : z, at = new THREE.Vector3(...f.at), dir = new THREE.Vector3(...z.from).normalize();
   if (panel.classList.contains('open')) { panel.classList.remove('open'); document.body.classList.remove('reading'); }
   flyTo(at, at.clone().addScaledVector(dir, Math.min(f.d, controls.maxDistance)), 1.1, z.az || AZ.home); focused = true; setZone(id); }
-function closeMenu() { menu.classList.remove('open'); moreBtn.setAttribute('aria-expanded', 'false'); }
+// the 部落格 tab is a plain link out of the room, so only the buttons are handled here
 hud.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (b === moreBtn) { const open = !menu.classList.contains('open'); menu.classList.toggle('open', open); moreBtn.setAttribute('aria-expanded', open); return; }
-  closeMenu(); if (TV.on || RD.mode || RD.busy) return;
+  if (TV.on || RD.mode || RD.busy) return;
   if (b === homeBtn) closePanel(); else if (b.dataset.zone) goZone(b.dataset.zone);
 });
-addEventListener('pointerdown', e => { if (!hud.contains(e.target)) closeMenu(); }, { capture:true });
 controls.addEventListener('start', () => setZone(null));
 
 /* ================= pick-up readers + TV ================= */
