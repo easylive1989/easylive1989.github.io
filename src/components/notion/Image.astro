@@ -1,5 +1,6 @@
 ---
 import type { NotionBlock } from '../../lib/notion';
+import { responsiveImage, IMAGE_SIZES } from '../../lib/images';
 
 interface Props { block: NotionBlock; }
 const { block } = Astro.props;
@@ -7,10 +8,22 @@ const img = (block as any).image;
 const rawUrl = img?.file?.url ?? img?.external?.url ?? '';
 const isLocal = rawUrl.startsWith('/assets/');
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const url = isLocal ? `${base}${rawUrl}` : rawUrl;
+// a downloaded image goes out as WebP at the column's widths; a remote one as it is
+const out = isLocal ? await responsiveImage(rawUrl) : { src: rawUrl, variants: [] };
+const url = isLocal ? `${base}${out.src}` : out.src;
+const srcset = out.variants.length > 1 ? out.variants.map((v) => `${base}${v.src} ${v.width}w`).join(', ') : undefined;
 const caption = img.caption?.map((t: any) => t.plain_text).join('') ?? '';
 ---
 <figure>
-  <img src={url} alt={caption || 'Article image'} loading="lazy" decoding="async" />
+  <img
+    src={url}
+    srcset={srcset}
+    sizes={srcset && IMAGE_SIZES}
+    width={out.width}
+    height={out.height}
+    alt={caption || 'Article image'}
+    loading="lazy"
+    decoding="async"
+  />
   {caption && <figcaption>{caption}</figcaption>}
 </figure>
