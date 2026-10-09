@@ -23,7 +23,7 @@ src/
 ├── components/       # SiteHead、ArchiveView、Notion block 渲染元件
 │   └── notion/       # Notion block 渲染元件
 ├── integrations/     # build 後處理：Cubic 11 像素字型縮成書房用到的字、替拆出去的 chunk 加 modulepreload
-├── layouts/          # DeskLayout：內容頁共用（木桌底、紙張、部落格的刊頭：站名、三個分頁、「我的書房」回書房）
+├── layouts/          # DeskLayout：內容頁共用（木桌底、紙張、部落格的刊頭：站名、三個分頁、「書房」回 3D 書房）
 ├── lib/              # 工具函式 (Notion API、資料處理、圖片等)
 │   ├── study.ts      # 把 Notion 資料對應到書房裡的物件（書架、展示架、書桌）
 │   └── profile.ts    # 他是誰：寫的書、鐵人賽、演講、聯絡方式；書房和關於我頁共用

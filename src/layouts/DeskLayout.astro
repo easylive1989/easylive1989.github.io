@@ -42,10 +42,9 @@ const { title, description, ogImage, tab, width = 'reading', bodyClass } = Astro
           <a href={href} data-tab={id} class:list={{ on: id === tab }} aria-current={id === tab ? 'true' : undefined}>{label}</a>
         ))}
       </nav>
-      <span class="blog-split" aria-hidden="true"></span>
       <a class="blog-room" href={BASE} title="切到 3D 書房">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4h12v17M3 21h18M14.5 12.5v1" /></svg>
-        <span>我的書房</span>
+        <span>書房</span>
       </a>
     </header>
 
