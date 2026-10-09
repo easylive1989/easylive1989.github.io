@@ -231,7 +231,9 @@ const BASE = import.meta.env.BASE_URL;
   #intro[data-s="2"] { --a: 32deg; --g: .2; --r: .55; }
   #intro[data-s="3"] { --a: 54deg; --g: .43; --r: .8; }
   #intro[data-s="4"] { --a: 86deg; --g: .83; --r: 1.5; }
-  #intro.off { opacity: 0; }
+  /* an open door takes no clicks, even when the stuck-door message made it clickable (an inline style, hence the !important) and the
+     room turned up after all */
+  #intro.off { opacity: 0; pointer-events: none !important; }
   #intro a { color: var(--color-accent-300); }
   #intro .door { position: relative; width: calc(var(--dr)*26); height: calc(var(--dr)*54); transform-origin: 60% 50%; transition: transform 1.6s cubic-bezier(.5,0,.8,.4); }
   #intro[data-s="4"] .door { transform: scale(2.6); } /* and you walk in */
