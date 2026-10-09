@@ -87,7 +87,7 @@ const BASE = import.meta.env.BASE_URL;
       <style is:inline>#intro { display: none; }</style>
       <div class="noscript">
         <p>這裡是一間互動式的 3D 書房，需要開啟 JavaScript 才能走進去。</p>
-        <p><a href={`${BASE}archive/`}>所有文章</a> · <a href={`${BASE}reading/`}>書架</a> · <a href="/rss.xml">RSS</a></p>
+        <p><a href={`${BASE}archive/`}>所有文章</a> · <a href={`${BASE}reading/`}>書架</a> · <a href={`${BASE}about/`}>關於我</a> · <a href="/rss.xml">RSS</a></p>
       </div>
     </noscript>
 
@@ -129,7 +129,7 @@ const BASE = import.meta.env.BASE_URL;
           const cap = intro.querySelector('.cap'); // gone when study.js has put up its own message (no WebGL)
           if (ran || !cap || intro.classList.contains('off')) return;
           intro.style.pointerEvents = 'auto';
-          cap.innerHTML = '書房的門卡住了。<a href="" data-retry>再推一次</a> · <a href="' + BASE + 'archive/">所有文章</a> · <a href="' + BASE + 'reading/">書架</a>';
+          cap.innerHTML = '書房的門卡住了。<a href="" data-retry>再推一次</a> · <a href="' + BASE + 'archive/">所有文章</a> · <a href="' + BASE + 'reading/">書架</a> · <a href="' + BASE + 'about/">關於我</a>';
           cap.querySelector('[data-retry]').onclick = e => { e.preventDefault(); location.reload(); };
         };
         addEventListener('error', e => {

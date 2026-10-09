@@ -46,7 +46,7 @@ try { renderer = new THREE.WebGLRenderer({ antialias:!Q.low }); }
 catch (err) {
   // no WebGL (old browser, GPU blocklist): the room can't open, so leave the doors to the rest of the site
   const intro = byId('intro'); intro.classList.remove('off'); intro.style.pointerEvents = 'auto';
-  intro.innerHTML = '<div>這間書房需要 WebGL 才能走進去。<br><br><a href="' + SITE.archive + '">所有文章</a> · <a href="' + SITE.reading + '">書架</a> · <a href="' + SITE.rss + '">RSS</a></div>';
+  intro.innerHTML = '<div>這間書房需要 WebGL 才能走進去。<br><br><a href="' + SITE.archive + '">所有文章</a> · <a href="' + SITE.reading + '">書架</a> · <a href="' + SITE.about + '">關於我</a> · <a href="' + SITE.rss + '">RSS</a></div>';
   throw err;
 }
 renderer.setPixelRatio(Q.low ? 1 : Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);

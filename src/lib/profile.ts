@@ -20,6 +20,8 @@ export const MY_BOOK = {
   author: '吳政樺（Paul）',
   blurb: '由 2023 iThome 鐵人賽佳作改寫成書，從基礎到進階一次到位。',
   url: 'https://www.tenlong.com.tw/products/9786264140010?list_name=srh',
+  /** A photo of the book from the publisher's shop, 360 × 504, under public/. Only the about page shows it. */
+  cover: 'assets/my-book-cover.jpg',
   front: {
     sub: '從設計到測試、維持產品品質的高效實踐',
     head: '打造自動化測試策略，完美交付高品質 App！',

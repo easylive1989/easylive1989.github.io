@@ -80,7 +80,7 @@ export interface StudyData {
     avatar: string;
     channels: [string, string, string][];
   };
-  site: { reading: string; archive: string; rss: string; url: string; study: string };
+  site: { reading: string; archive: string; about: string; rss: string; url: string; study: string };
   github: {
     ok: boolean;
     username: string;
@@ -384,6 +384,7 @@ export async function buildStudyData(): Promise<StudyData> {
     site: {
       reading: `${BASE}reading/`,
       archive: `${BASE}archive/`,
+      about: `${BASE}about/`,
       rss: '/rss.xml',
       study: `${BASE}study/`,
       url: config.site.url,

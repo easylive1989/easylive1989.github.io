@@ -1,0 +1,123 @@
+---
+import DeskLayout from '../layouts/DeskLayout.astro';
+import { loadConfig } from '../lib/config';
+import { MY_BOOK, IRONMAN, TALKS, TAGLINE, channels } from '../lib/profile';
+
+// Who Paul is, for the blog: the room's self-portrait card without its line of achievements, then the book, the Ironman runs
+// and the talks that stand on the room's display shelves, and where to find him.
+const config = loadConfig();
+const BASE = import.meta.env.BASE_URL;
+const runs = [...IRONMAN].reverse(); // newest first here; the room keeps them oldest first for its bears
+const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener' });
+---
+
+<DeskLayout title="關於我" description={config.author.bio} width="reading" tab="about">
+  <article class="paper about">
+    <header class="masthead ab-head">
+      <div class="rules" aria-hidden="true"><i></i><i></i></div>
+      <div class="ab-hero">
+        <img src={`${BASE}${config.author.avatar}`} alt={config.author.name} width="200" height="200" />
+        <div>
+          <div class="ab-hi">Hi, I'm</div>
+          <h1>{config.author.name}</h1>
+          <div class="ab-tag">{TAGLINE}</div>
+        </div>
+      </div>
+    </header>
+
+    <p class="ab-bio">{config.author.bio}</p>
+
+    <section class="ab-sec" aria-labelledby="ab-book">
+      <h2 id="ab-book">我出的書</h2>
+      <div class="ab-book">
+        <img src={`${BASE}${MY_BOOK.cover}`} alt={`《${MY_BOOK.title}》書封`} width="360" height="504" loading="lazy" />
+        <div>
+          <h3>{MY_BOOK.title}</h3>
+          <div class="ab-by">{MY_BOOK.author}</div>
+          <p>{MY_BOOK.blurb}</p>
+          <a class="btn btn-secondary" href={MY_BOOK.url} {...away(MY_BOOK.url)}>購書 ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="ab-sec" aria-labelledby="ab-ironman">
+      <h2 id="ab-ironman">iThome 鐵人賽</h2>
+      <ul class="ab-list">
+        {runs.map(([year, result, series, url, prize]) => (
+          <li>
+            <span class="ab-y num">{year}</span>
+            <span class="ab-t"><a href={url} {...away(url)}>{series} ↗</a><span>連續三十天、一天一篇</span></span>
+            <span class:list={['ab-r', { win: prize }]}>{result}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="ab-sec" aria-labelledby="ab-talks">
+      <h2 id="ab-talks">演講</h2>
+      <ul class="ab-list">
+        {TALKS.map(([year, title, host, url]) => (
+          <li>
+            <span class="ab-y num">{year}</span>
+            <span class="ab-t"><a href={url} {...away(url)}>{title} ↗</a><span>{host}</span></span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="ab-sec" aria-labelledby="ab-find">
+      <h2 id="ab-find">Find me at</h2>
+      <div class="ab-ch">
+        {channels(config).map(([name, label, url]) => (
+          <a href={url} {...away(url)}><b>{name}</b>{label}</a>
+        ))}
+      </div>
+    </section>
+  </article>
+</DeskLayout>
+
+<style>
+  .about { padding: 48px 56px 56px; }
+  .ab-head { margin-bottom: 26px; }
+  .ab-hero { display: flex; gap: 24px; align-items: center; }
+  .ab-hero img { flex: none; width: 112px; height: 112px; object-fit: cover; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+  .ab-hi { font-size: 15px; font-style: italic; color: var(--color-neutral-700); }
+  .ab-hero h1 { margin: 2px 0 6px; font-family: var(--font-reading); font-size: 40px; line-height: 1.15; }
+  .ab-tag { font-size: 14px; color: var(--color-neutral-700); }
+  .ab-bio { margin: 0; font-size: 17px; line-height: 1.85; }
+
+  .ab-sec { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--color-divider); }
+  .ab-sec h2 { margin: 0 0 16px; font-family: var(--font-reading); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700); }
+
+  .ab-book { display: flex; gap: 22px; align-items: flex-start; }
+  .ab-book img { flex: none; width: 120px; height: auto; }
+  .ab-book h3 { margin: 0 0 4px; font-family: var(--font-reading); font-size: 20px; }
+  .ab-by { margin-bottom: 8px; font-size: 14px; font-style: italic; color: var(--color-neutral-700); }
+  .ab-book p { margin: 0 0 12px; line-height: 1.7; }
+
+  .ab-list { list-style: none; margin: 0; padding: 0; }
+  .ab-list li { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: baseline; padding: 10px 0; border-bottom: 1px dashed var(--color-divider); }
+  .ab-list li:last-child { border-bottom: 0; }
+  .ab-y { font-family: var(--font-reading); font-size: 18px; font-weight: 700; }
+  .ab-t a { font-size: 16px; color: var(--color-text); text-decoration: none; }
+  .ab-t a:hover { color: var(--color-accent-700); }
+  .ab-t span { display: block; margin-top: 2px; font-size: 13px; color: var(--color-neutral-700); }
+  .ab-r { padding: 2px 8px; border-radius: var(--radius-md); background: var(--color-accent-100); color: var(--color-accent-800); font-size: 12px; white-space: nowrap; }
+  .ab-r.win { background: #f6ecd5; color: var(--brass-dark); }
+
+  .ab-ch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
+  .ab-ch a { display: flex; gap: 10px; min-width: 0; padding: 6px 0; border-bottom: 1px solid var(--color-divider); font-size: 15px; color: var(--color-text); text-decoration: none; overflow-wrap: anywhere; }
+  .ab-ch a:hover { color: var(--color-accent-700); }
+  .ab-ch b { flex: none; width: 72px; font-weight: 400; color: var(--color-neutral-700); }
+
+  @media (max-width: 640px) {
+    .about { padding: 28px 20px 36px; }
+    .ab-hero { gap: 16px; }
+    .ab-hero img { width: 80px; height: 80px; }
+    .ab-hero h1 { font-size: 30px; }
+    .ab-book img { width: 96px; }
+    .ab-list li { grid-template-columns: 48px 1fr; }
+    .ab-r { grid-column: 2; justify-self: start; }
+    .ab-ch { grid-template-columns: 1fr; }
+  }
+</style>
