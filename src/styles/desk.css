@@ -126,7 +126,32 @@ body.desk-body {
 .masthead .rules i:last-child { height: 1px; }
 .masthead .kicker { margin-bottom: var(--space-2); }
 .masthead h1 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.08; margin: 0; }
-.masthead .lede { font-style: italic; margin: var(--space-3) 0 0; color: color-mix(in srgb, var(--color-text) 78%, transparent); }
+
+/* — the figures under a masthead's headline: a numeral over its label, a hairline between one and the next — */
+.mast-stats { display: flex; flex-wrap: wrap; margin: 26px 0 0; padding: 0; }
+.mast-stat {
+  display: flex;
+  flex-direction: column-reverse; /* numeral over label, label first in the markup */
+  gap: 6px;
+  padding: 0 28px;
+  border-left: 1px solid var(--color-divider);
+}
+.mast-stat:first-child { padding-left: 0; border-left: 0; }
+.mast-stat dd {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.mast-stat dt {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-neutral-700);
+}
+.mast-stat.is-peak dd { color: var(--color-accent-2); }
 
 /* — brass plate: the little label on the shelf, for section headings — */
 .plate-brass {
@@ -154,6 +179,9 @@ body.desk-body {
   .blog-head { padding: 16px var(--space-2) 4px; }
   .desk-main { padding: var(--space-3) var(--space-2) var(--space-6); }
   .desk-top { right: var(--space-3); bottom: var(--space-3); }
+  .mast-stats { margin-top: 20px; }
+  .mast-stat { padding: 0 16px; }
+  .mast-stat dd { font-size: 30px; }
 }
 
 /* a phone: the name on a line of its own, the tabs and the way into the room on the next */
@@ -163,6 +191,9 @@ body.desk-body {
   .blog-brand { flex-basis: 100%; font-size: 19px; }
   .blog-tabs { margin-left: 0; gap: 18px; padding: 0 12px; }
   .blog-room { margin-left: auto; }
+  /* four figures no longer fit on a line: two rows of two */
+  .mast-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-3); }
+  .mast-stat:nth-child(odd) { padding-left: 0; border-left: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

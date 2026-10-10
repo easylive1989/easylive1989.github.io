@@ -1,0 +1,53 @@
+---
+import '../styles/heat.css';
+
+interface Props {
+  /** The caption over the grid. */
+  title: string;
+  /** What the figure shows, read out in place of its cells. */
+  label: string;
+  /** How many fell in each quarter of a year. A year left out is a column of empty cells, not a missing one. */
+  counts: Record<number, number[]>;
+  /** The first and the last year across the top. */
+  from: number;
+  to: number;
+  /** What a cell counts, for its tooltip: 本, 篇. */
+  unit: string;
+  /** A year to pick out in the second ink. */
+  mark?: number;
+}
+
+const { title, label, counts, from, to, unit, mark } = Astro.props;
+const years = Array.from({ length: Math.max(1, to - from + 1) }, (_, i) => from + i);
+const QUARTERS = [0, 1, 2, 3];
+const LEVELS = [0, 1, 2, 3, 4];
+const max = Math.max(1, ...Object.values(counts).flat());
+// four shades of ink over the empty cell, by how near a quarter comes to the busiest one
+const level = (v: number) => (v <= 0 ? 0 : Math.min(4, Math.max(1, Math.round((v / max) * 4))));
+---
+
+<figure class="heat" style={`--n:${years.length}`}>
+  <figcaption class="heat-title">{title}</figcaption>
+  <div class="heat-grid" role="img" aria-label={label}>
+    <span></span>
+    {years.map((y) => <span class:list={['heat-y', 'num', { mark: y === mark }]}>{y}</span>)}
+    {QUARTERS.map((q) => (
+      <>
+        <span class="heat-q">Q{q + 1}</span>
+        {years.map((y) => {
+          const v = counts[y]?.[q] ?? 0;
+          return (
+            <span class="heat-cell num" data-v={level(v)} title={`${y} Q${q + 1} · ${v} ${unit}`}>
+              {v > 0 ? v : ''}
+            </span>
+          );
+        })}
+      </>
+    ))}
+  </div>
+  <div class="heat-legend" aria-hidden="true">
+    <span>少</span>
+    {LEVELS.map((l) => <i class="heat-cell" data-v={l}></i>)}
+    <span>多</span>
+  </div>
+</figure>

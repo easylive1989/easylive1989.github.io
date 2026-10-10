@@ -1,5 +1,6 @@
 ---
 import DeskLayout from '../layouts/DeskLayout.astro';
+import QuarterHeat from '../components/QuarterHeat.astro';
 import '../styles/reading.css';
 import { getAllBooks, getBookNotes } from '../lib/data';
 import {
@@ -86,8 +87,6 @@ const views = [
 const heatYears = Array.from(byYear.keys()).filter((y) => y > 0).sort();
 const oldestYear = heatYears[0] ?? new Date().getFullYear();
 const newestYear = heatYears[heatYears.length - 1] ?? new Date().getFullYear();
-const heatRange: number[] = [];
-for (let y = oldestYear; y <= newestYear; y++) heatRange.push(y);
 
 const heatBucket: Record<number, [number, number, number, number]> = {};
 for (const b of allBooks) {
@@ -97,11 +96,6 @@ for (const b of allBooks) {
   if (y == null || q == null) continue;
   heatBucket[y] ??= [0, 0, 0, 0];
   heatBucket[y][q - 1]++;
-}
-const maxCell = Math.max(1, ...Object.values(heatBucket).flatMap((row) => row));
-function heatLevel(v: number): number {
-  if (v <= 0) return 0;
-  return Math.min(4, Math.max(1, Math.round((v / maxCell) * 4)));
 }
 
 // Raw Notion 類型 counts — books appear in every category they're tagged with.
@@ -131,7 +125,6 @@ function coverRatio(title: string): number {
   return COVER_RATIOS[Math.abs(h) % COVER_RATIOS.length];
 }
 
-const heatLabel = (y: number, v: number) => `${y} · ${v} 本`;
 const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
 ---
 
@@ -146,44 +139,22 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
           <div class="rd-mast-main">
             <div class="card-kicker kicker">Reading list · 書單</div>
             <h1 id="rd-h1">讀過的<em>書</em></h1>
-            <p class="lede">隨手記錄看過的書。技術書幫我換腦袋、非虛構幫我換視角、小說幫我換情緒。</p>
-            <dl class="rd-stats">
-              <div class="rd-stat"><dt class="l">total</dt><dd class="n num">{totalCount}</dd></div>
-              <div class="rd-stat"><dt class="l">read</dt><dd class="n num">{readCount}</dd></div>
-              <div class="rd-stat"><dt class="l">wishlist</dt><dd class="n num">{wishlistCount}</dd></div>
-              <div class="rd-stat"><dt class="l">years</dt><dd class="n num">{yearsSpan}</dd></div>
+            <dl class="mast-stats">
+              <div class="mast-stat"><dt>total</dt><dd class="num">{totalCount}</dd></div>
+              <div class="mast-stat"><dt>read</dt><dd class="num">{readCount}</dd></div>
+              <div class="mast-stat"><dt>wishlist</dt><dd class="num">{wishlistCount}</dd></div>
+              <div class="mast-stat"><dt>years</dt><dd class="num">{yearsSpan}</dd></div>
             </dl>
           </div>
 
-          <div class="rd-heat">
-            <div class="rd-heat-title">每季讀完的書</div>
-            <div class="heat-grid" role="img" aria-label="每年每季讀完的書數量熱度圖">
-              <span></span>
-              {['Q1', 'Q2', 'Q3', 'Q4'].map((q) => <span class="heat-q">{q}</span>)}
-              {heatRange.map((y) => {
-                const row = heatBucket[y] ?? [0, 0, 0, 0];
-                return (
-                  <>
-                    <span class="heat-y num">{y}</span>
-                    {row.map((v) => (
-                      <span class="heat-cell num" data-v={heatLevel(v)} title={heatLabel(y, v)}>
-                        {v > 0 ? v : ''}
-                      </span>
-                    ))}
-                  </>
-                );
-              })}
-            </div>
-            <div class="heat-legend" aria-hidden="true">
-              <span>少</span>
-              <i class="heat-cell" data-v="0"></i>
-              <i class="heat-cell" data-v="1"></i>
-              <i class="heat-cell" data-v="2"></i>
-              <i class="heat-cell" data-v="3"></i>
-              <i class="heat-cell" data-v="4"></i>
-              <span>多</span>
-            </div>
-          </div>
+          <QuarterHeat
+            title="每季讀完的書"
+            label="每年每季讀完的書數量熱度圖"
+            counts={heatBucket}
+            from={oldestYear}
+            to={newestYear}
+            unit="本"
+          />
         </div>
       </section>
 

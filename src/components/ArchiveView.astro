@@ -2,13 +2,14 @@
 import type { Article, Note } from '../lib/notion';
 import type { Category } from '../lib/data';
 import { categorySlug } from '../lib/category';
+import QuarterHeat from './QuarterHeat.astro';
 import '../styles/archive.css';
 
 interface Props {
   articles: Article[];
   allCategories: Category[];
   scopeCategoryName?: string;
-  /** 碎碎念 to list among the articles. They are left out of the figures in the masthead, and a note with nothing written under its title gets no link. */
+  /** 碎碎念 to list among the articles. They count in the masthead's figures like any article, and a note with nothing written under its title gets no link. */
   notes?: (Note & { hasBody: boolean })[];
 }
 
@@ -40,34 +41,27 @@ interface YearGroup {
   items: Row[];
 }
 
-// The figures in the masthead count the articles alone.
-const grouped = new Map<number, Article[]>();
-for (const a of articles) {
-  const year = new Date(a.createdTime).getFullYear();
-  if (!grouped.has(year)) grouped.set(year, []);
-  grouped.get(year)!.push(a);
+// Everything the page lists, newest first: the articles and, each by its date, the 碎碎念.
+const rows: Row[] = [
+  ...articles.map((a) => ({ title: a.title, cat: a.category, createdTime: a.createdTime, href: `${BASE}${categorySlug(a.category)}/${a.id}/` })),
+  ...notes.map((n) => ({ title: n.title, cat: NOTE_CAT, createdTime: n.createdTime, href: n.hasBody ? `${BASE}notes/${n.id}/` : null })),
+].sort((a, b) => b.createdTime.localeCompare(a.createdTime));
+// One block of the list per year. The figures in the masthead count these same rows.
+const byYear = new Map<number, Row[]>();
+for (const r of rows) {
+  const year = new Date(r.createdTime).getFullYear();
+  if (!byYear.has(year)) byYear.set(year, []);
+  byYear.get(year)!.push(r);
 }
 let peakYear = 0;
 let peakCount = 0;
-for (const [year, items] of grouped.entries()) {
+for (const [year, items] of byYear.entries()) {
   if (items.length > peakCount) {
     peakCount = items.length;
     peakYear = year;
   }
 }
-
-// The list below them holds the 碎碎念 too, each by its date.
-const rows: Row[] = [
-  ...articles.map((a) => ({ title: a.title, cat: a.category, createdTime: a.createdTime, href: `${BASE}${categorySlug(a.category)}/${a.id}/` })),
-  ...notes.map((n) => ({ title: n.title, cat: NOTE_CAT, createdTime: n.createdTime, href: n.hasBody ? `${BASE}notes/${n.id}/` : null })),
-].sort((a, b) => b.createdTime.localeCompare(a.createdTime));
-const listed = new Map<number, Row[]>();
-for (const r of rows) {
-  const year = new Date(r.createdTime).getFullYear();
-  if (!listed.has(year)) listed.set(year, []);
-  listed.get(year)!.push(r);
-}
-const yearGroups: YearGroup[] = Array.from(listed.entries())
+const yearGroups: YearGroup[] = Array.from(byYear.entries())
   .sort((a, b) => b[0] - a[0])
   .map(([year, items]) => ({
     year,
@@ -76,20 +70,18 @@ const yearGroups: YearGroup[] = Array.from(listed.entries())
     items,
   }));
 
-const years = Array.from(grouped.keys());
+const years = Array.from(byYear.keys());
 const oldestYear = years.length ? Math.min(...years) : new Date().getFullYear();
 const newestYear = years.length ? Math.max(...years) : new Date().getFullYear();
 const yearSpan = Math.max(1, newestYear - oldestYear + 1);
-const totalPosts = articles.length;
+const totalPosts = rows.length;
 
-// The histogram runs over the whole span so a quiet year shows as a gap, not as a missing column.
-const histogram = years.length
-  ? Array.from({ length: yearSpan }, (_, i) => {
-      const year = oldestYear + i;
-      return { year, count: grouped.get(year)?.length ?? 0, peak: year === peakYear };
-    })
-  : [];
-const maxYearCount = histogram.reduce((m, g) => Math.max(m, g.count), 0);
+// The heatmap in the masthead: how many of them each quarter of each year saw.
+const byQuarter: Record<number, number[]> = {};
+for (const r of rows) {
+  const d = new Date(r.createdTime);
+  (byQuarter[d.getFullYear()] ??= [0, 0, 0, 0])[Math.floor(d.getMonth() / 3)]++;
+}
 
 // Process-ink palette for categories: cyan, magenta, and a darkened yellow that holds up on paper.
 const palette = ['var(--cat-1)', 'var(--cat-2)', 'var(--cat-3)'];
@@ -104,18 +96,16 @@ const chipData = allCategories.map((c) => ({
   count: articles.filter((a) => a.category === c.name).length,
   color: catColor(c.name),
 }));
+// 碎碎念 stand as one more category, in the chips and in the masthead's count of them
 if (notes.length) chipData.push({ name: NOTE_CAT, count: notes.length, color: catColor(NOTE_CAT) });
 
 const heroTitle = isScoped ? scopeCategoryName! : '所有文章';
-const heroDesc = isScoped
-  ? `這個分類底下的 ${totalPosts} 篇文章，跨 ${yearSpan} 年。`
-  : `從 ${oldestYear} 年的第一篇開始，記錄學習歷程。寫到自己也忘記為什麼開始的那一天。`;
 const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
 ---
 
-<div class:list={['paper', 'archive-sheet', { 'is-scoped': isScoped }]} id="top">
-  <!-- Masthead: double rule, kicker, headline, lede, then the figures -->
-  <header class="masthead">
+<div class:list={['archive-sheet', { 'is-scoped': isScoped }]} id="top">
+  <!-- Masthead, a sheet of its own: double rule, kicker, then the headline over its figures, beside the heatmap -->
+  <header class="paper masthead">
     <div class="rules" aria-hidden="true"><i></i><i></i></div>
     <div class="kicker-row">
       <span class="kicker card-kicker">{kicker}</span>
@@ -132,135 +122,115 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
 
     <div class="mast-grid">
       <div class="mast-text">
-        <h1 class:list={{ 'is-long': heroTitle.length > 10 }}>{heroTitle}<span class="stop">。</span></h1>
-        <p class="lede">{heroDesc}</p>
+        <h1 class:list={{ 'is-long': heroTitle.length > 10 }}>{heroTitle}</h1>
+        <dl class="mast-stats">
+          <div class="mast-stat"><dt>posts</dt><dd class="num">{totalPosts}</dd></div>
+          <div class="mast-stat"><dt>{yearSpan === 1 ? 'year' : 'years'}</dt><dd class="num">{yearSpan}</dd></div>
+          <div class="mast-stat"><dt>categories</dt><dd class="num">{chipData.length}</dd></div>
+          <div class="mast-stat is-peak"><dt>peak · {peakCount} 篇</dt><dd class="num">{peakYear || '-'}</dd></div>
+        </dl>
       </div>
 
-      {histogram.length > 0 && (
-        <figure class="histo" aria-label="每年發文量" style={`--n:${histogram.length}`}>
-          <figcaption class="histo-label">每年發文量</figcaption>
-          <div class="histo-grid">
-            {histogram.map((g) => (
-              <div class:list={['histo-col', { peak: g.peak, zero: g.count === 0 }]} title={`${g.year}：${g.count} 篇`}>
-                <div class="histo-slot">
-                  <span
-                    class="histo-bar"
-                    style={`height:${maxYearCount > 0 ? (g.count / maxYearCount) * 100 : 0}%`}
-                  ></span>
-                </div>
-                <span class="yr num">{g.year}</span>
-                <span class="ct num">{g.count} 篇</span>
-              </div>
-            ))}
-          </div>
-        </figure>
+      {years.length > 0 && (
+        <QuarterHeat
+          title="每季發文量"
+          label="每年每季發文數量熱度圖"
+          counts={byQuarter}
+          from={oldestYear}
+          to={newestYear}
+          unit="篇"
+          mark={peakYear}
+        />
       )}
     </div>
-
-    <dl class="stats">
-      <div class="stat">
-        <dt>total posts</dt>
-        <dd class="num">{totalPosts}</dd>
-      </div>
-      <div class="stat">
-        <dt>spanning</dt>
-        <dd class="num">{yearSpan}<span class="unit">{yearSpan === 1 ? ' yr' : ' yrs'}</span></dd>
-      </div>
-      <div class="stat">
-        <dt>categories</dt>
-        <dd class="num">{allCategories.length}</dd>
-      </div>
-      <div class="stat stat-peak">
-        <dt>peak year · {peakCount} 篇</dt>
-        <dd class="num">{peakYear || '-'}</dd>
-      </div>
-    </dl>
   </header>
 
-  <!-- Filter bar: search, sort, categories -->
-  <section class="filter-bar" id="archive-bar" aria-label="篩選文章">
-    <div class="filter-main">
-      <div class="search">
-        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="6.5"></circle>
-          <path d="M16 16l4.5 4.5"></path>
-        </svg>
-        <input
-          id="archive-q"
-          class="input"
-          type="search"
-          placeholder="搜尋標題…"
-          autocomplete="off"
-          aria-label="搜尋文章標題"
-        />
-        <kbd class="kbd" id="archive-kbd" aria-hidden="true">⌘K</kbd>
-      </div>
-      <button class="btn btn-secondary sort-btn" id="archive-sort" type="button" data-dir="desc" aria-label="切換排序">
-        <span class="sort-prefix">排序</span>
-        <span class="sort-label">↓ 新到舊</span>
-      </button>
-      <span class="result-count num" id="archive-count" data-total={rows.length} aria-live="polite">共 {rows.length} 篇</span>
-    </div>
-    {!isScoped && (
-      <div class="chips" id="archive-chips" role="group" aria-label="依分類篩選">
-        <button class="chip tag tag-accent" type="button" data-cat="*" aria-pressed="true">
-          全部 <span class="ct num">{rows.length}</span>
+  <!-- The index, on the sheet under it: the filter bar over the list -->
+  <div class="paper archive-index">
+    <!-- Filter bar: search, sort, categories -->
+    <section class="filter-bar" id="archive-bar" aria-label="篩選文章">
+      <div class="filter-main">
+        <div class="search">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5"></circle>
+            <path d="M16 16l4.5 4.5"></path>
+          </svg>
+          <input
+            id="archive-q"
+            class="input"
+            type="search"
+            placeholder="搜尋標題…"
+            autocomplete="off"
+            aria-label="搜尋文章標題"
+          />
+          <kbd class="kbd" id="archive-kbd" aria-hidden="true">⌘K</kbd>
+        </div>
+        <button class="btn btn-secondary sort-btn" id="archive-sort" type="button" data-dir="desc" aria-label="切換排序">
+          <span class="sort-prefix">排序</span>
+          <span class="sort-label">↓ 新到舊</span>
         </button>
-        {chipData.map((c) => (
-          <button class="chip tag tag-outline" type="button" data-cat={c.name} aria-pressed="false">
-            <span class="dot" style={`--c:${c.color}`}></span>
-            {c.name}
-            <span class="ct num">{c.count}</span>
+      </div>
+      {!isScoped && (
+        <div class="chips" id="archive-chips" role="group" aria-label="依分類篩選">
+          <button class="chip tag tag-accent" type="button" data-cat="*" aria-pressed="true">
+            全部 <span class="ct num">{rows.length}</span>
           </button>
-        ))}
-      </div>
-    )}
-  </section>
-
-  <!-- The index itself, one block per year -->
-  <section class="archive-list" id="archive-list" aria-label="文章列表">
-    {yearGroups.map((g) => (
-      <div class="year-block" data-year={g.year}>
-        <div class="year-side">
-          <div class="yr-n num">{g.year}</div>
-          <div class="yr-l num" data-total={g.count}>{g.count} 篇</div>
-          {g.peak && yearGroups.length > 1 && <div class="tag tag-peak">★ 高峰年</div>}
+          {chipData.map((c) => (
+            <button class="chip tag tag-outline" type="button" data-cat={c.name} aria-pressed="false">
+              <span class="dot" style={`--c:${c.color}`}></span>
+              {c.name}
+              <span class="ct num">{c.count}</span>
+            </button>
+          ))}
         </div>
-        <div class="rows">
-          {g.items.map((r, i) => {
-            const Tag = r.href ? 'a' : 'div';
-            return (
-              <Tag
-                class:list={['archive-row', { 'is-first': i === 0 }]}
-                href={r.href ?? undefined}
-                data-cat={r.cat}
-                data-title={r.title}
-                data-date={r.createdTime}
-              >
-                <span class="row-date num">{fmtMonthDay(r.createdTime)}</span>
-                <span class="row-title">{r.title}</span>
-                <span class="row-cat" title={r.cat}>
-                  <span class="dot" style={`--c:${catColor(r.cat)}`}></span>
-                  <span class="row-cat-name">{r.cat}</span>
-                </span>
-                <span class="row-min num">{estimateMin(r.title)} min</span>
-                {r.href && <span class="row-arrow" aria-hidden="true">↗</span>}
-              </Tag>
-            );
-          })}
-        </div>
-      </div>
-    ))}
-    <div class="archive-empty" id="archive-empty" hidden={yearGroups.length > 0}>
-      <p>沒有符合的文章。</p>
-      <button class="btn btn-secondary" id="archive-reset" type="button">清除篩選</button>
-    </div>
-  </section>
+      )}
+    </section>
 
-  <!-- Quiet colophon; the masthead has the way back, the desk's corner button the way up -->
-  <footer class="archive-foot">
-    <span>paul-learning.dev · © {new Date().getFullYear()} Paul Wu · built with Astro</span>
-  </footer>
+    <!-- The index itself, one block per year -->
+    <section class="archive-list" id="archive-list" aria-label="文章列表">
+      {yearGroups.map((g) => (
+        <div class="year-block" data-year={g.year}>
+          <div class="year-side">
+            <div class="yr-n num">{g.year}</div>
+            <div class="yr-l num" data-total={g.count}>{g.count} 篇</div>
+            {g.peak && yearGroups.length > 1 && <div class="tag tag-peak">★ 高峰年</div>}
+          </div>
+          <div class="rows">
+            {g.items.map((r, i) => {
+              const Tag = r.href ? 'a' : 'div';
+              return (
+                <Tag
+                  class:list={['archive-row', { 'is-first': i === 0 }]}
+                  href={r.href ?? undefined}
+                  data-cat={r.cat}
+                  data-title={r.title}
+                  data-date={r.createdTime}
+                >
+                  <span class="row-date num">{fmtMonthDay(r.createdTime)}</span>
+                  <span class="row-title">{r.title}</span>
+                  <span class="row-cat" title={r.cat}>
+                    <span class="dot" style={`--c:${catColor(r.cat)}`}></span>
+                    <span class="row-cat-name">{r.cat}</span>
+                  </span>
+                  <span class="row-min num">{estimateMin(r.title)} min</span>
+                  {r.href && <span class="row-arrow" aria-hidden="true">↗</span>}
+                </Tag>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <div class="archive-empty" id="archive-empty" hidden={yearGroups.length > 0}>
+        <p>沒有符合的文章。</p>
+        <button class="btn btn-secondary" id="archive-reset" type="button">清除篩選</button>
+      </div>
+    </section>
+
+    <!-- Quiet colophon; the masthead has the way back, the desk's corner button the way up -->
+    <footer class="archive-foot">
+      <span>paul-learning.dev · © {new Date().getFullYear()} Paul Wu · built with Astro</span>
+    </footer>
+  </div>
 </div>
 
 <script is:inline>
@@ -272,7 +242,6 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
     var sortBtn = document.getElementById('archive-sort');
     var emptyEl = document.getElementById('archive-empty');
     var resetBtn = document.getElementById('archive-reset');
-    var countEl = document.getElementById('archive-count');
     var bar = document.getElementById('archive-bar');
     var kbd = document.getElementById('archive-kbd');
     var sections = Array.prototype.slice.call(list.querySelectorAll('.year-block'));
@@ -300,8 +269,6 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
 
     function apply() {
       var anyVisible = false;
-      var shown = 0;
-      var total = 0;
       for (var s = 0; s < sections.length; s++) {
         var sec = sections[s];
         var rows = sec.querySelectorAll('.archive-row');
@@ -322,12 +289,9 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
           var t = parseInt(yl.getAttribute('data-total') || '0', 10);
           yl.textContent = visibleInSection === t ? t + ' 篇' : visibleInSection + ' / ' + t + ' 篇';
         }
-        shown += visibleInSection;
-        total += rows.length;
         if (visibleInSection > 0) anyVisible = true;
       }
       if (emptyEl) emptyEl.hidden = anyVisible;
-      if (countEl) countEl.textContent = shown === total ? '共 ' + total + ' 篇' : '顯示 ' + shown + ' / ' + total + ' 篇';
       markFirst();
     }
 

@@ -1,4 +1,4 @@
-/* Archive and category pages — a broadsheet index on one sheet of paper.
+/* Archive and category pages — a broadsheet index on two sheets of paper: the masthead, then the filter bar over the list.
    Everything is scoped under .archive-sheet; tokens come from broadsheet.css / desk.css. */
 
 .archive-sheet {
@@ -9,13 +9,13 @@
   --cat-2: var(--color-accent-2);
   --cat-3: #b58a00; /* process yellow, darkened so a dot still reads on paper */
 
-  padding: 34px var(--pad) 26px;
   font-family: var(--font-reading);
 }
 
 .archive-sheet .num { font-variant-numeric: tabular-nums lining-nums; }
 
 /* — masthead — */
+.archive-sheet .masthead { padding: 34px var(--pad) 32px; }
 .archive-sheet .kicker-row {
   display: flex;
   justify-content: space-between;
@@ -57,94 +57,9 @@
   text-wrap: balance;
 }
 .archive-sheet .masthead h1.is-long { font-size: 44px; }
-.archive-sheet .masthead h1 .stop { color: var(--color-accent-2); }
-.archive-sheet .masthead .lede {
-  font-size: 17px;
-  line-height: 1.65;
-  max-width: 30em;
-  margin-top: var(--space-3);
-}
 
-/* histogram: slim bars standing on a baseline rule */
-.archive-sheet .histo {
-  margin: 0;
-  /* 64px per year, up to the full 320px column; a single-year series stays slim so its title gets the room */
-  width: max(80px, min(320px, calc(var(--n) * 64px)));
-}
-.archive-sheet .histo-label {
-  margin-bottom: var(--space-2);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.archive-sheet .histo-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
-}
-.archive-sheet .histo-col { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-.archive-sheet .histo-slot {
-  width: 100%;
-  height: 84px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  border-bottom: 1px solid var(--color-text);
-}
-.archive-sheet .histo-bar {
-  display: block;
-  width: min(14px, 60%);
-  background: var(--color-accent);
-  transition: background-color 0.15s;
-}
-.archive-sheet .histo-col.peak .histo-bar { background: var(--color-accent-2); }
-.archive-sheet .histo-col:hover .histo-bar { background: var(--color-accent-700); }
-.archive-sheet .histo-col.peak:hover .histo-bar { background: var(--color-accent-2-700); }
-.archive-sheet .histo-col .yr {
-  margin-top: 7px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
-}
-.archive-sheet .histo-col .ct { font-size: 10px; line-height: 1.3; color: var(--muted); }
-.archive-sheet .histo-col.zero .yr,
-.archive-sheet .histo-col.zero .ct { opacity: 0.5; }
-.archive-sheet .histo-col.peak .yr { color: var(--color-accent-2-700); }
-
-/* stats strip */
-.archive-sheet .stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 30px 0 0;
-  border-top: 1px solid var(--color-text);
-  border-bottom: 1px solid var(--hair);
-}
-.archive-sheet .stat {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  padding: 14px 0 12px 22px;
-  border-left: 1px solid var(--hair);
-}
-.archive-sheet .stat:first-child { padding-left: 0; border-left: 0; }
-.archive-sheet .stat dd {
-  order: -1;
-  margin: 0;
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-}
-.archive-sheet .stat dd .unit { font-size: 14px; font-weight: 600; letter-spacing: 0; color: var(--muted); }
-.archive-sheet .stat-peak dd { color: var(--color-accent-2); }
-.archive-sheet .stat dt {
-  margin-top: 6px;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
+/* — the index sheet: the filter bar is its top edge — */
+.archive-sheet .archive-index { padding: 0 var(--pad) 26px; }
 
 /* — filter bar — */
 .archive-sheet .filter-bar {
@@ -152,8 +67,9 @@
   top: 0;
   z-index: 5;
   margin: 0 calc(var(--pad) * -1);
-  padding: 14px var(--pad) 14px;
+  padding: 20px var(--pad) 14px;
   background: var(--color-bg);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 /* while stuck: a soft edge beneath */
 .archive-sheet .filter-bar.is-stuck {
@@ -200,12 +116,6 @@
   white-space: nowrap;
 }
 .archive-sheet .sort-prefix { color: var(--muted); font-weight: 400; }
-.archive-sheet .result-count {
-  margin-left: auto;
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-}
 
 .archive-sheet .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--space-2); }
 .archive-sheet .chip {
@@ -340,37 +250,29 @@
 }
 
 /* — narrow screens — */
+/* the sheet is narrower than its full width, with no room for the heatmap beside the figures: it drops underneath */
+@media (max-width: 1040px) {
+  .archive-sheet .mast-grid { grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
+}
+
 @media (max-width: 960px) {
-  .archive-sheet .mast-grid { gap: 28px; }
-  .archive-sheet .histo { width: max(80px, min(260px, calc(var(--n) * 64px))); }
   .archive-sheet .masthead h1 { font-size: 48px; }
   .archive-sheet .masthead h1.is-long { font-size: 40px; }
 }
 
 @media (max-width: 760px) {
-  .archive-sheet { --pad: 18px; padding-top: 22px; padding-bottom: 20px; }
+  .archive-sheet { --pad: 18px; }
+  .archive-sheet .masthead { padding-top: 22px; padding-bottom: 24px; }
+  .archive-sheet .archive-index { padding-bottom: 20px; }
 
-  .archive-sheet .mast-grid { grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
   .archive-sheet .masthead h1,
   .archive-sheet .masthead h1.is-long { font-size: 34px; line-height: 1.12; }
-  .archive-sheet .masthead .lede { font-size: 15px; margin-top: var(--space-2); }
-  .archive-sheet .histo-slot { height: 60px; }
-  .archive-sheet .histo-bar { width: min(10px, 60%); }
-  .archive-sheet .histo-col .ct { font-size: 9px; }
-  .archive-sheet .histo { width: max(80px, min(100%, calc(var(--n) * 56px))); }
 
-  .archive-sheet .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 22px; }
-  .archive-sheet .stat { padding: 12px 0 10px 16px; }
-  .archive-sheet .stat:nth-child(odd) { padding-left: 0; border-left: 0; }
-  .archive-sheet .stat:nth-child(n + 3) { border-top: 1px solid var(--hair); }
-  .archive-sheet .stat dd { font-size: 26px; }
-
-  .archive-sheet .filter-bar { position: static; padding-top: 12px; padding-bottom: 12px; }
+  .archive-sheet .filter-bar { position: static; padding-top: 16px; padding-bottom: 12px; }
   .archive-sheet .filter-main { flex-wrap: wrap; }
   .archive-sheet .search { flex: 1 1 100%; max-width: none; }
   .archive-sheet .search .input { padding-right: 12px; }
   .archive-sheet .kbd { display: none; } /* no keyboard shortcut to advertise on a phone */
-  .archive-sheet .result-count { margin-left: auto; }
 
   .archive-sheet .year-block { grid-template-columns: minmax(0, 1fr); }
   .archive-sheet .year-side {
