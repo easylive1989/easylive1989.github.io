@@ -46,8 +46,7 @@
   gap: var(--space-6);
   align-items: stretch;
 }
-.rd-top.has-current { grid-template-columns: minmax(0, 1fr) 340px; }
-/* the sheets sit side by side here, so the stacking margin of `.paper + .paper` goes */
+/* the grid's gap spaces the sheets here, so the stacking margin of `.paper + .paper` goes */
 .reading .rd-top > .paper { margin-top: 0; }
 
 .rd-masthead { padding: 28px 36px 32px; }
@@ -147,7 +146,7 @@
 .heat-legend span { margin: 0 3px; }
 .heat-legend .heat-cell { width: 12px; height: 12px; }
 
-/* currently reading — a card pinned beside the masthead */
+/* currently reading — a card pinned under the masthead */
 .rd-current {
   display: flex;
   flex-direction: column;
@@ -192,7 +191,7 @@
 .cur-slide { flex: 0 0 100%; width: 100%; padding: 8px 10px 12px; user-select: none; }
 .cur-book {
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-columns: 112px minmax(0, 480px);
   gap: var(--space-4);
   align-items: center;
 }
@@ -472,7 +471,7 @@
    Every row is exactly --pitch tall, so one repeating background draws a
    plank under each wrapped row, edge to edge, plus the shadow beneath it. */
 .rd-shelf {
-  --bw: 148px;            /* width of a book */
+  --bw: 156px;            /* width of a book: four fill a row beside the plate */
   --gx: 20px;
   --shelf-pt: 34px;
   --shelf-pl: 214px;      /* room for the plate */
@@ -670,12 +669,6 @@ a.t:hover { text-decoration-color: currentColor; }
 }
 
 /* ───────────────────────── smaller screens ───────────────────────── */
-
-/* not enough room for the card beside the masthead: it drops underneath */
-@media (max-width: 1160px) {
-  .rd-top.has-current { grid-template-columns: minmax(0, 1fr); }
-  .rd-current .cur-book { grid-template-columns: 112px minmax(0, 480px); }
-}
 
 /* the plate leaves the shelf's left margin and sits above its row */
 @media (max-width: 900px) {
