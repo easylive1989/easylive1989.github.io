@@ -40,7 +40,9 @@ src/
 │       ├── index.astro      # 分類文章列表
 │       └── [slug].astro     # 文章內頁
 ├── scripts/
-│   ├── study.js          # 書房場景與互動 (three.js)
+│   ├── study.js          # 書房的舞台：鏡頭、兩間房間共用的東西（書、展品、桌上與櫃上的東西）、互動、切換世界 (three.js)
+│   ├── studyWestRoom.js  # 配秋天湖景的西式書房：牆、窗、家具骨架
+│   ├── studyInkRoom.js   # 配水墨山水的中式書齋，第一次點橡皮鴨切過去時才載入
 │   ├── studyTextures.js  # 程序化貼圖（木紋、灰泥、地板……），不碰 DOM，Worker 也能跑
 │   └── studyWorker.js    # 在 Worker 裡畫上面那些貼圖，開頁時主執行緒不被卡住
 └── styles/           # broadsheet.css (設計系統)、desk.css (內容頁共用)、
