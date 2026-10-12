@@ -120,7 +120,18 @@ export default function buildInkRoom(kit) {
     parts.push(decal(aoLin, 5.5, .55, [2.995, .28, .25], [0, -Math.PI / 2, Math.PI], .27), decal(aoLin, 6, .55, [0, .28, 2.994], [0, Math.PI, Math.PI], .27));
     parts.push(decal(aoLin, 6, .5, [0, 2.54, -2.494], [0, 0, 0], .22), decal(aoLin, 5.5, .5, [2.995, 2.54, .25], [0, -Math.PI / 2, 0], .22), decal(aoLin, 6, .5, [0, 2.54, 2.994], [0, Math.PI, 0], .22)); }
 
-  shell();
+  /* ================= 書格: the bookcase as open stands ================= */
+  // The boards are where the western bookcase has them. What holds them is a post at the front and the back of each bay's ends, with
+  // nothing behind the books or beside them, so the white wall shows through. Under the lowest board an apron runs from post to post.
+  function bookcase() { const { shelf, LV, bays, SZ0, SZ1, BZ } = kit;
+    piece(shelf, 'ink-bookcase', g => {
+      LV.forEach((y, i) => { const z0 = i === LV.length - 1 ? SZ0 : BZ; g.add(box(.4, .035, SZ1 - z0, rose, 'shelf-board', [-2.81, y, (z0 + SZ1) / 2])); }); // only the top board runs the whole length, over the display shelves too
+      bays.slice(1).forEach(z => [-2.635, -2.985].forEach(x => g.add(box(.045, 2.57, .045, rose, 'post', [x, 1.285, z], null, 1))));
+      for (let i = 1; i < bays.length - 1; i++) { const a = bays[i], b = bays[i + 1];
+        g.add(box(.016, .045, b - a - .045, rose, 'apron', [-2.632, .06, (a + b) / 2], null, 2));
+        [a + .07, b - .07].forEach(z => g.add(box(.016, .08, .1, rose, 'apron-head', [-2.632, .043, z], null, 2))); } }); }
+
+  shell(); bookcase();
   // the moon gate, in the plane of the back wall: the duck out on the jetty answers only through it
   return { parts, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
 }
