@@ -16,10 +16,13 @@ const recordDir = flag('--record'), repoArg = flag('--repo'), outArg = args[0];
 const SCRIPTS = ['study.js', 'studyTextures.js', 'studyWorker.js'], PAGE = 'Paul Study.html';
 const LAST = path.join(import.meta.dirname, 'last-sync.json');
 const sha = (f, algo = 'sha256', enc = 'hex') => createHash(algo).update(fs.readFileSync(f)).digest(enc);
-const syncedFrom = html => (html.match(/Synced from the site repo \(easylive1989\.github\.io @ ([^)]*)\)/) || [])[1];
+const HEADER = /Synced from the site repo \(easylive1989\.github\.io @ ([^)]*)\)/;
+const syncedFrom = html => (html.match(HEADER) || [])[1];
+// the page apart from the commit its header names: two builds of the same content hash the same
+const pageSha = f => createHash('sha256').update(fs.readFileSync(f, 'utf8').replace(HEADER, '')).digest('hex');
 
 if (recordDir) {
-  const rec = { commit: syncedFrom(fs.readFileSync(path.join(recordDir, PAGE), 'utf8')), at: new Date().toISOString(), files: Object.fromEntries(SCRIPTS.map(f => [f, sha(path.join(recordDir, f))])) };
+  const rec = { commit: syncedFrom(fs.readFileSync(path.join(recordDir, PAGE), 'utf8')), at: new Date().toISOString(), page: pageSha(path.join(recordDir, PAGE)), files: Object.fromEntries(SCRIPTS.map(f => [f, sha(path.join(recordDir, f))])) };
   fs.writeFileSync(LAST, JSON.stringify(rec, null, 2) + '\n');
   console.log(`recorded: Claude Design is at ${rec.commit}`);
   process.exit(0);
@@ -148,12 +151,16 @@ figcaption { font-size: 11px; margin-top: var(--space-1); color: color-mix(in sr
 `);
 fs.writeFileSync(path.join(out, DS, '_ds_bundle.js'), '');
 
-/* ---- what to upload: the page always (its header names the commit), a script only if it differs from what was last sent ---- */
+/* ---- what to upload: whatever differs from what this checkout last sent; the page goes with any script, so its header names the commit ---- */
 const last = fs.existsSync(LAST) ? JSON.parse(fs.readFileSync(LAST, 'utf8')) : null;
 const changed = SCRIPTS.filter(f => !last || last.files[f] !== sha(path.join(out, f)));
+const pageChanged = !last || last.page !== pageSha(path.join(out, PAGE));
 console.log(`bundle for ${commit} in ${out}`);
 console.log(last ? `Claude Design was last synced at ${last.commit} (${last.at.slice(0, 10)})` : 'no record of an earlier sync: upload every file');
-console.log('upload, in this order: ' + [...['studyTextures.js', 'study.js', 'studyWorker.js'].filter(f => changed.includes(f)), PAGE].join(', '));
+if (last) try { const files = git(`diff --name-only ${last.commit.split(' ')[0]}..HEAD -- src`); if (files) console.log('source changed since then: ' + files.split('\n').join(', ')); } catch {}
+if (!changed.length && !pageChanged) console.log('NOTHING TO UPLOAD: the page and the scripts are what was last sent');
+else console.log('upload, in this order: ' + [...['studyTextures.js', 'study.js', 'studyWorker.js'].filter(f => changed.includes(f)), PAGE].join(', ')
+  + (pageChanged && last && !changed.length ? '   (the scripts are unchanged; the page differs in its data or markup)' : ''));
 if (dirty) console.log('WARNING: src/ has uncommitted changes, and they are in this bundle');
-const built = fs.statSync(path.join(repo, 'dist/index.html')).mtimeMs, dataCommit = +git('log -1 --format=%ct -- src/lib src/pages/index.astro') * 1000;
-if (built < dataCommit) console.log(`WARNING: dist/index.html (${new Date(built).toISOString()}) is older than the last commit to src/lib or the page: run npm run build first, or the data is stale`);
+const built = fs.statSync(path.join(repo, 'dist/index.html')).mtimeMs, dataCommit = +git('log -1 --format=%ct -- src/lib src/pages/index.astro site.config.yaml') * 1000;
+if (built < dataCommit) console.log(`WARNING: dist/index.html (${new Date(built).toISOString()}) is older than the last commit to src/lib, the page or site.config.yaml: run npm run build, then this again, or the data is stale`);
