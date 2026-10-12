@@ -1344,4 +1344,3 @@ addEventListener('resize', fitCamera); fitCamera();
 // the type sheet is not waited for (SiteHead deferType), so it can land after the lettering was drawn in the fallback serif: once it is
 // in, the faces the canvases use are asked for (a canvas cannot be counted on to start a web font loading) and every lettered texture redrawn
 typeIn.then(() => document.fonts && Promise.all(['400', '600', '700'].map(w => document.fonts.load(`${w} 1em ${SERIF}`)))).catch(() => {}).then(() => texts.forEach(t => t.redraw()));
-
