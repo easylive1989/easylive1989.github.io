@@ -826,20 +826,28 @@ const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.
 const SKEY = 'study-scenery', sceneryTex = [outsideTex, sideTex, waterTex];
 const within = (ms, p) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('no answer in ' + ms + ' ms')), ms))]);
 const WORLDS = {
-  lake:{ sky:SKY.top, back:scene.background.getHex(), leaf:FALL.part, build:async () => buildWestRoom(kit),
+  lake:{ sky:SKY.top, back:scene.background.getHex(), leaf:FALL.part, builder:async () => buildWestRoom,
     paint:(far, side, near) => { paintLakeView(far, { trees:FALL.trees }); paintLakeView(side, { trees:FALL.trees, seed:23, boathouse:false, feather:.1 }); paintNearWater(near, far, { trees:FALL.trees }); } },
-  ink:{ sky:INKS.paper, back:INKS.paper, leaf:INKS.seal, build:async () => (await within(15000, import('./studyInkRoom.js'))).default(kit),
+  ink:{ sky:INKS.paper, back:INKS.paper, leaf:INKS.seal, builder:async () => (await within(15000, import('./studyInkRoom.js'))).default,
     paint:(far, side, near) => { paintInkView(far); paintInkView(side, { seed:23, pavilion:false, feather:.1 }); paintInkWater(near, far); } },
 };
-// `turning`: the door is shut, and the duck is not listened to. The empty sheets the views' textures were made with go to whichever is painted first
-let world = null, turning = true, blank = sceneryTex.map(t => t.image);
-// builds a world's room and paints its view, the first time either is wanted; nothing of it shows yet
+// `turning`: the door is shut, and the duck is not listened to. The empty sheets the views' textures were made with go to whichever is painted
+// first. `roomPicks`: what of the room on show can be picked
+let world = null, turning = true, blank = sceneryTex.map(t => t.image), roomPicks = [];
+// Builds a world's room and paints its view, the first time either is wanted; nothing of it shows yet. A builder that breaks off half way
+// has what it had already hung in the room taken down again, so that the room on show is left as it was.
 async function prepare(name) { const w = WORLDS[name];
-  if (!w.room) { const r = await w.build(); r.parts.forEach(o => { o.visible = false; }); w.room = r; }
+  if (!w.room) { const build = await w.builder(), hosts = [room, shelf, disp, desk, rack, tvc, chair, side, portrait, pf], had = hosts.map(h => new Set(h.children)); let r;
+    try { r = build(kit); } catch (err) { hosts.forEach((h, i) => [...h.children].forEach(o => { if (!had[i].has(o)) h.remove(o); })); throw err; }
+    // What a room hangs on a thing that can be picked (the stand under the TV, the frame round the portrait) answers for that thing
+    r.picks = []; r.parts.forEach(p => { p.visible = false; p.traverse(o => { if (!o.isMesh) return; for (let a = o.parent; a; a = a.parent) if (a.userData.pick) { o.userData.root = a; r.picks.push(o); break; } }); });
+    w.room = r; }
   if (!w.sheets) { w.sheets = blank || sceneryTex.map(t => cnv(t.image.width, t.image.height)); blank = null; w.paint(...w.sheets); } }
 // puts a prepared world on show, and the other one away
 function show(name) { const w = WORLDS[world = name];
   for (const k in WORLDS) if (WORLDS[k].room) WORLDS[k].room.parts.forEach(o => { o.visible = k === name; });
+  // a ray takes no notice of what is hidden, so only the room on show is left among the things that can be picked
+  roomPicks.forEach(o => { const i = pickables.indexOf(o); if (i >= 0) pickables.splice(i, 1); }); pickables.push(...(roomPicks = w.room.picks));
   sceneryTex.forEach((t, i) => { t.image = w.sheets[i]; t.needsUpdate = true; });
   sky.material.color.set(w.sky); scene.background.set(w.back); pMat.color.set(w.leaf); renderer.shadowMap.needsUpdate = true; }
 // The duck's doing. A world that has been built is put on show at once. One that has not is built behind the door; if it cannot be
