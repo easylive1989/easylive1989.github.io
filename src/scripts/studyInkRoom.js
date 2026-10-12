@@ -152,7 +152,45 @@ export default function buildInkRoom(kit) {
       const profile = [[0, 0], [.034, 0], [.038, .015], [.058, .1], [.06, .135], [.046, .165], [.02, .182], [.019, .198], [.027, .205]].map(([r, y]) => new THREE.Vector2(r, y));
       g.add(mk(new THREE.LatheGeometry(profile, 32), celadon, 'vase', [.12, DL[0] + .0175, .2])); }); }
 
-  shell(); bookcase(); curio();
+  /* ================= 畫案: the desk as a painting table, and what stands on it that is this room's own ================= */
+  // The top is the western desk's, to the centimetre. Under it: legs set in from the ends, a long apron front and back with a spandrel at
+  // each leg, and two stretchers between the legs at each end. No drawer.
+  function table() { const { desk, rack, portrait, pf, DX, DY, DZ, RKW, RKD } = kit, top = DY - .025, lx = .8, lz = .4;
+    const clay = std('ink-clay', '#5b3a2e', { roughness:.7 }), cane = std('ink-bamboo', '#a98b55', { roughness:.6 }), soot = pbr('ink-inkstone', '#1c1e20', { roughness:.5, clearcoat:.3 }), wet = pbr('ink-wet-ink', '#060708', { roughness:.08, clearcoat:1 });
+    piece(desk, 'ink-table', g => {
+      g.add(box(2.15, .05, .95, rose, 'desk-top', [DX, DY, DZ]));
+      [-1, 1].forEach(sx => { [-1, 1].forEach(sz => { g.add(box(.055, top, .055, rose, 'table-leg', [DX + sx * lx, top / 2, DZ + sz * lz], null, 1));
+          g.add(box(.16, .11, .016, rose, 'table-spandrel', [DX + sx * lx, top - .075, DZ + sz * (lz + .02)], null, 0)); });
+        [.3, .46].forEach(y => g.add(box(.03, .03, 2 * lz, rose, 'table-stretcher', [DX + sx * lx, y, DZ], null, 2))); });
+      [-1, 1].forEach(sz => g.add(box(2.05, .05, .016, rose, 'table-apron', [DX, top - .03, DZ + sz * (lz + .02)], null, 0)));
+      // an inkstone with ink in its well, a brush laid on a rest shaped like three peaks, and a pot of brushes behind the laptop's left
+      g.add(box(.12, .022, .17, soot, 'inkstone', [2.12, DY + .036, -1.7])); g.add(cyl(.038, .038, .003, 24, wet, 'ink', [2.12, DY + .0485, -1.72]));
+      g.add(box(.11, .022, .022, clay, 'brush-rest', [2.34, DY + .036, -1.66])); [-.035, 0, .035].forEach((dx, i) => g.add(mk(new THREE.ConeGeometry(.014, i === 1 ? .04 : .028, 12), clay, 'brush-rest', [2.34 + dx, DY + .047 + (i === 1 ? .018 : .012), -1.66])));
+      g.add(rod([2.2, DY + .034, -1.6], [2.36, DY + .066, -1.67], .0045, cane, 'brush')); g.add(rod([2.36, DY + .066, -1.67], [2.39, DY + .072, -1.683], .0055, soot, 'brush-tip'));
+      g.add(cyl(.038, .038, .1, 24, cane, 'brush-pot', [1.4, DY + .075, -2.3]));
+      [[-.012, .01, -.1], [.014, -.006, .12], [0, .014, .02]].forEach(([dx, dz, lean]) => { g.add(rod([1.4 + dx, DY + .05, -2.3 + dz], [1.4 + dx + lean * .2, DY + .25, -2.3 + dz], .004, cane, 'brush')); g.add(rod([1.4 + dx + lean * .2, DY + .25, -2.3 + dz], [1.4 + dx + lean * .23, DY + .28, -2.3 + dz], .005, soot, 'brush-tip')); }); });
+    // the box the series stand in: the western rack's shape, in rosewood
+    piece(rack, 'ink-book-box', g => { g.add(box(RKW, .018, RKD, rose, 'rack-base', [0, .009, 0])); g.add(box(RKW - .036, .12, .014, rose, 'rack-back', [0, .078, -RKD / 2 + .007]));
+      [-1, 1].forEach(s => g.add(box(.018, .19, RKD, rose, 'rack-end', [s * (RKW / 2 - .009), .113, 0]))); });
+    // The lamp: a paper lantern of six sides hung from the arm of a stand. The lantern is where the western lamp's shade is, for the
+    // light and its glow are the stage's and stay put.
+    const paper = new THREE.MeshStandardMaterial({ name:'ink-lamp-paper', color:col('#f3e2bd'), emissive:col('#ffb15a'), emissiveIntensity:.6, roughness:.9 });
+    piece(desk, 'ink-lamp', g => { g.position.set(2.56, DY + .025, -2.33);
+      g.add(box(.11, .022, .11, rose, 'lamp-base', [0, .011, 0])); g.add(box(.022, .62, .022, rose, 'lamp-stem', [0, .32, 0], null, 1)); g.add(rod([0, .62, 0], [-.18, .625, .068], .009, rose, 'lamp-arm'));
+      g.add(rod([-.16, .62, .06], [-.16, .585, .06], .003, soot, 'lamp-cord')); g.add(cyl(.055, .055, .14, 6, paper, 'lamp-paper', [-.16, .51, .06]));
+      [.585, .435].forEach(y => g.add(cyl(.06, .06, .012, 6, roseD, 'lamp-cap', [-.16, y, .06]))); g.add(cyl(.005, .003, .06, 8, std('ink-tassel', '#c2272d', { roughness:.8 }), 'lamp-tassel', [-.16, .4, .06])); });
+    // an orchid in a clay pot, where the snake plant stands: long narrow leaves that rise and fall over, and one stalk in flower
+    piece(desk, 'ink-orchid', g => { g.position.set(.74, DY + .025, -2.2); const R = rng(31), leaf = std('ink-orchid-leaf', '#3f6e3c', { roughness:.55, side:THREE.DoubleSide });
+      g.add(cyl(.052, .04, .07, 6, clay, 'pot', [0, .035, 0])); g.add(cyl(.046, .046, .004, 12, std('ink-soil', '#2a1d14', { roughness:1 }), 'soil', [0, .068, 0]));
+      for (let i = 0; i < 11; i++) { const H = .2 + R() * .16, Wd = .011 + R() * .006, a = i * 2.4 + R() * .5, bow = .35 + R() * .5, geo = new THREE.PlaneGeometry(1, 1, 1, 10), p = geo.attributes.position;
+        for (let q = 0; q < p.count; q++) { const u = p.getX(q), v = p.getY(q) + .5; p.setXYZ(q, u * Wd * Math.sin(Math.PI * (.12 + v * .86)), H * (v - bow * .55 * v * v), bow * H * v * v * .9 + .006); }
+        geo.computeVertexNormals(); geo.rotateY(a); g.add(mk(geo, leaf, 'orchid-leaf', [0, .068, 0])); }
+      g.add(rod([0, .068, 0], [.03, .3, .02], .0025, std('ink-orchid-stalk', '#6b7d3e'), 'orchid-stalk')); [[.012, .2, .012], [.022, .25, .02], [.032, .3, .018]].forEach(p => g.add(mk(new THREE.SphereGeometry(.011, 10, 8), std('ink-orchid-bloom', '#efe7c9', { roughness:.6 }), 'orchid-bloom', p))); });
+    // the portrait, out of its brass edges and into a table screen: a wooden frame round the panel, and two feet on a rail
+    piece(pf, 'ink-screen-frame', g => { [-.108, .108].forEach(x => g.add(box(.024, .274, .026, rose, 'screen-frame', [x, 0, .001], null, 1))); [-.134, .134].forEach(y => g.add(box(.24, .024, .026, rose, 'screen-frame', [0, y, .001], null, 0))); });
+    piece(portrait, 'ink-screen-stand', g => { [-.1, .1].forEach(x => g.add(box(.028, .05, .12, rose, 'screen-foot', [x, .025, -.02], null, 2))); g.add(box(.2, .02, .03, rose, 'screen-rail', [0, .02, -.012], null, 0)); }); }
+
+  shell(); bookcase(); curio(); table();
   // the moon gate, in the plane of the back wall: the duck out on the jetty answers only through it
   return { parts, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
 }
