@@ -64,7 +64,8 @@ const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .02, 60);
 const PHONE = innerWidth <= 760;
 const HOME = { pos:new THREE.Vector3(1.05, 1.72, 2.1), tgt:new THREE.Vector3(-0.2, 1.22, -1.7) };
 if (PHONE) HOME.tgt.sub(HOME.pos).setLength(1).add(HOME.pos);
-camera.position.set(1.6, 1.9, 3.6);
+const ENTRY = new THREE.Vector3(1.6, 1.9, 3.6); // just inside the door into the house: where the eye is when that door opens
+camera.position.copy(ENTRY);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.tgt); controls.enableDamping = true; controls.enablePan = false; controls.rotateSpeed = .45;
 controls.minDistance = .35; controls.maxDistance = PHONE ? 2 : 4.4; controls.minPolarAngle = .95; controls.maxPolarAngle = 1.8; // the short orbit must not back out through the wall behind
@@ -161,7 +162,6 @@ async function paintClaimed() {
   mine.forEach(([key, ch, t]) => { t.dispose(); t.image = sets[key][ch]; t.needsUpdate = true; renderer.initTexture(t); });
   w?.terminate();
 }
-const sheetsReady = (async () => { await null; await paintClaimed(); })(); // once the whole room is built, and every slot claimed
 // one sheet of grain, 2 m along it and 1 m across, stained three ways by the material colours
 const woodTex = { map:sheet('wood', 'color', [.5, 1]), normalMap:sheet('wood', 'normal', [.5, 1]), roughnessMap:sheet('wood', 'rough', [.5, 1]), normalScale:new THREE.Vector2(.35, .35) };
 // one 2.5 m sheet of plaster: its relief and its roughness are every room's; the western walls lay its colour over them
@@ -675,7 +675,7 @@ const dkM = pbr('duck', C.yel, { roughness:.35, clearcoat:.6, clearcoatRoughness
 const dkb = mk(new THREE.SphereGeometry(.05, 20, 14), dkM, 'duck-body'); dkb.scale.set(1, .75, 1.3); duck.add(dkb);
 duck.add(mk(new THREE.SphereGeometry(.032, 16, 12), dkM, 'duck-head', [0,.045,.04]));
 duck.add(mk(new THREE.ConeGeometry(.012, .03, 8), std('beak', '#e0742c'), 'duck-beak', [0,.042,.077], [Math.PI/2,0,0]));
-// It changes the scenery outside (see SCENERY below). From across the room it is a few pixels wide, so an unseen ball around it takes the
+// It changes the world: the view outside and the room with it (see WORLDS below). From across the room it is a few pixels wide, so an unseen ball around it takes the
 // click: wider for a finger than for a cursor.
 const duckReach = mk(new THREE.SphereGeometry(matchMedia('(pointer: coarse)').matches ? .3 : .13, 12, 8), new THREE.MeshBasicMaterial({ visible:false }), 'duck-reach', [0, .04, .02]); duckReach.castShadow = duckReach.receiveShadow = false; duck.add(duckReach);
 room.add(duck); tag(duck, { type:'scenery' });
@@ -818,23 +818,42 @@ for (let i = 0; i < PN; i++) { pPos[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0
 const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 const pMat = new THREE.PointsMaterial({ map:leafTex, color:col(FALL.part), size:FALL.size, transparent:true, depthWrite:false, alphaTest:.2 });
 const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.add(points);
-// What lies outside the window and the door, and the leaves that fall past them. There are two views of it: the lake in autumn, and
-// the same lake as a landscape in ink, where the sky is paper and the leaves are the red of the sun. The rubber duck on the jetty changes
-// one for the other, and the room remembers which it was left on. A view is painted the first time it is wanted, on sheets of its own.
+/* ================= worlds ================= */
+// A world is what lies outside and the room that goes with it: the lake in autumn seen from the western study, and the same lake as a
+// landscape in ink, where the sky is paper and the leaves are the red of the sun, seen from a Chinese one. The rubber duck on the jetty
+// changes one for the other, and the page remembers which it was left in. Only the world the door opens on is built. The other is built
+// the first time it is asked for, behind the door, which is shut and pushed open again; after that both are kept, and change places at once.
 const SKEY = 'study-scenery', sceneryTex = [outsideTex, sideTex, waterTex];
-const SCENERY = {
-  lake:{ sky:SKY.top, back:scene.background.getHex(), leaf:FALL.part, paint:(far, side, near) => { paintLakeView(far, { trees:FALL.trees }); paintLakeView(side, { trees:FALL.trees, seed:23, boathouse:false, feather:.1 }); paintNearWater(near, far, { trees:FALL.trees }); } },
-  ink:{ sky:INKS.paper, back:INKS.paper, leaf:INKS.seal, paint:(far, side, near) => { paintInkView(far); paintInkView(side, { seed:23, pavilion:false, feather:.1 }); paintInkWater(near, far); } },
+const within = (ms, p) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('no answer in ' + ms + ' ms')), ms))]);
+const WORLDS = {
+  lake:{ sky:SKY.top, back:scene.background.getHex(), leaf:FALL.part, build:async () => buildWestRoom(kit),
+    paint:(far, side, near) => { paintLakeView(far, { trees:FALL.trees }); paintLakeView(side, { trees:FALL.trees, seed:23, boathouse:false, feather:.1 }); paintNearWater(near, far, { trees:FALL.trees }); } },
+  ink:{ sky:INKS.paper, back:INKS.paper, leaf:INKS.seal, build:async () => (await within(15000, import('./studyInkRoom.js'))).default(kit),
+    paint:(far, side, near) => { paintInkView(far); paintInkView(side, { seed:23, pavilion:false, feather:.1 }); paintInkWater(near, far); } },
 };
-let scenery, blank = sceneryTex.map(t => t.image); // the empty sheets the textures were made with go to whichever view is painted first
-function setScenery(name) {
-  const v = SCENERY[scenery = name];
-  if (!v.sheets) { v.sheets = blank || sceneryTex.map(t => cnv(t.image.width, t.image.height)); blank = null; v.paint(...v.sheets); }
-  sceneryTex.forEach((t, i) => { t.image = v.sheets[i]; t.needsUpdate = true; });
-  sky.material.color.set(v.sky); scene.background.set(v.back); pMat.color.set(v.leaf);
-}
-setScenery((() => { try { return localStorage.getItem(SKEY); } catch { return null; } })() === 'ink' ? 'ink' : 'lake');
-const turnScenery = () => { setScenery(scenery === 'ink' ? 'lake' : 'ink'); try { localStorage.setItem(SKEY, scenery); } catch {} };
+// `turning`: the door is shut, and the duck is not listened to. The empty sheets the views' textures were made with go to whichever is painted first
+let world = null, turning = true, blank = sceneryTex.map(t => t.image);
+// builds a world's room and paints its view, the first time either is wanted; nothing of it shows yet
+async function prepare(name) { const w = WORLDS[name];
+  if (!w.room) { const r = await w.build(); r.parts.forEach(o => { o.visible = false; }); w.room = r; }
+  if (!w.sheets) { w.sheets = blank || sceneryTex.map(t => cnv(t.image.width, t.image.height)); blank = null; w.paint(...w.sheets); } }
+// puts a prepared world on show, and the other one away
+function show(name) { const w = WORLDS[world = name];
+  for (const k in WORLDS) if (WORLDS[k].room) WORLDS[k].room.parts.forEach(o => { o.visible = k === name; });
+  sceneryTex.forEach((t, i) => { t.image = w.sheets[i]; t.needsUpdate = true; });
+  sky.material.color.set(w.sky); scene.background.set(w.back); pMat.color.set(w.leaf); renderer.shadowMap.needsUpdate = true; }
+// The duck's doing. A world that has been built is put on show at once. One that has not is built behind the door; if it cannot be
+// (its script would not load), the door opens again on the world it shut on.
+async function turnWorld() { if (turning) return; turning = true;
+  const to = world === 'ink' ? 'lake' : 'ink', fresh = !WORLDS[to].room; let ok = true;
+  if (fresh) await shutDoor();
+  try { await prepare(to); show(to);
+    if (fresh) { ajar(); await Promise.all([paintClaimed().then(ajar), renderer.compileAsync(scene, camera).catch(() => {}).then(ajar)]); }
+    try { localStorage.setItem(SKEY, to); } catch {} }
+  catch (err) { ok = false; console.warn('the other room would not open', err); }
+  if (fresh) walkIn();
+  if (!ok) toast('另一間書房暫時進不去，等一下再試');
+  turning = false; }
 let partN = Q.low ? Math.ceil(PN / 2) : PN; pGeo.setDrawRange(0, partN);
 
 /* ================= the room itself ================= */
@@ -844,7 +863,6 @@ const kit = { THREE, renderer, Q, C, M, col, rng, cnv, texOf, ctex, mk, box, cyl
   woodTex, plasterTex, grit, decal, aoLin, halo, dispAt,
   room, shelf, disp, desk, rack, tvc, chair, side, portrait, pf,
   LV, bays, SZ0, SZ1, BZ, DL, DW, DD, DX, DY, DZ, CW, CH, CD, RKW, RKD, WIN, WZ, DOOR, DCX, FDOOR };
-const westRoom = buildWestRoom(kit);
 
 /* ================= UI ================= */
 const st = { cur:null };
@@ -1205,7 +1223,7 @@ function tipText(p) {
 const setMouse = e => { const r = renderer.domElement.getBoundingClientRect(); mouse.set((e.clientX - r.left)/r.width*2-1, -(e.clientY - r.top)/r.height*2+1); ray.setFromCamera(mouse, camera); };
 // Only the things that can be picked are tested, so a wall hides none of them. That is right for what stands in the room, but the duck
 // is out on the jetty: it answers only along a line of sight that leaves through the doorway.
-const viaDoor = ({ origin:o, direction:d }) => { const k = (WZ - o.z) / d.z, x = o.x + d.x * k, y = o.y + d.y * k; return d.z < 0 && x > DOOR.x0 + .04 && x < DOOR.x1 - .04 && y > 0 && y < DOOR.y1; };
+const viaDoor = ({ origin:o, direction:d }) => { const k = (WZ - o.z) / d.z, r = world && WORLDS[world].room; return !!r && d.z < 0 && r.opening(o.x + d.x * k, o.y + d.y * k); };
 const pickRoot = () => { const root = rootOf(ray.intersectObjects(pickables, false)[0]); return root && root.userData.pick.type === 'scenery' && !viaDoor(ray.ray) ? null : root; };
 renderer.domElement.addEventListener('pointerdown', e => { down = { x:e.clientX, y:e.clientY }; });
 renderer.domElement.addEventListener('pointermove', e => {
@@ -1221,7 +1239,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   setMouse(e); const root = pickRoot();
   if (!root) { if (panel.classList.contains('open')) closePanel(); return; }
   const p = root.userData.pick;
-  if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout(); else if (p.type === 'scenery') turnScenery();
+  if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout(); else if (p.type === 'scenery') turnWorld();
 });
 
 /* ================= adaptive quality ================= */
@@ -1229,7 +1247,7 @@ renderer.domElement.addEventListener('pointerup', e => {
 // everything that can change without rebuilding shaders, and remembered as slow so the next visit starts there.
 const qSamples = [];
 function judge(dt) {
-  if (!Q.armed || Q.low || Q.judged || tween || document.hidden) return;
+  if (!Q.armed || Q.low || Q.judged || tween || turning || document.hidden) return;
   qSamples.push(dt); if (qSamples.length < 150) return;
   Q.judged = true; const s = [...qSamples].sort((a, b) => a - b);
   if (s[s.length >> 1] > .025) demote();
@@ -1292,17 +1310,38 @@ function loop(ts) {
   if (TV.on) { positionTV(); if (!tween && !TV.vis) { TV.vis = true; tvui.classList.add('vis'); } }
   renderer.render(scene, camera);
 }
-// the shaders are built while the sheets are still being painted; the room opens once both are done
-// the door on the loading screen swings a little wider as each of the three is done: the room built, its shaders, its sheets
+/* ================= the door ================= */
+// The loading screen is the study's door. It swings a little wider as each of three things is done (the room built, its shaders, its
+// sheets), then all the way, and the eye walks in. That happens when the page opens, and again whenever the duck asks for a room that has
+// not been built: the screen goes back to the door, shut, and the room is built behind it.
 const introEl = $('intro'), door = n => { introEl.dataset.s = Math.max(n, +introEl.dataset.s || 0); }; let doorN = 0; const ajar = () => door(++doorN);
-ajar();
-renderer.compileAsync(scene, camera).catch(() => {}).then(() => { ajar(); renderer.setAnimationLoop(loop); });
-sheetsReady.then(ajar);
-Promise.all([sheetsReady, new Promise(r => setTimeout(r, 300))]).then(() => { flyTo(HOME.tgt, HOME.pos, 2.2); Q.armed = true; door(4); introEl.classList.add('off'); document.body.classList.add('in');
-  loadDog().catch(err => console.warn('the dog stayed off the chair', err)); }); // the room first, then the dog
+function walkIn() { camera.position.copy(ENTRY); controls.target.copy(HOME.tgt); flyTo(HOME.tgt, HOME.pos, 2.2); focused = false; setZone(null);
+  door(4); introEl.classList.remove('again'); introEl.classList.add('off'); introEl.style.pointerEvents = ''; document.body.classList.add('in'); }
+// Back to the door, shut. Whatever was held up to read is put down first; the dock goes once the door has covered it, and comes back in
+// button by button when the door opens, as it did the first time.
+const shutDoor = () => new Promise(done => {
+  if (panel.classList.contains('open')) { panel.classList.remove('open'); document.body.classList.remove('reading'); }
+  tip.style.opacity = 0; hoverRoot = null;
+  introEl.classList.add('snap'); introEl.dataset.s = 0; doorN = 0; void introEl.offsetWidth; introEl.classList.remove('snap'); // shut, without swinging back
+  introEl.style.pointerEvents = 'auto'; introEl.classList.add('again'); introEl.classList.remove('off');
+  setTimeout(() => { document.body.classList.remove('in'); done(); }, 400); });
+// The door opens on the world the room was left in. If that is the Chinese study and its script will not load, on the lake instead (and
+// the page goes on remembering the study, to try again next time). The shaders are built while the sheets are still being painted; the
+// room opens once the sheets are in.
+(async () => {
+  let first = (() => { try { return localStorage.getItem(SKEY); } catch { return null; } })() === 'ink' ? 'ink' : 'lake';
+  try { await prepare(first); }
+  catch (err) { if (first === 'lake') throw err; console.warn('the Chinese study would not open, so the door opens on the lake', err); await prepare(first = 'lake'); }
+  show(first); ajar();
+  renderer.compileAsync(scene, camera).catch(() => {}).then(() => { ajar(); renderer.setAnimationLoop(loop); });
+  await Promise.all([paintClaimed().then(ajar), new Promise(r => setTimeout(r, 300))]);
+  walkIn(); Q.armed = true; turning = false;
+  loadDog().catch(err => console.warn('the dog stayed off the chair', err)); // the room first, then the dog
+})();
 // a portrait screen would crop the room to a sliver, so widen the vertical field of view as it narrows
 const fitCamera = () => { camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect >= 1 ? 52 : Math.min(85, 52 + (1 - camera.aspect) * 60); camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); stillFor = null; lastDraw = -Infinity; stir(); }; // resizing wipes the canvas, so the very next frame is drawn, even in a room standing still
 addEventListener('resize', fitCamera); fitCamera();
 // the type sheet is not waited for (SiteHead deferType), so it can land after the lettering was drawn in the fallback serif: once it is
 // in, the faces the canvases use are asked for (a canvas cannot be counted on to start a web font loading) and every lettered texture redrawn
 typeIn.then(() => document.fonts && Promise.all(['400', '600', '700'].map(w => document.fonts.load(`${w} 1em ${SERIF}`)))).catch(() => {}).then(() => texts.forEach(t => t.redraw()));
+
