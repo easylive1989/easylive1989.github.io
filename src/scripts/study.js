@@ -446,7 +446,7 @@ const board = new THREE.Group(); board.name = 'game-board';
 place(board, 'g2', .4, on(3), .15, -.15, 0);
 // the book I wrote, face out and leaning on the back of the shelf: a book like any other, the size of the one in the shops, turned so its front board faces the room.
 // Its front board and its spine are drawn after the real ones — white, an orange strip across the head and an orange band at the foot, the title in a heavy sans.
-// The back board is against the wall and stays plain. It is not taken down and opened like the others: picking it brings up the
+// The back board is against its stand and stays plain. It is not taken down and opened like the others: picking it brings up the
 // panel, with the way to the shop that sells it.
 if (has('mb')) { const BW = .17, BH = .23, BT = .0186, it = ITEMS.mb, px = Q.low ? 520 : 1040, BAND = .762, ORANGE = '#f18845', INK = '#231815', SLATE = '#1f3a44', GREEN = '#63b958';
   const sans = wt => s => `${wt} ${s}px "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif`, bold = sans(700), heavy = sans(800);
@@ -479,8 +479,17 @@ if (has('mb')) { const BW = .17, BH = .23, BT = .0186, it = ITEMS.mb, px = Q.low
   const spine = (x, w, h) => { const B = BAND * h; x.save(); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.fillStyle = ORANGE; x.fillRect(0, B, w, h - B);
     x.fillStyle = INK; setDown(x, it.t, w, B, bold); x.translate(0, B); x.fillStyle = '#fff'; setDown(x, it.by + '著', w, h - B, bold); x.restore(); };
   const face = (name, across, draw) => new THREE.MeshStandardMaterial({ name, roughness:.7, map:ctex(Math.round(px * across / BH), px, draw) });
-  const g = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(BW, BH, BT), [face('spine-mb', BT, spine), pagesMat, pagesMat, pagesMat, std('cover-mb', '#ffffff', { roughness:.7 }), face('cover-mb-front', BW, front)], 'book-mb'));
-  place(g, 'mb', .5, on(1) + BH/2, .049, Math.PI, -.1); }
+  // It is shown the way a shop shows a book: on a stand of black sheet steel, a plate folded up into a tall back that leans away (its
+  // top shows over the book), the book's foot in the fold and a bar across the front to stop it sliding off. The plate runs on behind as
+  // far as the back overhangs it. The stand stays where it is when the book is lifted.
+  const LEAN = .42, T = .003, SW = .13, PH = .25, FRONT = BT + .02, REAR = .11, X = .5, Z = .18, RY = -.15, c = Math.cos(LEAN), s = Math.sin(LEAN);
+  const steel = std('stand', '#17171a', { roughness:.5, metalness:.3 }), stand = new THREE.Group(); stand.name = 'book-stand';
+  stand.add(box(SW, T, FRONT + REAR, steel, 'stand-base', [0, T/2, (FRONT - REAR)/2]));
+  stand.add(box(SW, PH, T, steel, 'stand-back', [0, T + (PH/2)*c - (T/2)*s, -(PH/2)*s - (T/2)*c], [-LEAN, 0, 0]));
+  stand.add(box(SW, .014, .01, steel, 'stand-lip', [0, T + .007, FRONT - .005]));
+  stand.position.set(X, on(1), Z); stand.rotation.y = RY; disp.add(weld(stand));
+  const g = new THREE.Group(); g.add(mk(new THREE.BoxGeometry(BW, BH, BT), [face('spine-mb', BT, spine), pagesMat, pagesMat, pagesMat, std('cover-mb', '#ffffff', { roughness:.7 }), face('cover-mb-front', BW, front)], 'book-mb', [0, T + (BH/2)*c + (BT/2)*s, (BT/2)*c - (BH/2)*s], [-LEAN, Math.PI, 0]));
+  place(g, 'mb', X, on(1), Z, RY, 0); g.userData.pull.set(0, c, -s).applyAxisAngle(UP, RY).multiplyScalar(.03); } // lifted, it slides up the back of the stand
 
 /* the award ceremony: a black-and-gold podium with the star on its top step, and beside it the envelope — seal broken, the winner's card half drawn */
 const podium = new THREE.Group(); podium.name = 'award-podium';
