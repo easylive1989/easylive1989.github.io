@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, paintInkView, paintInkWater, SKY, INKS, crtMask } from './studyTextures.js';
+import buildWestRoom from './studyWestRoom.js';
 const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
 
 /* ================= content ================= */
@@ -75,11 +76,9 @@ controls.minAzimuthAngle = az0 - .62; controls.maxAzimuthAngle = az0 + (PHONE ? 
 /* ================= helpers ================= */
 const std = (name, c, o = {}) => new THREE.MeshStandardMaterial({ name, color:col(c), roughness:.8, metalness:0, ...o });
 const M = {
-  wall:std('wall', C.wall, { roughness:.95 }), wallL:std('wall-light', C.wallL, { roughness:.95 }),
   wood:std('wood', C.wood, { roughness:.55 }), woodD:std('wood-dark', C.woodD, { roughness:.6 }), woodL:std('wood-light', C.woodL, { roughness:.5 }),
   fabric:std('fabric', C.fabric, { roughness:1 }), fabricD:std('fabric-dark', C.fabricD, { roughness:1 }),
   cream:std('cream', C.cream, { roughness:.9 }), brass:std('brass', C.brass, { roughness:.35, metalness:.8 }), ink:std('ink', C.ink, { roughness:.5 }),
-  glass:new THREE.MeshStandardMaterial({ name:'glass', color:col('#9fb7b0'), transparent:true, opacity:.08, roughness:.05, depthWrite:false }),
   alu:std('aluminium', '#9a9893', { roughness:.35, metalness:.7 }),
 };
 const mk = (geo, m, name, p, r) => { const o = new THREE.Mesh(geo, m); o.name = name; if (p) o.position.set(...p); if (r) o.rotation.set(...r); o.castShadow = true; o.receiveShadow = true; return o; };
@@ -146,23 +145,27 @@ function rboxGeo(w, h, d, r, ax) {
 // right kind; the finished sheets drop into those same texture objects when they arrive, so no shader is built twice.
 const STAND_IN = { color:'#bdbdbd', normal:'#8080ff', rough:'#ffffff' }, slots = [];
 const sheet = (key, ch, rep = [1, 1]) => { const t = texOf(cnv(2, 2, (x, w, h) => { x.fillStyle = STAND_IN[ch]; x.fillRect(0, 0, w, h); }), rep, ch === 'color'); slots.push([key, ch, t]); return t; };
-const sheetsReady = (async () => {
-  await null; // let the whole room be built (and every slot claimed) first
+// Paints the sheets that have been claimed since it last ran, and only those: everything the room at the door is made of, and later
+// whatever a room built behind the door asks for besides.
+async function paintClaimed() {
+  const mine = slots.splice(0); if (!mine.length) return;
+  const keys = [...new Set(mine.map(s => s[0]))];
   let sets = null, w = null;
   if (typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined') {
-    try { sets = await new Promise((res, rej) => { w = new Worker(new URL('./studyWorker.js', import.meta.url), { type:'module' }); w.onmessage = e => res(e.data); w.onerror = rej; w.postMessage({ low:Q.low }); }); }
+    try { sets = await new Promise((res, rej) => { w = new Worker(new URL('./studyWorker.js', import.meta.url), { type:'module' }); w.onmessage = e => res(e.data); w.onerror = rej; w.postMessage({ low:Q.low, keys }); }); }
     catch (err) { console.warn('painting the room\'s sheets on the main thread instead', err); }
   }
-  if (!sets) sets = paintSheets(Q.low);
+  if (!sets) sets = paintSheets(Q.low, keys);
   // Uploaded here and now rather than on the next frame: in Chromium a worker's bitmaps live on its GPU context and go when it does, and
   // the next frame can be a long way off (a tab opened in the background, shaders still compiling). Only then is the worker let go.
-  slots.forEach(([key, ch, t]) => { t.dispose(); t.image = sets[key][ch]; t.needsUpdate = true; renderer.initTexture(t); });
+  mine.forEach(([key, ch, t]) => { t.dispose(); t.image = sets[key][ch]; t.needsUpdate = true; renderer.initTexture(t); });
   w?.terminate();
-})();
+}
+const sheetsReady = (async () => { await null; await paintClaimed(); })(); // once the whole room is built, and every slot claimed
 // one sheet of grain, 2 m along it and 1 m across, stained three ways by the material colours
 const woodTex = { map:sheet('wood', 'color', [.5, 1]), normalMap:sheet('wood', 'normal', [.5, 1]), roughnessMap:sheet('wood', 'rough', [.5, 1]), normalScale:new THREE.Vector2(.35, .35) };
-// one 2.5 m sheet of plaster, painted two shades by the material colours
-const plasterTex = { map:sheet('plaster', 'color', [.4, .4]), normalMap:sheet('plaster', 'normal', [.4, .4]), roughnessMap:sheet('plaster', 'rough', [.4, .4]), normalScale:new THREE.Vector2(.55, .55) };
+// one 2.5 m sheet of plaster: its relief and its roughness are every room's; the western walls lay its colour over them
+const plasterTex = { normalMap:sheet('plaster', 'normal', [.4, .4]), roughnessMap:sheet('plaster', 'rough', [.4, .4]), normalScale:new THREE.Vector2(.55, .55) };
 // upholstery: one 12.5 cm swatch of 4 mm threads
 const fabricTex = { map:sheet('fabric', 'color', [8, 8]), normalMap:sheet('fabric', 'normal', [8, 8]), normalScale:new THREE.Vector2(.8, .8), roughness:1, sheen:.4, sheenRoughness:.75 };
 // small things: metal that has been handled, and a fine grit for paper and hardboard
@@ -175,51 +178,22 @@ Object.assign(M, {
   wood: pbr('wood', '#9a5f3c', { ...woodTex, roughness:.52, clearcoat:.45, clearcoatRoughness:.28 }),
   woodD: pbr('wood-dark', '#6a3f29', { ...woodTex, roughness:.62, clearcoat:.3, clearcoatRoughness:.35 }),
   woodL: pbr('wood-light', '#b07a50', { ...woodTex, roughness:.47, clearcoat:.5, clearcoatRoughness:.25 }),
-  wall: std('wall', '#544739', { ...plasterTex, roughness:1 }),
-  wallL: std('wall-light', '#665645', { ...plasterTex, roughness:1 }), ceil: std('ceiling', '#7d6f5e', { ...plasterTex, map:null, roughness:1 }), // painted flat: the walls' mottling would be most of a phone's screen
   fabric: pbr('fabric', '#9a917a', { ...fabricTex, sheenColor:col('#cfc7ae') }),
   fabricD: pbr('fabric-dark', '#7a7262', { ...fabricTex, sheenColor:col('#aaa290') }),
   brass: pbr('brass', '#d2a868', { ...metalTex, roughness:.43 }),
   alu: pbr('aluminium', '#b4b2ad', { ...metalTex, map:null, roughness:.53 }),
   cream: pbr('cream', C.cream, { roughness:.6, clearcoat:.2 }),
-  glass: new THREE.MeshPhysicalMaterial(lite({ name:'glass', color:col('#c8d8d4'), transparent:true, opacity:.14, roughness:.04, metalness:0, depthWrite:false, clearcoat:1 })),
 });
 
 /* ================= room shell ================= */
-// one 3 m tile of 12.5 cm boards, laid twice each way
-const [floorMap, floorNormal, floorRough] = ['color', 'normal', 'rough'].map(ch => { const t = sheet('floor', ch, [2, 2]); t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; });
-// the boards stop at the outer face of the back wall, where the deck takes over; the tile keeps its scale
-const floorGeo = new THREE.PlaneGeometry(6, 5.6); for (let i = 0, uv = floorGeo.attributes.uv; i < uv.count; i++) uv.setY(i, uv.getY(i) * 5.6 / 6);
-room.add(mk(floorGeo, new THREE.MeshPhysicalMaterial(lite({ name:'floor', map:floorMap, normalMap:floorNormal, normalScale:new THREE.Vector2(.7, .7), roughnessMap:floorRough, roughness:1, clearcoat:.25, clearcoatRoughness:.35 })), 'floor', [0,0,.2], [-Math.PI/2,0,0]));
-room.add(roomUV(box(.1, 2.8, 6, M.wall, 'wall-left', [-3.05,1.4,0])));
-room.add(roomUV(box(.1, 2.8, 6, M.wall, 'wall-right', [3.05,1.4,0])));
-// back wall with the door and window openings
-const DOOR = { x0:-2, x1:-.9, y1:2.15 };
-room.add(roomUV(box(DOOR.x0 + 3.05, 2.8, .1, M.wall, 'wall-back', [(DOOR.x0 - 3.05)/2,1.4,-2.55])));
-room.add(roomUV(box(.05 - DOOR.x1, 2.8, .1, M.wall, 'wall-back', [(DOOR.x1 + .05)/2,1.4,-2.55])));
-room.add(roomUV(box(DOOR.x1 - DOOR.x0, 2.8 - DOOR.y1, .1, M.wall, 'wall-back', [(DOOR.x0 + DOOR.x1)/2,(2.8 + DOOR.y1)/2,-2.55])));
-room.add(roomUV(box(.4, 2.8, .1, M.wall, 'wall-back', [2.85,1.4,-2.55])));
-room.add(roomUV(box(2.6, 1.0, .1, M.wall, 'wall-back', [1.35,.5,-2.55])));
-room.add(roomUV(box(2.6, .3, .1, M.wall, 'wall-back', [1.35,2.65,-2.55])));
-// the front wall, behind the eye: whole, the door into the house only laid on it (it stays shut, so there is nothing to see through it)
-const FDOOR = { x0:-2.8, x1:-1.96, y1:2.05 };
-room.add(roomUV(box(6.2, 2.8, .1, M.wall, 'wall-front', [0,1.4,3.05])));
-room.add(roomUV(box(6.2, .1, 5.7, M.ceil, 'ceiling', [0,2.85,.15])));
-// crown + skirting
-[[-3,0,'x'],[3,0,'x']].forEach(([x]) => { room.add(box(.08, .12, 6, M.cream, 'crown', [x*.985,2.74,0])); room.add(box(.05, .14, 6, M.woodD, 'skirting', [x*.99,.07,0])); });
-[-2.48, 2.98].forEach(z => room.add(box(6, .12, .08, M.cream, 'crown', [0,2.74,z])));
-[[-3, DOOR.x0 - .04], [DOOR.x1 + .04, 3]].forEach(([a, b]) => room.add(box(b - a, .14, .05, M.woodD, 'skirting', [(a + b)/2,.07,-2.48])));
-[[-3, FDOOR.x0 - .04], [FDOOR.x1 + .04, 3]].forEach(([a, b]) => room.add(box(b - a, .14, .05, M.woodD, 'skirting', [(a + b)/2,.07,2.98])));
+// The walls, the floor and the ceiling are a room's own (studyWestRoom.js, studyInkRoom.js). What both keep to is where the openings are:
+// the doorway onto the jetty in the back wall, and the door into the house in the front one.
+const DOOR = { x0:-2, x1:-.9, y1:2.15 }, FDOOR = { x0:-2.8, x1:-1.96, y1:2.05 };
 
 /* ================= bookshelf (left wall) ================= */
 const shelf = new THREE.Group(); shelf.name = 'bookshelf'; room.add(shelf);
 const SX = -2.62, SZ0 = -2.47, SZ1 = 1.6, LV = [.1, .45, .8, 1.15, 1.5, 1.85, 2.2, 2.55];
 const bays = [SZ0, -1.13, .44, SZ1], BZ = bays[1]; // the corner bay is the display shelves; the books start at BZ. The reading list's bay is as wide as the camera can still see to the end of, turned as far left as it goes
-shelf.add(box(.4, 2.72, SZ1 - BZ + .03, M.woodD, 'shelf-carcass-back', [-2.98,1.36,(BZ+SZ1)/2]));
-bays.forEach(z => shelf.add(box(.4, 2.72, .05, M.wood, 'shelf-divider', [-2.81,1.36,z])));
-LV.forEach((y, i) => { const z0 = i === LV.length - 1 ? SZ0 : BZ; shelf.add(box(.4, .035, SZ1 - z0, M.wood, 'shelf-board', [-2.81,y,(z0+SZ1)/2])); }); // only the top board runs the whole length
-shelf.add(box(.42, .18, SZ1 - SZ0 + .05, M.wood, 'shelf-cornice', [-2.8,2.68,(SZ0+SZ1)/2]));
-LV.slice(1).forEach(y => { const s = mk(new THREE.BoxGeometry(.02, .01, SZ1 - BZ), new THREE.MeshBasicMaterial({ name:'led', color:col('#b98450') }), 'led-strip', [-2.63, y - .025, (BZ+SZ1)/2]); s.castShadow = false; shelf.add(s); });
 /* the bay nearer the camera: books that are only there to be looked at */
 const spineCols = [C.c900, C.m900, C.m800, '#24402f', '#2e4a3a', '#1f2c3d', C.cream, '#6b3a26', '#8a6b45', C.n800, '#3d2a1e', C.c800, '#c9b88f', '#5a1f1f'];
 // each is one instance of a unit block; `aBook` gives each its own spine layout, and the shader tells its cloth from its paper
@@ -381,13 +355,6 @@ function takeDown(id) {
 const disp = new THREE.Group(); disp.name = 'display-shelves'; disp.position.set(-2.98, 0, (SZ0 + BZ)/2); disp.rotation.y = Math.PI/2; room.add(disp); disp.updateMatrixWorld();
 const dispAt = (x, y, z) => disp.localToWorld(new THREE.Vector3(x, y, z)).toArray(); // for what has to live in the room: lights and halos
 const DW = BZ - SZ0 - .05, DD = .37, DL = [.8, 1.24, 1.68, 2.12], on = i => DL[i] + .018;
-disp.add(roomUV(box(DW, 1.75, .02, M.wallL, 'display-back', [0, 1.675, .01])));
-DL.forEach(y => disp.add(box(DW, .035, DD, M.woodL, 'display-shelf', [0, y, DD/2])));
-const cabinet = new THREE.Group(); cabinet.name = 'cabinet'; disp.add(cabinet);
-cabinet.add(box(DW, .78, DD + .01, M.wood, 'display-cabinet', [0, .39, (DD + .01)/2]));
-[-.315, .315].forEach(x => cabinet.add(box(.6, .64, .012, M.woodD, 'cabinet-door', [x, .41, DD + .016], null, 1)));
-[-.06, .06].forEach(x => cabinet.add(cyl(.012, .012, .05, 8, M.brass, 'knob', [x, .46, DD + .03], [Math.PI/2,0,0])));
-[-.3, .3].forEach(x => { const s = mk(new THREE.CircleGeometry(.03, 16), new THREE.MeshBasicMaterial({ color:col('#ffe2b0') }), 'downlight', [x, 2.531, .2], [Math.PI/2,0,0]); disp.add(s); });
 const exh = {};
 const place = (g, id, x, y, z, ry = 0, tilt = -.1) => { if (!has(id)) return; g.position.set(x, y, z); g.rotation.set(tilt, ry, 0); disp.add(g); exh[id] = g; tag(g, { type:'item', id, view:'display' }); };
 // an exhibit built from many small parts is drawn as one mesh per material
@@ -596,16 +563,6 @@ const tapeOf = (id, ink) => { const it = ITEMS[id], g = new THREE.Group(); g.nam
 /* ================= game cabinet: console + CRT, between the door and the desk ================= */
 const tvc = new THREE.Group(); tvc.name = 'tv-cabinet'; tvc.position.set(.055, 0, -2.2); room.add(tvc);
 const CW = .7, CH = .77, CD = .42;
-// a seventies TV stand: a paler teak with a tighter grain and a brighter lacquer than the rest of the room, hardboard at the back
-const teak = pbr('teak', '#c48c58', { map:sheet('wood', 'color', [.8, 1.6]), normalMap:sheet('wood', 'normal', [.8, 1.6]), roughnessMap:sheet('wood', 'rough', [.8, 1.6]), normalScale:new THREE.Vector2(.35, .35), roughness:.45, clearcoat:.6, clearcoatRoughness:.18 });
-const hardboard = std('hardboard', '#3b2b1f', { normalMap:grit, roughness:.92 });
-[-1, 1].forEach(sx => tvc.add(box(.025, CH - .05, CD, teak, 'cab-side', [sx*(CW/2 - .0125), .05 + (CH - .05)/2, 0])));
-tvc.add(box(CW + .02, .03, CD + .02, teak, 'cab-top', [0, CH - .015 + .02, 0]));
-tvc.add(box(CW, .025, CD, teak, 'cab-bottom', [0, .0625, 0]));
-tvc.add(box(CW - .05, .018, CD - .03, teak, 'cab-shelf', [0, .4, -.01]));
-tvc.add(box(CW, CH - .05, .012, hardboard, 'cab-back', [0, .05 + (CH - .05)/2, -CD/2 + .006]));
-tvc.add(box(CW, .04, .02, teak, 'cab-plinth', [0, .03, CD/2 - .02]));
-[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a, b]) => tvc.add(cyl(.012, .009, .05, 10, teak, 'cab-foot', [a*(CW/2 - .04), .025, b*(CD/2 - .04)])));
 // console
 const plasticG = pbr('console-grey', '#b9b4aa', { ...plasticTex, roughness:.85, clearcoat:.3 }), plasticD = pbr('console-dark', '#2b2a2c', { ...plasticTex, roughness:.75, clearcoat:.4 });
 const con = new THREE.Group(); con.name = 'game-console'; con.position.set(-.07, .41 + .009, .02); tvc.add(con);
@@ -698,23 +655,10 @@ const sky = mk(new THREE.PlaneGeometry(22, 3), new THREE.MeshBasicMaterial({ nam
 // the lake itself, from under the house out to the foot of the painting
 const waterTex = ctex(256, 256, () => {}, false); waterTex.wrapS = THREE.RepeatWrapping; waterTex.repeat.x = 10;
 const water = mk(new THREE.PlaneGeometry(22, 2.2), new THREE.MeshBasicMaterial({ name:'water', map:waterTex }), 'water', [-5.6, -.35, -3.5], [-Math.PI/2,0,0]); water.castShadow = false; water.receiveShadow = false; room.add(water);
-const wf = new THREE.Group(); wf.name = 'window'; room.add(wf);
-const WZ = -2.55;
-wf.add(box(WIN.x1 - WIN.x0 + .1, .08, .14, M.woodD, 'window-frame', [1.35, WIN.y1 + .02, WZ]));
-wf.add(box(WIN.x1 - WIN.x0 + .1, .08, .14, M.woodD, 'window-frame', [1.35, WIN.y0, WZ]));
-[WIN.x0, WIN.x1].forEach(x => wf.add(box(.08, WIN.y1 - WIN.y0, .14, M.woodD, 'window-frame', [x, (WIN.y0+WIN.y1)/2, WZ])));
-[.917, 1.783].forEach(x => wf.add(box(.05, WIN.y1 - WIN.y0, .08, M.woodD, 'mullion', [x, (WIN.y0+WIN.y1)/2, WZ])));
-[1.55, 2.08].forEach(y => wf.add(box(WIN.x1 - WIN.x0, .045, .08, M.woodD, 'transom', [1.35, y, WZ])));
-const glass = mk(new THREE.PlaneGeometry(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0), M.glass, 'glass', [1.35, (WIN.y0+WIN.y1)/2, WZ - .02]); glass.castShadow = false; wf.add(glass);
-wf.add(box(WIN.x1 - WIN.x0 + .4, .04, .1, M.cream, 'sill', [1.35, WIN.y0 - .02, -2.5]));
-[WIN.x0 - .1, WIN.x1 + .1].forEach(x => wf.add(roomUV(box(.12, WIN.y1 - WIN.y0 + .3, .12, M.wallL, 'reveal', [x, (WIN.y0+WIN.y1)/2, -2.5]))));
+const WZ = -2.55; // the plane of the back wall, where its openings are
 
-/* ================= door + deck ================= */
-// an open doorway in the back wall: a frame and a threshold, no leaf
-const DCX = (DOOR.x0 + DOOR.x1)/2, df = new THREE.Group(); df.name = 'door'; room.add(df);
-[DOOR.x0, DOOR.x1].forEach(x => df.add(box(.08, DOOR.y1, .14, M.woodD, 'door-frame', [x, DOOR.y1/2, WZ])));
-df.add(box(DOOR.x1 - DOOR.x0 + .16, .08, .14, M.woodD, 'door-frame', [DCX, DOOR.y1 + .02, WZ]));
-df.add(box(DOOR.x1 - DOOR.x0 + .08, .03, .2, M.woodD, 'threshold', [DCX, .008, WZ - .01]));
+/* ================= deck ================= */
+const DCX = (DOOR.x0 + DOOR.x1)/2; // the middle of the doorway: the jetty and the duck are set out from it
 // a jetty off the door: boards laid across and weathered grey, on two beams and four posts standing in the lake
 const deckM = pbr('deck', '#81796c', { ...woodTex, roughness:.88 }), deckD = pbr('deck-dark', '#5d564c', { ...woodTex, roughness:.92 });
 const deck = new THREE.Group(); deck.name = 'deck'; room.add(deck);
@@ -736,70 +680,14 @@ duck.add(mk(new THREE.ConeGeometry(.012, .03, 8), std('beak', '#e0742c'), 'duck-
 const duckReach = mk(new THREE.SphereGeometry(matchMedia('(pointer: coarse)').matches ? .3 : .13, 12, 8), new THREE.MeshBasicMaterial({ visible:false }), 'duck-reach', [0, .04, .02]); duckReach.castShadow = duckReach.receiveShadow = false; duck.add(duckReach);
 room.add(duck); tag(duck, { type:'scenery' });
 
-/* ================= the front corner: the door into the house, and two paintings ================= */
-// The front wall is only ever seen from the bookshelf's side of the room, and then only its corner end: the door is there, and the
-// paintings hang on the stretch of the left wall between that corner and the bookshelf. No sun reaches either wall, so none of it throws
-// a shadow, and it is drawn as one mesh per material.
-const fw = new THREE.Group(); fw.name = 'front-corner'; room.add(fw);
-const FZ = 3, FCX = (FDOOR.x0 + FDOOR.x1)/2, FW = FDOOR.x1 - FDOOR.x0;
-[FDOOR.x0, FDOOR.x1].forEach(x => fw.add(box(.08, FDOOR.y1, .1, M.woodD, 'door-casing', [x, FDOOR.y1/2, FZ - .01])));
-fw.add(box(FW + .16, .08, .1, M.woodD, 'door-casing', [FCX, FDOOR.y1 + .02, FZ - .01]));
-fw.add(box(FW, FDOOR.y1, .04, M.wood, 'door-leaf', [FCX, FDOOR.y1/2, FZ - .02], null, 1));
-[[1.5, .8], [.55, .7]].forEach(([y, h]) => fw.add(box(FW - .2, h, .014, M.wood, 'door-panel', [FCX, y, FZ - .047], null, 1)));
-// the knob on the side away from the hinges, which are by the corner
-fw.add(cyl(.028, .028, .012, 16, M.brass, 'door-rose', [FDOOR.x1 - .08, .98, FZ - .046], [Math.PI/2,0,0]));
-fw.add(cyl(.01, .01, .03, 8, M.brass, 'door-knob', [FDOOR.x1 - .08, .98, FZ - .065], [Math.PI/2,0,0]));
-fw.add(mk(new THREE.SphereGeometry(.026, 16, 12), M.brass, 'door-knob', [FDOOR.x1 - .08, .98, FZ - .09]));
-// a painting is a canvas of its own at 4 px a centimetre, in a frame standing just off the left wall
-const painting = (w, h, z, y, frame, draw) => { fw.add(box(.03, h + .07, w + .07, frame, 'picture-frame', [-2.985, y, z]));
-  fw.add(mk(new THREE.PlaneGeometry(w, h), std('painting', '#fff', { map:ctex(Math.round(w*400), Math.round(h*400), draw, false), roughness:.85 }), 'painting', [-2.969, y, z], [0, Math.PI/2, 0])); };
-// hills going blue towards a low sun, in a gilt frame
-painting(.62, .44, 2.5, 1.55, M.brass, (x, w, h) => {
-  const g = x.createLinearGradient(0, 0, 0, h*.7); g.addColorStop(0, '#34506a'); g.addColorStop(.6, '#b98a73'); g.addColorStop(1, '#e8b47a'); x.fillStyle = g; x.fillRect(0, 0, w, h);
-  x.fillStyle = '#f6dfae'; x.beginPath(); x.arc(w*.68, h*.5, h*.08, 0, Math.PI*2); x.fill();
-  [['#7b8a78', .52, .07, 1.7], ['#55665a', .64, .06, 2.9], ['#33423a', .78, .05, 4.3]].forEach(([c, b, a, f]) => { x.fillStyle = c; x.beginPath(); x.moveTo(0, h);
-    for (let i = 0; i <= 40; i++) { const u = i/40; x.lineTo(u*w, h*(b - a*Math.sin(u*f + b*9) - a*.5*Math.sin(u*f*2.3))); } x.lineTo(w, h); x.fill(); });
-  const r = rng(7); x.globalAlpha = .06; for (let i = 0; i < 300; i++) { x.fillStyle = r() < .5 ? '#fff' : '#000'; x.fillRect(r()*w, r()*h, 2 + r()*6, 1); } x.globalAlpha = 1; });
-// two soft fields of colour, one over the other, in dark wood
-painting(.28, .36, 1.92, 1.5, M.woodD, (x, w, h) => { x.fillStyle = '#3b2420'; x.fillRect(0, 0, w, h);
-  [['#b0442e', .07, .48], ['#d79a3e', .6, .32]].forEach(([c, y0, hh]) => { x.fillStyle = c; x.globalAlpha = .35; for (let k = 0; k < 4; k++) x.fillRect(w*.1 + k*1.5, h*y0 + k*1.5, w*.8 - k*3, h*hh - k*3); });
-  x.globalAlpha = 1; });
-weld(fw).traverse(o => { o.castShadow = false; });
-
 /* ================= desk ================= */
 const desk = new THREE.Group(); desk.name = 'desk'; room.add(desk);
 const DY = .76, DZ = -2.0, DX = 1.675;
-desk.add(box(2.15, .05, .95, M.wood, 'desk-top', [DX, DY, DZ]));
-desk.add(box(2.05, .14, .05, M.woodD, 'desk-apron', [DX, DY - .1, DZ + .44]));
-[[.7,-2.42],[2.64,-2.42],[.7,-1.58],[2.64,-1.58]].forEach(([x,z]) => desk.add(box(.06, DY - .025, .06, M.woodD, 'desk-leg', [x, (DY - .025)/2, z])));
-desk.add(box(1.94, .03, .04, M.woodD, 'stretcher', [DX, .15, -2.4]));
-desk.add(box(.6, .1, .01, M.woodL, 'drawer', [DX, DY - .1, DZ + .468])); desk.add(cyl(.012, .012, .03, 8, M.brass, 'drawer-pull', [DX, DY - .1, DZ + .48], [Math.PI/2,0,0]));
 // book rack (left): one book per series, spines to the room
 const rack = new THREE.Group(); rack.name = 'book-rack'; rack.position.set(1.05, DY + .025, -2.24); rack.rotation.y = .12; desk.add(rack);
 const RKW = .38, RKD = .22, BH = .29, BT = .105;
-rack.add(box(RKW, .018, RKD, M.woodL, 'rack-base', [0, .009, 0])); rack.add(box(RKW - .036, .12, .014, M.woodL, 'rack-back', [0, .078, -RKD/2 + .007]));
-[-1, 1].forEach(k => rack.add(box(.018, .19, RKD, M.woodL, 'rack-end', [k * (RKW/2 - .009), .113, 0])));
 SERIES.forEach((id, i) => { const g = bookOf(id, .2, BH, BT); g.position.set((i - 1) * (BT + .006), .018 + BH/2, .006); g.rotation.y = -Math.PI/2; rack.add(g);
   tag(g, { type:'item', id, view:'desk' }, [0, .02, .06]); });
-// a snake plant at the rack's left end: a glazed pot on its saucer, and a rosette of blades, the inner ones tallest
-const plant = new THREE.Group(); plant.name = 'potted-plant'; plant.position.set(.74, DY + .025, -2.2); desk.add(plant);
-const potM = pbr('pot', C.cream, { roughness:.4, clearcoat:.8, clearcoatRoughness:.15 });
-plant.add(cyl(.06, .05, .012, 32, potM, 'saucer', [0,.006,0])); plant.add(cyl(.058, .042, .1, 32, potM, 'pot', [0,.062,0]));
-plant.add(mk(new THREE.TorusGeometry(.057, .006, 10, 32), potM, 'pot-rim', [0,.112,0], [Math.PI/2,0,0]));
-plant.add(cyl(.054, .054, .004, 24, std('soil', '#2a1d14', { roughness:1 }), 'soil', [0,.106,0]));
-// each blade is a strip pinched to a point, creased down its middle and bowed away from the heart of the plant; banded across, with a pale margin
-const bladeTex = texOf(cnv(32, 128, (x, w, h) => { const R = rng(7); x.fillStyle = '#2c5733'; x.fillRect(0, 0, w, h);
-  for (let y = 0; y < h; y += 3 + R()*6) { x.fillStyle = 'rgba(132,170,112,' + (.25 + R()*.4) + ')'; x.fillRect(0, y, w, 1 + R()*3); }
-  x.fillStyle = '#c9b65a'; x.fillRect(0, 0, 4, h); x.fillRect(w - 4, 0, 4, h); }));
-const bladeR = rng(31), blades = [];
-for (let i = 0; i < 11; i++) {
-  const inner = i < 4, H = inner ? .26 + bladeR()*.08 : .15 + bladeR()*.1, W = .046 + bladeR()*.014, a = i*2.4 + bladeR()*.5, bow = inner ? .05 + bladeR()*.08 : .18 + bladeR()*.16, tw = (bladeR() - .5)*.9;
-  const g = new THREE.PlaneGeometry(1, 1, 2, 8), p = g.attributes.position;
-  for (let k = 0; k < p.count; k++) { const u = p.getX(k), v = p.getY(k) + .5, w = W * Math.min(1, .55 + v*1.5) * Math.pow(1 - Math.pow(v, 2.2), .8), c = Math.cos(tw*v), s = Math.sin(tw*v), z = -Math.abs(u)*w*.5;
-    p.setXYZ(k, u*w*c + z*s, v*H, z*c - u*w*s + bow*Math.pow(v, 1.6)*H); }
-  g.computeVertexNormals(); g.rotateY(a); const r = inner ? .008 : .024 + bladeR()*.01; g.translate(Math.sin(a)*r, .106, Math.cos(a)*r); blades.push(g);
-}
-plant.add(mk(mergeGeometries(blades), std('blade', '#fff', { map:bladeTex, roughness:.55, side:THREE.DoubleSide }), 'blades'));
 // laptop (mermer)
 const laptop = new THREE.Group(); laptop.name = 'laptop'; laptop.position.set(1.78, DY + .025, -2.08); laptop.rotation.y = -.05; desk.add(laptop);
 laptop.add(box(.5, .016, .34, M.alu, 'laptop-base', [0,.008,0]));
@@ -829,14 +717,6 @@ const drafts = {};
   g.add(mk(new THREE.PlaneGeometry(.21, .28), new THREE.MeshStandardMaterial({ name:'draft-paper', map:draftTex(ITEMS[id].t, (ITEMS[id].k.match(/\d{4}\.\d{2}\.\d{2}/) || ['新稿'])[0]), normalMap:grit, normalScale:new THREE.Vector2(.3, .3), roughness:.9 }), 'draft-paper', [0,0,0], [-Math.PI/2,0,0]));
   desk.add(g); drafts[id] = g; tag(g, { type:'item', id, view:'desk' }, [0,.03,0]);
 });
-const pen = rod([2.26, DY + .033, -1.74], [2.42, DY + .033, -1.8], .006, M.ink, 'pen'); desk.add(pen);
-// right lamp
-const lampR = new THREE.Group(); lampR.name = 'side-lamp'; lampR.position.set(2.56, DY + .025, -2.33); desk.add(lampR);
-lampR.add(cyl(.07, .08, .025, 32, M.brass, 'lamp-base', [0,.012,0])); lampR.add(rod([0,.02,0], [0,.5,0], .009, M.brass, 'lamp-stem'));
-// the arm runs right to the apex of the shade, which hangs from a brass cap there
-lampR.add(rod([0,.5,0], [-.16,.572,.06], .008, M.brass, 'lamp-gooseneck')); lampR.add(cyl(.012, .02, .022, 24, M.brass, 'lamp-cap', [-.16,.562,.06]));
-const pleats = texOf(cnv(256, 8, (x, w, h) => { for (let i = 0; i < 32; i++) { const g = x.createLinearGradient(i*8, 0, i*8 + 8, 0); g.addColorStop(0, '#8f8f8f'); g.addColorStop(.45, '#fff'); g.addColorStop(1, '#a9a9a9'); x.fillStyle = g; x.fillRect(i*8, 0, 8, h); } }));
-const shadeR = mk(new THREE.ConeGeometry(.11, .1, 64, 1, true), std('pleated-shade', '#e8d3a8', { map:pleats, emissiveMap:pleats, roughness:.9, side:THREE.DoubleSide, emissive:col('#ffb15a'), emissiveIntensity:.35 }), 'pleated-shade', [-.16,.52,.06]); lampR.add(shadeR);
 // portrait (about)
 const portraitTex = ctex(240, 300, (x, w, h) => { x.fillStyle = C.paper; x.fillRect(0,0,w,h);
   x.globalCompositeOperation = 'multiply'; x.font = `700 200px ${SERIF}`; x.textAlign = 'center'; x.textBaseline = 'middle';
@@ -848,17 +728,11 @@ const portraitMat = new THREE.MeshStandardMaterial({ name:'portrait', map:portra
 pf.add(mk(new THREE.BoxGeometry(.2, .25, .015), [M.brass, M.brass, M.brass, M.brass, portraitMat, M.brass], 'portrait-frame'));
 const AVATAR = ABOUT.avatar;
 new THREE.TextureLoader().setCrossOrigin('anonymous').load(AVATAR, t => { t.colorSpace = THREE.SRGBColorSpace; const a = t.image.width / t.image.height, fa = .2 / .25; if (a > fa) { t.repeat.set(fa / a, 1); t.offset.set((1 - fa / a) / 2, 0); } else { t.repeat.set(1, a / fa); t.offset.set(0, (1 - a / fa) / 2); } portraitMat.map = t; portraitMat.needsUpdate = true; }, undefined, () => {});
-[[.1,0],[-.1,0]].forEach(([x]) => pf.add(box(.012, .25, .02, M.brass, 'frame-edge', [x,0,.003]))); [[.125],[-.125]].forEach(([y]) => pf.add(box(.21, .012, .02, M.brass, 'frame-edge', [0,y,.003])));
-portrait.add(rod([0,.01,-.07], [0,.2,-.005], .006, M.brass, 'easel-leg'));
 tag(portrait, { type:'about', view:'desk' }, [0,.03,0]);
 
 /* ================= armchair + dachshund ================= */
 const chair = new THREE.Group(); chair.name = 'armchair'; chair.position.set(2.4, 0, -.55); chair.rotation.y = -.6; room.add(chair); // by the right wall, in front of the desk's far end, turned to the room
-[[-.3,-.28],[.3,-.28],[-.3,.3],[.3,.3]].forEach(([x,z]) => chair.add(box(.05, .32, .05, M.woodD, 'chair-leg', [x,.16,z])));
-chair.add(mk(rboxGeo(.72, .14, .7, .04), M.fabricD, 'chair-frame', [0,.36,0]));
 const seatCushion = mk(rboxGeo(.6, .11, .6, .045), M.fabric, 'seat-cushion', [0,.47,.02]); chair.add(seatCushion);
-chair.add(mk(rboxGeo(.66, .62, .14, .05), M.fabric, 'chair-back', [0,.8,-.31], [-.12,0,0]));
-[-.34, .34].forEach(x => { chair.add(mk(rboxGeo(.09, .22, .62, .035), M.fabricD, 'chair-arm', [x,.55,0])); chair.add(box(.1, .04, .66, M.woodL, 'arm-rest', [x,.66,.01])); });
 // Jili, the black-and-tan dachshund, asleep on the cushion with its chin on its paws. It is a scanned model rather than one built here,
 // so it is fetched only once the room is open (a third of a megabyte the door need not wait for), and it fades in where it lies.
 // At 1.2× it is longer than the gap between the arms, so it lies across the cushion, its head towards the front corner and turned to the room
@@ -877,8 +751,6 @@ async function loadDog() {
 }
 // side table + books stack front right
 const side = new THREE.Group(); side.position.set(2.6, 0, .9); room.add(side);
-side.add(box(.6, .04, .5, M.wood, 'side-top', [0,.6,0])); [[-.26,-.21],[.26,-.21],[-.26,.21],[.26,.21]].forEach(([x,z]) => side.add(box(.04, .58, .04, M.woodD, 'side-leg', [x,.29,z])));
-side.add(box(.5, .12, .04, M.woodD, 'side-drawer', [0,.52,.23]));
 [[C.c900,.035],[C.m800,.04],[C.cream,.03]].forEach(([c, t], i) => side.add(box(.22 - i*.02, t, .3 - i*.02, std('stack-book', c), 'stack-book', [-.05, .62 + .02 + i*.038, 0], [0, i*.2, 0])));
 
 /* ================= lighting ================= */
@@ -911,9 +783,8 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 
 /* glow halos */
 const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
-const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); room.add(sp); };
+const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); room.add(sp); return sp; };
 halo([2.4, DY + .52, -2.27], .5, .16);
-[-.3, .3].forEach(x => halo(dispAt(x, 2.48, .2), .16, .18));
 
 /* dust in lamplight */
 const DN = 160, dPos = new Float32Array(DN*3), dSeed = new Float32Array(DN);
@@ -932,18 +803,11 @@ decal(aoRad, 1.3, 1.25, [2.4, .004, -.55], [-Math.PI/2, 0, .6], .9);
 decal(aoRad, 2.55, 1.4, [1.675, .004, -1.95], FL, .75);
 decal(aoRad, .9, .8, [2.6, .004, .9], FL, .8);
 decal(aoRad, .95, .62, [.055, .004, -2.2], FL, .85);
-[[-3, DOOR.x0], [DOOR.x1, 3]].forEach(([a, b]) => { decal(aoLin, b - a, .45, [(a + b)/2, .005, -2.27], [-Math.PI/2, 0, Math.PI], .8); decal(aoLin, b - a, .55, [(a + b)/2, .28, -2.494], [0, 0, Math.PI], .6); });
+[[-3, DOOR.x0], [DOOR.x1, 3]].forEach(([a, b]) => decal(aoLin, b - a, .45, [(a + b)/2, .005, -2.27], [-Math.PI/2, 0, Math.PI], .8));
 decal(aoLin, 4.2, .5, [-2.33, .005, -.43], [-Math.PI/2, 0, -Math.PI/2], .85);
 decal(aoLin, 6, .5, [2.77, .005, 0], [-Math.PI/2, 0, Math.PI/2], .7);
-decal(aoLin, 6, .55, [2.995, .28, 0], [0, -Math.PI/2, Math.PI], .6);
-decal(aoLin, 6, .5, [0, 2.54, -2.494], [0, 0, 0], .5);
-decal(aoLin, 6, .5, [2.995, 2.54, 0], [0, -Math.PI/2, 0], .5);
-decal(aoLin, 6, .55, [0, .28, 2.994], [0, Math.PI, Math.PI], .6);
-decal(aoLin, 6, .5, [0, 2.54, 2.994], [0, Math.PI, 0], .5);
 const DT = DY + .0265;
 [[1.78, -2.08, .62, .46], [1.05, -2.24, .5, .34], [2.56, -2.33, .22, .22], [2.22, -2.33, .26, .18]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
-LV.slice(1, 8).forEach(y => decal(aoLin, SZ1 - BZ, .12, [-2.788, y - .02, (BZ + SZ1)/2], [0, Math.PI/2, Math.PI], .55));
-[...DL.slice(1), LV[7]].forEach(y => decal(aoLin, DW, .12, [-2.957, y - .02, (SZ0 + BZ)/2], [0, Math.PI/2, Math.PI], .55));
 
 /* ================= autumn outside ================= */
 const FALL = { trees:['#c46a2c','#d9932f','#a8432a','#e2b246','#6f6a35'], part:'#d4782e', n:90, speed:.45, sway:.7, size:.05 };
@@ -972,6 +836,15 @@ function setScenery(name) {
 setScenery((() => { try { return localStorage.getItem(SKEY); } catch { return null; } })() === 'ink' ? 'ink' : 'lake');
 const turnScenery = () => { setScenery(scenery === 'ink' ? 'lake' : 'ink'); try { localStorage.setItem(SKEY, scenery); } catch {} };
 let partN = Q.low ? Math.ceil(PN / 2) : PN; pGeo.setDrawRange(0, partN);
+
+/* ================= the room itself ================= */
+// What a room's builder is handed (studyWestRoom.js, studyInkRoom.js): the tools everything here is made with, the groups its furniture
+// hangs its frames on, so that they share the coordinates of what stands on them, and the sizes both rooms keep to.
+const kit = { THREE, renderer, Q, C, M, col, rng, cnv, texOf, ctex, mk, box, cyl, rod, std, pbr, lite, sheet, roomUV, weld, mergeGeometries, rboxGeo,
+  woodTex, plasterTex, grit, decal, aoLin, halo, dispAt,
+  room, shelf, disp, desk, rack, tvc, chair, side, portrait, pf,
+  LV, bays, SZ0, SZ1, BZ, DL, DW, DD, DX, DY, DZ, CW, CH, CD, RKW, RKD, WIN, WZ, DOOR, DCX, FDOOR };
+const westRoom = buildWestRoom(kit);
 
 /* ================= UI ================= */
 const st = { cur:null };

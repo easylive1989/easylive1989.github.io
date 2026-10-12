@@ -449,12 +449,16 @@ export function agedPlastic({ size = 512, seed = 33 } = {}) {
   return { color:c, normal:normalFromHeight(hgt, 1.2 * u), rough:r };
 }
 
-// The sheets the room's materials are built on, at full size or, for the low tier, half. Worth a worker: together they are most of the
-// time it takes to open the room.
-export function paintSheets(low) {
-  const s = low ? 1 : 0;
-  return { wood:woodGrain({ size:[1024, 512][s] }), plaster:plaster({ size:[1024, 512][s] }), fabric:weave({ size:[512, 256][s] }),
-    metal:brushedMetal(), plastic:agedPlastic(), floor:plankFloor({ size:[1536, 768][s] }) };
+// The sheets the rooms' materials are built on, at full size or, for the low tier, half: all of them, or only those named. Worth a worker:
+// together they are most of the time it takes to open a room.
+const SHEETS = {
+  wood:s => woodGrain({ size:[1024, 512][s] }), plaster:s => plaster({ size:[1024, 512][s] }), fabric:s => weave({ size:[512, 256][s] }),
+  metal:() => brushedMetal(), plastic:() => agedPlastic(), floor:s => plankFloor({ size:[1536, 768][s] }),
+};
+export function paintSheets(low, keys = Object.keys(SHEETS)) {
+  const s = low ? 1 : 0, out = {};
+  for (const k of keys) out[k] = SHEETS[k](s);
+  return out;
 }
 
 // What a CRT puts between you and the picture: phosphor stripes, scanlines, and the dim corners of the tube. Multiplied over each frame.
