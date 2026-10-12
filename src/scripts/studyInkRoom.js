@@ -90,8 +90,9 @@ export default function buildInkRoom(kit) {
       [-.7, 1.3].forEach(z => g.add(box(6, .22, .18, timber, 'beam', [0, 2.69, z], null, 0)));
       for (let i = 0; i < 19; i++) g.add(box(.06, .07, 5.5, matte, 'rafter', [-2.85 + i * 5.7 / 18, 2.765, .2], null, 2));
       [-2.96, 2.96].forEach(x => g.add(box(.08, .18, 5.5, timber, 'plate', [x, 2.6, .2], null, 2))); [-2.46, 2.96].forEach(z => g.add(box(6, .18, .08, timber, 'plate', [0, 2.6, z], null, 0)));
-      // columns on stone bases: under the beams along the right wall, and in three of the corners (the bookcase fills the fourth)
-      [[2.93, -.7], [2.93, 1.3], [2.93, 2.93], [2.93, -2.45], [-2.93, -2.45]].forEach(([x, z]) => { g.add(cyl(.1, .1, 2.7, 20, timber, 'column', [x, 1.4, z])); g.add(cyl(.15, .17, .1, 20, stone, 'plinth', [x, .05, z])); });
+      // columns on stone bases, all along the right wall: under the two beams, and in its corners. The left wall has none: the curio stand
+      // fills its back corner, and the door into the house its front one
+      [[2.93, -.7], [2.93, 1.3], [2.93, 2.93], [2.93, -2.45]].forEach(([x, z]) => { g.add(cyl(.1, .1, 2.7, 20, timber, 'column', [x, 1.4, z])); g.add(cyl(.15, .17, .1, 20, stone, 'plinth', [x, .05, z])); });
       // the back wall, 20 cm thick, with the gate and the window cut out of it. The gate's hole is cut a little wide, so that its edge is
       // inside the trim of grey brick, which stands proud of the wall on both faces, and not on the trim's own inner face
       const cutR = GATE.r + .04, sh = new THREE.Shape(); sh.moveTo(-3.05, 0); sh.lineTo(GATE.x - half(cutR), 0); arc(sh, cutR, true); sh.lineTo(3.05, 0); sh.lineTo(3.05, 2.8); sh.lineTo(-3.05, 2.8); sh.closePath();
@@ -131,7 +132,27 @@ export default function buildInkRoom(kit) {
         g.add(box(.016, .045, b - a - .045, rose, 'apron', [-2.632, .06, (a + b) / 2], null, 2));
         [a + .07, b - .07].forEach(z => g.add(box(.016, .08, .1, rose, 'apron-head', [-2.632, .043, z], null, 2))); } }); }
 
-  shell(); bookcase();
+  /* ================= 博古架: the display shelves as a stand of unequal compartments, over a cupboard ================= */
+  // Laid out in the display shelves' own frame: x across the bay, z out from the wall. The four boards are where the western shelves have
+  // them. Three of the levels are broken by an upright, each at a different place and none where an exhibit stands, and the one
+  // compartment that holds nothing has a step in it, and a vase.
+  function curio() { const { disp, DL, DW, DD } = kit, hx = DW / 2 - .0225, d = DD - .03, head = 2.5325; // `head`: the underside of the bookcase's top board, which runs on over this bay
+    const celadon = pbr('ink-celadon', '#a9c4b4', { roughness:.18, clearcoat:1, clearcoatRoughness:.1 });
+    piece(disp, 'ink-curio', g => {
+      DL.forEach(y => g.add(box(DW, .035, DD, rose, 'display-shelf', [0, y, DD / 2])));
+      [-hx, hx].forEach(x => [.0225, DD - .0225].forEach(z => g.add(box(.045, 2.57, .045, rose, 'post', [x, 1.285, z], null, 1))));
+      [[3, .14], [2, 0], [0, -.05]].forEach(([i, x]) => { const y0 = DL[i] + .0175, y1 = i < 3 ? DL[i + 1] - .0175 : head; g.add(box(.022, y1 - y0, d, rose, 'upright', [x, (y0 + y1) / 2, DD / 2], null, 1)); });
+      g.add(box(.345, .022, d, rose, 'step', [.47, 1.03, DD / 2], null, 0)); g.add(box(.022, .22, d, rose, 'upright', [.3, .928, DD / 2], null, 1));
+      // the cupboard: two doors that meet on a bar, a round brass plate over the join with a pull either side, and an apron between its feet
+      g.add(box(DW - .05, .62, DD - .02, rose, 'cupboard', [0, .47, DD / 2]));
+      [-1, 1].forEach(s => g.add(box(DW / 2 - .075, .54, .012, roseD, 'cupboard-door', [s * (DW / 4 - .008), .47, DD - .004], null, 1)));
+      g.add(box(.03, .56, .016, rose, 'cupboard-bar', [0, .47, DD - .002], null, 1));
+      g.add(cyl(.055, .055, .004, 28, M.brass, 'cupboard-plate', [0, .5, DD + .008], [Math.PI / 2, 0, 0])); [-.02, .02].forEach(x => g.add(box(.008, .055, .004, M.brass, 'cupboard-pull', [x, .47, DD + .012])));
+      g.add(box(DW - .09, .05, .016, rose, 'apron', [0, .135, DD - .03], null, 0));
+      const profile = [[0, 0], [.034, 0], [.038, .015], [.058, .1], [.06, .135], [.046, .165], [.02, .182], [.019, .198], [.027, .205]].map(([r, y]) => new THREE.Vector2(r, y));
+      g.add(mk(new THREE.LatheGeometry(profile, 32), celadon, 'vase', [.12, DL[0] + .0175, .2])); }); }
+
+  shell(); bookcase(); curio();
   // the moon gate, in the plane of the back wall: the duck out on the jetty answers only through it
   return { parts, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
 }
