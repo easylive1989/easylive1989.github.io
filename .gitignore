@@ -38,3 +38,6 @@ public/assets/notion/
 
 # Notion incremental fetch cache (restored from GitHub Actions cache in CI)
 .notion-cache/
+
+# what this checkout last sent to Claude Design (see .claude/skills/sync-claude-design)
+.claude/skills/sync-claude-design/last-sync.json
