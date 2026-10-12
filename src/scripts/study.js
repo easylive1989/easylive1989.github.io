@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, SKY, crtMask } from './studyTextures.js';
+import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, paintInkView, paintInkWater, SKY, INKS, crtMask } from './studyTextures.js';
 const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
 
 /* ================= content ================= */
@@ -722,7 +722,10 @@ const dkM = pbr('duck', C.yel, { roughness:.35, clearcoat:.6, clearcoatRoughness
 const dkb = mk(new THREE.SphereGeometry(.05, 20, 14), dkM, 'duck-body'); dkb.scale.set(1, .75, 1.3); duck.add(dkb);
 duck.add(mk(new THREE.SphereGeometry(.032, 16, 12), dkM, 'duck-head', [0,.045,.04]));
 duck.add(mk(new THREE.ConeGeometry(.012, .03, 8), std('beak', '#e0742c'), 'duck-beak', [0,.042,.077], [Math.PI/2,0,0]));
-room.add(duck);
+// It changes the scenery outside (see SCENERY below). From across the room it is a few pixels wide, so an unseen ball around it takes the
+// click: wider for a finger than for a cursor.
+const duckReach = mk(new THREE.SphereGeometry(matchMedia('(pointer: coarse)').matches ? .3 : .13, 12, 8), new THREE.MeshBasicMaterial({ visible:false }), 'duck-reach', [0, .04, .02]); duckReach.castShadow = duckReach.receiveShadow = false; duck.add(duckReach);
+room.add(duck); tag(duck, { type:'scenery' });
 
 /* ================= the front corner: the door into the house, and two paintings ================= */
 // The front wall is only ever seen from the bookshelf's side of the room, and then only its corner end: the door is there, and the
@@ -942,10 +945,23 @@ for (let i = 0; i < PN; i++) { pPos[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0
 const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 const pMat = new THREE.PointsMaterial({ map:leafTex, color:col(FALL.part), size:FALL.size, transparent:true, depthWrite:false, alphaTest:.2 });
 const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.add(points);
-// the lake outside the window and the door, and the leaves that fall past them
-paintLakeView(outsideTex.image, { trees:FALL.trees }); outsideTex.needsUpdate = true;
-paintLakeView(sideTex.image, { trees:FALL.trees, seed:23, boathouse:false, feather:.1 }); sideTex.needsUpdate = true;
-paintNearWater(waterTex.image, outsideTex.image, { trees:FALL.trees }); waterTex.needsUpdate = true;
+// What lies outside the window and the door, and the leaves that fall past them. There are two views of it: the lake in autumn, and
+// the same lake as a landscape in ink, where the sky is paper and the leaves are the red of the sun. The rubber duck on the jetty changes
+// one for the other, and the room remembers which it was left on. A view is painted the first time it is wanted, on sheets of its own.
+const SKEY = 'study-scenery', sceneryTex = [outsideTex, sideTex, waterTex];
+const SCENERY = {
+  lake:{ sky:SKY.top, back:scene.background.getHex(), leaf:FALL.part, paint:(far, side, near) => { paintLakeView(far, { trees:FALL.trees }); paintLakeView(side, { trees:FALL.trees, seed:23, boathouse:false, feather:.1 }); paintNearWater(near, far, { trees:FALL.trees }); } },
+  ink:{ sky:INKS.paper, back:INKS.paper, leaf:INKS.seal, paint:(far, side, near) => { paintInkView(far); paintInkView(side, { seed:23, pavilion:false, feather:.1 }); paintInkWater(near, far); } },
+};
+let scenery, blank = sceneryTex.map(t => t.image); // the empty sheets the textures were made with go to whichever view is painted first
+function setScenery(name) {
+  const v = SCENERY[scenery = name];
+  if (!v.sheets) { v.sheets = blank || sceneryTex.map(t => cnv(t.image.width, t.image.height)); blank = null; v.paint(...v.sheets); }
+  sceneryTex.forEach((t, i) => { t.image = v.sheets[i]; t.needsUpdate = true; });
+  sky.material.color.set(v.sky); scene.background.set(v.back); pMat.color.set(v.leaf);
+}
+setScenery((() => { try { return localStorage.getItem(SKEY); } catch { return null; } })() === 'ink' ? 'ink' : 'lake');
+const turnScenery = () => { setScenery(scenery === 'ink' ? 'lake' : 'ink'); try { localStorage.setItem(SKEY, scenery); } catch {} };
 let partN = Q.low ? Math.ceil(PN / 2) : PN; pGeo.setDrawRange(0, partN);
 
 /* ================= UI ================= */
@@ -1301,13 +1317,18 @@ function tipText(p) {
   if (p.type === 'item') return ITEMS[p.id].tip || ITEMS[p.id].t; // everything in the room goes by its title, unless it has a name of its own
   if (p.type === 'list') return 'GitHub 活動';
   if (p.type === 'about') return '關於 Paul';
+  if (p.type === 'scenery') return '換個景色';
   return '';
 }
 const setMouse = e => { const r = renderer.domElement.getBoundingClientRect(); mouse.set((e.clientX - r.left)/r.width*2-1, -(e.clientY - r.top)/r.height*2+1); ray.setFromCamera(mouse, camera); };
+// Only the things that can be picked are tested, so a wall hides none of them. That is right for what stands in the room, but the duck
+// is out on the jetty: it answers only along a line of sight that leaves through the doorway.
+const viaDoor = ({ origin:o, direction:d }) => { const k = (WZ - o.z) / d.z, x = o.x + d.x * k, y = o.y + d.y * k; return d.z < 0 && x > DOOR.x0 + .04 && x < DOOR.x1 - .04 && y > 0 && y < DOOR.y1; };
+const pickRoot = () => { const root = rootOf(ray.intersectObjects(pickables, false)[0]); return root && root.userData.pick.type === 'scenery' && !viaDoor(ray.ray) ? null : root; };
 renderer.domElement.addEventListener('pointerdown', e => { down = { x:e.clientX, y:e.clientY }; });
 renderer.domElement.addEventListener('pointermove', e => {
   if (lockCam) { tip.style.opacity = 0; hoverRoot = null; renderer.domElement.style.cursor = TV.on ? 'zoom-out' : 'default'; return; }
-  setMouse(e); hoverRoot = rootOf(ray.intersectObjects(pickables, false)[0]);
+  setMouse(e); hoverRoot = pickRoot();
   renderer.domElement.style.cursor = hoverRoot ? 'pointer' : 'grab';
   if (hoverRoot) { tip.textContent = tipText(hoverRoot.userData.pick); tip.style.left = e.clientX + 14 + 'px'; tip.style.top = e.clientY + 14 + 'px'; tip.style.opacity = 1; } else tip.style.opacity = 0;
 });
@@ -1315,10 +1336,10 @@ renderer.domElement.addEventListener('pointerleave', () => { tip.style.opacity =
 renderer.domElement.addEventListener('pointerup', e => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) { down = null; return; } down = null;
   if (TV.on) { exitTV(); return; } if (lockCam) return;
-  setMouse(e); const root = rootOf(ray.intersectObjects(pickables, false)[0]);
+  setMouse(e); const root = pickRoot();
   if (!root) { if (panel.classList.contains('open')) closePanel(); return; }
   const p = root.userData.pick;
-  if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout();
+  if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout(); else if (p.type === 'scenery') turnScenery();
 });
 
 /* ================= adaptive quality ================= */

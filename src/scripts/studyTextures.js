@@ -336,6 +336,102 @@ export function paintNearWater(c, lake, { trees, seed = 19 }) {
   x.globalAlpha = 1;
 }
 
+// The same lake as a landscape in ink, for whoever would rather look out on that (the rubber duck on the jetty changes the view).
+// It keeps the lake's layout — the water from 55% down, the high ground on the left, the right left open — so the jetty, the near
+// water and the door's mirrored copy meet it the same way. The ink thins to nothing at the foot of each range: the bare paper is the mist.
+export const INKS = { paper:'#efe7d4', ink:'#1b1d20', seal:'#c2272d' };
+const thin = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, '0');
+export function paintInkView(c, { seed = 11, pavilion = true, feather = 0 } = {}) {
+  const x = c.getContext('2d'), w = c.width, h = c.height, R = rng(seed), { paper:PAPER, ink:INK } = INKS;
+  const SHORE = h * .55;
+  const layer = (k, draw) => cnv(Math.round(w * k), Math.round(h * k), lx => { lx.scale(k, k); lx.lineCap = lx.lineJoin = 'round'; draw(lx); });
+  const depth = (k, draw) => { x.globalAlpha = 1; x.drawImage(layer(k, draw), 0, 0, w, h); };
+  const blob = (lx, bx, by, rx, ry, col, a) => { lx.globalAlpha = a; lx.fillStyle = col; lx.beginPath(); lx.ellipse(bx, by, rx, ry, 0, 0, 6.2832); lx.fill(); };
+  // a range is its peaks, each [centre, half-width, height] as fractions of the canvas, shifted a little by the seed; its outline is the highest of them
+  const ridge = (peaks, foot) => { const ps = peaks.map(([pc, pw, ph]) => [pc + (R() - .5) * .03, pw * (.9 + R() * .25), ph * (.88 + R() * .24)]);
+    return t => (foot - ps.reduce((y, [pc, pw, ph]) => Math.max(y, ph * Math.exp(-Math.pow(Math.abs(t - pc) / pw, 1.7))), 0)) * h; };
+  const mountain = (lx, rf, foot, ink, a, strokes) => {
+    const N = 200, pts = [], footY = foot * h; let top = h;
+    for (let i = 0; i <= N; i++) { const y = Math.min(footY, rf(i / N) + (R() - .5) * h * .007); pts.push([i / N * w, y]); top = Math.min(top, y); }
+    lx.beginPath(); lx.moveTo(0, footY); pts.forEach(([px, py]) => lx.lineTo(px, py)); lx.lineTo(w, footY); lx.closePath();
+    const g = lx.createLinearGradient(0, top, 0, footY); g.addColorStop(0, thin(ink, a)); g.addColorStop(.45, thin(ink, a * .62)); g.addColorStop(1, thin(ink, 0));
+    lx.globalAlpha = 1; lx.fillStyle = g; lx.fill();
+    lx.save(); lx.clip(); lx.strokeStyle = INK; // short strokes down the faces, darkest just under the ridge
+    for (let i = 0; i < strokes; i++) { const t = R(), y0 = rf(t), span = footY - y0; if (span < h * .03) continue;
+      const sy = y0 + R() * R() * span * .6, len = 6 + R() * 24, lean = (R() - .5) * 9;
+      lx.globalAlpha = (.07 + R() * .22) * (1 - (sy - y0) / span); lx.lineWidth = .8 + R() * 2.4; lx.beginPath(); lx.moveTo(t * w, sy); lx.lineTo(t * w + lean, sy + len); lx.stroke(); }
+    lx.restore();
+    if (!strokes) return; // a range drawn with strokes has its ridge drawn too, with the tip of the brush, wherever it stands clear of the mist
+    lx.globalAlpha = a * .5; lx.strokeStyle = INK; lx.lineWidth = 1.3; lx.beginPath(); let pen = false;
+    pts.forEach(([px, py]) => { if (py > footY - h * .02) { pen = false; return; } pen ? lx.lineTo(px, py) : lx.moveTo(px, py); pen = true; }); lx.stroke(); };
+  const pine = (lx, tx, base, H, lean) => { // a leaning trunk, and flat tiers of needles that shorten towards the top
+    lx.globalAlpha = .9; lx.strokeStyle = INK; lx.lineWidth = Math.max(1, H * .05); lx.beginPath(); lx.moveTo(tx, base); lx.quadraticCurveTo(tx + lean * .2, base - H * .5, tx + lean, base - H); lx.stroke();
+    for (let i = 0; i < 5; i++) { const k = .42 + i * .145, cx = tx + lean * k * k + (i % 2 ? 1 : -1) * H * .1, rx = H * (.3 - i * .042) * (.8 + R() * .4);
+      blob(lx, cx, base - H * k, rx, H * .05, INK, .82); blob(lx, cx + rx * .3, base - H * k - H * .03, rx * .55, H * .035, INK, .5); } };
+  const bank = t => SHORE - h * .04 * Math.pow(Math.max(0, 1 - t * 2), .7); // the top of the spit that runs out from the left, to half way across
+
+  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.fillStyle = PAPER; x.fillRect(0, 0, w, h);
+  // the sky is the paper, with one thin wash across it; the sun is the only colour in the picture
+  depth(.08, lx => { for (let i = 0; i < 9; i++) blob(lx, R() * w, h * (.1 + R() * .16), 120 + R() * 160, 14 + R() * 18, '#7d8689', .05 + R() * .07); });
+  if (pavilion) depth(.5, lx => blob(lx, w * .64, h * .315, 16, 16, INKS.seal, .8));
+  // the far range in the palest ink, and mist along its foot
+  depth(.14, lx => mountain(lx, ridge([[.12, .08, .2], [.3, .07, .19], [.42, .05, .25], [.55, .06, .2], [.68, .07, .15], [.8, .05, .22], [.93, .06, .16]], .5), .52, '#55626a', .62, 0));
+  depth(.06, lx => { for (let i = 0; i < 12; i++) blob(lx, R() * w, h * (.43 + R() * .08), 80 + R() * 120, 9 + R() * 12, PAPER, .35 + R() * .4); });
+  // the range in front of it: steeper, darker, and drawn; the mist takes its foot too
+  depth(.4, lx => mountain(lx, ridge([[.03, .08, .3], [.14, .05, .25], [.335, .05, .3], [.42, .035, .235], [.49, .04, .15], [.985, .04, .2]], .56), .57, '#2c3135', .86, 300));
+  depth(.06, lx => { for (let i = 0; i < 16; i++) blob(lx, R() * w, h * (.47 + R() * .09), 70 + R() * 130, 8 + R() * 11, PAPER, .4 + R() * .45); });
+  // the near shore: the spit, a rock at the right edge, pines on both, scrub along the bank
+  depth(.8, lx => {
+    const spit = [[0, SHORE + 3]]; for (let i = 0; i <= 50; i++) spit.push([i / 100 * w, bank(i / 100) - h * (.005 + R() * .006)]); spit.push([w * .5, SHORE + 3]);
+    const rock = [[w * .87, SHORE + 3]]; for (let i = 0; i <= 20; i++) rock.push([w * (.87 + i / 20 * .13), SHORE - h * (.15 * Math.pow(i / 20, .6) + R() * .012)]); rock.push([w, SHORE + 3]);
+    [spit, rock].forEach(p => { lx.globalAlpha = .88; lx.fillStyle = INK; lx.beginPath(); p.forEach(([px, py], i) => i ? lx.lineTo(px, py) : lx.moveTo(px, py)); lx.closePath(); lx.fill(); });
+    for (let i = 0; i < 9; i++) { const t = .02 + R() * .36; if (pavilion && t > .25 && t < .36) continue; pine(lx, t * w, bank(t), h * (.07 + R() * .07), (R() - .3) * 16); } // none where the pavilion stands
+    for (let i = 0; i < 4; i++) pine(lx, w * (.91 + i * .028), SHORE - h * (.06 + i * .03), h * (.1 + R() * .06), -8 - R() * 14);
+    for (let i = 0; i < 60; i++) { const t = R() * .5; blob(lx, t * w, bank(t) - R() * 5, 3 + R() * 6, 2 + R() * 4, INK, .5 + R() * .3); } });
+  // a pavilion on the spit, where the boathouse stands on the other lake: a roof with lifted eaves on four posts
+  if (pavilion) depth(1, lx => { const cx = w * .305, base = SHORE - h * .018, ry = base - 30, pw = 25;
+    lx.globalAlpha = .95; lx.fillStyle = lx.strokeStyle = INK;
+    lx.beginPath(); lx.moveTo(cx - pw - 7, ry + 1); lx.quadraticCurveTo(cx - pw * .5, ry + 5, cx - 4, ry - 13); lx.lineTo(cx, ry - 21); lx.lineTo(cx + 4, ry - 13);
+    lx.quadraticCurveTo(cx + pw * .5, ry + 5, cx + pw + 7, ry + 1); lx.quadraticCurveTo(cx + pw * .6, ry + 9, cx, ry + 8); lx.quadraticCurveTo(cx - pw * .6, ry + 9, cx - pw - 7, ry + 1); lx.fill();
+    lx.lineWidth = 2; [-18, -6, 6, 18].forEach(dx => { lx.beginPath(); lx.moveTo(cx + dx, ry + 7); lx.lineTo(cx + dx, base); lx.stroke(); });
+    lx.lineWidth = 3; lx.beginPath(); lx.moveTo(cx - 24, base); lx.lineTo(cx + 24, base); lx.stroke(); });
+  // a few birds, high over the water
+  depth(1, lx => { lx.strokeStyle = INK; lx.lineWidth = 1.3; for (let i = 0; i < 6; i++) { const bx = w * (.46 + i * .024 + R() * .012), by = h * (.27 - i * .006 + R() * .03), s = 3.5 + R() * 2.5;
+    lx.globalAlpha = .55 + R() * .3; lx.beginPath(); lx.moveTo(bx - s, by); lx.quadraticCurveTo(bx - s * .5, by - s * .8, bx, by); lx.quadraticCurveTo(bx + s * .5, by - s * .8, bx + s, by); lx.stroke(); } });
+
+  // the water is paper as well: the shore faintly again upside down, fading out towards the house, and a few strokes of ripple
+  const K = .3, refl = layer(K, lx => lx.drawImage(c, 0, 0)), phase = R() * 6;
+  x.fillStyle = PAPER; x.fillRect(0, SHORE, w, h - SHORE); x.globalAlpha = .3;
+  for (let sy = 0; sy < h - SHORE; sy += 2) x.drawImage(refl, 0, Math.max(0, (SHORE - sy - 2) * K), w * K, 2 * K, Math.sin(sy * .09 + phase) * (1.5 + sy * .02), SHORE + sy, w, 2);
+  const veil = x.createLinearGradient(0, SHORE, 0, h); veil.addColorStop(0, thin(PAPER, 0)); veil.addColorStop(.45, thin(PAPER, .7)); veil.addColorStop(1, thin(PAPER, .96));
+  x.globalAlpha = 1; x.fillStyle = veil; x.fillRect(0, SHORE, w, h - SHORE);
+  x.strokeStyle = INK; x.lineCap = 'round';
+  for (let i = 0; i < 46; i++) { const ly = SHORE + h * (.02 + R() * .4), sx = R() * w; x.globalAlpha = .08 + R() * .16; x.lineWidth = .8 + R(); x.beginPath(); x.moveTo(sx, ly); x.lineTo(sx + 20 + R() * 90, ly + (R() - .5) * 1.5); x.stroke(); }
+  // one boat out on it: an awning amidships, a man in a straw hat at the stern with his rod out, and the wake they have left
+  if (pavilion) { const bx = w * .6, by = SHORE + h * .095; x.globalAlpha = .92; x.fillStyle = x.strokeStyle = INK;
+    x.beginPath(); x.moveTo(bx - 24, by - 4); x.quadraticCurveTo(bx, by + 8, bx + 26, by - 5); x.lineTo(bx + 18, by + 1); x.quadraticCurveTo(bx, by + 6, bx - 17, by + 1); x.closePath(); x.fill();
+    x.globalAlpha = .7; x.beginPath(); x.ellipse(bx - 3, by, 9, 7, 0, Math.PI, 0); x.fill();
+    x.globalAlpha = .92; [[[11, -1], [14, -9], [17, -1]], [[9, -9], [14, -13], [19, -9]]].forEach(tri => { x.beginPath(); tri.forEach(([dx, dy], i) => i ? x.lineTo(bx + dx, by + dy) : x.moveTo(bx + dx, by + dy)); x.fill(); });
+    x.lineWidth = 1; x.beginPath(); x.moveTo(bx + 15, by - 7); x.lineTo(bx + 44, by - 20); x.stroke();
+    x.globalAlpha = .4; x.lineWidth = .7; x.beginPath(); x.moveTo(bx + 44, by - 20); x.lineTo(bx + 45, by + 4); x.stroke();
+    x.globalAlpha = .22; x.lineWidth = 1; [[-34, 5, 26], [-20, 9, 44], [6, 12, 30]].forEach(([dx, dy, len]) => { x.beginPath(); x.moveTo(bx + dx, by + dy); x.lineTo(bx + dx + len, by + dy); x.stroke(); }); }
+  x.globalAlpha = 1;
+  // as on the other lake: a view laid over the edge of another gives way to it along its own left edge
+  if (feather) { const edge = x.createLinearGradient(0, 0, w * feather, 0); edge.addColorStop(0, 'rgba(0,0,0,1)'); edge.addColorStop(1, 'rgba(0,0,0,0)');
+    x.globalCompositeOperation = 'destination-out'; x.fillStyle = edge; x.fillRect(0, 0, w * feather, h); x.globalCompositeOperation = 'source-over'; }
+}
+
+// The water between the house and the ink landscape: the paper the painting ends on, a shade greyer as it comes under the eye, with
+// a few strokes of ripple. Tiles from side to side.
+export function paintInkWater(c, view, { seed = 19 } = {}) {
+  const x = c.getContext('2d'), w = c.width, h = c.height, R = rng(seed);
+  const [r, g, b] = cnv(1, 1, lx => lx.drawImage(view, 0, view.height - 6, view.width, 6, 0, 0, 1, 1)).getContext('2d').getImageData(0, 0, 1, 1).data;
+  const grad = x.createLinearGradient(0, 0, 0, h); grad.addColorStop(0, `rgb(${r},${g},${b})`); grad.addColorStop(1, `rgb(${Math.round(r * .8)},${Math.round(g * .81)},${Math.round(b * .82)})`);
+  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.fillStyle = grad; x.fillRect(0, 0, w, h);
+  for (let i = 0; i < 60; i++) { const by = R() * h, len = 14 + R() * 50, bx = R() * w, th = 1 + R(); x.globalAlpha = .06 + R() * .12; x.fillStyle = R() < .7 ? INKS.ink : '#fff'; [-w, 0, w].forEach(dx => x.fillRect(bx + dx, by, len, th)); }
+  x.globalAlpha = 1;
+}
+
 // Moulded plastic that has sat in a room for years: a faint pebble grain, clouds of yellowing, smudges where it is handled,
 // a scuff or two. Pale, to be tinted by the part's colour. Returns colour, normal and roughness canvases.
 export function agedPlastic({ size = 512, seed = 33 } = {}) {
