@@ -25,7 +25,7 @@ const C = {
   paper:T('--color-bg'), ink:T('--color-text'), cyan:T('--color-accent'), mag:T('--color-accent-2'), yel:rgb(tok('--color-process-yellow','#edbb00')),
   c700:T('--color-accent-700'), c800:T('--color-accent-800'), c900:T('--color-accent-900'), m700:T('--color-accent-2-700'), m800:T('--color-accent-2-800'), m900:T('--color-accent-2-900'),
   n200:T('--color-neutral-200'), n600:T('--color-neutral-600'), n800:T('--color-neutral-800'),
-  wood:'#5b3522', woodD:'#3b2216', woodL:'#7a4a2c', wall:'#3a322b', wallL:'#4a4038', fabric:'#776f5c', fabricD:'#5e5747', cream:'#eadfc6', brass:'#b38b4b', cat:'#d98a46',
+  wood:'#5b3522', woodD:'#3b2216', woodL:'#7a4a2c', fabric:'#776f5c', fabricD:'#5e5747', cream:'#eadfc6', brass:'#b38b4b', cat:'#d98a46',
 };
 const col = h => new THREE.Color(h);
 
@@ -144,22 +144,29 @@ function rboxGeo(w, h, d, r, ax) {
 // The big procedural sheets (wood, plaster, cloth, the floor) are most of what it costs to open the room, so they are painted in a
 // worker where the browser allows it, and the page stays responsive meanwhile. Every material is built at once on a 2×2 stand-in of the
 // right kind; the finished sheets drop into those same texture objects when they arrive, so no shader is built twice.
-const STAND_IN = { color:'#bdbdbd', normal:'#8080ff', rough:'#ffffff' }, slots = [];
+const STAND_IN = { color:'#bdbdbd', normal:'#8080ff', rough:'#ffffff' }, slots = [], painted = {};
 const sheet = (key, ch, rep = [1, 1]) => { const t = texOf(cnv(2, 2, (x, w, h) => { x.fillStyle = STAND_IN[ch]; x.fillRect(0, 0, w, h); }), rep, ch === 'color'); slots.push([key, ch, t]); return t; };
 // Paints the sheets that have been claimed since it last ran, and only those: everything the room at the door is made of, and later
-// whatever a room built behind the door asks for besides.
+// whatever a room built behind the door asks for besides. A sheet that is already on the card is not painted again: the texture that
+// wants it takes over the one that has it, provided the two are set up the same way (how often each repeats does not come into that).
+// So the teak of the TV cabinet is the room's wood grain at another scale, uploaded once.
 async function paintClaimed() {
   const mine = slots.splice(0); if (!mine.length) return;
-  const keys = [...new Set(mine.map(s => s[0]))];
+  const twin = ([key, ch, t]) => { const d = painted[key + '/' + ch]; return d && d.anisotropy === t.anisotropy && d.colorSpace === t.colorSpace ? d : null; };
+  const keys = [...new Set(mine.filter(s => !twin(s)).map(s => s[0]))];
   let sets = null, w = null;
-  if (typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined') {
+  if (keys.length && typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined') {
     try { sets = await new Promise((res, rej) => { w = new Worker(new URL('./studyWorker.js', import.meta.url), { type:'module' }); w.onmessage = e => res(e.data); w.onerror = rej; w.postMessage({ low:Q.low, keys }); }); }
     catch (err) { console.warn('painting the room\'s sheets on the main thread instead', err); }
   }
   if (!sets) sets = paintSheets(Q.low, keys);
   // Uploaded here and now rather than on the next frame: in Chromium a worker's bitmaps live on its GPU context and go when it does, and
   // the next frame can be a long way off (a tab opened in the background, shaders still compiling). Only then is the worker let go.
-  mine.forEach(([key, ch, t]) => { t.dispose(); t.image = sets[key][ch]; t.needsUpdate = true; renderer.initTexture(t); });
+  // A texture that takes over a sheet is marked changed by its own count, not by needsUpdate, which would have the sheet they now share
+  // uploaded again, from a bitmap that may have gone with its worker.
+  mine.forEach(s => { const [key, ch, t] = s, d = twin(s); t.dispose();
+    if (d) { t.source = d.source; t.version++; } else { t.image = sets[key][ch]; t.needsUpdate = true; painted[key + '/' + ch] = t; }
+    renderer.initTexture(t); });
   w?.terminate();
 }
 // one sheet of grain, 2 m along it and 1 m across, stained three ways by the material colours
@@ -192,7 +199,7 @@ const DOOR = { x0:-2, x1:-.9, y1:2.15 }, FDOOR = { x0:-2.8, x1:-1.96, y1:2.05 };
 
 /* ================= bookshelf (left wall) ================= */
 const shelf = new THREE.Group(); shelf.name = 'bookshelf'; room.add(shelf);
-const SX = -2.62, SZ0 = -2.47, SZ1 = 1.6, LV = [.1, .45, .8, 1.15, 1.5, 1.85, 2.2, 2.55];
+const SZ0 = -2.47, SZ1 = 1.6, LV = [.1, .45, .8, 1.15, 1.5, 1.85, 2.2, 2.55];
 const bays = [SZ0, -1.13, .44, SZ1], BZ = bays[1]; // the corner bay is the display shelves; the books start at BZ. The reading list's bay is as wide as the camera can still see to the end of, turned as far left as it goes
 /* the bay nearer the camera: books that are only there to be looked at */
 const spineCols = [C.c900, C.m900, C.m800, '#24402f', '#2e4a3a', '#1f2c3d', C.cream, '#6b3a26', '#8a6b45', C.n800, '#3d2a1e', C.c800, '#c9b88f', '#5a1f1f'];
@@ -824,7 +831,7 @@ const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.
 // changes one for the other, and the page remembers which it was left in. Only the world the door opens on is built. The other is built
 // the first time it is asked for, behind the door, which is shut and pushed open again; after that both are kept, and change places at once.
 const SKEY = 'study-scenery', sceneryTex = [outsideTex, sideTex, waterTex];
-const within = (ms, p) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('no answer in ' + ms + ' ms')), ms))]);
+const within = (ms, p) => { let t; return Promise.race([p, new Promise((_, no) => { t = setTimeout(() => no(new Error('no answer in ' + ms + ' ms')), ms); })]).finally(() => clearTimeout(t)); };
 const WORLDS = {
   lake:{ sky:SKY.top, back:scene.background.getHex(), leaf:FALL.part, builder:async () => buildWestRoom,
     paint:(far, side, near) => { paintLakeView(far, { trees:FALL.trees }); paintLakeView(side, { trees:FALL.trees, seed:23, boathouse:false, feather:.1 }); paintNearWater(near, far, { trees:FALL.trees }); } },
@@ -860,7 +867,7 @@ async function turnWorld() { if (turning) return; turning = true;
     try { localStorage.setItem(SKEY, to); } catch {} }
   catch (err) { ok = false; console.warn('the other room would not open', err); }
   if (fresh) walkIn();
-  if (!ok) toast('另一間書房暫時進不去，等一下再試');
+  if (!ok) toast('另一間書房進不去，重新整理頁面再試一次');
   turning = false; }
 let partN = Q.low ? Math.ceil(PN / 2) : PN; pGeo.setDrawRange(0, partN);
 
@@ -1325,8 +1332,8 @@ function loop(ts) {
 const introEl = $('intro'), door = n => { introEl.dataset.s = Math.max(n, +introEl.dataset.s || 0); }; let doorN = 0; const ajar = () => door(++doorN);
 function walkIn() { camera.position.copy(ENTRY); controls.target.copy(HOME.tgt); flyTo(HOME.tgt, HOME.pos, 2.2); focused = false; setZone(null);
   door(4); introEl.classList.remove('again'); introEl.classList.add('off'); introEl.style.pointerEvents = ''; document.body.classList.add('in'); }
-// Back to the door, shut. Whatever was held up to read is put down first; the dock goes once the door has covered it, and comes back in
-// button by button when the door opens, as it did the first time.
+// Back to the door, shut. An open panel is closed first (a book, a page or the TV cannot be up: none of them lets a click through to the
+// duck); the dock goes once the door has covered it, and comes back in button by button when the door opens, as it did the first time.
 const shutDoor = () => new Promise(done => {
   if (panel.classList.contains('open')) { panel.classList.remove('open'); document.body.classList.remove('reading'); }
   tip.style.opacity = 0; hoverRoot = null;

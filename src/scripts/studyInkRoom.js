@@ -113,8 +113,9 @@ export default function buildInkRoom(kit) {
       g.add(box(fw + .34, .1, .1, timber, 'door-head', [cx, fh + .05, fz], null, 0)); g.add(box(fw + .17, .06, .1, timber, 'door-sill', [cx, .03, fz], null, 0));
       [-1, 1].forEach(s => { g.add(box(fw / 2 - .004, fh - .06, .035, roseD, 'door-leaf', [cx + s * fw / 4, fh / 2 + .03, fz + .01], null, 1));
         g.add(cyl(.045, .045, .008, 24, M.brass, 'door-boss', [cx + s * .07, 1.05, fz - .012], [Math.PI / 2, 0, 0])); g.add(mk(new THREE.TorusGeometry(.032, .005, 8, 24), M.brass, 'door-ring', [cx + s * .07, 1.02, fz - .02])); }); });
-    // bamboo on the pier between the gate and the window; hills and a line of the Analects on the left wall, by the door into the house
-    scroll(.3, .98, [-.24, 1.78, -2.497], 0, bamboo); scroll(.34, 1.05, [-2.994, 1.62, 2.5], Math.PI / 2, hills); scroll(.26, .9, [-2.994, 1.62, 1.95], Math.PI / 2, writing(['學而時習之', '不亦說乎']));
+    // bamboo on the pier between the gate and the window, hung high enough for its lower rod to clear the gate's trim, which widens
+    // downwards; hills and a line of the Analects on the left wall, by the door into the house
+    scroll(.3, .98, [-.2, 1.89, -2.497], 0, bamboo); scroll(.34, 1.05, [-2.994, 1.62, 2.5], Math.PI / 2, hills); scroll(.26, .9, [-2.994, 1.62, 1.95], Math.PI / 2, writing(['學而時習之', '不亦說乎']));
     // contact shadows at the foot and the head of the walls: light ones, where the western room's are heavy, for these walls are white
     const foot = half(R2);
     [[-3, GATE.x - foot], [GATE.x + foot, 3]].forEach(([a, b]) => parts.push(decal(aoLin, b - a, .55, [(a + b) / 2, .28, -2.494], [0, 0, Math.PI], .27)));
@@ -130,7 +131,7 @@ export default function buildInkRoom(kit) {
       bays.slice(1).forEach(z => [-2.635, -2.985].forEach(x => g.add(box(.045, 2.57, .045, rose, 'post', [x, 1.285, z], null, 1))));
       for (let i = 1; i < bays.length - 1; i++) { const a = bays[i], b = bays[i + 1];
         g.add(box(.016, .045, b - a - .045, rose, 'apron', [-2.632, .06, (a + b) / 2], null, 2));
-        [a + .07, b - .07].forEach(z => g.add(box(.016, .08, .1, rose, 'apron-head', [-2.632, .043, z], null, 2))); } }); }
+        [a + .07, b - .07].forEach(z => g.add(box(.012, .08, .1, rose, 'apron-head', [-2.632, .043, z], null, 2))); } }); } // thinner than the apron, so that the two share no face
 
   /* ================= 博古架: the display shelves as a stand of unequal compartments, over a cupboard ================= */
   // Laid out in the display shelves' own frame: x across the bay, z out from the wall. The four boards are where the western shelves have
@@ -160,7 +161,7 @@ export default function buildInkRoom(kit) {
     piece(desk, 'ink-table', g => {
       g.add(box(2.15, .05, .95, rose, 'desk-top', [DX, DY, DZ]));
       [-1, 1].forEach(sx => { [-1, 1].forEach(sz => { g.add(box(.055, top, .055, rose, 'table-leg', [DX + sx * lx, top / 2, DZ + sz * lz], null, 1));
-          g.add(box(.16, .11, .016, rose, 'table-spandrel', [DX + sx * lx, top - .075, DZ + sz * (lz + .02)], null, 0)); });
+          g.add(box(.16, .11, .012, rose, 'table-spandrel', [DX + sx * lx, top - .075, DZ + sz * (lz + .02)], null, 0)); }); // thinner than the apron it stands behind: no shared face
         [.3, .46].forEach(y => g.add(box(.03, .03, 2 * lz, rose, 'table-stretcher', [DX + sx * lx, y, DZ], null, 2))); });
       [-1, 1].forEach(sz => g.add(box(2.05, .05, .016, rose, 'table-apron', [DX, top - .03, DZ + sz * (lz + .02)], null, 0)));
       // an inkstone with ink in its well, a brush laid on a rest shaped like three peaks, and a pot of brushes behind the laptop's left
@@ -180,7 +181,7 @@ export default function buildInkRoom(kit) {
       g.add(rod([-.16, .62, .06], [-.16, .585, .06], .003, soot, 'lamp-cord')); g.add(cyl(.055, .055, .14, 6, paper, 'lamp-paper', [-.16, .51, .06]));
       [.585, .435].forEach(y => g.add(cyl(.06, .06, .012, 6, roseD, 'lamp-cap', [-.16, y, .06]))); g.add(cyl(.005, .003, .06, 8, std('ink-tassel', '#c2272d', { roughness:.8 }), 'lamp-tassel', [-.16, .4, .06])); });
     // an orchid in a clay pot, where the snake plant stands: long narrow leaves that rise and fall over, and one stalk in flower
-    piece(desk, 'ink-orchid', g => { g.position.set(.74, DY + .025, -2.2); const R = rng(31), leaf = std('ink-orchid-leaf', '#3f6e3c', { roughness:.55, side:THREE.DoubleSide });
+    piece(desk, 'ink-orchid', g => { g.position.set(.705, DY + .025, -2.2); const R = rng(31), leaf = std('ink-orchid-leaf', '#3f6e3c', { roughness:.55, side:THREE.DoubleSide });
       g.add(cyl(.052, .04, .07, 6, clay, 'pot', [0, .035, 0])); g.add(cyl(.046, .046, .004, 12, std('ink-soil', '#2a1d14', { roughness:1 }), 'soil', [0, .068, 0]));
       for (let i = 0; i < 11; i++) { const H = .2 + R() * .16, Wd = .011 + R() * .006, a = i * 2.4 + R() * .5, bow = .35 + R() * .5, geo = new THREE.PlaneGeometry(1, 1, 1, 10), p = geo.attributes.position;
         for (let q = 0; q < p.count; q++) { const u = p.getX(q), v = p.getY(q) + .5; p.setXYZ(q, u * Wd * Math.sin(Math.PI * (.12 + v * .86)), H * (v - bow * .55 * v * v), bow * H * v * v * .9 + .006); }
@@ -193,11 +194,11 @@ export default function buildInkRoom(kit) {
   /* ================= the stand under the TV ================= */
   // Four legs and three boards, the boards where the western cabinet has its top, its shelf and its bottom: the TV, the console and the
   // cartridges stay where they are. Open at the back; a low rail round three sides of the middle board.
-  function stand() { const { tvc, CW, CD } = kit, hx = CW / 2 - .02, hz = CD / 2 - .02;
+  function stand() { const { tvc, CW, CH, CD } = kit, hx = CW / 2 - .02, hz = CD / 2 - .02, top = CH + .005, under = top - .015; // the top board's middle, where the western cabinet's is, and its underside
     piece(tvc, 'ink-stand', g => {
-      [-1, 1].forEach(sx => [-1, 1].forEach(sz => g.add(box(.04, .76, .04, rose, 'stand-leg', [sx * hx, .38, sz * hz], null, 1))));
-      g.add(box(CW + .02, .03, CD + .02, rose, 'stand-top', [0, .775, 0])); g.add(box(CW - .05, .018, CD - .03, rose, 'stand-shelf', [0, .4, -.01])); g.add(box(CW - .01, .025, CD - .01, rose, 'stand-shelf', [0, .0625, 0]));
-      [-1, 1].forEach(s => { g.add(box(CW - .08, .04, .014, rose, 'stand-apron', [0, .74, s * hz], null, 0)); g.add(box(.014, .04, CD - .08, rose, 'stand-apron', [s * hx, .74, 0], null, 2));
+      [-1, 1].forEach(sx => [-1, 1].forEach(sz => g.add(box(.04, under, .04, rose, 'stand-leg', [sx * hx, under / 2, sz * hz], null, 1))));
+      g.add(box(CW + .02, .03, CD + .02, rose, 'stand-top', [0, top, 0])); g.add(box(CW - .05, .018, CD - .03, rose, 'stand-shelf', [0, .4, -.01])); g.add(box(CW - .01, .025, CD - .01, rose, 'stand-shelf', [0, .0625, 0]));
+      [-1, 1].forEach(s => { g.add(box(CW - .08, .04, .014, rose, 'stand-apron', [0, under - .02, s * hz], null, 0)); g.add(box(.014, .04, CD - .08, rose, 'stand-apron', [s * hx, under - .02, 0], null, 2));
         g.add(box(.014, .03, CD - .08, rose, 'stand-rail', [s * hx, .47, 0], null, 2)); });
       g.add(box(CW - .08, .03, .014, rose, 'stand-rail', [0, .47, -hz], null, 0)); }); }
 
