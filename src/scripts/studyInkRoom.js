@@ -190,7 +190,36 @@ export default function buildInkRoom(kit) {
     piece(pf, 'ink-screen-frame', g => { [-.108, .108].forEach(x => g.add(box(.024, .274, .026, rose, 'screen-frame', [x, 0, .001], null, 1))); [-.134, .134].forEach(y => g.add(box(.24, .024, .026, rose, 'screen-frame', [0, y, .001], null, 0))); });
     piece(portrait, 'ink-screen-stand', g => { [-.1, .1].forEach(x => g.add(box(.028, .05, .12, rose, 'screen-foot', [x, .025, -.02], null, 2))); g.add(box(.2, .02, .03, rose, 'screen-rail', [0, .02, -.012], null, 0)); }); }
 
-  shell(); bookcase(); curio(); table();
+  /* ================= the stand under the TV ================= */
+  // Four legs and three boards, the boards where the western cabinet has its top, its shelf and its bottom: the TV, the console and the
+  // cartridges stay where they are. Open at the back; a low rail round three sides of the middle board.
+  function stand() { const { tvc, CW, CD } = kit, hx = CW / 2 - .02, hz = CD / 2 - .02;
+    piece(tvc, 'ink-stand', g => {
+      [-1, 1].forEach(sx => [-1, 1].forEach(sz => g.add(box(.04, .76, .04, rose, 'stand-leg', [sx * hx, .38, sz * hz], null, 1))));
+      g.add(box(CW + .02, .03, CD + .02, rose, 'stand-top', [0, .775, 0])); g.add(box(CW - .05, .018, CD - .03, rose, 'stand-shelf', [0, .4, -.01])); g.add(box(CW - .01, .025, CD - .01, rose, 'stand-shelf', [0, .0625, 0]));
+      [-1, 1].forEach(s => { g.add(box(CW - .08, .04, .014, rose, 'stand-apron', [0, .74, s * hz], null, 0)); g.add(box(.014, .04, CD - .08, rose, 'stand-apron', [s * hx, .74, 0], null, 2));
+        g.add(box(.014, .03, CD - .08, rose, 'stand-rail', [s * hx, .47, 0], null, 2)); });
+      g.add(box(CW - .08, .03, .014, rose, 'stand-rail', [0, .47, -hz], null, 0)); }); }
+
+  /* ================= 圈椅 and 方几: the armchair and the side table ================= */
+  // The chair keeps the armchair's cushion, and the dog asleep on it. Round it: a seat frame, front legs that run up to the ends of the
+  // arms and back legs that run up to the rail, the rail itself in one horseshoe from arm to arm over the back, a splat, a spindle under
+  // each arm, and stretchers low down. The table keeps its top's height: a waist under the top, four legs, a stretcher on each side.
+  function seats() { const { chair, side } = kit;
+    piece(chair, 'ink-chair', g => {
+      g.add(box(.7, .05, .66, rose, 'chair-seat', [0, .39, 0]));
+      [-1, 1].forEach(s => { g.add(cyl(.022, .022, .72, 12, rose, 'chair-leg', [s * .31, .36, .29])); g.add(cyl(.022, .022, .9, 12, rose, 'chair-leg', [s * .29, .45, -.29]));
+        g.add(rod([s * .33, .415, 0], [s * .352, .775, .02], .012, rose, 'chair-spindle')); g.add(box(.028, .025, .58, rose, 'chair-stretcher', [s * .3, .15, 0], null, 2)); g.add(box(.012, .05, .52, rose, 'chair-apron', [s * .31, .34, 0], null, 2)); });
+      const rail = [[-.37, .7, .37], [-.345, .715, .28], [-.355, .76, .05], [-.29, .9, -.27], [0, .97, -.345], [.29, .9, -.27], [.355, .76, .05], [.345, .715, .28], [.37, .7, .37]].map(p => new THREE.Vector3(...p));
+      g.add(mk(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rail), 48, .019, 10), rose, 'chair-rail'));
+      g.add(box(.15, .56, .014, rose, 'chair-splat', [0, .69, -.325], [-.055, 0, 0], 1));
+      g.add(box(.62, .03, .035, rose, 'chair-stretcher', [0, .1, .29], null, 0)); g.add(box(.58, .025, .028, rose, 'chair-stretcher', [0, .1, -.29], null, 0)); g.add(box(.56, .05, .012, rose, 'chair-apron', [0, .34, .3], null, 0)); });
+    piece(side, 'ink-side-table', g => {
+      g.add(box(.52, .04, .52, rose, 'table-top', [0, .6, 0])); g.add(box(.45, .03, .45, roseD, 'table-waist', [0, .565, 0]));
+      [-1, 1].forEach(sx => [-1, 1].forEach(sz => g.add(box(.04, .58, .04, rose, 'table-leg', [sx * .23, .29, sz * .23], null, 1))));
+      [-1, 1].forEach(s => { g.add(box(.42, .025, .025, rose, 'table-stretcher', [0, .2, s * .23], null, 0)); g.add(box(.025, .025, .42, rose, 'table-stretcher', [s * .23, .2, 0], null, 2)); }); }); }
+
+  shell(); bookcase(); curio(); table(); stand(); seats();
   // the moon gate, in the plane of the back wall: the duck out on the jetty answers only through it
   return { parts, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
 }
