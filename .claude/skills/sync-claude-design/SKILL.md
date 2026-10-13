@@ -10,12 +10,12 @@ description: Use when the user asks to sync the study room back to Claude Design
 The 3D study room (the site's home page) has a copy in Claude Design: project **Paul Park 數位遊樂園**,
 id `012eca2b-cfa3-49b4-94f3-e252bce17c39`
 (<https://claude.ai/design/p/012eca2b-cfa3-49b4-94f3-e252bce17c39?file=Paul+Study.html>).
-"Sync back" means: rebuild six files from the repo and **overwrite them in place**. `build-design.mjs` beside this file
+"Sync back" means: rebuild seven files from the repo and **overwrite them in place**. `build-design.mjs` beside this file
 assembles them and says which to upload; this document is the procedure around it.
 
 | File in Claude Design | Built from |
 |---|---|
-| `study.js`, `studyWestRoom.js`, `studyInkRoom.js`, `studyTextures.js`, `studyWorker.js` | `src/scripts/*`, byte for byte |
+| `study.js`, `studyWestRoom.js`, `studyInkRoom.js`, `studySnowRoom.js`, `studyTextures.js`, `studyWorker.js` | `src/scripts/*`, byte for byte |
 | `Paul Study.html` | `src/pages/index.astro` with the Astro parts resolved: data from `dist/index.html`, `src/styles/prose.css` inlined, site links absolute, three.js from an unpkg import map, the design system linked from the project's own `_ds/` |
 
 Nothing else in the project is touched: `Paul Study v*.html`, `study-v*.js`, `Paul Park*.html`, `Garden Daily.dc.html`,
@@ -52,7 +52,7 @@ would replace the real design system with an empty one).
      **one file per call**, in the printed order (`Paul Study.html` is spelled with its space).
 5. **Record it:** `node .claude/skills/sync-claude-design/build-design.mjs --record <scratchpad>/design-sync`
    This writes `last-sync.json` here: what this checkout last sent, ignored by git. It is not a reading of the project, so
-   if a sync may have happened from another machine, upload all six files.
+   if a sync may have happened from another machine, upload all seven files.
 6. Report the commit and the files sent.
 
 ## Things that go wrong
