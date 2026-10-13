@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, paintInkView, paintInkWater, SKY, INKS, crtMask } from './studyTextures.js';
+import { rng, cnv, paintSheets, spineAtlas, SPINES, pageEdges, paintLakeView, paintNearWater, paintInkView, paintInkWater, paintSnowView, paintSnowWater, SKY, INKS, SNOWS, crtMask } from './studyTextures.js';
 import buildWestRoom from './studyWestRoom.js';
 const texOf = (c, rep = [1,1], srgb = true) => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
 
@@ -831,10 +831,11 @@ const pMat = new THREE.PointsMaterial({ map:leafTex, color:col(FALL.part), size:
 const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.add(points);
 let fall = FALL; // how what is in the air falls just now: a world may have something other than leaves there, falling its own way
 /* ================= worlds ================= */
-// A world is what lies outside and the room that goes with it: the lake in autumn seen from the western study, and the same lake as a
-// landscape in ink, where the sky is paper and the leaves are the red of the sun, seen from a Chinese one. The rubber duck on the jetty
-// changes one for the other, and the page remembers which it was left in. Only the world the door opens on is built. The other is built
-// the first time it is asked for, behind the door, which is shut and pushed open again; after that both are kept, and change places at once.
+// A world is what lies outside and the room that goes with it: the lake in autumn seen from the western study; the same lake as a
+// landscape in ink, where the sky is paper and the leaves are the red of the sun, seen from a Chinese one; and the lake under snow, as a
+// print, seen from a Japanese room where one sits on the floor. The rubber duck on the jetty goes round them, and the page remembers which
+// it was left in. Only the world the door opens on is built. Another is built the first time it is asked for, behind the door, which is
+// shut and pushed open again; after that it is kept, and the worlds that have been built change places at once.
 const SKEY = 'study-scenery', sceneryTex = [outsideTex, sideTex, waterTex];
 const within = (ms, p) => { let t; return Promise.race([p, new Promise((_, no) => { t = setTimeout(() => no(new Error('no answer in ' + ms + ' ms')), ms); })]).finally(() => clearTimeout(t)); };
 const WORLDS = {
@@ -842,8 +843,10 @@ const WORLDS = {
     paint:(far, side, near) => { paintLakeView(far, { trees:FALL.trees }); paintLakeView(side, { trees:FALL.trees, seed:23, boathouse:false, feather:.1 }); paintNearWater(near, far, { trees:FALL.trees }); } },
   ink:{ sky:INKS.paper, back:INKS.paper, leaf:INKS.seal, builder:async () => (await within(15000, import('./studyInkRoom.js'))).default,
     paint:(far, side, near) => { paintInkView(far); paintInkView(side, { seed:23, pavilion:false, feather:.1 }); paintInkWater(near, far); } },
+  snow:{ sky:SNOWS.sky, back:SNOWS.sky, leaf:SNOWS.flake, fall:{ speed:.22, sway:.28, size:.038 }, builder:async () => (await within(15000, import('./studySnowRoom.js'))).default,
+    paint:(far, side, near) => { paintSnowView(far); paintSnowView(side, { seed:23, islet:false, feather:.1 }); paintSnowWater(near, far); } },
 };
-const ORDER = ['lake', 'ink']; // the duck's round
+const ORDER = ['lake', 'ink', 'snow']; // the duck's round
 // `turning`: the door is shut, and the duck is not listened to. The empty sheets the views' textures were made with go to whichever is painted
 // first. `roomPicks`: what of the room on show can be picked
 let world = null, turning = true, blank = sceneryTex.map(t => t.image), roomPicks = [];
