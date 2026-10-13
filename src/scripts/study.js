@@ -763,7 +763,7 @@ const side = new THREE.Group(); side.position.set(2.6, 0, .9); room.add(side);
 /* ================= lighting ================= */
 const hemi = new THREE.HemisphereLight(0xbdd4ee, 0x6b5440, 1); scene.add(hemi); // daylight off the walls from above, lamplight off the floor from below
 const amb = new THREE.AmbientLight(0x5a5048, .6); scene.add(amb);
-const lampLight2 = new THREE.PointLight(0xffa850, .8, 3.5, 1.6); lampLight2.position.set(2.42, DY + .5, -2.25); room.add(lampLight2);
+const lampLight2 = new THREE.PointLight(0xffa850, .8, 3.5, 1.6); desk.add(lampLight2); // the desk's lamp: on the desk's group, so that it goes where the desk goes (setLamp, below, places it)
 // every point light is paid for on every pixel, so the shelf strip and the display downlights are each one light, placed between the fittings they stand for
 const shelfLight = new THREE.PointLight(0xffc27a, 1.2, 4.2, 1.5); shelfLight.position.set(-2.4, 1.9, .1); room.add(shelfLight);
 const displayLight = new THREE.PointLight(0xffd29a, .8, 1.9, 1.8); displayLight.position.set(...dispAt(0, 2.05, DD + .06)); room.add(displayLight);
@@ -791,7 +791,11 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 /* glow halos */
 const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
 const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); room.add(sp); return sp; };
-halo([2.4, DY + .52, -2.27], .5, .16);
+// The glow round the desk's lamp is on the desk's group too. Where the light and its glow are, in the desk's own frame: by the shade of
+// the western lamp, unless the room on show keeps its lamp somewhere else.
+const lampGlow = halo([0, 0, 0], .5, .16); desk.add(lampGlow);
+const setLamp = at => { lampLight2.position.set(...(at || [2.42, DY + .5, -2.25])); lampGlow.position.set(...(at || [2.4, DY + .52, -2.27])); };
+setLamp();
 
 /* dust in lamplight */
 const DN = 160, dPos = new Float32Array(DN*3), dSeed = new Float32Array(DN);
@@ -814,7 +818,7 @@ decal(aoRad, .95, .62, [.055, .004, -2.2], FL, .85);
 decal(aoLin, 4.2, .5, [-2.33, .005, -.43], [-Math.PI/2, 0, -Math.PI/2], .85);
 decal(aoLin, 6, .5, [2.77, .005, 0], [-Math.PI/2, 0, Math.PI/2], .7);
 const DT = DY + .0265;
-[[1.78, -2.08, .62, .46], [1.05, -2.24, .5, .34], [2.56, -2.33, .22, .22], [2.22, -2.33, .26, .18]].forEach(([x, z, w, d]) => decal(aoRad, w, d, [x, DT, z], FL, .7));
+[[1.78, -2.08, .62, .46], [1.05, -2.24, .5, .34], [2.56, -2.33, .22, .22], [2.22, -2.33, .26, .18]].forEach(([x, z, w, d]) => desk.add(decal(aoRad, w, d, [x, DT, z], FL, .7))); // on the desk's group: where the desk goes, so do the shadows of what stands on it
 
 /* ================= autumn outside ================= */
 const FALL = { trees:['#c46a2c','#d9932f','#a8432a','#e2b246','#6f6a35'], part:'#d4782e', n:90, speed:.45, sway:.7, size:.05 };
@@ -825,6 +829,7 @@ for (let i = 0; i < PN; i++) { pPos[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0
 const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 const pMat = new THREE.PointsMaterial({ map:leafTex, color:col(FALL.part), size:FALL.size, transparent:true, depthWrite:false, alphaTest:.2 });
 const points = new THREE.Points(pGeo, pMat); points.frustumCulled = false; room.add(points);
+let fall = FALL; // how what is in the air falls just now: a world may have something other than leaves there, falling its own way
 /* ================= worlds ================= */
 // A world is what lies outside and the room that goes with it: the lake in autumn seen from the western study, and the same lake as a
 // landscape in ink, where the sky is paper and the leaves are the red of the sun, seen from a Chinese one. The rubber duck on the jetty
@@ -838,6 +843,7 @@ const WORLDS = {
   ink:{ sky:INKS.paper, back:INKS.paper, leaf:INKS.seal, builder:async () => (await within(15000, import('./studyInkRoom.js'))).default,
     paint:(far, side, near) => { paintInkView(far); paintInkView(side, { seed:23, pavilion:false, feather:.1 }); paintInkWater(near, far); } },
 };
+const ORDER = ['lake', 'ink']; // the duck's round
 // `turning`: the door is shut, and the duck is not listened to. The empty sheets the views' textures were made with go to whichever is painted
 // first. `roomPicks`: what of the room on show can be picked
 let world = null, turning = true, blank = sceneryTex.map(t => t.image), roomPicks = [];
@@ -856,11 +862,15 @@ function show(name) { const w = WORLDS[world = name];
   // a ray takes no notice of what is hidden, so only the room on show is left among the things that can be picked
   roomPicks.forEach(o => { const i = pickables.indexOf(o); if (i >= 0) pickables.splice(i, 1); }); pickables.push(...(roomPicks = w.room.picks));
   sceneryTex.forEach((t, i) => { t.image = w.sheets[i]; t.needsUpdate = true; });
-  sky.material.color.set(w.sky); scene.background.set(w.back); pMat.color.set(w.leaf); renderer.shadowMap.needsUpdate = true; }
+  sky.material.color.set(w.sky); scene.background.set(w.back); pMat.color.set(w.leaf); fall = w.fall ? { ...FALL, ...w.fall } : FALL; pMat.size = fall.size;
+  // A room where one sits on the floor has the desk, the chair and the side table sink, with all that is on them, and may keep its lamp
+  // somewhere else on the desk. These are set to the room's own every time one goes on show, so that nothing is left over from the last.
+  const sink = w.room.sink || {}; desk.position.y = 0 - (sink.desk || 0); chair.position.y = 0 - (sink.chair || 0); side.position.y = 0 - (sink.side || 0); setLamp(w.room.lamp);
+  renderer.shadowMap.needsUpdate = true; }
 // The duck's doing. A world that has been built is put on show at once. One that has not is built behind the door; if it cannot be
 // (its script would not load), the door opens again on the world it shut on.
 async function turnWorld() { if (turning) return; turning = true;
-  const to = world === 'ink' ? 'lake' : 'ink', fresh = !WORLDS[to].room; let ok = true;
+  const to = ORDER[(ORDER.indexOf(world) + 1) % ORDER.length], fresh = !WORLDS[to].room; let ok = true;
   if (fresh) await shutDoor();
   try { await prepare(to); show(to);
     if (fresh) { ajar(); await Promise.all([paintClaimed().then(ajar), renderer.compileAsync(scene, camera).catch(() => {}).then(ajar)]); }
@@ -954,14 +964,14 @@ const shelfFit = () => { if (!shelved.length) return { at:[-2.63, 1.35, (bays[1]
 const ZONES = {
   shelf:   { fit:shelfFit, from:[1, .03, .2], az:AZ.display },
   display: { at:[-2.9, 1.5, (SZ0 + BZ)/2], from:[1, .1, .12], d:2.5, az:AZ.display },
-  desk:    { at:[DX, DY + .2, DZ], from:[-.1, .6, 1], d:2.2 },
+  desk:    { at:[DX, DY + .2, DZ], from:[-.1, .6, 1], d:2.2, on:desk }, // `on`: the group this corner belongs to. If it has sunk, the camera looks that much lower
   tv:      { at:[.055, CH, -2.2], from:[.12, .35, 1], d:1.7 },
 };
 const hud = $('hud'), homeBtn = hud.querySelector('[data-home]');
 let hudAway = false;
 // which corner the camera was last sent to, by the dock or by picking something up there; cleared once it is turned by hand
 function setZone(id) { hud.querySelectorAll('[data-zone]').forEach(b => b.classList.toggle('on', b.dataset.zone === id)); }
-function goZone(id) { const z = ZONES[id], f = z.fit ? z.fit() : z, at = new THREE.Vector3(...f.at), dir = new THREE.Vector3(...z.from).normalize();
+function goZone(id) { const z = ZONES[id], f = z.fit ? z.fit() : z, at = new THREE.Vector3(...f.at), dir = new THREE.Vector3(...z.from).normalize(); if (z.on) at.y += z.on.position.y;
   if (panel.classList.contains('open')) { panel.classList.remove('open'); document.body.classList.remove('reading'); }
   flyTo(at, at.clone().addScaledVector(dir, Math.min(f.d, controls.maxDistance)), 1.1, z.az || AZ.home); focused = true; setZone(id); }
 // the 部落格 tab is a plain link out of the room, so only the buttons are handled here
@@ -1302,7 +1312,7 @@ function loop(ts) {
       if (jili.fade === 1) { m.transparent = false; m.needsUpdate = true; jili.mesh.castShadow = true; renderer.shadowMap.needsUpdate = true; } } // the shadow comes with the solid dog, not before it
     jili.root.scale.y = 1 + Math.sin(t*1.3) * .015; }
   const pa = pGeo.attributes.position.array;
-  for (let i = 0; i < partN; i++) { const s = pSeed[i]; pa[i*3+1] -= FALL.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * FALL.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
+  for (let i = 0; i < partN; i++) { const s = pSeed[i]; pa[i*3+1] -= fall.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * fall.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
   pGeo.attributes.position.needsUpdate = true;
   const f = dt * 60; // the dust's steps were tuned per frame at 60 a second; scaled, it drifts no slower when frames are fewer
   const da = dGeo.attributes.position.array; for (let i = 0; i < dustN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009 * f; da[i*3+1] += (Math.sin(t*.21 + s0*30) * .0006 - .00012) * f; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008 * f; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
@@ -1344,9 +1354,9 @@ const shutDoor = () => new Promise(done => {
 // the page goes on remembering the study, to try again next time). The shaders are built while the sheets are still being painted; the
 // room opens once the sheets are in.
 (async () => {
-  let first = (() => { try { return localStorage.getItem(SKEY); } catch { return null; } })() === 'ink' ? 'ink' : 'lake';
+  const kept = (() => { try { return localStorage.getItem(SKEY); } catch { return null; } })(); let first = ORDER.includes(kept) ? kept : 'lake';
   try { await prepare(first); }
-  catch (err) { if (first === 'lake') throw err; console.warn('the Chinese study would not open, so the door opens on the lake', err); await prepare(first = 'lake'); }
+  catch (err) { if (first === 'lake') throw err; console.warn('the room the page was left in would not open, so the door opens on the lake', err); await prepare(first = 'lake'); }
   show(first); ajar();
   renderer.compileAsync(scene, camera).catch(() => {}).then(() => { ajar(); renderer.setAnimationLoop(loop); });
   await Promise.all([paintClaimed().then(ajar), new Promise(r => setTimeout(r, 300))]);
