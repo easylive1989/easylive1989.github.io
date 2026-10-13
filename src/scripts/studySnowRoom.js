@@ -72,7 +72,30 @@ export default function buildSnowRoom(kit) {
     parts.push(decal(aoLin, 5.5, .55, [2.995, .28, .25], [0, -Math.PI / 2, Math.PI], .27), decal(aoLin, 6, .55, [0, .28, 2.994], [0, Math.PI, Math.PI], .27));
     parts.push(decal(aoLin, 6, .5, [0, 2.54, -2.494], [0, 0, 0], .22), decal(aoLin, 5.5, .5, [2.995, 2.54, .25], [0, -Math.PI / 2, 0], .22), decal(aoLin, 6, .5, [0, 2.54, 2.994], [0, Math.PI, 0], .22)); }
 
-  shell();
+  /* ================= 本棚: the bookcase ================= */
+  // Boards where the western bookcase has them, between solid ends, with a thin back. Its top board stops with the books: the bay in the
+  // corner is an alcove here, with a head of its own.
+  function bookcase() { const { shelf, LV, bays, SZ1, BZ } = kit;
+    piece(shelf, 'snow-bookcase', g => { LV.forEach(y => g.add(box(.4, .035, SZ1 - BZ, kiri, 'shelf-board', [-2.81, y, (BZ + SZ1) / 2])));
+      bays.slice(1).forEach(z => g.add(box(.4, 2.58, .03, kiri, 'shelf-end', [-2.81, 1.29, z], null, 1))); g.add(box(.014, 2.5, SZ1 - BZ, sugi, 'shelf-back', [-2.99, 1.33, (BZ + SZ1) / 2], null, 1)); }); }
+
+  /* ================= 床脇: the display shelves as an alcove ================= */
+  // Laid out in the display shelves' own frame: x across the bay (the room's back wall is at +x, the bookcase at −x), z out from the wall.
+  // A low cupboard with paper doors, its top the first of the four levels; a board right across for the second; then two boards set off
+  // against each other and tied by a strut, the upper one with a lip at its free end. Each board is under everything that stands at its
+  // level. A post of polished log on the bookcase's side, a sleeve of wall on the other, a beam across the head.
+  function alcove() { const { disp, DL, DW, DD } = kit, hw = DW / 2, zc = DD / 2 - .02, d = DD - .04;
+    piece(disp, 'snow-alcove', g => {
+      [DL[0], DL[1]].forEach(y => g.add(box(DW, .035, DD, kiri, 'display-shelf', [0, y, DD / 2])));
+      g.add(box(hw + .5, .03, d, keyaki, 'display-shelf', [(-hw + .5) / 2, DL[2] + .0025, zc])); g.add(box(hw + .36, .03, d, keyaki, 'display-shelf', [(hw - .36) / 2, DL[3] + .0025, zc]));
+      g.add(box(.025, DL[3] - DL[2] - .03, .025, keyaki, 'strut', [.485, (DL[2] + DL[3]) / 2 + .0025, zc], null, 1)); g.add(box(.02, .03, d, keyaki, 'lip', [-.35, DL[3] + .0325, zc], null, 2));
+      g.add(box(DW, .76, DD - .03, kiri, 'cupboard', [0, .4, (DD - .03) / 2]));
+      [-1, 1].forEach(sd => { const cx = sd * DW / 4, w = DW / 2 - .03; g.add(box(w, .62, .012, paper, 'cupboard-door', [cx, .4, DD - .022]));
+        [[0, .31, w, .02], [0, -.31, w, .02], [-w / 2 + .01, 0, .02, .62], [w / 2 - .01, 0, .02, .62]].forEach(([dx, dy, bw, bh]) => g.add(box(bw, bh, .018, dark, 'cupboard-frame', [cx + dx, .4 + dy, DD - .02])));
+        g.add(cyl(.018, .018, .008, 16, dark, 'cupboard-pull', [cx - sd * (w / 2 - .07), .4, DD - .012], [Math.PI / 2, 0, 0])); });
+      g.add(box(.04, 2.6, DD, juraku, 'sleeve', [hw + .02, 1.3, DD / 2])); g.add(cyl(.055, .055, 2.62, 18, keyaki, 'tokobashira', [-hw - .03, 1.31, DD - .05])); g.add(box(DW + .1, .07, .05, kiri, 'head', [0, 2.52, DD - .03], null, 0)); }); }
+
+  shell(); bookcase(); alcove();
   // the open half of the left bay, in the plane of the back wall: the duck out on the jetty answers only through it
   const [a, b] = BAYS[0], pw = (b - a) / 4;
   return { parts, sink, lamp, opening:(x, y) => y > 0 && y < PH && x > a + pw + .04 && x < a + 3 * pw - .04 };
