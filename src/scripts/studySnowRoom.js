@@ -120,7 +120,22 @@ export default function buildSnowRoom(kit) {
     piece(pf, 'snow-frame', g => { [-.108, .108].forEach(px => g.add(box(.02, .27, .024, dark, 'frame', [px, 0, .001], null, 1))); [-.134, .134].forEach(py => g.add(box(.236, .02, .024, dark, 'frame', [0, py, .001], null, 0))); });
     piece(portrait, 'snow-frame-feet', g => { [-.09, .09].forEach(px => g.add(box(.022, .03, .1, dark, 'foot', [px, .015, -.02], null, 2))); }); }
 
-  shell(); bookcase(); alcove(); table();
+  /* ================= the stand under the TV ================= */
+  // Two ends and three boards, the boards where the western cabinet has its top, its shelf and its bottom, and a rail across the back.
+  // This one does not sink: the TV stays at the height it was.
+  function stand() { const { tvc, CW, CD } = kit;
+    piece(tvc, 'snow-tv-stand', g => { [-1, 1].forEach(sd => g.add(box(.022, .76, CD, kiri, 'stand-end', [sd * (CW / 2 - .011), .38, 0], null, 1)));
+      g.add(box(CW + .02, .03, CD + .02, kiri, 'stand-top', [0, .775, 0])); g.add(box(CW - .05, .018, CD - .03, kiri, 'stand-shelf', [0, .4, -.01])); g.add(box(CW - .044, .025, CD, kiri, 'stand-shelf', [0, .0625, 0])); g.add(box(CW - .044, .09, .014, kiri, 'stand-rail', [0, .71, -CD / 2 + .01], null, 0)); }); }
+
+  /* ================= 座椅子 and a low stand: the armchair and the side table ================= */
+  // Both groups sink. The chair is a board on the floor with a back that leans away; the armchair's cushion is its pad, and the dog is
+  // asleep on it. The side table is a top on two boards, its top where the pile of books needs it once the group is down.
+  function seats() { const { chair, side } = kit; sink.chair = DROP.chair; sink.side = DROP.side;
+    piece(chair, 'snow-zaisu', g => { const y0 = DROP.chair; g.add(box(.66, .04, .64, keyaki, 'zaisu-seat', [0, y0 + .02, 0]));
+      g.add(box(.56, .5, .025, keyaki, 'zaisu-back', [0, y0 + .28, -.39], [-.28, 0, 0], 1)); g.add(box(.6, .035, .04, dark, 'zaisu-rail', [0, y0 + .525, -.46], [-.28, 0, 0], 0)); });
+    piece(side, 'snow-low-stand', g => { const y0 = DROP.side; g.add(box(.52, .04, .52, kiri, 'stand-top', [0, .6, 0])); [-1, 1].forEach(sd => g.add(box(.035, .58 - y0, .44, kiri, 'stand-leg', [sd * .2, y0 + (.58 - y0) / 2, 0], null, 1))); }); }
+
+  shell(); bookcase(); alcove(); table(); stand(); seats();
   // the open half of the left bay, in the plane of the back wall: the duck out on the jetty answers only through it
   const [a, b] = BAYS[0], pw = (b - a) / 4;
   return { parts, sink, lamp, opening:(x, y) => y > 0 && y < PH && x > a + pw + .04 && x < a + 3 * pw - .04 };
