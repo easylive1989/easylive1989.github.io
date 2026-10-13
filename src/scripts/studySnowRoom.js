@@ -95,7 +95,32 @@ export default function buildSnowRoom(kit) {
         g.add(cyl(.018, .018, .008, 16, dark, 'cupboard-pull', [cx - sd * (w / 2 - .07), .4, DD - .012], [Math.PI / 2, 0, 0])); });
       g.add(box(.04, 2.6, DD, juraku, 'sleeve', [hw + .02, 1.3, DD / 2])); g.add(cyl(.055, .055, 2.62, 18, keyaki, 'tokobashira', [-hw - .03, 1.31, DD - .05])); g.add(box(DW + .1, .07, .05, kiri, 'head', [0, 2.52, DD - .03], null, 0)); }); }
 
-  shell(); bookcase(); alcove();
+  /* ================= 座卓: the desk as a low table, and what stands on it that is this room's own ================= */
+  // The top is the western desk's. Its group sinks until that top is a floor-sitter's height, so the legs are only as long as from the
+  // top to the floor it comes down to, and everything here is set out in the group's frame as it is before it sinks.
+  function table() { const { desk, rack, portrait, pf, DX, DY, DZ, RKW, RKD } = kit, top = DY - .025, leg = top - DROP.desk;
+    sink.desk = DROP.desk; lamp = [2.56, DY + .175, -2.33]; // the light is in the andon's paper
+    piece(desk, 'snow-table', g => { g.add(box(2.15, .05, .95, keyaki, 'desk-top', [DX, DY, DZ]));
+      [-1, 1].forEach(sx => [-1, 1].forEach(sz => g.add(box(.09, leg, .09, keyaki, 'table-leg', [DX + sx * .94, DROP.desk + leg / 2, DZ + sz * .37], null, 1))));
+      [-1, 1].forEach(sz => g.add(box(1.8, .05, .025, keyaki, 'table-apron', [DX, top - .035, DZ + sz * .37], null, 0))); [-1, 1].forEach(sx => g.add(box(.025, .05, .66, keyaki, 'table-apron', [DX + sx * .94, top - .035, DZ], null, 2)));
+      // a cup of tea on its saucer, where the pen lay
+      g.add(cyl(.055, .048, .008, 20, dark, 'saucer', [2.15, DY + .029, -1.72])); g.add(cyl(.036, .03, .07, 20, pbr('snow-cup', '#e4e0d2', { roughness:.25, clearcoat:.8 }), 'cup', [2.15, DY + .068, -1.72])); g.add(cyl(.031, .031, .002, 20, std('snow-tea', '#8a9440', { roughness:.2 }), 'tea', [2.15, DY + .1, -1.72])); });
+    // the stand the series are in: the western rack's shape, in paulownia
+    piece(rack, 'snow-book-stand', g => { g.add(box(RKW, .018, RKD, kiri, 'rack-base', [0, .009, 0])); g.add(box(RKW - .036, .12, .014, kiri, 'rack-back', [0, .078, -RKD / 2 + .007])); [-1, 1].forEach(sd => g.add(box(.018, .19, RKD, kiri, 'rack-end', [sd * (RKW / 2 - .009), .113, 0]))); });
+    // 行灯: a box of paper in a wooden frame, standing where the lamp stood
+    const glow = new THREE.MeshStandardMaterial({ name:'snow-andon-paper', color:col('#f6ead0'), emissive:col('#ffb866'), emissiveIntensity:.7, roughness:.9 });
+    piece(desk, 'snow-andon', g => { g.position.set(2.56, DY + .025, -2.33); g.add(box(.14, .02, .14, dark, 'andon-base', [0, .01, 0])); g.add(box(.14, .014, .14, dark, 'andon-head', [0, .283, 0]));
+      [-1, 1].forEach(sx => [-1, 1].forEach(sz => g.add(box(.012, .27, .012, dark, 'andon-post', [sx * .058, .15, sz * .058], null, 1)))); g.add(mk(new THREE.BoxGeometry(.104, .23, .104), glow, 'andon-paper', [0, .15, 0])); });
+    // 盆栽: a pine in a shallow pot, where the plant stood
+    piece(desk, 'snow-bonsai', g => { g.position.set(.74, DY + .025, -2.2); const bark = std('snow-bark', '#4a3628', { roughness:.9 }), needle = std('snow-needles', '#2f5a3a', { roughness:.8 });
+      g.add(box(.17, .04, .11, pbr('snow-pot', '#34454f', { roughness:.3, clearcoat:.7 }), 'pot', [0, .02, 0])); g.add(box(.15, .006, .09, std('snow-soil', '#3a2a1c', { roughness:1 }), 'soil', [0, .042, 0]));
+      [[[-.03, .04, 0], [.012, .12, .01], .009], [[.012, .12, .01], [-.02, .19, -.005], .0075], [[-.02, .19, -.005], [.03, .255, 0], .006]].forEach(([a0, b0, r]) => g.add(rod(a0, b0, r, bark, 'trunk')));
+      [[.055, .15, .012, .055], [-.05, .215, 0, .05], [.04, .275, 0, .045]].forEach(([px, py, pz, r]) => { const m = mk(new THREE.SphereGeometry(r, 14, 10), needle, 'pad', [px, py, pz]); m.scale.set(1, .38, .8); g.add(m); }); });
+    // the portrait in a plain dark frame, on two feet
+    piece(pf, 'snow-frame', g => { [-.108, .108].forEach(px => g.add(box(.02, .27, .024, dark, 'frame', [px, 0, .001], null, 1))); [-.134, .134].forEach(py => g.add(box(.236, .02, .024, dark, 'frame', [0, py, .001], null, 0))); });
+    piece(portrait, 'snow-frame-feet', g => { [-.09, .09].forEach(px => g.add(box(.022, .03, .1, dark, 'foot', [px, .015, -.02], null, 2))); }); }
+
+  shell(); bookcase(); alcove(); table();
   // the open half of the left bay, in the plane of the back wall: the duck out on the jetty answers only through it
   const [a, b] = BAYS[0], pw = (b - a) / 4;
   return { parts, sink, lamp, opening:(x, y) => y > 0 && y < PH && x > a + pw + .04 && x < a + 3 * pw - .04 };
