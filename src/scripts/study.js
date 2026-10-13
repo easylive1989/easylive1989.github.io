@@ -70,6 +70,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.tgt); controls.enableDamping = true; controls.enablePan = false; controls.rotateSpeed = .45;
 controls.minDistance = .35; controls.maxDistance = PHONE ? 2 : 4.4; controls.minPolarAngle = .95; controls.maxPolarAngle = 1.8; // the short orbit must not back out through the wall behind
 const CAM_TOP = 2.6; // as high as the camera goes: the ceiling is at 2.8
+const CAM_LOW = .25; // and as low: it looks up from under a low table, not from inside the floor
 const CAM_FRONT = 2.8; // as far back as it goes: the front wall is at 3
 const az0 = Math.atan2(HOME.pos.x - HOME.tgt.x, HOME.pos.z - HOME.tgt.z);
 controls.minAzimuthAngle = az0 - .62; controls.maxAzimuthAngle = az0 + (PHONE ? .9 : .42);
@@ -193,7 +194,7 @@ Object.assign(M, {
 });
 
 /* ================= room shell ================= */
-// The walls, the floor and the ceiling are a room's own (studyWestRoom.js, studyInkRoom.js). What both keep to is where the openings are:
+// The walls, the floor and the ceiling are a room's own (studyWestRoom.js, studyInkRoom.js, studySnowRoom.js). What all keep to is where the openings are:
 // the doorway onto the jetty in the back wall, and the door into the house in the front one.
 const DOOR = { x0:-2, x1:-.9, y1:2.15 }, FDOOR = { x0:-2.8, x1:-1.96, y1:2.05 };
 
@@ -792,9 +793,9 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 const haloTex = ctex(128, 128, (x, w, h) => { const g = x.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); g.addColorStop(0, 'rgba(255,230,180,1)'); g.addColorStop(.18, 'rgba(255,200,130,.55)'); g.addColorStop(.5, 'rgba(255,170,90,.12)'); g.addColorStop(1, 'rgba(255,160,80,0)'); x.fillStyle = g; x.fillRect(0,0,w,h); }, false);
 const halo = (p, size, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:haloTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); sp.position.set(...p); sp.scale.set(size, size, 1); room.add(sp); return sp; };
 // The glow round the desk's lamp is on the desk's group too. Where the light and its glow are, in the desk's own frame: by the shade of
-// the western lamp, unless the room on show keeps its lamp somewhere else.
+// the western lamp and as strong as it, unless the room on show keeps its lamp somewhere else or burns it lower.
 const lampGlow = halo([0, 0, 0], .5, .16); desk.add(lampGlow);
-const setLamp = at => { lampLight2.position.set(...(at || [2.42, DY + .5, -2.25])); lampGlow.position.set(...(at || [2.4, DY + .52, -2.27])); };
+const setLamp = ({ at, power = .8 } = {}) => { lampLight2.position.set(...(at || [2.42, DY + .5, -2.25])); lampGlow.position.set(...(at || [2.4, DY + .52, -2.27])); lampLight2.intensity = power; };
 setLamp();
 
 /* dust in lamplight */
@@ -859,7 +860,7 @@ async function prepare(name) { const w = WORLDS[name];
     r.picks = []; r.parts.forEach(p => { p.visible = false; p.traverse(o => { if (!o.isMesh) return; for (let a = o.parent; a; a = a.parent) if (a.userData.pick) { o.userData.root = a; r.picks.push(o); break; } }); });
     w.room = r; }
   if (!w.sheets) { w.sheets = blank || sceneryTex.map(t => cnv(t.image.width, t.image.height)); blank = null; w.paint(...w.sheets); } }
-// puts a prepared world on show, and the other one away
+// puts a prepared world on show, and the others away
 function show(name) { const w = WORLDS[world = name];
   for (const k in WORLDS) if (WORLDS[k].room) WORLDS[k].room.parts.forEach(o => { o.visible = k === name; });
   // a ray takes no notice of what is hidden, so only the room on show is left among the things that can be picked
@@ -868,7 +869,9 @@ function show(name) { const w = WORLDS[world = name];
   sky.material.color.set(w.sky); scene.background.set(w.back); pMat.color.set(w.leaf); fall = w.fall ? { ...FALL, ...w.fall } : FALL; pMat.size = fall.size;
   // A room where one sits on the floor has the desk, the chair and the side table sink, with all that is on them, and may keep its lamp
   // somewhere else on the desk. These are set to the room's own every time one goes on show, so that nothing is left over from the last.
-  const sink = w.room.sink || {}; desk.position.y = 0 - (sink.desk || 0); chair.position.y = 0 - (sink.chair || 0); side.position.y = 0 - (sink.side || 0); setLamp(w.room.lamp);
+  // A camera that is looking at something on the desk goes down or up with it.
+  const sink = w.room.sink || {}, was = desk.position.y; desk.position.y = 0 - (sink.desk || 0); chair.position.y = 0 - (sink.chair || 0); side.position.y = 0 - (sink.side || 0); setLamp(w.room.lamp);
+  if (Math.abs(controls.target.x - DX) < 1.08 && Math.abs(controls.target.z - DZ) < .48) { const dy = desk.position.y - was; controls.target.y += dy; camera.position.y += dy; }
   renderer.shadowMap.needsUpdate = true; }
 // The duck's doing. A world that has been built is put on show at once. One that has not is built behind the door; if it cannot be
 // (its script would not load), the door opens again on the world it shut on.
@@ -885,8 +888,8 @@ async function turnWorld() { if (turning) return; turning = true;
 let partN = Q.low ? Math.ceil(PN / 2) : PN; pGeo.setDrawRange(0, partN);
 
 /* ================= the room itself ================= */
-// What a room's builder is handed (studyWestRoom.js, studyInkRoom.js): the tools everything here is made with, the groups its furniture
-// hangs its frames on, so that they share the coordinates of what stands on them, and the sizes both rooms keep to.
+// What a room's builder is handed (studyWestRoom.js, studyInkRoom.js, studySnowRoom.js): the tools everything here is made with, the groups
+// its furniture hangs its frames on, so that they share the coordinates of what stands on them, and the sizes all the rooms keep to.
 const kit = { THREE, renderer, Q, C, M, col, rng, cnv, texOf, ctex, mk, box, cyl, rod, std, pbr, lite, sheet, roomUV, weld, mergeGeometries, rboxGeo,
   woodTex, plasterTex, grit, decal, aoLin, halo, dispAt,
   room, shelf, disp, desk, rack, tvc, chair, side, portrait, pf,
@@ -1328,6 +1331,7 @@ function loop(ts) {
   sliding = moved || Math.abs((open && !phone ? 230 : 0) - viewX) > .5 || Math.abs((open && phone ? innerHeight * .29 : 0) - viewY) > .5;
   controls.minAzimuthAngle = tween ? -Infinity : azWin[0]; controls.maxAzimuthAngle = tween ? Infinity : azWin[1];
   controls.minPolarAngle = Math.max(.95, Math.acos(Math.min(1, (CAM_TOP - controls.target.y) / camera.position.distanceTo(controls.target)))); // the further out, the less it can climb
+  controls.maxPolarAngle = Math.max(controls.minPolarAngle, Math.min(1.8, Math.acos(Math.max(-1, Math.min(1, (CAM_LOW - controls.target.y) / camera.position.distanceTo(controls.target)))))); // or sink
   controls.update();
   const fk = (CAM_FRONT - controls.target.z) / (camera.position.z - controls.target.z); // backing out towards the front wall, it stops short of it
   if (fk > 0 && fk < 1) camera.position.sub(controls.target).multiplyScalar(fk).add(controls.target);
@@ -1353,8 +1357,8 @@ const shutDoor = () => new Promise(done => {
   introEl.classList.add('snap'); introEl.dataset.s = 0; doorN = 0; void introEl.offsetWidth; introEl.classList.remove('snap'); // shut, without swinging back
   introEl.style.pointerEvents = 'auto'; introEl.classList.add('again'); introEl.classList.remove('off');
   setTimeout(() => { document.body.classList.remove('in'); done(); }, 400); });
-// The door opens on the world the room was left in. If that is the Chinese study and its script will not load, on the lake instead (and
-// the page goes on remembering the study, to try again next time). The shaders are built while the sheets are still being painted; the
+// The door opens on the world the room was left in. If that is a room whose script will not load, on the lake instead (and the page goes
+// on remembering that room, to try again next time). The shaders are built while the sheets are still being painted; the
 // room opens once the sheets are in.
 (async () => {
   const kept = (() => { try { return localStorage.getItem(SKEY); } catch { return null; } })(); let first = ORDER.includes(kept) ? kept : 'lake';

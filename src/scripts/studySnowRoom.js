@@ -46,11 +46,11 @@ export default function buildSnowRoom(kit) {
       [-3.05, 3.05].forEach(x => g.add(roomUV(box(.1, 2.8, 5.6, juraku, 'wall', [x, 1.4, .2])))); g.add(roomUV(box(6.2, 2.8, .1, juraku, 'wall', [0, 1.4, 3.05])));
       // overhead: boards on thin battens, and a cornice round the walls
       g.add(box(6.2, .1, 5.7, ceilM, 'ceiling', [0, 2.85, .15])); for (let i = 0; i < 12; i++) g.add(box(6, .03, .035, sugi, 'batten', [0, 2.785, -2.3 + i * .47], null, 0));
-      [-2.95, 2.95].forEach(x => g.add(box(.05, .06, 5.5, sugi, 'cornice', [x, 2.77, .2], null, 2))); [-2.47, 2.95].forEach(z => g.add(box(6, .06, .05, sugi, 'cornice', [0, 2.77, z], null, 0)));
+      [-2.975, 2.975].forEach(x => g.add(box(.05, .06, 5.5, sugi, 'cornice', [x, 2.77, .2], null, 2))); [-2.475, 2.975].forEach(z => g.add(box(6, .06, .05, sugi, 'cornice', [0, 2.77, z], null, 0)));
       // posts: at the ends and the middle of the back wall, twice along the right wall, and in the two front corners; and the rail that
-      // runs round the room at the head of the screens
+      // runs round the room at the head of the screens. On the left wall it stops at the bookcase, which stands against the rest of that wall
       [[-2.94, Z], [-.04, Z], [2.94, Z], [2.94, -.7], [2.94, 1.3], [2.94, 2.94], [-2.94, 2.94]].forEach(([x, z]) => g.add(box(.12, 2.8, .12, hinoki, 'post', [x, 1.4, z], null, 1)));
-      [-2.975, 2.975].forEach(x => g.add(box(.03, .09, 5.5, hinoki, 'nageshi', [x, KAMOI + .045, .2], null, 2))); g.add(box(6, .09, .03, hinoki, 'nageshi', [0, KAMOI + .045, 2.975], null, 0));
+      const nz = kit.SZ1 + .015; g.add(box(.03, .09, 5.5, hinoki, 'nageshi', [2.975, KAMOI + .045, .2], null, 2)); g.add(box(.03, .09, 2.95 - nz, hinoki, 'nageshi', [-2.975, KAMOI + .045, (2.95 + nz) / 2], null, 2)); g.add(box(6, .09, .03, hinoki, 'nageshi', [0, KAMOI + .045, 2.975], null, 0));
       // the back: a lintel, plaster above it, a sill; and the screens
       g.add(box(6.1, .1, .14, hinoki, 'kamoi', [0, KAMOI + .05, Z], null, 0)); g.add(roomUV(box(6.1, 2.8 - KAMOI - .1, .1, juraku, 'wall', [0, (2.8 + KAMOI + .1) / 2, Z]))); g.add(box(6.1, .03, .14, hinoki, 'shikii', [0, .002, Z], null, 0));
       BAYS.forEach(([a, b]) => { const pw = (b - a) / 4; [[0, 0], [0, .035], [3, .035], [3, 0]].forEach(([slot, dz]) => g.add(mk(new THREE.BoxGeometry(pw - .004, PH, .026), shoji, 'shoji', [a + (slot + .5) * pw, PH / 2 + .01, Z - .02 + dz]))); });
@@ -83,7 +83,8 @@ export default function buildSnowRoom(kit) {
   // Laid out in the display shelves' own frame: x across the bay (the room's back wall is at +x, the bookcase at −x), z out from the wall.
   // A low cupboard with paper doors, its top the first of the four levels; a board right across for the second; then two boards set off
   // against each other and tied by a strut, the upper one with a lip at its free end. Each board is under everything that stands at its
-  // level. A post of polished log on the bookcase's side, a sleeve of wall on the other, a beam across the head.
+  // level. A post of polished log on the bookcase's side, a sleeve of wall on the other, a beam across the head. The boards are let into
+  // the post; on its other side it stops short of where the first row of books begins.
   function alcove() { const { disp, DL, DW, DD } = kit, hw = DW / 2, zc = DD / 2 - .02, d = DD - .04;
     piece(disp, 'snow-alcove', g => {
       [DL[0], DL[1]].forEach(y => g.add(box(DW, .035, DD, kiri, 'display-shelf', [0, y, DD / 2])));
@@ -93,13 +94,13 @@ export default function buildSnowRoom(kit) {
       [-1, 1].forEach(sd => { const cx = sd * DW / 4, w = DW / 2 - .03; g.add(box(w, .62, .012, paper, 'cupboard-door', [cx, .4, DD - .022]));
         [[0, .31, w, .02], [0, -.31, w, .02], [-w / 2 + .01, 0, .02, .62], [w / 2 - .01, 0, .02, .62]].forEach(([dx, dy, bw, bh]) => g.add(box(bw, bh, .018, dark, 'cupboard-frame', [cx + dx, .4 + dy, DD - .02])));
         g.add(cyl(.018, .018, .008, 16, dark, 'cupboard-pull', [cx - sd * (w / 2 - .07), .4, DD - .012], [Math.PI / 2, 0, 0])); });
-      g.add(box(.04, 2.6, DD, juraku, 'sleeve', [hw + .02, 1.3, DD / 2])); g.add(cyl(.055, .055, 2.62, 18, keyaki, 'tokobashira', [-hw - .03, 1.31, DD - .05])); g.add(box(DW + .1, .07, .05, kiri, 'head', [0, 2.52, DD - .03], null, 0)); }); }
+      g.add(box(.04, 2.6, DD, juraku, 'sleeve', [hw + .02, 1.3, DD / 2])); g.add(cyl(.045, .045, 2.62, 18, keyaki, 'tokobashira', [-hw - .02, 1.31, DD - .035])); g.add(box(DW + .1, .07, .05, kiri, 'head', [0, 2.52, DD - .03], null, 0)); }); }
 
   /* ================= 座卓: the desk as a low table, and what stands on it that is this room's own ================= */
   // The top is the western desk's. Its group sinks until that top is a floor-sitter's height, so the legs are only as long as from the
   // top to the floor it comes down to, and everything here is set out in the group's frame as it is before it sinks.
   function table() { const { desk, rack, portrait, pf, DX, DY, DZ, RKW, RKD } = kit, top = DY - .025, leg = top - DROP.desk;
-    sink.desk = DROP.desk; lamp = [2.56, DY + .175, -2.33]; // the light is in the andon's paper
+    sink.desk = DROP.desk; lamp = { at:[2.56, DY + .175, -2.33], power:.4 }; // the light is in the andon's paper, a hand's width off the table, so it is turned down
     piece(desk, 'snow-table', g => { g.add(box(2.15, .05, .95, keyaki, 'desk-top', [DX, DY, DZ]));
       [-1, 1].forEach(sx => [-1, 1].forEach(sz => g.add(box(.09, leg, .09, keyaki, 'table-leg', [DX + sx * .94, DROP.desk + leg / 2, DZ + sz * .37], null, 1))));
       [-1, 1].forEach(sz => g.add(box(1.8, .05, .025, keyaki, 'table-apron', [DX, top - .035, DZ + sz * .37], null, 0))); [-1, 1].forEach(sx => g.add(box(.025, .05, .66, keyaki, 'table-apron', [DX + sx * .94, top - .035, DZ], null, 2)));
