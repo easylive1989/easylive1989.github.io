@@ -87,8 +87,8 @@ export default function buildSnowRoom(kit) {
   function alcove() { const { disp, DL, DW, DD } = kit, hw = DW / 2, zc = DD / 2 - .02, d = DD - .04;
     piece(disp, 'snow-alcove', g => {
       [DL[0], DL[1]].forEach(y => g.add(box(DW, .035, DD, kiri, 'display-shelf', [0, y, DD / 2])));
-      g.add(box(hw + .5, .03, d, keyaki, 'display-shelf', [(-hw + .5) / 2, DL[2] + .0025, zc])); g.add(box(hw + .36, .03, d, keyaki, 'display-shelf', [(hw - .36) / 2, DL[3] + .0025, zc]));
-      g.add(box(.025, DL[3] - DL[2] - .03, .025, keyaki, 'strut', [.485, (DL[2] + DL[3]) / 2 + .0025, zc], null, 1)); g.add(box(.02, .03, d, keyaki, 'lip', [-.35, DL[3] + .0325, zc], null, 2));
+      g.add(box(hw + .5, .03, d, keyaki, 'display-shelf', [(-hw + .5) / 2, DL[2] + .0025, zc])); g.add(box(hw + .42, .03, d, keyaki, 'display-shelf', [(hw - .42) / 2, DL[3] + .0025, zc]));
+      g.add(box(.025, DL[3] - DL[2] - .03, .025, keyaki, 'strut', [.485, (DL[2] + DL[3]) / 2 + .0025, zc], null, 1)); g.add(box(.02, .03, d, keyaki, 'lip', [-.41, DL[3] + .0325, zc], null, 2));
       g.add(box(DW, .76, DD - .03, kiri, 'cupboard', [0, .4, (DD - .03) / 2]));
       [-1, 1].forEach(sd => { const cx = sd * DW / 4, w = DW / 2 - .03; g.add(box(w, .62, .012, paper, 'cupboard-door', [cx, .4, DD - .022]));
         [[0, .31, w, .02], [0, -.31, w, .02], [-w / 2 + .01, 0, .02, .62], [w / 2 - .01, 0, .02, .62]].forEach(([dx, dy, bw, bh]) => g.add(box(bw, bh, .018, dark, 'cupboard-frame', [cx + dx, .4 + dy, DD - .02])));
