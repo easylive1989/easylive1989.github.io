@@ -432,62 +432,6 @@ export function paintInkWater(c, view, { seed = 19 } = {}) {
   x.globalAlpha = 1;
 }
 
-// The lake under snow, as a woodblock print: flat colour inside a keyline, a sky that shades off downwards, bars of mist. It keeps the
-// lake's layout (the water from 55% down, the high ground on the left). What there is to look at is kept low and to the right of the
-// middle: the room this is seen from has a low lintel, and from the middle of that room only so much of the sheet shows through its screens.
-export const SNOWS = { sky:'#46566a', key:'#26323d', flake:'#ffffff' };
-export function paintSnowView(c, { seed = 11, islet = true, feather = 0 } = {}) {
-  const x = c.getContext('2d'), w = c.width, h = c.height, R = rng(seed), KEY = SNOWS.key, SHORE = h * .55;
-  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.lineJoin = x.lineCap = 'round';
-  const grad = (y0, y1, stops) => { const g = x.createLinearGradient(0, y0, 0, y1); stops.forEach(([t, cc]) => g.addColorStop(t, cc)); return g; };
-  const blob = (bx, by, rx, ry, cc, a = 1) => { x.globalAlpha = a; x.fillStyle = cc; x.beginPath(); x.ellipse(bx, by, rx, ry, 0, 0, 6.2832); x.fill(); x.globalAlpha = 1; };
-  // a range: all that lies under a profile, down to its foot, in one colour, with a keyline along its top
-  const range = (yf, foot, fill) => { const N = 200, pts = []; for (let i = 0; i <= N; i++) pts.push([i / N * w, Math.min(foot, yf(i / N))]);
-    x.beginPath(); x.moveTo(0, foot); pts.forEach(p => x.lineTo(p[0], p[1])); x.lineTo(w, foot); x.closePath(); x.fillStyle = fill; x.fill();
-    x.strokeStyle = KEY; x.lineWidth = 1.4; x.globalAlpha = .6; x.beginPath(); let pen = false; pts.forEach(([px, py]) => { if (py >= foot - 1) { pen = false; return; } pen ? x.lineTo(px, py) : x.moveTo(px, py); pen = true; }); x.stroke(); x.globalAlpha = 1; };
-  const ridge = (ps, foot) => t => h * (foot - ps.reduce((m, [pc, pw, ph]) => Math.max(m, ph * Math.exp(-Math.pow(Math.abs(t - pc) / pw, 1.7))), 0)) + (R() - .5) * 1.5;
-  const bank = t => SHORE - h * .05 * Math.pow(Math.max(0, 1 - t * 2.2), .8); // the top of the near shore, which falls away from the left
-  // a pine: a trunk, four tiers of needles, and a cap of snow on each
-  const pine = (tx, by, H) => { x.strokeStyle = '#2a2622'; x.lineWidth = Math.max(1.2, H * .05); x.beginPath(); x.moveTo(tx, by); x.lineTo(tx + H * .08, by - H); x.stroke();
-    for (let i = 0; i < 4; i++) { const k = .4 + i * .18, rx = H * (.34 - i * .06), cy = by - H * k; blob(tx + H * .08 * k, cy, rx, H * .07, '#2f4a3c'); blob(tx + H * .08 * k - 1, cy - H * .035, rx * .9, H * .04, '#f4f6f6'); } };
-
-  // the sky, darkest overhead; a far range all white, blue-grey at its foot; bars of mist; the near hills
-  x.fillStyle = grad(0, SHORE, [[0, SNOWS.sky], [.25 / .55, '#7b8894'], [1, '#c5cbd0']]); x.fillRect(0, 0, w, SHORE + 2);
-  range(ridge([[.08, .09, .13], [.24, .07, .1], [.42, .08, .12], [.6, .07, .09], [.8, .08, .12], [.95, .06, .1]], .5), h * .52, grad(h * .36, h * .52, [[0, '#f2f4f4'], [1, '#a9b8c4']]));
-  for (let i = 0; i < 5; i++) { const bw = 120 + R() * 220, bx = R() * (w - bw), by = h * (.39 + R() * .1), bh = 9 + R() * 7; x.globalAlpha = .8; x.fillStyle = '#e4e8ea'; x.beginPath(); x.roundRect ? x.roundRect(bx, by, bw, bh, bh / 2) : x.rect(bx, by, bw, bh); x.fill(); } x.globalAlpha = 1;
-  range(ridge([[0, .1, .2], [.13, .07, .15], [.27, .08, .1], [.97, .05, .12]], .555), SHORE + 2, '#e6eaec');
-  range(ridge([[.02, .07, .12], [.17, .06, .085], [.33, .07, .05], [.995, .035, .085]], .56), SHORE + 2, '#bcc8cf');
-  // the water: a ground of slate, ripples as short bars of white or of the keyline, the shore drawn once
-  x.fillStyle = grad(SHORE, h, [[0, '#5d7284'], [1, '#22303d']]); x.fillRect(0, SHORE, w, h - SHORE);
-  for (let i = 0; i < 70; i++) { const ly = SHORE + 3 + R() * R() * (h - SHORE) * .9, lx = R() * w, len = 20 + R() * 110; x.globalAlpha = .1 + R() * .22; x.fillStyle = R() < .7 ? '#ffffff' : KEY; x.fillRect(lx, ly, len, 1 + R() * 1.2); } x.globalAlpha = 1;
-  x.strokeStyle = KEY; x.lineWidth = 1.2; x.globalAlpha = .45; x.beginPath(); x.moveTo(0, SHORE + 1); x.lineTo(w, SHORE + 1); x.stroke(); x.globalAlpha = 1;
-  // pines along the near shore, and on the headland at the right edge
-  for (let i = 0; i < 16; i++) { const t = .01 + R() * .44, bx = t * w, by = bank(t) - R() * h * .05; pine(bx, by + 4, h * (.06 + R() * .06)); }
-  for (let i = 0; i < 4; i++) pine(w * (.9 + i * .03), SHORE - h * (.02 + i * .018), h * (.08 + R() * .03));
-  // an islet off the shore, where the open screens look: pines, a hut under snow with its lamp lit; and a boat further out
-  if (islet) { const cx = w * .47, by = SHORE - 1; blob(cx, SHORE + 3, 78, 9, '#bcc8cf'); [-52, -38, 44, 58].forEach((dx, i) => pine(cx + dx, SHORE + 1, h * (.07 + (i % 2) * .025)));
-    x.fillStyle = '#5f4634'; x.fillRect(cx - 22, by - 20, 44, 20); x.fillStyle = '#f2c86b'; x.fillRect(cx - 5, by - 14, 10, 9);
-    x.beginPath(); x.moveTo(cx - 32, by - 18); x.lineTo(cx - 10, by - 42); x.lineTo(cx + 10, by - 42); x.lineTo(cx + 32, by - 18); x.closePath(); x.fillStyle = '#f6f8f8'; x.fill(); x.strokeStyle = KEY; x.lineWidth = 1.2; x.globalAlpha = .6; x.stroke();
-    const bx = w * .67, bt = SHORE + h * .11; x.fillStyle = KEY; x.globalAlpha = .9; x.beginPath(); x.moveTo(bx - 24, bt - 4); x.quadraticCurveTo(bx, bt + 8, bx + 26, bt - 5); x.lineTo(bx + 18, bt + 1); x.quadraticCurveTo(bx, bt + 6, bx - 17, bt + 1); x.closePath(); x.fill();
-    [[[11, -1], [14, -9], [17, -1]], [[9, -9], [14, -13], [19, -9]]].forEach(tri => { x.beginPath(); tri.forEach(([dx, dy], i) => i ? x.lineTo(bx + dx, bt + dy) : x.moveTo(bx + dx, bt + dy)); x.fill(); }); x.globalAlpha = 1; }
-  // snow in the air, all over the sheet
-  for (let i = 0; i < 300; i++) blob(R() * w, R() * h, .8 + R() * 1.6, .8 + R() * 1.6, '#ffffff', .35 + R() * .5);
-  // as on the other lakes: a view laid over the edge of another gives way to it along its own left edge
-  if (feather) { const edge = x.createLinearGradient(0, 0, w * feather, 0); edge.addColorStop(0, 'rgba(0,0,0,1)'); edge.addColorStop(1, 'rgba(0,0,0,0)');
-    x.globalCompositeOperation = 'destination-out'; x.fillStyle = edge; x.fillRect(0, 0, w * feather, h); x.globalCompositeOperation = 'source-over'; }
-}
-
-// The water between the house and the print: the slate the sheet ends on, darker as it comes under the eye, with a few bars of ripple.
-// Tiles from side to side.
-export function paintSnowWater(c, view, { seed = 19 } = {}) {
-  const x = c.getContext('2d'), w = c.width, h = c.height, R = rng(seed);
-  const [r, g, b] = cnv(1, 1, lx => lx.drawImage(view, 0, view.height - 6, view.width, 6, 0, 0, 1, 1)).getContext('2d').getImageData(0, 0, 1, 1).data;
-  const grad = x.createLinearGradient(0, 0, 0, h); grad.addColorStop(0, `rgb(${r},${g},${b})`); grad.addColorStop(1, `rgb(${Math.round(r * .8)},${Math.round(g * .82)},${Math.round(b * .85)})`);
-  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.fillStyle = grad; x.fillRect(0, 0, w, h);
-  for (let i = 0; i < 60; i++) { const by = R() * h, len = 14 + R() * 50, bx = R() * w, th = 1 + R(); x.globalAlpha = .08 + R() * .14; x.fillStyle = R() < .6 ? '#ffffff' : SNOWS.key; [-w, 0, w].forEach(dx => x.fillRect(bx + dx, by, len, th)); }
-  x.globalAlpha = 1;
-}
-
 // Moulded plastic that has sat in a room for years: a faint pebble grain, clouds of yellowing, smudges where it is handled,
 // a scuff or two. Pale, to be tinted by the part's colour. Returns colour, normal and roughness canvases.
 export function agedPlastic({ size = 512, seed = 33 } = {}) {

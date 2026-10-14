@@ -1,6 +1,6 @@
 // Assembles the Claude Design copy of the study room from the repo (see SKILL.md beside this file):
 //   Paul Study.html  <- src/pages/index.astro with the Astro bits resolved
-//   study.js, studyWestRoom.js, studyInkRoom.js, studySnowRoom.js, studyTextures.js, studyWorker.js  <- src/scripts/*, verbatim
+//   study.js, studyWestRoom.js, studyInkRoom.js, studyTextures.js, studyWorker.js  <- src/scripts/*, verbatim
 //
 //   node build-design.mjs <outDir> [--repo <dir>]   build the bundle into <outDir> (wiped first) and say what to upload
 //   node build-design.mjs --record <outDir>         after a successful upload: remember what was sent, for the next comparison
@@ -13,7 +13,7 @@ import { execSync } from 'node:child_process';
 
 const args = process.argv.slice(2), flag = n => { const i = args.indexOf(n); return i < 0 ? null : args.splice(i, 2)[1]; };
 const recordDir = flag('--record'), repoArg = flag('--repo'), outArg = args[0];
-const SCRIPTS = ['study.js', 'studyWestRoom.js', 'studyInkRoom.js', 'studySnowRoom.js', 'studyTextures.js', 'studyWorker.js'], PAGE = 'Paul Study.html';
+const SCRIPTS = ['study.js', 'studyWestRoom.js', 'studyInkRoom.js', 'studyTextures.js', 'studyWorker.js'], PAGE = 'Paul Study.html';
 const LAST = path.join(import.meta.dirname, 'last-sync.json');
 const sha = (f, algo = 'sha256', enc = 'hex') => createHash(algo).update(fs.readFileSync(f)).digest(enc);
 const HEADER = /Synced from the site repo \(easylive1989\.github\.io @ ([^)]*)\)/;
@@ -114,7 +114,7 @@ const html = `<!DOCTYPE html>
 <!-- Synced from the site repo (easylive1989.github.io @ ${commit}).
      This page is src/pages/index.astro with the Astro parts resolved: the Notion content is a snapshot, site links are
      absolute, and three.js comes from the import map instead of the bundler.
-     study.js, studyWestRoom.js, studyInkRoom.js, studySnowRoom.js, studyTextures.js and studyWorker.js are the files in src/scripts/, unchanged. -->
+     study.js, studyWestRoom.js, studyInkRoom.js, studyTextures.js and studyWorker.js are the files in src/scripts/, unchanged. -->
 <link rel="stylesheet" href="${DS}/styles.css">
 <script src="${DS}/_ds_bundle.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -159,7 +159,7 @@ console.log(`bundle for ${commit} in ${out}`);
 console.log(last ? `Claude Design was last synced at ${last.commit} (${last.at.slice(0, 10)})` : 'no record of an earlier sync: upload every file');
 if (last) try { const files = git(`diff --name-only ${last.commit.split(' ')[0]}..HEAD -- src`); if (files) console.log('source changed since then: ' + files.split('\n').join(', ')); } catch {}
 if (!changed.length && !pageChanged) console.log('NOTHING TO UPLOAD: the page and the scripts are what was last sent');
-else console.log('upload, in this order: ' + [...['studyTextures.js', 'studyWestRoom.js', 'studyInkRoom.js', 'studySnowRoom.js', 'study.js', 'studyWorker.js'].filter(f => changed.includes(f)), PAGE].join(', ')
+else console.log('upload, in this order: ' + [...['studyTextures.js', 'studyWestRoom.js', 'studyInkRoom.js', 'study.js', 'studyWorker.js'].filter(f => changed.includes(f)), PAGE].join(', ')
   + (pageChanged && last && !changed.length ? '   (the scripts are unchanged; the page differs in its data or markup)' : ''));
 if (dirty) console.log('WARNING: src/ has uncommitted changes, and they are in this bundle');
 const built = fs.statSync(path.join(repo, 'dist/index.html')).mtimeMs, dataCommit = +git('log -1 --format=%ct -- src/lib src/pages/index.astro site.config.yaml') * 1000;
