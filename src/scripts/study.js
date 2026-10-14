@@ -36,7 +36,11 @@ const QKEY = 'study-quality';
 const stored = (() => { try { return localStorage.getItem(QKEY); } catch { return null; } })();
 const forced = new URLSearchParams(location.search).get('quality');
 if (forced === 'low' || forced === 'high') try { localStorage.setItem(QKEY, forced); } catch {} // the override also replaces what an earlier visit remembered
-const Q = { low: forced ? forced === 'low' : stored ? stored === 'low' : matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4, judged:false, armed:false };
+const coarse = matchMedia('(pointer: coarse)').matches;
+const Q = { low: forced ? forced === 'low' : stored ? stored === 'low' : coarse || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4, judged:false, armed:false };
+// A phone is put in the low tier for its GPU, but its screen is too dense (3× on an iPhone) to be drawn at 1× without a visible blur. So,
+// unless it was told to be low or remembered as slow, it starts at 2×, and the same first seconds of frame times take it down to 1×.
+Q.sharp = Q.low && coarse && !forced && !stored;
 if (Q.low) document.body.classList.add('lite');
 
 /* ================= renderer ================= */
@@ -50,7 +54,7 @@ catch (err) {
   intro.innerHTML = '<div>這間書房需要 WebGL 才能走進去。<br><br><a href="' + SITE.archive + '">所有文章</a> · <a href="' + SITE.reading + '">書架</a> · <a href="' + SITE.about + '">關於我</a> · <a href="' + SITE.rss + '">RSS</a></div>';
   throw err;
 }
-renderer.setPixelRatio(Q.low ? 1 : Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Q.sharp ? Math.min(devicePixelRatio, 2) : Q.low ? 1 : Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 // nothing in the room moves on its own, so the shadow map is drawn once and again only while something is being pulled or carried
 renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;
@@ -1276,19 +1280,21 @@ renderer.domElement.addEventListener('pointerup', e => {
 /* ================= adaptive quality ================= */
 // Once the camera has settled, watch a few seconds of frame times; a machine that cannot hold 40 fps is moved to the low tier for
 // everything that can change without rebuilding shaders, and remembered as slow so the next visit starts there.
+// A phone drawn at 2× is watched the same way, and one that cannot keep up only loses the extra pixels: the rest is low already.
 const qSamples = [];
+const judging = () => Q.armed && !Q.judged && (!Q.low || Q.sharp);
 function judge(dt) {
-  if (!Q.armed || Q.low || Q.judged || tween || turning || document.hidden) return;
+  if (!judging() || tween || turning || document.hidden) return;
   qSamples.push(dt); if (qSamples.length < 150) return;
   Q.judged = true; const s = [...qSamples].sort((a, b) => a - b);
   if (s[s.length >> 1] > .025) demote();
 }
 function demote() {
-  Q.low = true; document.body.classList.add('lite');
+  const phone = Q.sharp; Q.low = true; Q.sharp = false; document.body.classList.add('lite');
   renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight);
   dustN = DN / 2; dGeo.setDrawRange(0, dustN); partN = Math.ceil(PN / 2); pGeo.setDrawRange(0, partN);
   try { localStorage.setItem(QKEY, 'low'); } catch {}
-  toast('這台電腦跑得有點吃力，書房已切到輕量模式');
+  toast(phone ? '這支手機跑得有點吃力，書房的畫面已調低解析度' : '這台電腦跑得有點吃力，書房已切到輕量模式');
 }
 
 /* ================= loop ================= */
@@ -1306,7 +1312,7 @@ function loop(ts) {
   const still = reader.classList.contains('vis') && LF.obj && !LF.obj.visible;
   if (still && stillFor === LF.obj) return;
   // the frame times being judged have to be full-speed ones, so the room does not settle before the verdict is in
-  const live = tween || LF.anim || sliding || (Q.armed && !Q.low && !Q.judged) || ts - lastStir < IDLE_AFTER;
+  const live = tween || LF.anim || sliding || judging() || ts - lastStir < IDLE_AFTER;
   if (ts - lastDraw < (live ? FRAME : IDLE_FRAME) - 4) return; // 4 ms of slack, so a frame that arrives a hair early is not put off to the next
   lastDraw = ts; stillFor = still ? LF.obj : null;
   clock.update(ts); const dt = Math.min(clock.getDelta(), .05), t = clock.getElapsed(); judge(dt);
