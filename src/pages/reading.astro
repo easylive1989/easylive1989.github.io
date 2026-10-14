@@ -32,7 +32,6 @@ interface Shelf {
   label: string;
   count: number;
   books: Book[];
-  peak?: boolean;
   note?: string;
   wish?: boolean;
 }
@@ -53,14 +52,6 @@ for (const b of shelfBooks) {
 for (const items of byYear.values()) {
   items.sort((a, b) => finishedKey(b).localeCompare(finishedKey(a)));
 }
-let peakYear = 0;
-let peakCount = 0;
-for (const [year, items] of byYear) {
-  if (items.length > peakCount) {
-    peakCount = items.length;
-    peakYear = year;
-  }
-}
 
 const yearShelves: Shelf[] = Array.from(byYear.entries())
   .sort((a, b) => b[0] - a[0])
@@ -70,7 +61,6 @@ const yearShelves: Shelf[] = Array.from(byYear.entries())
     label: String(year),
     count: items.length,
     books: items,
-    peak: year === peakYear && items.length > 0,
   }));
 
 const wishShelf: Shelf | null =
@@ -285,7 +275,7 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
                 <h2 class="shelf-plate plate-brass">
                   <span class="pl-main num">{s.label}</span>
                   <span class="pl-count num" data-total={s.count}>{s.count} 本</span>
-                  {(s.peak || s.note) && <span class="pl-note">{s.peak ? '★ 高峰年' : s.note}</span>}
+                  {s.note && <span class="pl-note">{s.note}</span>}
                 </h2>
                 <div class="rd-shelf">
                   {s.books.map((b) => {
