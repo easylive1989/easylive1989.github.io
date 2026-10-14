@@ -161,12 +161,10 @@ export default function buildInkRoom(kit) {
           g.add(box(.16, .11, .012, rose, 'table-spandrel', [DX + sx * lx, top - .075, DZ + sz * (lz + .02)], null, 0)); }); // thinner than the apron it stands behind: no shared face
         [.3, .46].forEach(y => g.add(box(.03, .03, 2 * lz, rose, 'table-stretcher', [DX + sx * lx, y, DZ], null, 2))); });
       [-1, 1].forEach(sz => g.add(box(2.05, .05, .016, rose, 'table-apron', [DX, top - .03, DZ + sz * (lz + .02)], null, 0)));
-      // an inkstone with ink in its well, a brush laid on a rest shaped like three peaks, and a pot of brushes behind the laptop's left
+      // an inkstone with ink in its well, and a brush laid on a rest shaped like three peaks
       g.add(box(.12, .022, .17, soot, 'inkstone', [2.12, DY + .036, -1.7])); g.add(cyl(.038, .038, .003, 24, wet, 'ink', [2.12, DY + .0485, -1.72]));
       g.add(box(.11, .022, .022, clay, 'brush-rest', [2.34, DY + .036, -1.66])); [-.035, 0, .035].forEach((dx, i) => g.add(mk(new THREE.ConeGeometry(.014, i === 1 ? .04 : .028, 12), clay, 'brush-rest', [2.34 + dx, DY + .047 + (i === 1 ? .018 : .012), -1.66])));
-      g.add(rod([2.2, DY + .034, -1.6], [2.36, DY + .066, -1.67], .0045, cane, 'brush')); g.add(rod([2.36, DY + .066, -1.67], [2.39, DY + .072, -1.683], .0055, soot, 'brush-tip'));
-      g.add(cyl(.038, .038, .1, 24, cane, 'brush-pot', [1.4, DY + .075, -2.3]));
-      [[-.012, .01, -.1], [.014, -.006, .12], [0, .014, .02]].forEach(([dx, dz, lean]) => { g.add(rod([1.4 + dx, DY + .05, -2.3 + dz], [1.4 + dx + lean * .2, DY + .25, -2.3 + dz], .004, cane, 'brush')); g.add(rod([1.4 + dx + lean * .2, DY + .25, -2.3 + dz], [1.4 + dx + lean * .23, DY + .28, -2.3 + dz], .005, soot, 'brush-tip')); }); });
+      g.add(rod([2.2, DY + .034, -1.6], [2.36, DY + .066, -1.67], .0045, cane, 'brush')); g.add(rod([2.36, DY + .066, -1.67], [2.39, DY + .072, -1.683], .0055, soot, 'brush-tip')); });
     // the box the series stand in: the western rack's shape, in rosewood
     piece(rack, 'ink-book-box', g => { g.add(box(RKW, .018, RKD, rose, 'rack-base', [0, .009, 0])); g.add(box(RKW - .036, .12, .014, rose, 'rack-back', [0, .078, -RKD / 2 + .007]));
       [-1, 1].forEach(s => g.add(box(.018, .19, RKD, rose, 'rack-end', [s * (RKW / 2 - .009), .113, 0]))); });
