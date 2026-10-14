@@ -48,7 +48,8 @@ export default function buildInkRoom(kit) {
   /* ================= scrolls ================= */
   // Paper between two rods, hung flat on a wall. The sheet is its mount, and inside the mount the picture, which `draw` paints in a box
   // w × h at 520 px to the metre. The lettering is in whatever regular script the machine has; a machine with none sets it in its serif.
-  const INK = '#1b1d20', SEAL = '#c2272d', KAI = '"Kaiti TC", "BiauKai", "DFKai-SB", "Kaiti SC", "Songti TC", serif';
+  // The saying is in a running hand where the machine has one, and in that regular script where it has not.
+  const INK = '#1b1d20', SEAL = '#c2272d', KAI = '"Kaiti TC", "BiauKai", "DFKai-SB", "Kaiti SC", "Songti TC", serif', XING = '"Xingkai TC", "Xingkai SC", "STXingkai", ' + KAI;
   const scrollMat = (W, H, draw) => { const w = Math.round(W * 520), h = Math.round(H * 520), mx = Math.round(w * .09), top = Math.round(h * .1), bot = Math.round(h * .14);
     return std('ink-scroll', '#ffffff', { roughness:.9, map:ctex(Math.round(w * K), Math.round(h * K), x => { x.save(); x.scale(K, K); x.fillStyle = '#d8ceb4'; x.fillRect(0, 0, w, h); x.fillStyle = '#ece4cf'; x.fillRect(mx, top, w - 2 * mx, h - top - bot);
       x.translate(mx, top); x.beginPath(); x.rect(0, 0, w - 2 * mx, h - top - bot); x.clip(); draw(x, w - 2 * mx, h - top - bot); x.restore(); }, false) }); };
@@ -58,13 +59,9 @@ export default function buildInkRoom(kit) {
     g.add(cyl(.008, .008, W + .02, 8, timber, 'scroll-rod', [0, H / 2, .008], [0, 0, Math.PI / 2])); g.add(cyl(.014, .014, W + .07, 10, timber, 'scroll-rod', [0, -H / 2, .014], [0, 0, Math.PI / 2]));
     return lone(room, g); };
   const seal = (x, px, py, s = 15) => { x.globalAlpha = .9; x.fillStyle = SEAL; x.fillRect(px, py, s, s); x.globalAlpha = 1; };
-  // three stalks of bamboo, the nearest darkest, each a run of joints; leaves in clusters over them
-  const bamboo = (x, w, h) => { const R = rng(5); x.strokeStyle = INK; x.lineCap = 'round';
-    [[.3, 5, .9], [.55, 3.5, .55], [.72, 2.5, .35]].forEach(([bx, lw, a], s) => { x.globalAlpha = a; x.lineWidth = lw; const lean = (s - 1) * .05 + .03;
-      for (let y = h - 4; y > h * .08;) { const l = 46 + R() * 26; seg(x, bx * w + (h - y) * lean, y, bx * w + (h - y + l) * lean, y - l + 3); y -= l; } });
-    x.fillStyle = INK; for (let i = 0; i < 26; i++) { const lx = w * (.2 + R() * .65), ly = h * (.06 + R() * .5), a = -1.2 + R() * 1.6, l = 18 + R() * 20; x.globalAlpha = .45 + R() * .5;
-      x.save(); x.translate(lx, ly); x.rotate(a); x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(l * .5, -4, l, 0); x.quadraticCurveTo(l * .5, 4, 0, 0); x.fill(); x.restore(); }
-    seal(x, w * .76, h * .88); };
+  // a saying in large characters down the middle of the sheet, and a seal under them to the left
+  const motto = text => (x, w, h) => { const cs = [...text], fs = Math.min(w * .72, (h - 44) / (cs.length * 1.05)); x.fillStyle = INK; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `600 ${fs}px ${XING}`; x.globalAlpha = .9;
+    cs.forEach((ch, r) => x.fillText(ch, w / 2, fs * (.62 + r * 1.05))); x.globalAlpha = 1; seal(x, w * .16, h - 34, 20); };
   // three ranges, each fading out at its foot, and a hut under a tree on the near bank
   const hills = (x, w, h) => { const R = rng(12);
     [[.34, .1, .3], [.46, .07, .55], [.6, .05, .85]].forEach(([base, amp, a], q) => { x.globalAlpha = a * .7; x.beginPath(); x.moveTo(0, h * (base + .16));
@@ -113,9 +110,9 @@ export default function buildInkRoom(kit) {
       g.add(box(fw + .34, .1, .1, timber, 'door-head', [cx, fh + .05, fz], null, 0)); g.add(box(fw + .17, .06, .1, timber, 'door-sill', [cx, .03, fz], null, 0));
       [-1, 1].forEach(s => { g.add(box(fw / 2 - .004, fh - .06, .035, roseD, 'door-leaf', [cx + s * fw / 4, fh / 2 + .03, fz + .01], null, 1));
         g.add(cyl(.045, .045, .008, 24, M.brass, 'door-boss', [cx + s * .07, 1.05, fz - .012], [Math.PI / 2, 0, 0])); g.add(mk(new THREE.TorusGeometry(.032, .005, 8, 24), M.brass, 'door-ring', [cx + s * .07, 1.02, fz - .02])); }); });
-    // bamboo on the pier between the gate and the window, hung high enough for its lower rod to clear the gate's trim, which widens
+    // 上善若水 on the pier between the gate and the window, hung high enough for its lower rod to clear the gate's trim, which widens
     // downwards; hills and a line of the Analects on the left wall, by the door into the house
-    scroll(.3, .98, [-.2, 1.89, -2.497], 0, bamboo); scroll(.34, 1.05, [-2.994, 1.62, 2.5], Math.PI / 2, hills); scroll(.26, .9, [-2.994, 1.62, 1.95], Math.PI / 2, writing(['學而時習之', '不亦說乎']));
+    scroll(.3, .98, [-.2, 1.89, -2.497], 0, motto('上善若水')); scroll(.34, 1.05, [-2.994, 1.62, 2.5], Math.PI / 2, hills); scroll(.26, .9, [-2.994, 1.62, 1.95], Math.PI / 2, writing(['學而時習之', '不亦說乎']));
     // contact shadows at the foot and the head of the walls: light ones, where the western room's are heavy, for these walls are white
     const foot = half(R2);
     [[-3, GATE.x - foot], [GATE.x + foot, 3]].forEach(([a, b]) => parts.push(decal(aoLin, b - a, .55, [(a + b) / 2, .28, -2.494], [0, 0, Math.PI], .27)));
