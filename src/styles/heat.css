@@ -30,7 +30,6 @@
   line-height: 1.6;
   color: var(--color-text);
 }
-.heat-y.mark { color: var(--color-accent-2-700); }
 .heat-q {
   font-size: 10px;
   letter-spacing: 0.1em;

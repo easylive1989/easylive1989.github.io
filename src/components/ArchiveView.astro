@@ -37,7 +37,6 @@ interface Row {
 interface YearGroup {
   year: number;
   count: number;
-  peak: boolean;
   items: Row[];
 }
 
@@ -53,20 +52,11 @@ for (const r of rows) {
   if (!byYear.has(year)) byYear.set(year, []);
   byYear.get(year)!.push(r);
 }
-let peakYear = 0;
-let peakCount = 0;
-for (const [year, items] of byYear.entries()) {
-  if (items.length > peakCount) {
-    peakCount = items.length;
-    peakYear = year;
-  }
-}
 const yearGroups: YearGroup[] = Array.from(byYear.entries())
   .sort((a, b) => b[0] - a[0])
   .map(([year, items]) => ({
     year,
     count: items.length,
-    peak: year === peakYear,
     items,
   }));
 
@@ -127,7 +117,6 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
           <div class="mast-stat"><dt>posts</dt><dd class="num">{totalPosts}</dd></div>
           <div class="mast-stat"><dt>{yearSpan === 1 ? 'year' : 'years'}</dt><dd class="num">{yearSpan}</dd></div>
           <div class="mast-stat"><dt>categories</dt><dd class="num">{chipData.length}</dd></div>
-          <div class="mast-stat is-peak"><dt>peak · {peakCount} 篇</dt><dd class="num">{peakYear || '-'}</dd></div>
         </dl>
       </div>
 
@@ -139,7 +128,6 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
           from={oldestYear}
           to={newestYear}
           unit="篇"
-          mark={peakYear}
         />
       )}
     </div>
@@ -193,7 +181,6 @@ const kicker = isScoped ? 'Series · 系列' : 'Archive · 歸檔';
           <div class="year-side">
             <div class="yr-n num">{g.year}</div>
             <div class="yr-l num" data-total={g.count}>{g.count} 篇</div>
-            {g.peak && yearGroups.length > 1 && <div class="tag tag-peak">★ 高峰年</div>}
           </div>
           <div class="rows">
             {g.items.map((r, i) => {

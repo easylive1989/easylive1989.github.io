@@ -161,12 +161,6 @@
   letter-spacing: 0.06em;
   color: var(--muted);
 }
-.archive-sheet .tag-peak {
-  margin-top: 10px;
-  background: var(--color-accent-2-100);
-  color: var(--color-accent-2-800);
-  font-weight: 600;
-}
 
 .archive-sheet .rows { min-width: 0; padding-left: 24px; border-left: 1px solid var(--hair); }
 
@@ -283,9 +277,7 @@
     padding: 18px 0 6px;
   }
   .archive-sheet .yr-n { font-size: 40px; }
-  .archive-sheet .yr-l,
-  .archive-sheet .tag-peak { margin-top: 0; }
-  .archive-sheet .tag-peak { align-self: center; }
+  .archive-sheet .yr-l { margin-top: 0; }
 
   .archive-sheet .rows { padding-left: 0; border-left: 0; }
   .archive-sheet .archive-row,

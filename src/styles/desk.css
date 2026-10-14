@@ -151,7 +151,6 @@ body.desk-body {
   text-transform: uppercase;
   color: var(--color-neutral-700);
 }
-.mast-stat.is-peak dd { color: var(--color-accent-2); }
 
 /* — brass plate: the little label on the shelf, for section headings — */
 .plate-brass {

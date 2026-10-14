@@ -13,11 +13,9 @@ interface Props {
   to: number;
   /** What a cell counts, for its tooltip: 本, 篇. */
   unit: string;
-  /** A year to pick out in the second ink. */
-  mark?: number;
 }
 
-const { title, label, counts, from, to, unit, mark } = Astro.props;
+const { title, label, counts, from, to, unit } = Astro.props;
 const years = Array.from({ length: Math.max(1, to - from + 1) }, (_, i) => from + i);
 const QUARTERS = [0, 1, 2, 3];
 const LEVELS = [0, 1, 2, 3, 4];
@@ -30,7 +28,7 @@ const level = (v: number) => (v <= 0 ? 0 : Math.min(4, Math.max(1, Math.round((v
   <figcaption class="heat-title">{title}</figcaption>
   <div class="heat-grid" role="img" aria-label={label}>
     <span></span>
-    {years.map((y) => <span class:list={['heat-y', 'num', { mark: y === mark }]}>{y}</span>)}
+    {years.map((y) => <span class="heat-y num">{y}</span>)}
     {QUARTERS.map((q) => (
       <>
         <span class="heat-q">Q{q + 1}</span>
