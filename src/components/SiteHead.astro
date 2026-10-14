@@ -29,6 +29,9 @@ const image = ogImage ?? new URL(`${BASE}${config.author.avatar}`, config.site.u
 ---
 
 <meta charset="utf-8" />
+<!-- Only the CSP rules that restrict nothing the site loads: no plugins, no <base> or form pointed elsewhere, http upgraded to https.
+     Scripts, styles and images are left open (inline scripts, Google Fonts, the room's WebAssembly). GitHub Pages sends no headers -->
+<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>{pageTitle}</title>
 <meta name="description" content={description} />
