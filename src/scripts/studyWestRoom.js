@@ -3,7 +3,7 @@
 // that world is wanted (study.js, WORLDS). What rests on the furniture (the books, the exhibits, the laptop, the TV, the dog on its cushion)
 // belongs to neither room and stays in study.js; each frame is hung on the group its contents are in, so the two share coordinates.
 export default function buildWestRoom(kit) {
-  const { THREE, renderer, C, M, col, rng, cnv, texOf, ctex, mk, box, cyl, rod, std, pbr, lite, sheet, roomUV, weld, mergeGeometries, rboxGeo, plasterTex, grit, decal, aoLin, halo, dispAt } = kit;
+  const { THREE, renderer, Q, C, M, col, rng, cnv, texOf, ctex, mk, box, cyl, rod, std, pbr, lite, sheet, roomUV, weld, mergeGeometries, rboxGeo, woodTex, plasterTex, grit, decal, aoLin, halo, dispAt } = kit;
   const { room, shelf, disp, desk, rack, tvc, chair, side, portrait, pf } = kit;
   const { LV, bays, SZ0, SZ1, BZ, DL, DW, DD, DX, DY, DZ, CW, CH, CD, RKW, RKD, WIN, WZ, DOOR, DCX, FDOOR } = kit;
   const parts = [], put = (parent, o) => { parent.add(o); parts.push(o); return o; };
@@ -163,6 +163,52 @@ export default function buildWestRoom(kit) {
   /* ================= side table ================= */
   put(side, box(.6, .04, .5, M.wood, 'side-top', [0,.6,0])); [[-.26,-.21],[.26,-.21],[-.26,.21],[.26,.21]].forEach(([x,z]) => put(side, box(.04, .58, .04, M.woodD, 'side-leg', [x,.29,z])));
   put(side, box(.5, .12, .04, M.woodD, 'side-drawer', [0,.52,.23]));
+
+  /* ================= "Be water, my friend." on the wall between the door and the window ================= */
+  // A print in the manner of an illuminated page: parchment, a red initial, curls in the corners, a flourish above and below, set in two
+  // lines. It is drawn at its design's 226 × 310 (700 px to the metre) times three, two on the low tier. Its two faces are fetched for
+  // its own letters only; until they have come, or if they never do, it is lettered in the house serif.
+  {
+    const W = 226, H = 310, S = Q.low ? 2 : 3, RED = '#8e2a1c', LINE = '#7a5a2a', FELL = '"IM Fell English", "Source Serif 4", serif';
+    const flourish = (x, y, down) => { const k = down ? 16 : 0; x.beginPath(); x.moveTo(5, y + 8); x.bezierCurveTo(30, y + k, 45, y + 16 - k, 75, y + 8); x.bezierCurveTo(105, y + k, 120, y + k, 145, y + 8); x.stroke(); x.beginPath(); x.arc(75, y + 8, 2.4, 0, 7); x.fill(); };
+    const printTex = ctex(W * S, H * S, x => { x.save(); x.scale(S, S);
+      const g = x.createRadialGradient(113, 140, 0, 113, 140, 200); g.addColorStop(0, '#f3e5c6'); g.addColorStop(.6, '#e6d0a3'); g.addColorStop(1, '#c9a970'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      const R = rng(7); for (let i = 0; i < 260; i++) { x.globalAlpha = .05 + R() * .08; x.fillStyle = R() < .5 ? '#8a6a3a' : '#fff6e0'; x.fillRect(R() * W, R() * H, .6 + R(), .6 + R()); } x.globalAlpha = 1;
+      x.strokeStyle = LINE; x.fillStyle = RED; x.lineWidth = 1.2; x.lineCap = 'round';
+      // a curl in each corner, the top left one turned over for the others
+      [[6, 6, 1, 1], [W - 6, 6, -1, 1], [6, H - 6, 1, -1], [W - 6, H - 6, -1, -1]].forEach(([ox, oy, sx, sy]) => { x.save(); x.translate(ox, oy); x.scale(sx, sy);
+        x.beginPath(); x.moveTo(2, 24); x.bezierCurveTo(2, 11, 11, 2, 24, 2); x.moveTo(7, 24); x.bezierCurveTo(7, 15, 15, 7, 24, 7); x.stroke(); x.beginPath(); x.arc(24, 2, 1.6, 0, 7); x.fill(); x.restore(); });
+      // down the middle: a flourish, the two lines, a rule with a lozenge, the name, a flourish
+      x.save(); x.translate((W - 150) / 2, 0); flourish(x, 58, false); flourish(x, 236, true); x.restore();
+      x.textBaseline = 'alphabetic'; x.fillStyle = '#2b1d12';
+      x.font = `44px "UnifrakturMaguntia", ${FELL}`; const wB = x.measureText('B').width; x.font = `29px ${FELL}`; const w1 = x.measureText('e water,').width, w2 = x.measureText('my friend.').width, x1 = (W - wB - w1) / 2;
+      x.font = `44px "UnifrakturMaguntia", ${FELL}`; x.fillStyle = '#c9a24f'; x.fillText('B', x1 + 1, 123); x.fillStyle = RED; x.fillText('B', x1, 122);
+      x.fillStyle = '#2b1d12'; x.font = `29px ${FELL}`; x.fillText('e water,', x1 + wB, 122); x.fillText('my friend.', (W - w2) / 2, 156);
+      x.beginPath(); x.moveTo(72, 184); x.lineTo(106, 184); x.moveTo(120, 184); x.lineTo(154, 184); x.lineWidth = 1; x.stroke();
+      x.fillStyle = RED; x.beginPath(); x.moveTo(113, 179); x.lineTo(117, 184); x.lineTo(113, 189); x.lineTo(109, 184); x.closePath(); x.fill();
+      x.fillStyle = '#2b1d12'; x.font = `italic 15px ${FELL}`; x.textAlign = 'center'; x.fillText('— Bruce Lee', W / 2, 218); x.restore(); });
+    const face = 'https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=UnifrakturMaguntia&display=swap&text=' + encodeURIComponent('Be water, my friend. — Bruce Lee');
+    if (!document.querySelector(`link[href="${face}"]`)) {
+      const l = Object.assign(document.createElement('link'), { rel:'stylesheet', href:face });
+      l.addEventListener('load', () => Promise.all(['44px "UnifrakturMaguntia"', '29px "IM Fell English"', 'italic 15px "IM Fell English"'].map(f => document.fonts.load(f, 'Bwater'))).then(() => printTex.redraw(), () => {}), { once:true });
+      document.head.append(l);
+    }
+    // In walnut, a bead of lighter wood round the inside of the moulding and a gilt lip inside that, the paper set back behind glass,
+    // hung in the middle of the wall between the door's frame and the window's reveal, its middle at eye height
+    const fw = .42, fh = .54, m = .043, lip = .006, cx = (DOOR.x1 + .04 + WIN.x0 - .16) / 2, cy = 1.58, wz = WZ + .05;
+    const walnut = pbr('frame-walnut', '#3f2618', { ...woodTex, roughness:.45, clearcoat:.35, clearcoatRoughness:.3 });
+    const frame = new THREE.Group(); frame.name = 'be-water'; frame.position.set(cx, cy, wz);
+    [-1, 1].forEach(s => { frame.add(box(fw, m, .028, walnut, 'frame', [0, s * (fh - m) / 2, .014], null, 0)); frame.add(box(m, fh - 2 * m, .028, walnut, 'frame', [s * (fw - m) / 2, 0, .014], null, 1));
+      frame.add(box(fw - .028, .008, .031, M.woodD, 'frame-bead', [0, s * (fh / 2 - .014), .0155], null, 0)); frame.add(box(.008, fh - .028, .031, M.woodD, 'frame-bead', [s * (fw / 2 - .014), 0, .0155], null, 1));
+      frame.add(box(fw - 2 * m, lip, .02, M.brass, 'frame-gilt', [0, s * (fh / 2 - m - lip / 2), .01], null, 0)); frame.add(box(lip, fh - 2 * m - 2 * lip, .02, M.brass, 'frame-gilt', [s * (fw / 2 - m - lip / 2), 0, .01], null, 1)); });
+    weld(frame);
+    const paper = mk(new THREE.PlaneGeometry(fw - 2 * (m + lip), fh - 2 * (m + lip)), std('be-water-print', '#ffffff', { map:printTex, roughness:.9 }), 'be-water-print', [0, 0, .012]); paper.castShadow = false; frame.add(paper);
+    const glass = mk(new THREE.PlaneGeometry(fw - 2 * m, fh - 2 * m), new THREE.MeshPhysicalMaterial(lite({ name:'frame-glass', color:col('#ffffff'), transparent:true, opacity:.07, roughness:.05, metalness:0, depthWrite:false, clearcoat:1 })), 'frame-glass', [0, 0, .021]);
+    glass.castShadow = false; frame.add(glass); put(room, frame);
+    // and a soft shadow on the wall round it, thrown a little down and to the left, away from the window
+    const soft = ctex(64, 80, (x, w, h) => { x.shadowColor = '#000'; x.shadowBlur = 9; x.shadowOffsetX = w * 2; x.fillStyle = '#000'; x.fillRect(12 - w * 2, 12, w - 24, h - 24); }, false);
+    parts.push(decal(soft, fw * 64 / 40, fh * 80 / 56, [cx - .012, cy - .02, wz + .006], [0, 0, 0], .5));
+  }
 
   /* ================= contact shadows on the walls, and under the shelves' boards ================= */
   [[-3, DOOR.x0], [DOOR.x1, 3]].forEach(([a, b]) => parts.push(decal(aoLin, b - a, .55, [(a + b)/2, .28, -2.494], [0, 0, Math.PI], .6)));
