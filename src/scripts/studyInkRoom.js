@@ -176,6 +176,15 @@ export default function buildInkRoom(kit) {
     const inkstone = new THREE.Group(); inkstone.name = 'inkstone'; inkstone.add(box(.12, .022, .17, soot, 'inkstone', [2.12, DY + .036, -1.7])); props.ink = cyl(.038, .038, .003, 24, wet, 'ink', [2.12, DY + .0485, -1.72]); inkstone.add(props.ink); props.inkstone = lone(desk, inkstone);
     const brush = new THREE.Group(); brush.name = 'brush'; brush.add(rod([2.2, DY + .034, -1.6], [2.36, DY + .066, -1.67], .0045, cane, 'brush'), rod([2.36, DY + .066, -1.67], [2.39, DY + .072, -1.683], .0055, soot, 'brush-tip')); props.brush = lone(desk, brush);
     Object.assign(props.mats, { soot, cane, clay, wet });
+    // The master's note, lying in front of the laptop: a few columns of a small hand, read from the right. It is where the escape game
+    // begins (the stage answers its 'entry' pick by loading the game), so it is always on the table.
+    const NOTE = ['客人留步', '夜裡風大，門先鎖了', '鑰匙在櫃裡', '封條要填我印上的字', '印放哪了？吉利知道', '主人'];
+    const noteTex = ctex(224, 160, (x, w, h) => { const R = rng(13); x.fillStyle = '#efe6cf'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(120,90,50,.12)'; for (let i = 0; i < 160; i++) x.fillRect(R() * w, R() * h, 1, 2 + R() * 6);
+      x.fillStyle = INK; x.font = `600 15px ${KAI}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.globalAlpha = .85; NOTE.forEach((l, c) => [...l].forEach((ch, r) => x.fillText(ch, w - 22 - c * 30, 18 + r * 15.5))); x.globalAlpha = 1; }, false);
+    const note = new THREE.Group(); note.name = 'note'; note.position.set(1.86, DY + .0265, -1.64); note.rotation.y = .14; note.userData.pick = { type:'entry', tip:'字條' };
+    const sheet = mk(new THREE.PlaneGeometry(.14, .1), std('ink-note', '#ffffff', { map:noteTex, roughness:.95 }), 'note', null, [-Math.PI / 2, 0, 0]); sheet.castShadow = false; note.add(sheet);
+    const hit = mk(new THREE.BoxGeometry(.2, .05, .16), new THREE.MeshBasicMaterial({ name:'reach', visible:false }), 'reach', [0, .01, 0]); hit.castShadow = hit.receiveShadow = false; note.add(hit); // a hand's breadth round a small sheet
+    props.note = lone(desk, note);
     // the box the series stand in: the western rack's shape, in rosewood
     piece(rack, 'ink-book-box', g => { g.add(box(RKW, .018, RKD, rose, 'rack-base', [0, .009, 0])); g.add(box(RKW - .036, .12, .014, rose, 'rack-back', [0, .078, -RKD / 2 + .007]));
       [-1, 1].forEach(s => g.add(box(.018, .19, RKD, rose, 'rack-end', [s * (RKW / 2 - .009), .113, 0]))); });

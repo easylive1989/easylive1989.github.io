@@ -1,7 +1,8 @@
 // 《字與墨》: the escape game's chapter in the Chinese study (studyEscape.js starts it, studyInkRoom.js hands over what it plays with).
 // The story: a guest reads in the study until dark, and looks up to find the moon gate shut by two round leaves, with a brass lock on
 // them. On the painting table lies a note from the master of the house, who has locked up against the night wind and rowed out onto
-// the lake: the key is in the cupboard under the curio stand, the cupboard is sealed with a strip of paper whose four squares want the
+// the lake (the note is the room's, and reading it is how the chapter begins): the key is in the cupboard under the curio stand, the
+// cupboard is sealed with a strip of paper whose four squares want the
 // four characters of his seal, and where the seal is, only Jili the dog knows. The seal has rolled into the celadon vase; a seal's face
 // reads backwards, and comes out right only stamped on paper. Writing wants the brush, the brush wants ink, and the ink has dried in
 // its stone. There is no hint; but Jili, clicked, looks towards the next thing. Out on the jetty, a boat far out on the lake waves.
@@ -26,10 +27,6 @@ export default function inkChapter(stage, ui) {
   const paperTex = ctex(160, 224, (x, w, h) => { x.fillStyle = '#f0e9d6'; x.fillRect(0, 0, w, h); fibres(x, w, h, 200, 9);
     if (S.p) { x.globalAlpha = .9; x.strokeStyle = SEAL; x.lineWidth = 4; x.strokeRect(58, 26, 44, 172); x.fillStyle = SEAL; x.font = `600 34px ${KAI}`; x.textAlign = 'center'; x.textBaseline = 'middle';
       WORD.forEach((c, i) => x.fillText(c, 80, 48 + i * 42)); x.globalAlpha = 1; } }, false);
-  // the master's note, as it lies on the table: a few columns of a small hand, read from the right
-  const NOTE = ['客人留步', '夜裡風大，門先鎖了', '鑰匙在櫃裡', '封條要填我印上的字', '印放哪了？吉利知道', '主人'];
-  const noteTex = ctex(224, 160, (x, w, h) => { x.fillStyle = '#efe6cf'; x.fillRect(0, 0, w, h); fibres(x, w, h, 160, 13); x.fillStyle = INK; x.font = `600 15px ${KAI}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.globalAlpha = .85;
-    NOTE.forEach((l, c) => [...l].forEach((ch, r) => x.fillText(ch, w - 22 - c * 30, 18 + r * 15.5))); x.globalAlpha = 1; }, false);
   // the seal's face, looked at: cut backwards, as a seal is
   const drawFace = c => { const x = c.getContext('2d'), w = c.width, h = c.height; x.fillStyle = '#5f6468'; x.fillRect(0, 0, w, h); x.fillStyle = '#767b7f'; x.fillRect(6, 6, w - 12, h - 12);
     x.save(); x.translate(w, 0); x.scale(-1, 1); x.fillStyle = '#8f2520'; x.font = `600 58px ${KAI}`; x.textAlign = 'center'; x.textBaseline = 'middle'; WORD.forEach((ch, i) => x.fillText(ch, w / 2, 42 + i * 72)); x.restore(); };
@@ -63,8 +60,6 @@ export default function inkChapter(stage, ui) {
     g.key.visible = false; disp.add(g.key);
     // a sheet of paper on the painting table, for the seal
     g.paper = mk(new THREE.PlaneGeometry(.2, .28), new THREE.MeshStandardMaterial({ name:'xuan', map:paperTex, roughness:.95 }), 'paper', [1.45, DY + .0265, -1.68], [-Math.PI / 2, 0, .06]); g.paper.castShadow = false; g.paper.visible = false; desk.add(g.paper);
-    // the master's note, in front of the laptop
-    g.note = mk(new THREE.PlaneGeometry(.14, .1), new THREE.MeshStandardMaterial({ name:'note', map:noteTex, roughness:.95 }), 'note', [1.86, DY + .0265, -1.64], [-Math.PI / 2, 0, .14]); g.note.castShadow = false; g.note.visible = false; desk.add(g.note);
     // the strip, pasted down the cupboard's join over the plate and the pulls
     g.strip = new THREE.Group(); g.strip.name = 'strip'; g.strip.position.set(0, .47, DD + .018);
     const sp = mk(new THREE.PlaneGeometry(.06, .5), new THREE.MeshStandardMaterial({ name:'strip', map:stripTex, roughness:.9 }), 'strip'); sp.castShadow = false;
@@ -77,17 +72,18 @@ export default function inkChapter(stage, ui) {
   const ground = () => (S.g || 0) >= 3; // the ink has been ground (S.g is unset until the first rub)
   const dry = () => { wet.color.set('#303236'); wet.roughness = .95; wet.clearcoatRoughness = .9; };
   const damp = () => { wet.color.set('#060708'); wet.roughness = .08; wet.clearcoatRoughness = 0; };
-  let shut = false, ending = false, out = false; // `out`: the eye is on the jetty and the chapter is over; any click goes back in
+  let shut = false, on = false, ending = false, out = false; // `on`: the player has looked up from the note and the chapter has begun
+  const notePick = P.note.userData.pick; // the room's: the note is the way in. While the chapter is on it answers to the chapter instead // `out`: the eye is on the jetty and the chapter is over; any click goes back in
   // What answers the pointer, and what is seen, follow the state. A hidden thing still answers a ray, so each is tagged only while it
   // is there to be clicked, and everything is untagged when the chapter is put away.
   const picked = new Set();
   const pick = (o, id, tip, on) => { if (on && !picked.has(o)) { stage.tag(o, { id, tip }); picked.add(o); } else if (!on && picked.has(o)) { stage.untag(o); picked.delete(o); } };
   function sync() {
     pick(P.inkstone, 'ink', '硯台', true); pick(P.brush, 'brush', '毛筆', !S.b); pick(P.vase, 'vase', '青瓷瓶', true);
-    pick(G.seal, 'seal', '印章', !!(S.s && !S.t)); pick(G.paper, 'paper', '宣紙', true); pick(G.note, 'note', '字條', true); pick(G.strip, 'strip', '封條', !S.o); pick(kit.dog, 'dog', '吉利', true);
+    pick(G.seal, 'seal', '印章', !!(S.s && !S.t)); pick(G.paper, 'paper', '宣紙', true); pick(G.strip, 'strip', '封條', !S.o); pick(kit.dog, 'dog', '吉利', true);
     P.doors.forEach(d => pick(d, 'door', '櫃門', true)); pick(G.key, 'key', '鑰匙', !!(S.o && !S.k));
     G.leaves.forEach(l => pick(l, 'gate', '月洞門', true)); pick(G.lock, 'lock', '銅鎖', shut);
-    P.brush.visible = !S.b; G.seal.visible = !!(S.s && !S.t); G.strip.visible = !S.o; G.key.visible = !!(S.o && !S.k); G.paper.visible = G.note.visible = true; G.lock.visible = shut; }
+    P.brush.visible = !S.b; G.seal.visible = !!(S.s && !S.t); G.strip.visible = !S.o; G.key.visible = !!(S.o && !S.k); G.paper.visible = true; G.lock.visible = shut; }
   function apply() { ground() ? damp() : dry(); paperTex.redraw(); if (S.o) written.push(...WORD); stripTex.redraw(); P.doors.forEach((d, i) => { d.rotation.y = S.o ? (i ? 1 : -1) * DOOR : 0; }); }
   const carry = () => ui.inv([S.b && ['brush', '毛筆'], S.t && ['seal', '印章'], S.k && ['key', '鑰匙']].filter(Boolean));
 
@@ -98,8 +94,8 @@ export default function inkChapter(stage, ui) {
 
   /* ================= the puzzles ================= */
   // the note is the story: what the master did, where the key is, what the strip wants, and who knows where the seal is
-  function readNote() { const first = !S.n; S.n = 1; ui.save();
-    ui.box('<span class="card-kicker">字條</span><h3>客人留步</h3><p>夜裡風大，我先把月洞門鎖上，划船到湖上去了。</p><p>鑰匙收在博古架下的櫃子裡。櫃上貼了封條；封條上四個空格，填上我那方印的字，就開。</p><p>印……放哪了？吉利知道。</p><p style="text-align:right">——主人</p><div class="acts"><button class="opt p" data-esc="close">收起</button></div>'); if (first) ui.toast('主人留的字。字跡很急'); }
+  const letter = acts => '<span class="card-kicker">字條</span><h3>客人留步</h3><p>夜裡風大，我先把月洞門鎖上，划船到湖上去了。</p><p>鑰匙收在博古架下的櫃子裡。櫃上貼了封條；封條上四個空格，填上我那方印的字，就開。</p><p>印……放哪了？吉利知道。</p><p style="text-align:right">——主人</p><div class="acts">' + acts + '</div>';
+  function readNote() { ui.box(letter('<button class="opt p" data-esc="close">收起</button>')); }
   function grind() { if (ground()) { ui.toast(S.b ? '墨已經磨好了' : '墨磨好了，筆在筆架上'); return; } S.g = (S.g || 0) + 1; ui.save();
     if (S.g < 3) ui.toast(['硯台是乾的，主人出門前沒磨墨。磨墨……', '再磨一會兒……'][S.g - 1]); else { damp(); ui.toast('墨磨好了，泛著光。筆架上的筆可以用了'); } }
   function takeBrush() { if (!ground()) { ui.toast('筆是乾的，要先磨墨。硯台就在旁邊'); return; } S.b = 1; ui.save(); sync(); carry(); ui.toast(S.n ? '拿起主人的毛筆。封條上的空格等著' : '拿起主人的毛筆'); }
@@ -118,12 +114,12 @@ export default function inkChapter(stage, ui) {
     anim(.8, k => { G.strip.scale.y = 1 - k * .98; G.strip.position.y = .47 - k * .22; }, () => { G.strip.scale.y = 1; G.strip.position.y = .47; sync();
       anim(1.2, k => { P.doors.forEach((d, i) => { d.rotation.y = (i ? 1 : -1) * DOOR * k; }); stage.shadows(); }, () => { stage.shadows(); ui.toast('櫃子開了。裡面有東西閃著光'); }); }); }
   function takeKey() { S.k = 1; ui.save(); sync(); carry(); ui.toast('櫃裡是一把銅鑰匙，繫著紅繩。月洞門上的鎖，就等它'); }
-  function unlock() { if (!S.k) { ui.toast(S.n ? '鎖著。主人說鑰匙收在櫃裡' : '鎖著，要鑰匙'); return; } if (ending) return; ending = true; const took = ui.end(); ui.toast('鎖開了');
+  function unlock() { if (!S.k) { ui.toast(S.n ? '鎖著。主人說鑰匙收在櫃裡' : '鎖著，要鑰匙'); return; } if (ending) return; ending = true; const took = ui.end(); ui.toast('鎖開了'); ui.quit('回書齋');
     pick(G.lock, 'lock', '', false); G.lock.visible = false; G.leaves.forEach(l => pick(l, 'gate', '', false)); stage.$('tip').style.opacity = 0; // the lock's name was still up at the pointer
     anim(1.6, k => { G.leaves.forEach(l => { l.rotation.y = -l.userData.s * OPEN * k; }); stage.shadows(); }, () => { stage.shadows();
       // out through the gate, onto the jetty, and a look back into the room
       stage.flyTo(new THREE.Vector3(GATE.x - .05, 1.1, -1.4), new THREE.Vector3(GATE.x + .3, 1.5, -3.3), 2.2, [-Infinity, Infinity]);
-      setTimeout(() => { out = true; stage.label('回書齋'); ui.box('<span class="card-kicker">字與墨</span><h3>你走出了書齋。</h3><p>棧橋上只有那隻橡皮鴨。湖上遠遠一葉小舟，舟上的人朝這邊揮了揮手。</p><p>用了 ' + took + '。' + (S.w ? '封條寫錯了 ' + S.w + ' 次。' : '封條一次就寫對了。') + '</p><p>看夠了，點房間任何地方回去。</p><div class="acts"><button class="opt p" data-esc="back">回書齋</button></div>'); }, 1800); }); }
+      setTimeout(() => { out = true; ui.box('<span class="card-kicker">字與墨</span><h3>你走出了書齋。</h3><p>棧橋上只有那隻橡皮鴨。湖上遠遠一葉小舟，舟上的人朝這邊揮了揮手。</p><p>用了 ' + took + '。' + (S.w ? '封條寫錯了 ' + S.w + ' 次。' : '封條一次就寫對了。') + '</p><p>看夠了，點房間任何地方回去。</p><div class="acts"><button class="opt p" data-esc="back">回書齋</button></div>'); }, 1800); }); }
   // Jili, looked to: the note says the dog knows where the seal is, and the dog looks where the next thing is, without a word
   function pet() { ui.toast(!S.n ? '吉利在椅子上睡得很沉' : !S.s ? '吉利抬起頭，朝博古架那邊看了一眼，又趴下了' : !S.t ? '吉利望著架上那枚印章' : !S.o ? (S.p ? '吉利看看紙上的紅印，又看看櫃子' : '吉利盯著你手上的印章，歪了歪頭') : !S.k ? '吉利對著打開的櫃子哼了一聲' : '吉利望著月洞門，尾巴搖了搖'); }
   // the chapter is over and put away: the eye goes back to the middle of the room, which is the room again
@@ -132,6 +128,7 @@ export default function inkChapter(stage, ui) {
   /* ================= what study.js and the card call ================= */
   function click(root, any) {
     if (ending) { if (out) back(); return; }
+    if (!on) { if (!(root && root.userData.pick.id === 'note')) cancel(); return; } // the note is open and nothing chosen: a click elsewhere puts it down
     if (!root) { if (any) ui.toast(S.n ? '現在不是看書的時候。先照字條找鑰匙' : '現在不是看書的時候。畫案上有張字條'); return; }
     const id = root.userData.pick.id;
     if (id === 'note') readNote(); else if (id === 'dog') pet(); else if (id === 'ink') grind(); else if (id === 'brush') takeBrush(); else if (id === 'vase') shake(); else if (id === 'seal') takeSeal(); else if (id === 'paper') stamp();
@@ -141,23 +138,29 @@ export default function inkChapter(stage, ui) {
     if (a === 'ch') { picks[+b.dataset.i] = b.dataset.c; b.parentElement.querySelectorAll('.opt').forEach(o => o.classList.toggle('on', o === b)); }
     else if (a === 'write') { if (picks.some(c => !c)) { ui.toast('還有空格沒寫'); return; }
       if (picks.join('') === WORD.join('')) { ui.closeBox(); unseal(); } else { S.w = (S.w || 0) + 1; ui.save(); ui.toast(S.w >= 2 ? '寫錯了，封條沒動。印面是反的，蓋在紙上才看得正' : '寫錯了，墨跡暈開。封條沒動'); } }
-    else if (a === 'note') { ui.closeBox(); stage.zone('desk'); ui.toast('字條壓在畫案上，筆電前面。點它'); }
+    else if (a === 'look') look();
     else if (a === 'back') back(); }
   function use(id) {
     if (id === 'seal') { ui.box('<div class="face"><canvas width="96" height="300"></canvas><div><span class="card-kicker">主人的閒章</span><h3>印面</h3><p>刻著四個字，是反的。蓋在紙上，字才正過來。</p><div class="acts"><button class="opt p" data-esc="close">收起</button></div></div></div>'); drawFace(document.querySelector('#esc .face canvas')); }
     else if (id === 'brush') ui.toast('主人的毛筆，筆尖是濕的'); else if (id === 'key') ui.toast('一把銅鑰匙，繫著紅繩'); }
-  // the room is shut: the leaves swing to, and the lock is on. The props' materials are compiled first, so the swing does not stutter.
-  // Then the card tells the story so far, and offers to go and read the note
-  function begin() { apply(); sync(); carry(); G.leaves.forEach(l => { l.rotation.y = -l.userData.s * OPEN; l.visible = true; });
-    renderer.compileAsync(scene, camera).catch(() => {}).then(() => anim(1.3, k => { G.leaves.forEach(l => { l.rotation.y = -l.userData.s * OPEN * (1 - k); }); stage.shadows(); },
+  // The chapter begins with the note, read: the card is the letter, and the choice of looking up from it or putting it back
+  function begin() { P.note.userData.pick = { type:'game', id:'note', tip:'字條' };
+    ui.box(letter('<button class="opt p" data-esc="look">抬頭看看</button><button class="opt" data-esc="close">放回去</button>')); }
+  // put back: nothing has happened, and the layer comes off
+  function cancel() { P.note.userData.pick = notePick; ui.closeBox(); ui.finish(); }
+  // Looked up from: the eye goes to the middle of the room, the leaves swing to and the lock is on (the props' materials are compiled
+  // first, so the swing does not stutter), and the card says what has happened and how the room answers
+  function look() { on = true; S.n = 1; ui.closeBox(); ui.go(); apply(); sync(); carry(); stage.goHome();
+    G.leaves.forEach(l => { l.rotation.y = -l.userData.s * OPEN; l.visible = true; });
+    renderer.compileAsync(scene, camera).catch(() => {}).then(() => setTimeout(() => anim(1.3, k => { G.leaves.forEach(l => { l.rotation.y = -l.userData.s * OPEN * (1 - k); }); stage.shadows(); },
       () => { shut = true; sync(); stage.shadows();
         ui.box('<span class="card-kicker">字與墨</span><h3>' + (ui.resumed ? '門，又關上了。' : '門，關上了。') + '</h3>'
-          + '<p>你在書齋裡翻書，翻到天色暗下來。抬頭時，月洞門不知何時合上了，門上掛著一把銅鎖。畫案上壓著一張字條。</p>'
+          + '<p>你抬頭時，月洞門已經合上了，門上掛著一把銅鎖。字條說鑰匙在櫃裡。</p>'
           + '<p>房間裡的東西，滑過去會知道它是什麼，點它就是動手；上面的「展示架」「書桌」能走近看。</p>'
-          + (ui.resumed ? '<p>接著上次的進度。</p>' : '') + '<div class="acts"><button class="opt p" data-esc="note">去看字條</button><button class="opt" data-esc="close">自己找</button></div>'); })); }
+          + (ui.resumed ? '<p>接著上次的進度。</p>' : '') + '<div class="acts"><button class="opt p" data-esc="close">開始找</button></div>'); }), 900)); }
   // the chapter is put away: the room is as it was, and nothing of the game answers the pointer
-  function teardown() { anims.length = 0; shaking = false; [...picked].forEach(o => pick(o, '', '', false)); shut = false; ending = out = false;
-    G.leaves.forEach(l => { l.visible = false; }); G.lock.visible = G.seal.visible = G.key.visible = G.paper.visible = G.note.visible = G.strip.visible = false; G.strip.scale.y = 1; G.strip.position.y = .47;
+  function teardown() { anims.length = 0; shaking = false; [...picked].forEach(o => pick(o, '', '', false)); shut = on = ending = out = false;
+    G.leaves.forEach(l => { l.visible = false; }); G.lock.visible = G.seal.visible = G.key.visible = G.paper.visible = G.strip.visible = false; P.note.userData.pick = notePick; G.strip.scale.y = 1; G.strip.position.y = .47;
     P.brush.visible = true; damp(); P.doors.forEach(d => { d.rotation.y = 0; }); P.vase.position.y = G.vaseY; P.vase.rotation.set(0, 0, 0); stage.shadows(); }
-  return { click, act, use, tick, begin, teardown, back, get busy() { return anims.length > 0; }, get ending() { return ending; } };
+  return { click, act, use, tick, begin, teardown, back, cancel, get on() { return on; }, get busy() { return anims.length > 0; }, get ending() { return ending; } };
 }

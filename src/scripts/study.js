@@ -857,7 +857,7 @@ async function prepare(name) { const w = WORLDS[name];
     w.room = r; }
   if (!w.sheets) { w.sheets = blank || sceneryTex.map(t => cnv(t.image.width, t.image.height)); blank = null; w.paint(...w.sheets); } }
 // puts a prepared world on show, and the other one away
-function show(name) { const w = WORLDS[world = name]; escBtn.hidden = escSep.hidden = !ESCAPES[name];
+function show(name) { const w = WORLDS[world = name];
   for (const k in WORLDS) if (WORLDS[k].room) WORLDS[k].room.parts.forEach(o => { o.visible = k === name; });
   // a ray takes no notice of what is hidden, so only the room on show is left among the things that can be picked
   roomPicks.forEach(o => { const i = pickables.indexOf(o); if (i >= 0) pickables.splice(i, 1); }); pickables.push(...(roomPicks = w.room.picks));
@@ -975,17 +975,16 @@ function goZone(id) { const z = ZONES[id], f = z.fit ? z.fit() : z, at = new THR
 hud.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (TV.on || RD.mode || RD.busy) return;
-  if (b === homeBtn) closePanel(); else if (b.dataset.zone) goZone(b.dataset.zone); else if (b.dataset.act === 'escape') toggleGame();
+  if (b === homeBtn) closePanel(); else if (b.dataset.zone) goZone(b.dataset.zone);
 });
 controls.addEventListener('start', () => setZone(null));
 
 /* ================= the escape game ================= */
 // A world may have a chapter of the escape game: a module that shuts the player in that world's room with a few puzzles between them
-// and the way out (studyEscape.js carries what the chapters share, studyEscapeInk.js is the Chinese study's). It loads the first time
-// the dock's 密室 is pressed. While a chapter is being played the room's clicks are the game's: nothing opens, the duck does not turn
-// the world, and Escape goes to the game. The button only shows in a world that has a chapter.
-const ESCAPES = { ink:1 };
-const escBtn = hud.querySelector('[data-act="escape"]'), escSep = hud.querySelector('[data-escape-sep]');
+// and the way out (studyEscape.js carries what the chapters share, studyEscapeInk.js is the Chinese study's). It loads when the thing
+// the chapter begins with is picked: a room marks that thing with a pick of type 'entry' (the note on the Chinese study's table).
+// While a chapter is being played the room's clicks are the game's: nothing opens, the duck does not turn the world, and Escape goes
+// to the game.
 let game = null, gameLoading = false;
 const playKit = { THREE, renderer, scene, room, camera, controls, kit, pickables, toast, esc, $, flyTo, goHome, AZ, HOME, stir:() => stir(), // `stir` is declared further down, with the loop
   world:() => world, props:() => WORLDS[world].room.props,
@@ -993,14 +992,12 @@ const playKit = { THREE, renderer, scene, room, camera, controls, kit, pickables
   tag:(root, data) => { root.userData.pick = { type:'game', ...data }; root.userData.pull = new THREE.Vector3(); root.userData.base = root.position.clone(); root.traverse(o => { if (o.isMesh) { o.userData.root = root; pickables.push(o); } }); },
   untag:root => { delete root.userData.pick; root.traverse(o => { if (!o.isMesh) return; delete o.userData.root; const i = pickables.indexOf(o); if (i >= 0) pickables.splice(i, 1); }); },
   shadows:() => { renderer.shadowMap.needsUpdate = true; },
-  label:t => { escBtn.querySelector('span').textContent = t; }, zone:goZone, // what the dock's button offers while the game is on: 放棄, or 回書齋 once it is won
-  over:() => { game = null; escBtn.classList.remove('on'); escBtn.querySelector('span').textContent = '密室'; } };
-async function toggleGame() {
-  if (game) { game.abandon(); return; }
-  if (gameLoading || turning || RD.mode || TV.on || !ESCAPES[world]) return; gameLoading = true;
-  if (panel.classList.contains('open')) closePanel(); else goHome(); // the chapter opens on the room seen whole, from its middle
-  try { const { start } = await within(15000, import('./studyEscape.js')); game = await start(playKit); if (game) { escBtn.classList.add('on'); escBtn.querySelector('span').textContent = '放棄'; } }
-  catch (err) { console.warn('the escape game would not load', err); toast('密室打不開，重新整理頁面再試一次'); }
+  over:() => { game = null; } };
+async function startGame() {
+  if (game || gameLoading || turning || RD.mode || TV.on) return; gameLoading = true;
+  if (panel.classList.contains('open')) { panel.classList.remove('open'); document.body.classList.remove('reading'); }
+  try { const { start } = await within(15000, import('./studyEscape.js')); game = await start(playKit); }
+  catch (err) { console.warn('the escape game would not load', err); toast('字條讀不出來，重新整理頁面再試一次'); }
   gameLoading = false; }
 
 /* ================= pick-up readers + TV ================= */
@@ -1264,7 +1261,7 @@ function tipText(p) {
   if (p.type === 'list') return 'GitHub 活動';
   if (p.type === 'about') return '關於 Paul';
   if (p.type === 'scenery') return '換個景色';
-  if (p.type === 'game') return p.tip || '';
+  if (p.type === 'game' || p.type === 'entry') return p.tip || '';
   return '';
 }
 const setMouse = e => { const r = renderer.domElement.getBoundingClientRect(); mouse.set((e.clientX - r.left)/r.width*2-1, -(e.clientY - r.top)/r.height*2+1); ray.setFromCamera(mouse, camera); };
@@ -1287,7 +1284,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   if (game) { game.click(root); return; }
   if (!root) { if (panel.classList.contains('open')) closePanel(); return; }
   const p = root.userData.pick;
-  if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout(); else if (p.type === 'scenery') turnWorld();
+  if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout(); else if (p.type === 'scenery') turnWorld(); else if (p.type === 'entry') startGame();
 });
 
 /* ================= adaptive quality ================= */
