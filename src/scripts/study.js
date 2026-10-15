@@ -993,6 +993,7 @@ const playKit = { THREE, renderer, scene, room, camera, controls, kit, pickables
   tag:(root, data) => { root.userData.pick = { type:'game', ...data }; root.userData.pull = new THREE.Vector3(); root.userData.base = root.position.clone(); root.traverse(o => { if (o.isMesh) { o.userData.root = root; pickables.push(o); } }); },
   untag:root => { delete root.userData.pick; root.traverse(o => { if (!o.isMesh) return; delete o.userData.root; const i = pickables.indexOf(o); if (i >= 0) pickables.splice(i, 1); }); },
   shadows:() => { renderer.shadowMap.needsUpdate = true; },
+  label:t => { escBtn.querySelector('span').textContent = t; }, // what the dock's button offers while the game is on: 放棄, or 回書齋 once it is won
   over:() => { game = null; escBtn.classList.remove('on'); escBtn.querySelector('span').textContent = '密室'; } };
 async function toggleGame() {
   if (game) { game.abandon(); return; }

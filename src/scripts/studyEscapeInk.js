@@ -69,7 +69,7 @@ export default function inkChapter(stage, ui) {
   const ground = () => (S.g || 0) >= 3; // the ink has been ground (S.g is unset until the first rub)
   const dry = () => { wet.color.set('#303236'); wet.roughness = .95; wet.clearcoatRoughness = .9; };
   const damp = () => { wet.color.set('#060708'); wet.roughness = .08; wet.clearcoatRoughness = 0; };
-  let shut = false, ending = false;
+  let shut = false, ending = false, out = false; // `out`: the eye is on the jetty and the chapter is over; any click goes back in
   // What answers the pointer, and what is seen, follow the state. A hidden thing still answers a ray, so each is tagged only while it
   // is there to be clicked, and everything is untagged when the chapter is put away.
   const picked = new Set();
@@ -112,10 +112,13 @@ export default function inkChapter(stage, ui) {
     anim(1.6, k => { G.leaves.forEach(l => { l.rotation.y = -l.userData.s * OPEN * k; }); stage.shadows(); }, () => { stage.shadows();
       // out through the gate, onto the jetty, and a look back into the room
       stage.flyTo(new THREE.Vector3(GATE.x - .05, 1.1, -1.4), new THREE.Vector3(GATE.x + .3, 1.5, -3.3), 2.2, [-Infinity, Infinity]);
-      setTimeout(() => ui.box('<span class="card-kicker">字與墨</span><h3>你走出了書齋。</h3><p>用了 ' + took + '。' + (S.w ? '封條寫錯了 ' + S.w + ' 次。' : '封條一次就寫對了。') + '</p><div class="acts"><button class="opt p" data-esc="back">回書齋</button></div>'), 1800); }); }
+      setTimeout(() => { out = true; stage.label('回書齋'); ui.box('<span class="card-kicker">字與墨</span><h3>你走出了書齋。</h3><p>用了 ' + took + '。' + (S.w ? '封條寫錯了 ' + S.w + ' 次。' : '封條一次就寫對了。') + '</p><p>看夠了，點房間任何地方回去。</p><div class="acts"><button class="opt p" data-esc="back">回書齋</button></div>'); }, 1800); }); }
+  // the chapter is over and put away: the eye goes back to the middle of the room, which is the room again
+  function back() { if (ending && !out) return; ui.closeBox(); teardown(); stage.goHome(); ui.finish(); }
 
   /* ================= what study.js and the card call ================= */
   function click(root, any) {
+    if (ending) { if (out) back(); return; }
     if (!root) { if (any) ui.toast('現在不是看書的時候。先找鑰匙出去'); return; }
     const id = root.userData.pick.id;
     if (id === 'ink') grind(); else if (id === 'brush') takeBrush(); else if (id === 'vase') shake(); else if (id === 'seal') takeSeal(); else if (id === 'paper') stamp();
@@ -125,7 +128,7 @@ export default function inkChapter(stage, ui) {
     if (a === 'ch') { picks[+b.dataset.i] = b.dataset.c; b.parentElement.querySelectorAll('.opt').forEach(o => o.classList.toggle('on', o === b)); }
     else if (a === 'write') { if (picks.some(c => !c)) { ui.toast('還有空格沒寫'); return; }
       if (picks.join('') === WORD.join('')) { ui.closeBox(); unseal(); } else { S.w = (S.w || 0) + 1; ui.save(); ui.toast(S.w >= 2 ? '寫錯了。印面是反的，蓋在紙上才看得正' : '寫錯了，墨跡暈開'); } }
-    else if (a === 'back') { ui.closeBox(); teardown(); stage.goHome(); ui.finish(); } }
+    else if (a === 'back') back(); }
   function use(id) {
     if (id === 'seal') { ui.box('<div class="face"><canvas width="96" height="300"></canvas><div><span class="card-kicker">印章</span><h3>印面</h3><p>刻著四個字，是反的。蓋在紙上，字才正過來。</p><div class="acts"><button class="opt p" data-esc="close">收起</button></div></div></div>'); drawFace(document.querySelector('#esc .face canvas')); }
     else if (id === 'brush') ui.toast('毛筆，筆尖是濕的'); else if (id === 'key') ui.toast('一把銅鑰匙，不知道開哪裡'); }
@@ -140,8 +143,8 @@ export default function inkChapter(stage, ui) {
           + '<p>滑過房間裡的東西，會動的會亮出名字，點它就是動手。上面的「展示架」「書桌」能走近看。卡住了，按「提示」。</p>'
           + (ui.resumed ? '<p>接著上次的進度。</p>' : '') + '<div class="acts"><button class="opt p" data-esc="close">開始找</button></div>'); })); }
   // the chapter is put away: the room is as it was, and nothing of the game answers the pointer
-  function teardown() { anims.length = 0; shaking = false; [...picked].forEach(o => pick(o, '', '', false)); shut = false;
+  function teardown() { anims.length = 0; shaking = false; [...picked].forEach(o => pick(o, '', '', false)); shut = false; ending = out = false;
     G.leaves.forEach(l => { l.visible = false; }); G.lock.visible = G.seal.visible = G.key.visible = G.paper.visible = G.strip.visible = false; G.strip.scale.y = 1; G.strip.position.y = .47;
     P.brush.visible = true; damp(); P.doors.forEach(d => { d.rotation.y = 0; }); P.vase.position.y = G.vaseY; P.vase.rotation.set(0, 0, 0); stage.shadows(); }
-  return { click, act, use, hint, tick, begin, teardown, get busy() { return anims.length > 0; }, get ending() { return ending; } };
+  return { click, act, use, hint, tick, begin, teardown, back, get busy() { return anims.length > 0; }, get ending() { return ending; } };
 }

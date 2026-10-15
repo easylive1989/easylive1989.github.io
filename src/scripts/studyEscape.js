@@ -52,8 +52,9 @@ export async function start(stage) {
     click:root => chapter.click(root && root.userData.pick.type === 'game' ? root : null, !!root),
     tick:dt => chapter.tick(dt),
     get busy() { return chapter.busy; },
-    escape:() => { if (!box.hidden) ui.closeBox(); },
-    abandon:() => { if (chapter.ending) return; ui.closeBox(); chapter.teardown(); save(name, S); stage.goHome(); stage.toast('先放著，進度留著下次再來'); ui.finish(); },
+    // once the chapter is won, every way out leads back into the room: Escape, the dock's button, a click anywhere in the room
+    escape:() => { if (chapter.ending) chapter.back(); else if (!box.hidden) ui.closeBox(); },
+    abandon:() => { if (chapter.ending) { chapter.back(); return; } ui.closeBox(); chapter.teardown(); save(name, S); stage.goHome(); stage.toast('先放著，進度留著下次再來'); ui.finish(); },
   };
   chapter.begin();
   return game;
