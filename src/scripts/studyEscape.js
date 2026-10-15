@@ -24,7 +24,7 @@ export async function start(stage) {
   card.innerHTML = '<div class="bar"><span class="ttl">' + esc(ch.title) + '</span><span class="clk">00:00</span><span class="sep"></span><span class="inv"></span></div><div class="box" hidden></div>';
   const clk = card.querySelector('.clk'), inv = card.querySelector('.inv'), box = card.querySelector('.box');
   const tickClock = () => { clk.textContent = mmss((S.t1 || Date.now()) - S.t0); }; tickClock(); const clockT = setInterval(tickClock, 1000);
-  requestAnimationFrame(() => card.classList.add('on'));
+  requestAnimationFrame(() => card.classList.add('on')); document.body.classList.add('escape'); // the page knows the game is on: the toast moves out from under the dock
 
   const ui = {
     state:S, save:() => save(name, S), resumed,
@@ -38,7 +38,7 @@ export async function start(stage) {
     // the chapter is over: the clock stops, the time is kept, and the card says so until the player goes back into the room
     end:() => { S.t1 = Date.now(); S.d = 1; save(name, S); tickClock(); return spell(S.t1 - S.t0); },
     // the layer comes off: the card goes, and the room is the room again
-    finish:() => { clearInterval(clockT); card.classList.remove('on'); setTimeout(() => { if (!card.classList.contains('on')) card.remove(); }, 400); stage.over(); },
+    finish:() => { clearInterval(clockT); document.body.classList.remove('escape'); card.classList.remove('on'); setTimeout(() => { if (!card.classList.contains('on')) card.remove(); }, 400); stage.over(); },
   };
   const chapter = (await ch.load()).default(stage, ui);
   card.onclick = e => { const b = e.target.closest('[data-esc]'); if (!b) return; const act = b.dataset.esc;

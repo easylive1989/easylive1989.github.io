@@ -199,6 +199,10 @@ const BASE = import.meta.env.BASE_URL;
 
   #toast { left: 50%; top: var(--space-8); transform: translate(-50%, -8px); padding: 10px 18px; font-size: 18px; line-height: 1.4; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
   #toast.on { opacity: 1; transform: translate(-50%, 0); }
+  /* the escape game's lines run long: they wrap rather than run under the dock, and while the game is on they stand a row below it
+     (on a phone the dock is a bar along the bottom, so the top is free) */
+  #toast { max-width: min(760px, calc(100vw - 32px)); box-sizing: border-box; text-align: center; }
+  @media (min-width: 761px) { body.escape #toast { top: 80px; } }
   body.reading #toast { left: calc(50% - 230px); }
 
   /* The dock. On a desk it sits in the top left corner; on a phone, whose view never takes in the whole room, it is a bar
