@@ -20,13 +20,20 @@ export async function start(stage) {
   /* the card */
   let card = document.getElementById('esc');
   if (!card) { card = document.createElement('div'); card.id = 'esc'; card.className = 'hud rpg'; document.body.appendChild(card); }
-  card.innerHTML = '<div class="bar"><span class="ttl">' + esc(ch.title) + '</span><span class="clk">00:00</span><span class="sep"></span><span class="inv"></span><span class="sep"></span><button class="opt" data-esc="hint">提示</button></div><div class="box" hidden></div>';
-  const bar = card.querySelector('.bar'), clk = card.querySelector('.clk'), inv = card.querySelector('.inv'), box = card.querySelector('.box');
+  card.innerHTML = '<div class="bar"><span class="ttl">' + esc(ch.title) + '</span><span class="clk">00:00</span><span class="sep"></span><span class="inv"></span><span class="sep"></span><button class="opt" data-esc="hint">提示</button></div><div class="lead"></div><div class="box" hidden></div>';
+  const clk = card.querySelector('.clk'), inv = card.querySelector('.inv'), lead = card.querySelector('.lead'), box = card.querySelector('.box'), hintBtn = card.querySelector('[data-esc="hint"]');
+  // a player who has got nowhere for a while is pointed at the hint: the button's cursor blinks, and a line says so once
+  let lastStep = Date.now(), nudged = false;
+  const nudgeT = setInterval(() => { if (S.d || nudged || Date.now() - lastStep < 45000) return; nudged = true; hintBtn.classList.add('on'); stage.toast('卡住了？右下角的「提示」會指路', 4500); }, 5000);
   const tickClock = () => { clk.textContent = mmss((S.t1 || Date.now()) - S.t0); }; tickClock(); const clockT = setInterval(tickClock, 1000);
   requestAnimationFrame(() => card.classList.add('on'));
 
   const ui = {
-    state:S, save:() => save(name, S), toast:stage.toast, resumed,
+    state:S, save:() => { lastStep = Date.now(); save(name, S); }, resumed,
+    // what the room says: a line at the top of the screen, held longer than the room's own, for a player has to read and look at once
+    toast:(t, ms = 4000) => stage.toast(t, ms),
+    // the latest lead, kept on the card until the next: what the player has found out, never what to do about it
+    lead:t => { lead.textContent = t; },
     // what is carried, as the options of a menu: each may be looked at
     inv:items => { inv.innerHTML = items.map(([id, label]) => '<button class="opt" data-esc="item" data-id="' + esc(id) + '">' + esc(label) + '</button>').join(''); },
     box:html => { box.innerHTML = html; box.hidden = false; },
@@ -35,11 +42,11 @@ export async function start(stage) {
     // the chapter is over: the clock stops, the time is kept, and the card says so until the player goes back into the room
     end:() => { S.t1 = Date.now(); S.d = 1; save(name, S); tickClock(); return spell(S.t1 - S.t0); },
     // the layer comes off: the card goes, and the room is the room again
-    finish:() => { clearInterval(clockT); card.classList.remove('on'); setTimeout(() => { if (!card.classList.contains('on')) card.remove(); }, 400); stage.over(); },
+    finish:() => { clearInterval(clockT); clearInterval(nudgeT); card.classList.remove('on'); setTimeout(() => { if (!card.classList.contains('on')) card.remove(); }, 400); stage.over(); },
   };
   const chapter = (await ch.load()).default(stage, ui);
   card.onclick = e => { const b = e.target.closest('[data-esc]'); if (!b) return; const act = b.dataset.esc;
-    if (act === 'hint') stage.toast(chapter.hint()); else if (act === 'item') chapter.use(b.dataset.id); else if (act === 'close') ui.closeBox(); else chapter.act(act, b); };
+    if (act === 'hint') { hintBtn.classList.remove('on'); nudged = false; lastStep = Date.now(); stage.toast(chapter.hint(), 5000); } else if (act === 'item') chapter.use(b.dataset.id); else if (act === 'close') ui.closeBox(); else chapter.act(act, b); };
 
   const game = {
     click:root => chapter.click(root && root.userData.pick.type === 'game' ? root : null, !!root),

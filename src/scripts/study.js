@@ -888,7 +888,7 @@ const kit = { THREE, renderer, Q, C, M, col, rng, cnv, texOf, ctex, mk, box, cyl
 /* ================= UI ================= */
 const st = { cur:null };
 const $ = id => document.getElementById(id);
-let toastT; const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); };
+let toastT; const toast = (t, ms = 2600) => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms); }; // the game's lines stay up longer
 const panel = $('panel'), pbody = $('pbody');
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 // the panel's links are the options of an RPG menu: the main one ("p") starts out under the cursor
