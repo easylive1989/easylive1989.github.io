@@ -857,7 +857,7 @@ async function prepare(name) { const w = WORLDS[name];
     w.room = r; }
   if (!w.sheets) { w.sheets = blank || sceneryTex.map(t => cnv(t.image.width, t.image.height)); blank = null; w.paint(...w.sheets); } }
 // puts a prepared world on show, and the other one away
-function show(name) { const w = WORLDS[world = name];
+function show(name) { const w = WORLDS[world = name]; escBtn.hidden = escSep.hidden = !ESCAPES[name];
   for (const k in WORLDS) if (WORLDS[k].room) WORLDS[k].room.parts.forEach(o => { o.visible = k === name; });
   // a ray takes no notice of what is hidden, so only the room on show is left among the things that can be picked
   roomPicks.forEach(o => { const i = pickables.indexOf(o); if (i >= 0) pickables.splice(i, 1); }); pickables.push(...(roomPicks = w.room.picks));
@@ -865,7 +865,7 @@ function show(name) { const w = WORLDS[world = name];
   sky.material.color.set(w.sky); scene.background.set(w.back); pMat.color.set(w.leaf); renderer.shadowMap.needsUpdate = true; }
 // The duck's doing. A world that has been built is put on show at once. One that has not is built behind the door; if it cannot be
 // (its script would not load), the door opens again on the world it shut on.
-async function turnWorld() { if (turning) return; turning = true;
+async function turnWorld() { if (turning) return; if (game) { toast('先逃出這間書齋再說'); return; } turning = true;
   const to = ORDER[(ORDER.indexOf(world) + 1) % ORDER.length], fresh = !WORLDS[to].room; let ok = true;
   if (fresh) await shutDoor();
   try { await prepare(to); show(to);
@@ -945,6 +945,7 @@ addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) 
   if (TV.on) { if (e.key === 'Escape') TV.play ? tvMenu() : exitTV(); else if (!TV.play && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); tvSel((TV.sel + (e.key === 'ArrowDown' ? 1 : -1) + GAMES.length) % GAMES.length); } else if (!TV.play && e.key === 'Enter') tvPlay(); return; }
   if (RD.mode) { const nx = e.key === 'ArrowRight', pv = e.key === 'ArrowLeft';
     if (e.key === 'Escape') closeReader(); else if (nx || pv) { e.preventDefault(); RD.mode === 'book' ? flip(nx ? 1 : -1) : stepDraft(nx ? 1 : -1); } return; }
+  if (game) { if (e.key === 'Escape') game.escape(); return; }
   if (e.key === 'Escape') closePanel(); });
 
 /* ================= dock ================= */
@@ -974,9 +975,32 @@ function goZone(id) { const z = ZONES[id], f = z.fit ? z.fit() : z, at = new THR
 hud.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (TV.on || RD.mode || RD.busy) return;
-  if (b === homeBtn) closePanel(); else if (b.dataset.zone) goZone(b.dataset.zone);
+  if (b === homeBtn) closePanel(); else if (b.dataset.zone) goZone(b.dataset.zone); else if (b.dataset.act === 'escape') toggleGame();
 });
 controls.addEventListener('start', () => setZone(null));
+
+/* ================= the escape game ================= */
+// A world may have a chapter of the escape game: a module that shuts the player in that world's room with a few puzzles between them
+// and the way out (studyEscape.js carries what the chapters share, studyEscapeInk.js is the Chinese study's). It loads the first time
+// the dock's 密室 is pressed. While a chapter is being played the room's clicks are the game's: nothing opens, the duck does not turn
+// the world, and Escape goes to the game. The button only shows in a world that has a chapter.
+const ESCAPES = { ink:1 };
+const escBtn = hud.querySelector('[data-act="escape"]'), escSep = hud.querySelector('[data-escape-sep]');
+let game = null, gameLoading = false;
+const playKit = { THREE, renderer, scene, room, camera, controls, kit, pickables, toast, esc, $, flyTo, goHome, AZ, HOME, stir:() => stir(), // `stir` is declared further down, with the loop
+  world:() => world, props:() => WORLDS[world].room.props,
+  // what the game adds to the room answers the pointer like anything else, under a pick type of its own; it gets no lift under the cursor
+  tag:(root, data) => { root.userData.pick = { type:'game', ...data }; root.userData.pull = new THREE.Vector3(); root.userData.base = root.position.clone(); root.traverse(o => { if (o.isMesh) { o.userData.root = root; pickables.push(o); } }); },
+  untag:root => { delete root.userData.pick; root.traverse(o => { if (!o.isMesh) return; delete o.userData.root; const i = pickables.indexOf(o); if (i >= 0) pickables.splice(i, 1); }); },
+  shadows:() => { renderer.shadowMap.needsUpdate = true; },
+  over:() => { game = null; escBtn.classList.remove('on'); escBtn.querySelector('span').textContent = '密室'; } };
+async function toggleGame() {
+  if (game) { game.abandon(); return; }
+  if (gameLoading || turning || RD.mode || TV.on || !ESCAPES[world]) return; gameLoading = true;
+  if (panel.classList.contains('open')) closePanel(); else goHome(); // the chapter opens on the room seen whole, from its middle
+  try { const { start } = await within(15000, import('./studyEscape.js')); game = await start(playKit); if (game) { escBtn.classList.add('on'); escBtn.querySelector('span').textContent = '放棄'; } }
+  catch (err) { console.warn('the escape game would not load', err); toast('密室打不開，重新整理頁面再試一次'); }
+  gameLoading = false; }
 
 /* ================= pick-up readers + TV ================= */
 // Books, the pages on the desk and the TV don't open the side panel: the thing itself comes to the camera
@@ -1239,6 +1263,7 @@ function tipText(p) {
   if (p.type === 'list') return 'GitHub 活動';
   if (p.type === 'about') return '關於 Paul';
   if (p.type === 'scenery') return '換個景色';
+  if (p.type === 'game') return p.tip || '';
   return '';
 }
 const setMouse = e => { const r = renderer.domElement.getBoundingClientRect(); mouse.set((e.clientX - r.left)/r.width*2-1, -(e.clientY - r.top)/r.height*2+1); ray.setFromCamera(mouse, camera); };
@@ -1258,6 +1283,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) { down = null; return; } down = null;
   if (TV.on) { exitTV(); return; } if (lockCam) return;
   setMouse(e); const root = pickRoot();
+  if (game) { game.click(root); return; }
   if (!root) { if (panel.classList.contains('open')) closePanel(); return; }
   const p = root.userData.pick;
   if (p.type === 'item') openItem(p.id); else if (p.type === 'list') openList(); else if (p.type === 'about') openAbout(); else if (p.type === 'scenery') turnWorld();
@@ -1298,7 +1324,7 @@ function loop(ts) {
   const still = reader.classList.contains('vis') && LF.obj && !LF.obj.visible;
   if (still && stillFor === LF.obj) return;
   // the frame times being judged have to be full-speed ones, so the room does not settle before the verdict is in
-  const live = tween || LF.anim || sliding || judging() || ts - lastStir < IDLE_AFTER;
+  const live = tween || LF.anim || sliding || judging() || (game && game.busy) || ts - lastStir < IDLE_AFTER;
   if (ts - lastDraw < (live ? FRAME : IDLE_FRAME) - 4) return; // 4 ms of slack, so a frame that arrives a hair early is not put off to the next
   lastDraw = ts; stillFor = still ? LF.obj : null;
   clock.update(ts); const dt = Math.min(clock.getDelta(), .05), t = clock.getElapsed(); judge(dt);
@@ -1315,7 +1341,7 @@ function loop(ts) {
   const f = dt * 60; // the dust's steps were tuned per frame at 60 a second; scaled, it drifts no slower when frames are fewer
   const da = dGeo.attributes.position.array; for (let i = 0; i < dustN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009 * f; da[i*3+1] += (Math.sin(t*.21 + s0*30) * .0006 - .00012) * f; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008 * f; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
   if (tween) { tween.t = Math.min(1, tween.t + dt / tween.d); const k = 1 - Math.pow(1 - tween.t, 3); controls.target.lerpVectors(tween.ft, tween.tt, k); camera.position.lerpVectors(tween.fp, tween.tp, k); if (tween.t >= 1) { tween = null; controls.enabled = !lockCam; } }
-  liftStep(dt);
+  liftStep(dt); if (game) game.tick(dt);
   // the panel covers the right 460px, or the bottom 58% on a phone — slide the view so the subject stays in the open part
   const open = panel.classList.contains('open'), phone = innerWidth <= 760, k = Math.min(1, dt * 6);
   viewX += ((open && !phone ? 230 : 0) - viewX) * k; viewY += ((open && phone ? innerHeight * .29 : 0) - viewY) * k;

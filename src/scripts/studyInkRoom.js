@@ -5,6 +5,9 @@
 export default function buildInkRoom(kit) {
   const { THREE, Q, M, col, rng, mk, box, cyl, rod, std, pbr, ctex, roomUV, weld, woodTex, plasterTex, decal, aoLin, room } = kit;
   const parts = [];
+  // What the escape game (studyEscapeInk.js) plays with: the few things that have to stay objects of their own, because they move or
+  // change, and the room's materials and sizes, so the game's props match the room
+  const props = {};
   // one piece of the room: built into a group of its own under `parent`, so that it shares the coordinates of whatever stands on it
   // there, then drawn as one mesh per material
   const piece = (parent, name, fill) => { const g = new THREE.Group(); g.name = name; parent.add(g); fill(g); weld(g); parts.push(g); return g; };
@@ -17,6 +20,7 @@ export default function buildInkRoom(kit) {
   const timber = pbr('ink-timber', '#2c1b14', { ...woodTex, roughness:.6, clearcoat:.25, clearcoatRoughness:.4 }), matte = std('ink-rafter', '#2a1b15', { roughness:.9 });
   const rose = pbr('ink-rosewood', '#45251a', { ...woodTex, roughness:.45, clearcoat:.5, clearcoatRoughness:.25 }), roseD = pbr('ink-rosewood-dark', '#2e1812', { ...woodTex, roughness:.5, clearcoat:.4, clearcoatRoughness:.3 });
   const stone = std('ink-stone', '#70767a', { roughness:.95 }), brick = std('ink-brick', '#4e5559', { roughness:.9 }), boards = std('ink-boards', '#a89c86', { roughness:1 });
+  props.mats = { timber, rose, roseD, stone, brick };
   // the floor: grey bricks half a metre square, four each way to a sheet
   const tiles = ctex(1024 * K, 1024 * K, (x, w) => { const R = rng(7), n = 4, s = w / n, u = w / 1024;
     for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { x.fillStyle = `hsl(${195 + R() * 20}, ${4 + R() * 4}%, ${36 + R() * 9}%)`; x.fillRect(i * s, j * s, s, s);
@@ -74,7 +78,7 @@ export default function buildInkRoom(kit) {
 
   /* ================= the shell ================= */
   // The moon gate: a circle in the back wall that the floor cuts off, so that its foot is a metre of threshold.
-  const GATE = { x:-1.45, y:.92, r:1.05 };
+  const GATE = { x:-1.45, y:.92, r:1.05 }; props.GATE = GATE;
   function shell() { const W = kit.WIN, F = kit.FDOOR, half = r => Math.sqrt(r * r - GATE.y * GATE.y), R2 = GATE.r + .09; // `R2`: the outside of the gate's trim
     // the gate's arc at radius `r`, from the floor on one side over the top to the floor on the other: left to right, or back again
     const arc = (s, r, over) => s.absarc(GATE.x, GATE.y, r, Math.atan2(-GATE.y, over ? -half(r) : half(r)), Math.atan2(-GATE.y, over ? half(r) : -half(r)), over);
@@ -141,14 +145,19 @@ export default function buildInkRoom(kit) {
       [-hx, hx].forEach(x => [.0225, DD - .0225].forEach(z => g.add(box(.045, 2.57, .045, rose, 'post', [x, 1.285, z], null, 1))));
       [[3, .14], [2, 0], [0, -.05]].forEach(([i, x]) => { const y0 = DL[i] + .0175, y1 = i < 3 ? DL[i + 1] - .0175 : head; g.add(box(.022, y1 - y0, d, rose, 'upright', [x, (y0 + y1) / 2, DD / 2], null, 1)); });
       g.add(box(.345, .022, d, rose, 'step', [.47, 1.03, DD / 2], null, 0)); g.add(box(.022, .22, d, rose, 'upright', [.3, .928, DD / 2], null, 1));
-      // the cupboard: two doors that meet on a bar, a round brass plate over the join with a pull either side, and an apron between its feet
-      g.add(box(DW - .05, .62, DD - .02, rose, 'cupboard', [0, .47, DD / 2]));
-      [-1, 1].forEach(s => g.add(box(DW / 2 - .075, .54, .012, roseD, 'cupboard-door', [s * (DW / 4 - .008), .47, DD - .004], null, 1)));
+      // the cupboard: a box of boards, open at the front, with a bar down the middle of the opening and an apron between its feet. Its two
+      // doors meet on the bar, each with half of the round brass plate and one pull; they hang on the posts, so they are built apart below
+      const cw = DW - .05, cd = DD - .02;
+      [.166, .774].forEach(y => g.add(box(cw, .012, cd, rose, 'cupboard', [0, y, DD / 2]))); [-1, 1].forEach(s => g.add(box(.012, .596, cd, rose, 'cupboard', [s * (cw / 2 - .006), .47, DD / 2], null, 1)));
+      g.add(box(cw - .024, .596, .012, rose, 'cupboard', [0, .47, .016], null, 1));
       g.add(box(.03, .56, .016, rose, 'cupboard-bar', [0, .47, DD - .002], null, 1));
-      g.add(cyl(.055, .055, .004, 28, M.brass, 'cupboard-plate', [0, .5, DD + .008], [Math.PI / 2, 0, 0])); [-.02, .02].forEach(x => g.add(box(.008, .055, .004, M.brass, 'cupboard-pull', [x, .47, DD + .012])));
-      g.add(box(DW - .09, .05, .016, rose, 'apron', [0, .135, DD - .03], null, 0));
-      const profile = [[0, 0], [.034, 0], [.038, .015], [.058, .1], [.06, .135], [.046, .165], [.02, .182], [.019, .198], [.027, .205]].map(([r, y]) => new THREE.Vector2(r, y));
-      g.add(mk(new THREE.LatheGeometry(profile, 32), celadon, 'vase', [.12, DL[0] + .0175, .2])); }); }
+      g.add(box(DW - .09, .05, .016, rose, 'apron', [0, .135, DD - .03], null, 0)); });
+    props.doors = [-1, 1].map(s => { const d = new THREE.Group(), dw = DW / 2 - .075; d.name = 'cupboard-door'; d.position.set(s * (DW / 2 - .0455), .47, DD - .004); // the hinge edge, by the post
+      d.add(box(dw, .54, .012, roseD, 'cupboard-door', [-s * dw / 2, 0, 0], null, 1));
+      d.add(mk(new THREE.CylinderGeometry(.055, .055, .004, 28, 1, false, s > 0 ? 0 : Math.PI, Math.PI), M.brass, 'cupboard-plate', [-s * (DW / 2 - .0455), .03, .012], [Math.PI / 2, 0, 0]));
+      d.add(box(.008, .055, .004, M.brass, 'cupboard-pull', [s * .02 - s * (DW / 2 - .0455), 0, .016])); return lone(disp, d); });
+    const profile = [[0, 0], [.034, 0], [.038, .015], [.058, .1], [.06, .135], [.046, .165], [.02, .182], [.019, .198], [.027, .205]].map(([r, y]) => new THREE.Vector2(r, y));
+    props.vase = lone(disp, mk(new THREE.LatheGeometry(profile, 32), celadon, 'vase', [.12, DL[0] + .0175, .2])); }
 
   /* ================= 畫案: the desk as a painting table, and what stands on it that is this room's own ================= */
   // The top is the western desk's, to the centimetre. Under it: legs set in from the ends, a long apron front and back with a spandrel at
@@ -161,10 +170,12 @@ export default function buildInkRoom(kit) {
           g.add(box(.16, .11, .012, rose, 'table-spandrel', [DX + sx * lx, top - .075, DZ + sz * (lz + .02)], null, 0)); }); // thinner than the apron it stands behind: no shared face
         [.3, .46].forEach(y => g.add(box(.03, .03, 2 * lz, rose, 'table-stretcher', [DX + sx * lx, y, DZ], null, 2))); });
       [-1, 1].forEach(sz => g.add(box(2.05, .05, .016, rose, 'table-apron', [DX, top - .03, DZ + sz * (lz + .02)], null, 0)));
-      // an inkstone with ink in its well, and a brush laid on a rest shaped like three peaks
-      g.add(box(.12, .022, .17, soot, 'inkstone', [2.12, DY + .036, -1.7])); g.add(cyl(.038, .038, .003, 24, wet, 'ink', [2.12, DY + .0485, -1.72]));
-      g.add(box(.11, .022, .022, clay, 'brush-rest', [2.34, DY + .036, -1.66])); [-.035, 0, .035].forEach((dx, i) => g.add(mk(new THREE.ConeGeometry(.014, i === 1 ? .04 : .028, 12), clay, 'brush-rest', [2.34 + dx, DY + .047 + (i === 1 ? .018 : .012), -1.66])));
-      g.add(rod([2.2, DY + .034, -1.6], [2.36, DY + .066, -1.67], .0045, cane, 'brush')); g.add(rod([2.36, DY + .066, -1.67], [2.39, DY + .072, -1.683], .0055, soot, 'brush-tip')); });
+      // a brush rest shaped like three peaks
+      g.add(box(.11, .022, .022, clay, 'brush-rest', [2.34, DY + .036, -1.66])); [-.035, 0, .035].forEach((dx, i) => g.add(mk(new THREE.ConeGeometry(.014, i === 1 ? .04 : .028, 12), clay, 'brush-rest', [2.34 + dx, DY + .047 + (i === 1 ? .018 : .012), -1.66]))); });
+    // an inkstone with ink in its well, and the brush laid on the rest: things of their own, for the game grinds the one and takes the other
+    const inkstone = new THREE.Group(); inkstone.name = 'inkstone'; inkstone.add(box(.12, .022, .17, soot, 'inkstone', [2.12, DY + .036, -1.7])); props.ink = cyl(.038, .038, .003, 24, wet, 'ink', [2.12, DY + .0485, -1.72]); inkstone.add(props.ink); props.inkstone = lone(desk, inkstone);
+    const brush = new THREE.Group(); brush.name = 'brush'; brush.add(rod([2.2, DY + .034, -1.6], [2.36, DY + .066, -1.67], .0045, cane, 'brush'), rod([2.36, DY + .066, -1.67], [2.39, DY + .072, -1.683], .0055, soot, 'brush-tip')); props.brush = lone(desk, brush);
+    Object.assign(props.mats, { soot, cane, clay, wet });
     // the box the series stand in: the western rack's shape, in rosewood
     piece(rack, 'ink-book-box', g => { g.add(box(RKW, .018, RKD, rose, 'rack-base', [0, .009, 0])); g.add(box(RKW - .036, .12, .014, rose, 'rack-back', [0, .078, -RKD / 2 + .007]));
       [-1, 1].forEach(s => g.add(box(.018, .19, RKD, rose, 'rack-end', [s * (RKW / 2 - .009), .113, 0]))); });
@@ -217,5 +228,5 @@ export default function buildInkRoom(kit) {
 
   shell(); bookcase(); curio(); table(); stand(); seats();
   // the moon gate, in the plane of the back wall: the duck out on the jetty answers only through it
-  return { parts, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
+  return { parts, props, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
 }
