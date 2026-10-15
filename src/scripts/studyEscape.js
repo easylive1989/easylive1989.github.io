@@ -3,7 +3,8 @@
 // into the room, and answers the clicks. What every chapter shares is here: the card along the foot of the screen (the chapter's name,
 // a clock, what is carried, a hint, and a box for whatever is being looked at or written on), the progress kept in localStorage, the
 // start, the giving up and the end.
-const CHAPTERS = { ink:{ title:'字與墨', load:() => import('./studyEscapeInk.js') } };
+// a chapter's name, what its hint is called and what a stuck player is told, and the module that is the chapter
+const CHAPTERS = { ink:{ title:'字與墨', hint:'問吉利', nudge:'卡住了？問問椅子上的吉利', load:() => import('./studyEscapeInk.js') } };
 const KEY = 'study-escape';
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch { return {}; } };
 const save = (name, s) => { try { const all = load(); all[name] = s; localStorage.setItem(KEY, JSON.stringify(all)); } catch {} };
@@ -20,11 +21,11 @@ export async function start(stage) {
   /* the card */
   let card = document.getElementById('esc');
   if (!card) { card = document.createElement('div'); card.id = 'esc'; card.className = 'hud rpg'; document.body.appendChild(card); }
-  card.innerHTML = '<div class="bar"><span class="ttl">' + esc(ch.title) + '</span><span class="clk">00:00</span><span class="sep"></span><span class="inv"></span><span class="sep"></span><button class="opt" data-esc="hint">提示</button></div><div class="lead"></div><div class="box" hidden></div>';
+  card.innerHTML = '<div class="bar"><span class="ttl">' + esc(ch.title) + '</span><span class="clk">00:00</span><span class="sep"></span><span class="inv"></span><span class="sep"></span><button class="opt" data-esc="hint">' + esc(ch.hint) + '</button></div><div class="lead"></div><div class="box" hidden></div>';
   const clk = card.querySelector('.clk'), inv = card.querySelector('.inv'), lead = card.querySelector('.lead'), box = card.querySelector('.box'), hintBtn = card.querySelector('[data-esc="hint"]');
   // a player who has got nowhere for a while is pointed at the hint: the button's cursor blinks, and a line says so once
   let lastStep = Date.now(), nudged = false;
-  const nudgeT = setInterval(() => { if (S.d || nudged || Date.now() - lastStep < 45000) return; nudged = true; hintBtn.classList.add('on'); stage.toast('卡住了？右下角的「提示」會指路', 4500); }, 5000);
+  const nudgeT = setInterval(() => { if (S.d || nudged || Date.now() - lastStep < 45000) return; nudged = true; hintBtn.classList.add('on'); stage.toast(ch.nudge, 4500); }, 5000);
   const tickClock = () => { clk.textContent = mmss((S.t1 || Date.now()) - S.t0); }; tickClock(); const clockT = setInterval(tickClock, 1000);
   requestAnimationFrame(() => card.classList.add('on'));
 
