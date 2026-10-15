@@ -882,7 +882,7 @@ let partN = Q.low ? Math.ceil(PN / 2) : PN; pGeo.setDrawRange(0, partN);
 // hangs its frames on, so that they share the coordinates of what stands on them, and the sizes both rooms keep to.
 const kit = { THREE, renderer, Q, C, M, col, rng, cnv, texOf, ctex, mk, box, cyl, rod, std, pbr, lite, sheet, roomUV, weld, mergeGeometries, rboxGeo,
   woodTex, plasterTex, grit, decal, aoLin, halo, dispAt,
-  room, shelf, disp, desk, rack, tvc, chair, side, portrait, pf,
+  room, shelf, disp, desk, rack, tvc, chair, side, portrait, pf, dog,
   LV, bays, SZ0, SZ1, BZ, DL, DW, DD, DX, DY, DZ, CW, CH, CD, RKW, RKD, WIN, WZ, DOOR, DCX, FDOOR };
 
 /* ================= UI ================= */

@@ -282,7 +282,7 @@ const BASE = import.meta.env.BASE_URL;
   .noscript a { color: var(--color-accent-300); }
 
   /* The escape game's card, in the bottom right corner (out of the way of the cupboard the display corner looks at): the chapter's
-     name and its clock, what is carried, a hint; and under them, when something is being looked at or written on, a box for it.
+     name and its clock, what is carried; and under them, when something is being looked at or written on, a box for it.
      On a phone it is a bar across the screen above the dock's. */
   #esc { right: var(--space-4); bottom: var(--space-6); z-index: 15; display: flex; flex-direction: column; font-size: 18px; line-height: 1.2; max-width: min(600px, calc(100vw - 32px)); opacity: 0; transition: opacity .35s; }
   #esc.on { opacity: 1; }
@@ -291,9 +291,6 @@ const BASE = import.meta.env.BASE_URL;
   #esc .clk { color: var(--rpg-dim); font-variant-numeric: tabular-nums; margin: 0 6px 0 8px; }
   #esc .inv { display: flex; align-items: center; min-width: 0; }
   #esc .inv:empty::before { content: "兩手空空"; color: var(--rpg-dim); padding: 0 8px; white-space: nowrap; }
-  #esc .lead { border-top: 3px solid var(--rpg-ink); padding: 7px 14px 8px; font-family: var(--font-body); font-size: 15px; line-height: 1.5; color: #e6e0d2; text-wrap: pretty; }
-  #esc .lead:empty { display: none; }
-  #esc .lead::before { content: "線索"; margin-right: 8px; font-family: var(--pixel); font-size: 12px; letter-spacing: .08em; color: var(--rpg-sky); }
   #esc .box { border-top: 3px solid var(--rpg-ink); padding: 14px 18px 16px; font-family: var(--font-body); }
   #esc .box[hidden] { display: none; }
   #esc .box .card-kicker { font-family: var(--pixel); font-size: 12px; letter-spacing: .08em; color: var(--rpg-sky); }
