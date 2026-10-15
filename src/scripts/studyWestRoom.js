@@ -205,9 +205,11 @@ export default function buildWestRoom(kit) {
     const paper = mk(new THREE.PlaneGeometry(fw - 2 * (m + lip), fh - 2 * (m + lip)), std('be-water-print', '#ffffff', { map:printTex, roughness:.9 }), 'be-water-print', [0, 0, .012]); paper.castShadow = false; frame.add(paper);
     const glass = mk(new THREE.PlaneGeometry(fw - 2 * m, fh - 2 * m), new THREE.MeshPhysicalMaterial(lite({ name:'frame-glass', color:col('#ffffff'), transparent:true, opacity:.07, roughness:.05, metalness:0, depthWrite:false, clearcoat:1 })), 'frame-glass', [0, 0, .021]);
     glass.castShadow = false; frame.add(glass); put(room, frame);
-    // and a soft shadow on the wall round it, thrown a little down and to the left, away from the window
-    const soft = ctex(64, 80, (x, w, h) => { x.shadowColor = '#000'; x.shadowBlur = 9; x.shadowOffsetX = w * 2; x.fillStyle = '#000'; x.fillRect(12 - w * 2, 12, w - 24, h - 24); }, false);
-    parts.push(decal(soft, fw * 64 / 40, fh * 80 / 56, [cx - .012, cy - .02, wz + .006], [0, 0, 0], .5));
+    // and a soft shadow on the wall round it, thrown a little down and to the left, away from the window. Where the frame stands it is
+    // cut away: seen from the side, a decal's pull towards the eye is more than the few millimetres it lies behind the print
+    const sx = .012, sy = .02, soft = ctex(64, 80, (x, w, h) => { x.shadowColor = '#000'; x.shadowBlur = 9; x.shadowOffsetX = w * 2; x.fillStyle = '#000'; x.fillRect(12 - w * 2, 12, w - 24, h - 24);
+      x.clearRect(12 + sx * (w - 24) / fw, 12 - sy * (h - 24) / fh, w - 24, h - 24); }, false);
+    parts.push(decal(soft, fw * 64 / 40, fh * 80 / 56, [cx - sx, cy - sy, wz + .006], [0, 0, 0], .5));
   }
 
   /* ================= contact shadows on the walls, and under the shelves' boards ================= */
