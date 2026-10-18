@@ -48,8 +48,10 @@ export default function buildInkRoom(kit) {
   /* ================= scrolls ================= */
   // Paper between two rods, hung flat on a wall. The sheet is its mount, and inside the mount the picture, which `draw` paints in a box
   // w × h at 520 px to the metre. The lettering is in whatever regular script the machine has; a machine with none sets it in its serif.
-  // The saying is in a running hand where the machine has one, and in that regular script where it has not.
-  const INK = '#1b1d20', SEAL = '#c2272d', KAI = '"Kaiti TC", "BiauKai", "DFKai-SB", "Kaiti SC", "Songti TC", serif', XING = '"Xingkai TC", "Xingkai SC", "STXingkai", ' + KAI;
+  // The saying is in a running hand, Zhi Mang Xing, fetched for its four characters only so that every machine shows the same; until it
+  // has come, or if it never does, in the machine's own running hand or regular script.
+  const INK = '#1b1d20', SEAL = '#c2272d', KAI = '"Kaiti TC", "BiauKai", "DFKai-SB", "Kaiti SC", "Songti TC", serif', XING = '"Zhi Mang Xing", "Xingkai TC", "Xingkai SC", "STXingkai", ' + KAI;
+  const HAND = 'https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&display=swap&text=' + encodeURIComponent('上善若水');
   const scrollMat = (W, H, draw) => { const w = Math.round(W * 520), h = Math.round(H * 520), mx = Math.round(w * .09), top = Math.round(h * .1), bot = Math.round(h * .14);
     return std('ink-scroll', '#ffffff', { roughness:.9, map:ctex(Math.round(w * K), Math.round(h * K), x => { x.save(); x.scale(K, K); x.fillStyle = '#d8ceb4'; x.fillRect(0, 0, w, h); x.fillStyle = '#ece4cf'; x.fillRect(mx, top, w - 2 * mx, h - top - bot);
       x.translate(mx, top); x.beginPath(); x.rect(0, 0, w - 2 * mx, h - top - bot); x.clip(); draw(x, w - 2 * mx, h - top - bot); x.restore(); }, false) }); };
@@ -60,7 +62,7 @@ export default function buildInkRoom(kit) {
     return lone(room, g); };
   const seal = (x, px, py, s = 15) => { x.globalAlpha = .9; x.fillStyle = SEAL; x.fillRect(px, py, s, s); x.globalAlpha = 1; };
   // a saying in large characters down the middle of the sheet, and a seal under them to the left
-  const motto = text => (x, w, h) => { const cs = [...text], fs = Math.min(w * .72, (h - 44) / (cs.length * 1.05)); x.fillStyle = INK; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `600 ${fs}px ${XING}`; x.globalAlpha = .9;
+  const motto = text => (x, w, h) => { const cs = [...text], fs = Math.min(w * .72, (h - 44) / (cs.length * 1.05)); x.fillStyle = INK; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `400 ${fs}px ${XING}`; x.globalAlpha = .9;
     cs.forEach((ch, r) => x.fillText(ch, w / 2, fs * (.62 + r * 1.05))); x.globalAlpha = 1; seal(x, w * .16, h - 34, 20); };
   // three ranges, each fading out at its foot, and a hut under a tree on the near bank
   const hills = (x, w, h) => { const R = rng(12);
@@ -112,7 +114,9 @@ export default function buildInkRoom(kit) {
         g.add(cyl(.045, .045, .008, 24, M.brass, 'door-boss', [cx + s * .07, 1.05, fz - .012], [Math.PI / 2, 0, 0])); g.add(mk(new THREE.TorusGeometry(.032, .005, 8, 24), M.brass, 'door-ring', [cx + s * .07, 1.02, fz - .02])); }); });
     // 上善若水 on the pier between the gate and the window, hung high enough for its lower rod to clear the gate's trim, which widens
     // downwards; hills and a line of the Analects on the left wall, by the door into the house
-    scroll(.3, .98, [-.2, 1.89, -2.497], 0, motto('上善若水')); scroll(.34, 1.05, [-2.994, 1.62, 2.5], Math.PI / 2, hills); scroll(.26, .9, [-2.994, 1.62, 1.95], Math.PI / 2, writing(['學而時習之', '不亦說乎']));
+    const saying = scroll(.3, .98, [-.2, 1.89, -2.497], 0, motto('上善若水')); scroll(.34, 1.05, [-2.994, 1.62, 2.5], Math.PI / 2, hills); scroll(.26, .9, [-2.994, 1.62, 1.95], Math.PI / 2, writing(['學而時習之', '不亦說乎']));
+    if (!document.querySelector(`link[href="${HAND}"]`)) { const l = Object.assign(document.createElement('link'), { rel:'stylesheet', href:HAND });
+      l.addEventListener('load', () => document.fonts.load('80px "Zhi Mang Xing"', '上善若水').then(() => saying.getObjectByName('scroll-paper').material.map.redraw(), () => {}), { once:true }); document.head.append(l); }
     // contact shadows at the foot and the head of the walls: light ones, where the western room's are heavy, for these walls are white
     const foot = half(R2);
     [[-3, GATE.x - foot], [GATE.x + foot, 3]].forEach(([a, b]) => parts.push(decal(aoLin, b - a, .55, [(a + b) / 2, .28, -2.494], [0, 0, Math.PI], .27)));
