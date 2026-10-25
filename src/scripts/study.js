@@ -862,7 +862,7 @@ function show(name) { const w = WORLDS[world = name];
   // a ray takes no notice of what is hidden, so only the room on show is left among the things that can be picked
   roomPicks.forEach(o => { const i = pickables.indexOf(o); if (i >= 0) pickables.splice(i, 1); }); pickables.push(...(roomPicks = w.room.picks));
   sceneryTex.forEach((t, i) => { t.image = w.sheets[i]; t.needsUpdate = true; });
-  sky.material.color.set(w.sky); scene.background.set(w.back); pMat.color.set(w.leaf); renderer.shadowMap.needsUpdate = true; }
+  sky.material.color.set(w.sky); scene.background.set(w.back); pMat.color.set(w.leaf); renderer.shadowMap.needsUpdate = true; voiceUp(); }
 // The duck's doing. A world that has been built is put on show at once. One that has not is built behind the door; if it cannot be
 // (its script would not load), the door opens again on the world it shut on.
 async function turnWorld() { if (turning) return; turning = true;
@@ -977,6 +977,23 @@ hud.addEventListener('click', e => {
   if (b === homeBtn) closePanel(); else if (b.dataset.zone) goZone(b.dataset.zone);
 });
 controls.addEventListener('start', () => setZone(null));
+
+/* ================= sound ================= */
+// A world may have a sound of its own (the ink lake's rain), with a button in the dock while it is on show. None plays until the button
+// is pressed, for a page may not start making a noise unasked. The choice is remembered: a page left with the sound on starts it again
+// at the first touch. The AudioContext is only made then, and put to sleep once nothing is left playing.
+const AKEY = 'study-sound', sndDock = hud.querySelector('[data-voice]'), sndBtn = sndDock.querySelector('[data-sound]');
+const AU = { ac:null, rest:0, want:(() => { try { return localStorage.getItem(AKEY) === 'on'; } catch { return false; } })() };
+function voiceUp() { const r = world && WORLDS[world].room, has = !!(r && r.voice);
+  sndDock.hidden = !has; sndBtn.setAttribute('aria-pressed', AU.want); sndBtn.querySelector('span').textContent = AU.want ? '雨聲 開' : '雨聲 關';
+  if (!AU.ac) return; const on = AU.want && has;
+  if (on && !r.sound) r.sound = r.voice(AU.ac, AU.ac.destination);
+  for (const k in WORLDS) { const s = WORLDS[k].room && WORLDS[k].room.sound; if (s) s(on && k === world); }
+  clearTimeout(AU.rest); if (on) AU.ac.resume(); else AU.rest = setTimeout(() => AU.ac.suspend(), 1800); }
+const wake = () => { if (!AU.ac) { try { AU.ac = new AudioContext(); } catch { return; } } voiceUp(); };
+sndBtn.addEventListener('click', () => { AU.want = !AU.want; try { localStorage.setItem(AKEY, AU.want ? 'on' : 'off'); } catch {} wake(); });
+const first = () => { ['pointerdown', 'keydown'].forEach(e => removeEventListener(e, first, true)); wake(); };
+if (AU.want) ['pointerdown', 'keydown'].forEach(e => addEventListener(e, first, true));
 
 /* ================= pick-up readers + TV ================= */
 // Books, the pages on the desk and the TV don't open the side panel: the thing itself comes to the camera
