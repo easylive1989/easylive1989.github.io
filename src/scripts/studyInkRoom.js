@@ -219,7 +219,25 @@ export default function buildInkRoom(kit) {
       [-1, 1].forEach(sx => [-1, 1].forEach(sz => g.add(box(.04, .58, .04, rose, 'table-leg', [sx * .23, .29, sz * .23], null, 1))));
       [-1, 1].forEach(s => { g.add(box(.42, .025, .025, rose, 'table-stretcher', [0, .2, s * .23], null, 0)); g.add(box(.025, .025, .42, rose, 'table-stretcher', [s * .23, .2, 0], null, 2)); }); }); }
 
-  shell(); bookcase(); curio(); table(); stand(); seats();
-  // the moon gate, in the plane of the back wall: the duck out on the jetty answers only through it
-  return { parts, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
+  /* ================= rain ================= */
+  // Fine strokes of ink, a little aslant, falling past the window and the gate into the lake: each is a line from its head, in ink, to a
+  // tail that fades into the paper. The low tier has half as many, and so does a machine moved to it on the way.
+  const RAIN = { n:700, x0:-5, x1:4, z0:-4.5, z1:-2.8, y0:-.35, y1:3.4, speed:5.2, wind:.6, len:.32, alpha:.38 };
+  function rain() { const R = rng(41), N = RAIN.n, head = new Float32Array(N * 3), pos = new Float32Array(N * 6), colour = new Float32Array(N * 8), pace = new Float32Array(N), ink = col(INK);
+    const drop = (i, y) => { head[i * 3] = RAIN.x0 + R() * (RAIN.x1 - RAIN.x0); head[i * 3 + 1] = y; head[i * 3 + 2] = RAIN.z0 + R() * (RAIN.z1 - RAIN.z0); };
+    for (let i = 0; i < N; i++) { drop(i, RAIN.y0 + R() * (RAIN.y1 - RAIN.y0)); pace[i] = .8 + R() * .4;
+      for (let e = 0; e < 2; e++) colour.set([ink.r, ink.g, ink.b, e ? 0 : RAIN.alpha * (.6 + R() * .4)], i * 8 + e * 4); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(colour, 4));
+    const lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ name:'ink-rain', vertexColors:true, transparent:true, depthWrite:false }));
+    lines.name = 'ink-rain'; lines.frustumCulled = false; lines.castShadow = lines.receiveShadow = false; lone(room, lines);
+    const tilt = RAIN.wind / RAIN.speed * RAIN.len;
+    return dt => { const n = Q.low ? N / 2 : N; geo.setDrawRange(0, n * 2);
+      for (let i = 0; i < n; i++) { const k = i * 3, v = RAIN.speed * pace[i] * dt; head[k] += RAIN.wind * pace[i] * dt; head[k + 1] -= v; if (head[k + 1] < RAIN.y0) drop(i, RAIN.y1 + R() * .5);
+        pos.set([head[k], head[k + 1], head[k + 2], head[k] - tilt, head[k + 1] + RAIN.len * pace[i], head[k + 2]], i * 6); }
+      geo.attributes.position.needsUpdate = true; }; }
+
+  shell(); bookcase(); curio(); table(); stand(); seats(); const tick = rain();
+  // the moon gate, in the plane of the back wall: the duck out on the jetty answers only through it. `tick`: the rain's step, which the
+  // loop takes while this room is on show
+  return { parts, tick, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
 }

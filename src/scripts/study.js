@@ -1312,6 +1312,7 @@ function loop(ts) {
   const pa = pGeo.attributes.position.array;
   for (let i = 0; i < partN; i++) { const s = pSeed[i]; pa[i*3+1] -= FALL.speed * (.7 + s*.6) * dt; pa[i*3] += Math.sin(t*1.1 + s*30) * FALL.sway * dt; if (pa[i*3+1] < 0) { pa[i*3+1] = OUT.y1; pa[i*3] = OUT.x0 + Math.random()*(OUT.x1-OUT.x0); } }
   pGeo.attributes.position.needsUpdate = true;
+  const wr = world && WORLDS[world].room; if (wr && wr.tick) wr.tick(dt); // what moves in a world's own weather: the rain over the ink lake
   const f = dt * 60; // the dust's steps were tuned per frame at 60 a second; scaled, it drifts no slower when frames are fewer
   const da = dGeo.attributes.position.array; for (let i = 0; i < dustN; i++) { const s0 = dSeed[i]; da[i*3] += Math.sin(t*.3 + s0*40) * .0009 * f; da[i*3+1] += (Math.sin(t*.21 + s0*30) * .0006 - .00012) * f; da[i*3+2] += Math.cos(t*.27 + s0*20) * .0008 * f; if (da[i*3+1] < .75) da[i*3+1] = 2.5; } dGeo.attributes.position.needsUpdate = true;
   if (tween) { tween.t = Math.min(1, tween.t + dt / tween.d); const k = 1 - Math.pow(1 - tween.t, 3); controls.target.lerpVectors(tween.ft, tween.tt, k); camera.position.lerpVectors(tween.fp, tween.tp, k); if (tween.t >= 1) { tween = null; controls.enabled = !lockCam; } }
