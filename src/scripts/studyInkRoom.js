@@ -236,33 +236,8 @@ export default function buildInkRoom(kit) {
         pos.set([head[k], head[k + 1], head[k + 2], head[k] - tilt, head[k + 1] + RAIN.len * pace[i], head[k + 2]], i * 6); }
       geo.attributes.position.needsUpdate = true; }; }
 
-  /* ================= the sound of the rain ================= */
-  // Made, not recorded. Ten seconds of noise with the patter of drops on tiles and water in it, looped: through a band that greys it,
-  // swelling and falling back as the gusts come and go, and again through a low one, for the weight of rain on the lake. Over that,
-  // drops off the eaves at no fixed time, each a short note that falls in pitch, somewhere between left and right. Built on the
-  // AudioContext it is handed, silent; `on` fades it in or out, and the eaves only drip while it is on.
-  function voice(ac, dest) { const R = rng(53), SR = ac.sampleRate, L = SR * 10, buf = ac.createBuffer(2, L, SR), now = () => ac.currentTime;
-    for (let c = 0; c < 2; c++) { const d = buf.getChannelData(c); let b0 = 0, b1 = 0, b2 = 0;
-      for (let i = 0; i < L; i++) { const w = R() * 2 - 1; b0 = .99765 * b0 + w * .099; b1 = .963 * b1 + w * .2965; b2 = .57 * b2 + w * 1.0526; d[i] = (b0 + b1 + b2 + w * .1848) * .1; } // pink
-      for (let n = 0; n < 900; n++) { const at = R() * L | 0, len = (.002 + R() * .006) * SR | 0, a = Math.pow(R(), 3) * .3; // most drops are faint
-        for (let i = 0; i < len; i++) d[(at + i) % L] += (R() * 2 - 1) * a * Math.exp(-5 * i / len); } }
-    const out = ac.createGain(); out.gain.value = 0; out.connect(dest);
-    const filter = (type, f) => { const n = ac.createBiquadFilter(); n.type = type; n.frequency.value = f; return n; }, bed = ac.createGain(), low = ac.createGain();
-    const hp = filter('highpass', 350), lp = filter('lowpass', 3200), deep = filter('lowpass', 250); bed.gain.value = .5; low.gain.value = .35;
-    const a = ac.createBufferSource(), b = ac.createBufferSource(); a.buffer = b.buffer = buf; a.loop = b.loop = true;
-    a.connect(hp).connect(lp).connect(bed).connect(out); b.connect(deep).connect(low).connect(out); a.start(); b.start(0, 4.3);
-    const gust = ac.createOscillator(), depth = ac.createGain(); gust.frequency.value = .07; depth.gain.value = .12; gust.connect(depth).connect(bed.gain); gust.start();
-    const drip = t => { const o = ac.createOscillator(), g = ac.createGain(), p = ac.createStereoPanner(), f = 700 + R() * 1100;
-      o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * .55, t + .05);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.02 + R() * .035, t + .003); g.gain.exponentialRampToValueAtTime(.0001, t + .14);
-      p.pan.value = R() * 1.6 - .8; o.connect(g).connect(p).connect(out); o.start(t); o.stop(t + .15); };
-    let next = 0, timer = 0, rest = 0;
-    const plan = () => { if (next < now()) next = now() + .05; while (next < now() + .3) { drip(next); next += .45 + Math.pow(R(), 2) * 2.4; } };
-    return on => { const g = out.gain; g.cancelScheduledValues(now()); g.setValueAtTime(g.value, now()); g.linearRampToValueAtTime(on ? .4 : 0, now() + 1.5);
-      clearTimeout(rest); if (on && !timer) timer = setInterval(plan, 100); if (!on) rest = setTimeout(() => { clearInterval(timer); timer = 0; }, 1600); }; }
-
   shell(); bookcase(); curio(); table(); stand(); seats(); const tick = rain();
   // the moon gate, in the plane of the back wall: the duck out on the jetty answers only through it. `tick`: the rain's step, which the
-  // loop takes while this room is on show; `voice`: its sound
-  return { parts, tick, voice, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
+  // loop takes while this room is on show
+  return { parts, tick, opening:(x, y) => y > 0 && Math.hypot(x - GATE.x, y - GATE.y) < GATE.r - .04 };
 }
