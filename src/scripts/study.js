@@ -1350,11 +1350,11 @@ const shutDoor = () => new Promise(done => {
   introEl.classList.add('snap'); introEl.dataset.s = 0; doorN = 0; void introEl.offsetWidth; introEl.classList.remove('snap'); // shut, without swinging back
   introEl.style.pointerEvents = 'auto'; introEl.classList.add('again'); introEl.classList.remove('off');
   setTimeout(() => { document.body.classList.remove('in'); done(); }, 400); });
-// The door opens on the world the room was left in. If that is a room whose script will not load, on the lake instead (and the page goes
-// on remembering that room, to try again next time). The shaders are built while the sheets are still being painted; the
+// The door opens on the world the room was left in, and on a first visit on the ink one. If that is a room whose script will not load, on
+// the lake instead (and the page goes on remembering that room, to try again next time). The shaders are built while the sheets are still being painted; the
 // room opens once the sheets are in.
 (async () => {
-  const kept = (() => { try { return localStorage.getItem(SKEY); } catch { return null; } })(); let first = ORDER.includes(kept) ? kept : 'lake';
+  const kept = (() => { try { return localStorage.getItem(SKEY); } catch { return null; } })(); let first = ORDER.includes(kept) ? kept : 'ink';
   try { await prepare(first); }
   catch (err) { if (first === 'lake') throw err; console.warn('the room the page was left in would not open, so the door opens on the lake', err); await prepare(first = 'lake'); }
   show(first); ajar();
