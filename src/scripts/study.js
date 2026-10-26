@@ -76,6 +76,7 @@ controls.minDistance = .35; controls.maxDistance = PHONE ? 2 : 4.4; controls.min
 const CAM_TOP = 2.6; // as high as the camera goes: the ceiling is at 2.8
 const CAM_LOW = .25; // and as low: it may look up from near the floor, never from inside it
 const CAM_FRONT = 2.8; // as far back as it goes: the front wall is at 3
+const CAM_SIDE = 2.7; // and as far to either side: the side walls are at 3, the ink study's columns stand out from the right one to 2.83
 const az0 = Math.atan2(HOME.pos.x - HOME.tgt.x, HOME.pos.z - HOME.tgt.z);
 controls.minAzimuthAngle = az0 - .62; controls.maxAzimuthAngle = az0 + (PHONE ? .9 : .42);
 
@@ -1326,8 +1327,11 @@ function loop(ts) {
   controls.minPolarAngle = Math.max(.95, Math.acos(Math.min(1, (CAM_TOP - controls.target.y) / camera.position.distanceTo(controls.target)))); // the further out, the less it can climb
   controls.maxPolarAngle = Math.max(controls.minPolarAngle, Math.min(1.8, Math.acos(Math.max(-1, Math.min(1, (CAM_LOW - controls.target.y) / camera.position.distanceTo(controls.target)))))); // or sink
   controls.update();
-  const fk = (CAM_FRONT - controls.target.z) / (camera.position.z - controls.target.z); // backing out towards the front wall, it stops short of it
-  if (fk > 0 && fk < 1) camera.position.sub(controls.target).multiplyScalar(fk).add(controls.target);
+  // backing out towards the front wall, it stops short of it; and of the side walls, which an orbit round a point off the middle of the room
+  // (the desk, the TV) can swing it into
+  const short = (wall, t, c) => { const k = (wall - t) / (c - t); return k > 0 && k < 1 ? k : 1; }, tg = controls.target, cp = camera.position;
+  const fk = Math.min(short(CAM_FRONT, tg.z, cp.z), short(Math.sign(cp.x - tg.x) * CAM_SIDE, tg.x, cp.x));
+  if (fk < 1) camera.position.sub(controls.target).multiplyScalar(fk).add(controls.target);
   // the way back to the middle of the room lights up once the camera has left it, or is on its way out
   const away = (tween ? tween.tp : camera.position).distanceToSquared(HOME.pos) > .01 || (tween ? tween.tt : controls.target).distanceToSquared(HOME.tgt) > .01;
   if (away !== hudAway) { hudAway = away; homeBtn.disabled = !away; }
