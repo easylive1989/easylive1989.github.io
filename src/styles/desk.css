@@ -52,7 +52,7 @@ body.desk-body {
 }
 .blog-head a { text-decoration: none; }
 .blog-head a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.blog-brand { font-size: 22px; font-weight: 700; letter-spacing: 0.02em; color: var(--color-text); }
+.blog-brand { font-size: 28px; font-weight: 700; letter-spacing: 0.02em; color: var(--color-text); }
 .blog-tabs, .blog-rss, .blog-room {
   display: flex;
   align-items: stretch;
@@ -194,7 +194,7 @@ body.desk-body {
 @media (max-width: 640px) {
   /* the frames keep a gap between them however narrow the line */
   .blog-head { flex-wrap: wrap; gap: 6px var(--space-2); }
-  .blog-brand { flex-basis: 100%; font-size: 19px; }
+  .blog-brand { flex-basis: 100%; font-size: 23px; }
   .blog-tabs { margin-left: 0; gap: 18px; padding: 0 12px; }
   .blog-rss { margin-left: auto; }
   .blog-room { margin-left: 0; }
