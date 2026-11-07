@@ -57,7 +57,6 @@
   gap: var(--space-4) 44px;
   align-items: end;
 }
-.rd-masthead .kicker { font-size: 11px; letter-spacing: 0.14em; }
 .rd-masthead h1 { font-size: clamp(42px, 5.4vw, 62px); }
 .rd-masthead h1 em {
   font-style: italic;

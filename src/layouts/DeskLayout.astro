@@ -34,7 +34,7 @@ const { title, description, ogImage, tab, width = 'reading', bodyClass } = Astro
     <SiteHead title={title} siteTitle={BLOG} description={description} ogImage={ogImage} />
   </head>
   <body class:list={['desk-body', bodyClass]}>
-    <!-- The blog's masthead: its name, its three tabs and, set apart, the way into the room. As wide as the paper, so it lines up with its edges -->
+    <!-- The blog's masthead: its name, its three tabs and, set apart, the RSS feed and the way into the room. As wide as the paper, so it lines up with its edges -->
     <header class:list={['blog-head', `desk-${width}`]}>
       <a class="blog-brand" href={`${BASE}archive/`}>{BLOG}</a>
       <nav class="blog-tabs" aria-label="部落格">
@@ -42,6 +42,9 @@ const { title, description, ogImage, tab, width = 'reading', bodyClass } = Astro
           <a href={href} data-tab={id} class:list={{ on: id === tab }} aria-current={id === tab ? 'true' : undefined}>{label}</a>
         ))}
       </nav>
+      <a class="blog-rss" href="/rss.xml" target="_blank" rel="noopener" title="RSS 訂閱" aria-label="RSS 訂閱">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.18 17.82c0 1.2-.97 2.18-2.18 2.18S1.82 19.02 1.82 17.82 2.79 15.64 4 15.64s2.18.98 2.18 2.18zM4 4.44v3.06A12.5 12.5 0 0 1 16.5 20h3.06A15.56 15.56 0 0 0 4 4.44zM4 10.6v3.07A6.4 6.4 0 0 1 10.4 20h3.07A9.47 9.47 0 0 0 4 10.6z" /></svg>
+      </a>
       <a class="blog-room" href={BASE} title="切到 3D 書房">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4h12v17M3 21h18M14.5 12.5v1" /></svg>
         <span>書房</span>

@@ -2,8 +2,6 @@
 import '../styles/heat.css';
 
 interface Props {
-  /** The caption over the grid. */
-  title: string;
   /** What the figure shows, read out in place of its cells. */
   label: string;
   /** How many fell in each quarter of a year. A year left out is a column of empty cells, not a missing one. */
@@ -15,7 +13,7 @@ interface Props {
   unit: string;
 }
 
-const { title, label, counts, from, to, unit } = Astro.props;
+const { label, counts, from, to, unit } = Astro.props;
 const years = Array.from({ length: Math.max(1, to - from + 1) }, (_, i) => from + i);
 const QUARTERS = [0, 1, 2, 3];
 const LEVELS = [0, 1, 2, 3, 4];
@@ -25,7 +23,6 @@ const level = (v: number) => (v <= 0 ? 0 : Math.min(4, Math.max(1, Math.round((v
 ---
 
 <figure class="heat" style={`--n:${years.length}`}>
-  <figcaption class="heat-title">{title}</figcaption>
   <div class="heat-grid" role="img" aria-label={label}>
     <span></span>
     {years.map((y) => <span class="heat-y num">{y}</span>)}

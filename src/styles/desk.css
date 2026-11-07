@@ -53,7 +53,7 @@ body.desk-body {
 .blog-head a { text-decoration: none; }
 .blog-head a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .blog-brand { font-size: 22px; font-weight: 700; letter-spacing: 0.02em; color: var(--color-text); }
-.blog-tabs, .blog-room {
+.blog-tabs, .blog-rss, .blog-room {
   display: flex;
   align-items: stretch;
   height: 36px;
@@ -74,7 +74,15 @@ body.desk-body {
   color: var(--color-accent-700);
   white-space: nowrap;
 }
-.blog-room:hover { background: var(--color-accent); color: #fff; }
+.blog-rss {
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  margin-left: var(--space-3);
+  color: var(--color-accent-700);
+}
+.blog-rss svg { width: 14px; height: 14px; fill: currentColor; }
+.blog-rss:hover, .blog-room:hover { background: var(--color-accent); color: #fff; }
 .blog-room svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 /* — back to the top: the masthead scrolls away, so this corner button brings the page back up — */
@@ -119,12 +127,11 @@ body.desk-body {
 }
 .paper + .paper { margin-top: var(--space-6); }
 
-/* — masthead: the double rule and kicker the room's title card uses — */
+/* — masthead: the double rule the room's title card uses — */
 .masthead .rules { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
 .masthead .rules i { display: block; background: var(--color-text); }
 .masthead .rules i:first-child { height: 3px; }
 .masthead .rules i:last-child { height: 1px; }
-.masthead .kicker { margin-bottom: var(--space-2); }
 .masthead h1 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.08; margin: 0; }
 
 /* — the figures under a masthead's headline: a numeral over its label, a hairline between one and the next — */
@@ -185,11 +192,12 @@ body.desk-body {
 
 /* a phone: the name on a line of its own, the tabs and the way into the room on the next */
 @media (max-width: 640px) {
-  /* the two frames keep a gap between them however narrow the line */
+  /* the frames keep a gap between them however narrow the line */
   .blog-head { flex-wrap: wrap; gap: 6px var(--space-2); }
   .blog-brand { flex-basis: 100%; font-size: 19px; }
   .blog-tabs { margin-left: 0; gap: 18px; padding: 0 12px; }
-  .blog-room { margin-left: auto; }
+  .blog-rss { margin-left: auto; }
+  .blog-room { margin-left: 0; }
   /* four figures no longer fit on a line: two rows of two */
   .mast-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-3); }
   .mast-stat:nth-child(odd) { padding-left: 0; border-left: 0; }

@@ -7,13 +7,6 @@
   width: fit-content;
   max-width: 100%;
 }
-.heat-title {
-  margin-bottom: var(--space-2);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-neutral-700);
-}
 .heat-grid {
   display: grid;
   /* the column of quarter labels, then a 28px cell and its gap for every year; narrower when the sheet is */

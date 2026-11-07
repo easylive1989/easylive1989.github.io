@@ -127,7 +127,6 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
         <div class="rules" aria-hidden="true"><i></i><i></i></div>
         <div class="rd-mast-grid">
           <div class="rd-mast-main">
-            <div class="card-kicker kicker">Reading list · 書單</div>
             <h1 id="rd-h1">讀過的<em>書</em></h1>
             <dl class="mast-stats">
               <div class="mast-stat"><dt>total</dt><dd class="num">{totalCount}</dd></div>
@@ -138,7 +137,6 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
           </div>
 
           <QuarterHeat
-            title="每季讀完的書"
             label="每年每季讀完的書數量熱度圖"
             counts={heatBucket}
             from={oldestYear}
