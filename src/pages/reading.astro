@@ -21,9 +21,6 @@ const totalCount = allBooks.length;
 const readCount = allBooks.filter((b) => bookStatus(b) === 'read').length;
 const wishlistCount = allBooks.filter((b) => bookStatus(b) === 'unstarted').length;
 
-const currentBooks = allBooks.filter((b) => bookStatus(b) === 'reading');
-const hasCurrent = currentBooks.length > 0;
-
 interface Shelf {
   /** Stable key: the year, or "wish". */
   id: string;
@@ -121,104 +118,29 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
 <DeskLayout title="書架" width="reading" tab="reading">
   <div class="reading" id="top">
 
-    <!-- 1 · masthead sheet (+ the card for whatever is being read right now) -->
-    <div class="rd-top">
-      <section class="paper masthead rd-masthead" aria-labelledby="rd-h1">
-        <div class="rules" aria-hidden="true"><i></i><i></i></div>
-        <div class="rd-mast-grid">
-          <div class="rd-mast-main">
-            <h1 id="rd-h1">讀過的<em>書</em></h1>
-            <dl class="mast-stats">
-              <div class="mast-stat"><dt>total</dt><dd class="num">{totalCount}</dd></div>
-              <div class="mast-stat"><dt>read</dt><dd class="num">{readCount}</dd></div>
-              <div class="mast-stat"><dt>wishlist</dt><dd class="num">{wishlistCount}</dd></div>
-              <div class="mast-stat"><dt>years</dt><dd class="num">{yearsSpan}</dd></div>
-            </dl>
-          </div>
-
-          <QuarterHeat
-            label="每年每季讀完的書數量熱度圖"
-            counts={heatBucket}
-            from={oldestYear}
-            to={newestYear}
-            unit="本"
-          />
+    <!-- 1 · masthead sheet -->
+    <section class="paper masthead rd-masthead" aria-labelledby="rd-h1">
+      <div class="rules" aria-hidden="true"><i></i><i></i></div>
+      <div class="rd-mast-grid">
+        <div class="rd-mast-main">
+          <h1 id="rd-h1">讀過的<em>書</em></h1>
+          <dl class="mast-stats">
+            <div class="mast-stat"><dt>total</dt><dd class="num">{totalCount}</dd></div>
+            <div class="mast-stat"><dt>read</dt><dd class="num">{readCount}</dd></div>
+            <div class="mast-stat"><dt>wishlist</dt><dd class="num">{wishlistCount}</dd></div>
+            <div class="mast-stat"><dt>years</dt><dd class="num">{yearsSpan}</dd></div>
+          </dl>
         </div>
-      </section>
 
-      {hasCurrent && (
-        <aside class="paper rd-current" id="current-tile" aria-label="正在讀">
-          <div class="cur-kicker">
-            ● 正在讀{currentBooks.length > 1 ? ` · ${currentBooks.length} 本` : ''}
-          </div>
-          <div class="cur-slides">
-            <div class="cur-track">
-              {currentBooks.map((book, i) => {
-                const cv = coverGradient(book);
-                return (
-                  <div class="cur-slide" data-slide-index={i}>
-                    <div class="cur-book">
-                      {book.coverUrl ? (
-                        <div class="cur-cover cover--img" aria-hidden="true">
-                          <img src={book.coverUrl} alt="" loading="lazy" draggable="false" />
-                        </div>
-                      ) : (
-                        <div
-                          class="cur-cover"
-                          style={`background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
-                          aria-hidden="true"
-                        >
-                          <span class="pub">{book.categories[0] ?? ''}</span>
-                          <span class="ttl">{book.title}</span>
-                        </div>
-                      )}
-                      <div class="cur-meta">
-                        <h2>{book.title}</h2>
-                        {book.categories[0] && (
-                          <div class="cur-cat">
-                            <i class={`dot dot-${cv.kind}`}></i>
-                            {book.categories[0]}
-                          </div>
-                        )}
-                        <div class="cur-progress">
-                          <div class="cur-progress-head">
-                            <span class="card-kicker">進度</span>
-                            <span class="pct num">{book.progress}%</span>
-                          </div>
-                          <div
-                            class="cur-bar"
-                            role="progressbar"
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                            aria-valuenow={book.progress}
-                            aria-label={`${book.title} 閱讀進度`}
-                          >
-                            <div class="cur-fill" style={`width:${book.progress}%`}></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          {currentBooks.length > 1 && (
-            <div class="cur-dots" role="tablist" aria-label="切換正在讀的書">
-              {currentBooks.map((_, i) => (
-                <button
-                  type="button"
-                  class="cur-dot"
-                  data-dot-index={i}
-                  aria-current={i === 0 ? 'true' : undefined}
-                  aria-label={`第 ${i + 1} 本`}
-                ></button>
-              ))}
-            </div>
-          )}
-        </aside>
-      )}
-    </div>
+        <QuarterHeat
+          label="每年每季讀完的書數量熱度圖"
+          counts={heatBucket}
+          from={oldestYear}
+          to={newestYear}
+          unit="本"
+        />
+      </div>
+    </section>
 
     <!-- 2 · filter strip -->
     <section class="paper rd-filter" aria-label="篩選書單">
@@ -351,7 +273,6 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
       var wishContainer = host.querySelector('[data-view-content="wish"]');
       var sections = readContainer ? Array.from(readContainer.querySelectorAll('.year-section')) : [];
       var wishSections = wishContainer ? Array.from(wishContainer.querySelectorAll('.year-section')) : [];
-      var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       var activeCat = '*';
       var kw = '';
@@ -470,83 +391,6 @@ const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
           if (q) q.focus();
         }
       });
-
-      // Currently-reading carousel
-      var currentTile = document.getElementById('current-tile');
-      if (currentTile) {
-        var track = currentTile.querySelector('.cur-track');
-        var slides = Array.from(currentTile.querySelectorAll('.cur-slide'));
-        var dots = Array.from(currentTile.querySelectorAll('.cur-dot'));
-        if (track && slides.length > 1) {
-          var active = 0;
-          var timer = null;
-          var dragging = false;
-          var startX = 0;
-          var pointerId = null;
-          var INTERVAL_MS = 6000;
-          var SWIPE_RATIO = 0.18; // 18% of slide width to commit
-
-          var applyTransform = function (offsetPx, animate) {
-            track.style.transition = animate && !reduceMotion ? '' : 'none';
-            track.style.transform = 'translateX(calc(' + (-active * 100) + '% + ' + offsetPx + 'px))';
-          };
-          var show = function (idx) {
-            active = (idx + slides.length) % slides.length;
-            applyTransform(0, true);
-            dots.forEach(function (d, i) {
-              if (i === active) d.setAttribute('aria-current', 'true');
-              else d.removeAttribute('aria-current');
-            });
-          };
-          var stop = function () { if (timer) { clearInterval(timer); timer = null; } };
-          var start = function () {
-            stop();
-            if (reduceMotion) return; // no unprompted movement
-            timer = setInterval(function () { show(active + 1); }, INTERVAL_MS);
-          };
-
-          dots.forEach(function (d, i) {
-            d.addEventListener('click', function () { show(i); start(); });
-          });
-          currentTile.addEventListener('mouseenter', stop);
-          currentTile.addEventListener('mouseleave', start);
-
-          // Pointer-based swipe (covers mouse + touch + pen)
-          track.addEventListener('pointerdown', function (e) {
-            if (e.button !== undefined && e.button !== 0) return;
-            dragging = true;
-            startX = e.clientX;
-            pointerId = e.pointerId;
-            try { track.setPointerCapture(pointerId); } catch (err) {}
-            stop();
-          });
-          track.addEventListener('pointermove', function (e) {
-            if (!dragging) return;
-            applyTransform(e.clientX - startX, false);
-          });
-          var release = function (e) {
-            if (!dragging) return;
-            dragging = false;
-            var delta = e.clientX - startX;
-            var w = track.offsetWidth || 1;
-            if (Math.abs(delta) > w * SWIPE_RATIO) {
-              show(active + (delta < 0 ? 1 : -1));
-            } else {
-              applyTransform(0, true);
-            }
-            if (pointerId != null) {
-              try { track.releasePointerCapture(pointerId); } catch (err) {}
-              pointerId = null;
-            }
-            start();
-          };
-          track.addEventListener('pointerup', release);
-          track.addEventListener('pointercancel', release);
-
-          applyTransform(0, false);
-          start();
-        }
-      }
     })();
   </script>
 </DeskLayout>
