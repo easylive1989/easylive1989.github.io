@@ -18,6 +18,25 @@ const rain = Array.from({ length: 58 }, (_, i) => ({
   storm: i >= 34,
   style: `left:${(i * 37 + (i >= 34 ? 17 : 0)) % 100}%;height:${18 + ((i * 7) % 16)}px;--d:${(1.1 + (i % 5) * 0.16).toFixed(2)}s;animation-delay:${(-((i * 0.29) % 2)).toFixed(2)}s`,
 }));
+
+// 小書齋's bamboo leaves: each a thin dab tapering to a point, [x, y, angle in degrees, length].
+const leaf = ([x, y, deg, len]: number[]) => {
+  const a = (deg * Math.PI) / 180;
+  const [dx, dy, nx, ny] = [Math.cos(a), Math.sin(a), -Math.sin(a), Math.cos(a)];
+  const p = (t: number, w: number) => `${(x + dx * len * t + nx * w).toFixed(1)} ${(y + dy * len * t + ny * w).toFixed(1)}`;
+  return `M${p(0, 0)} Q${p(0.35, 2.4)} ${p(1, 0)} Q${p(0.35, -2.4)} ${p(0, 0)}Z`;
+};
+const bambooLeaves = [
+  [76, 56, 205, 14], [77, 59, 175, 15], [77, 66, 145, 13], [76, 72, 200, 12],
+  [93, 44, -40, 14], [93, 47, -5, 15], [92, 54, 30, 13], [91, 60, 160, 12], [92, 66, 20, 11],
+  [104, 74, -20, 14], [104, 79, 15, 13], [103, 86, 150, 11],
+  [77, 92, 195, 12], [89, 90, -25, 12], [76, 96, 165, 10],
+].map(leaf).join('');
+// and the willow's strands, hanging from points along its branches: [x, y, length].
+const willowStrands = [
+  [200, 76, 26], [208, 72, 34], [216, 71, 40], [224, 74, 30], [234, 80, 36],
+  [256, 92, 30], [264, 88, 38], [272, 87, 32], [280, 88, 26], [254, 78, 24], [262, 71, 30], [268, 68, 22],
+].map(([x, y, l]) => `M${x} ${y} C${x - 2} ${y + l * 0.4} ${x - 2} ${y + l * 0.7} ${x + 1} ${y + l}`).join(' ');
 ---
 
 <div class:list={['ink-land', { 'is-near': near }]} aria-hidden="true">
@@ -77,6 +96,62 @@ const rain = Array.from({ length: 58 }, (_, i) => ({
       <path d="M906 245 v-11 M901 240 h10 M903 236 h6"></path>
       <path d="M1176 265 v-15 M1169 258 h14 M1171 253 h10 M1173 249 h6"></path>
       <path d="M1030 271 v-12 M1025 265 h10 M1027 261 h6"></path>
+    </g>
+  </svg>
+  <!-- 小書齋: a little study at the water's edge on the left, beside the page's words: a thatched roof on its posts, a scholar
+       at his desk with a book open, bamboo behind it and a willow hanging over it, in the far range's pale ink. At night a lamp
+       is lit in it. -->
+  <svg class="l-study" viewBox="0 0 320 200">
+    <defs>
+      <linearGradient id="ink-bank" gradientUnits="userSpaceOnUse" x1="0" y1="146" x2="0" y2="194"><stop offset="0" stop-color="#2c2b28" stop-opacity="0.28"></stop><stop offset="1" stop-color="#2c2b28" stop-opacity="0"></stop></linearGradient>
+      <linearGradient id="ink-roof" gradientUnits="userSpaceOnUse" x1="0" y1="82" x2="0" y2="116"><stop offset="0" stop-color="#2c2b28" stop-opacity="0.52"></stop><stop offset="1" stop-color="#2c2b28" stop-opacity="0.2"></stop></linearGradient>
+      <linearGradient id="study-fade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"></stop><stop offset="0.18" stop-color="#fff"></stop><stop offset="0.82" stop-color="#fff"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></linearGradient>
+      <mask id="study-edge" maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="200"><rect width="320" height="200" fill="url(#study-fade)"></rect></mask>
+      <radialGradient id="study-lamp" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f3d9a0" stop-opacity="0.9"></stop><stop offset="1" stop-color="#f3d9a0" stop-opacity="0"></stop></radialGradient>
+      <filter id="brush-study" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="21"></feTurbulence><feDisplacementMap in="SourceGraphic" scale="3"></feDisplacementMap></filter>
+    </defs>
+    <!-- bamboo behind the study: culms with knots, leaves in tapering dabs -->
+    <g stroke="#2c2b28" stroke-linecap="round" fill="none">
+      <path d="M78 150 C76 120 80 90 76 54 M90 150 C92 116 88 84 93 42 M102 148 C102 124 105 100 104 72" stroke-width="1.6" stroke-opacity="0.3"></path>
+      <path d="M74 128 h5 M75 104 h5 M74 78 h5 M88 130 h5 M89 104 h5 M90 74 h5 M100 128 h5 M102 104 h5" stroke-width="1.2" stroke-opacity="0.3"></path>
+    </g>
+    <path d={bambooLeaves} fill="#2c2b28" fill-opacity="0.34"></path>
+    <!-- the bank it stands on, fading out at both ends, and the stone footing under the floor -->
+    <g mask="url(#study-edge)">
+      <g filter="url(#brush-study)">
+        <path d="M0 184 C34 170 64 156 100 151 C140 146 190 146 226 150 C262 154 290 168 320 180 L320 200 L0 200 Z" fill="url(#ink-bank)"></path>
+        <path d="M0 184 C34 170 64 156 100 151 C140 146 190 146 226 150 C262 154 290 168 320 180" fill="none" stroke="#2c2b28" stroke-width="1.8" stroke-opacity="0.34" stroke-linecap="round"></path>
+        <path d="M58 168 l-8 12 M72 161 l-5 10 M262 160 l7 12 M276 166 l5 9" fill="none" stroke="#2c2b28" stroke-width="1.4" stroke-opacity="0.24" stroke-linecap="round"></path>
+      </g>
+      <!-- the water at its foot -->
+      <path d="M14 192 h60 M96 196 h44 M196 194 h64 M262 188 h40" fill="none" stroke="#2c2b28" stroke-width="1.2" stroke-opacity="0.16" stroke-linecap="round"></path>
+    </g>
+    <path d="M112 150 h90 l-2 -6 h-86 Z" fill="#2c2b28" fill-opacity="0.2" filter="url(#brush-study)"></path>
+    <!-- the study: back wall with a round window, posts, a railing along the front, a scholar at his desk -->
+    <rect x="120" y="112" width="74" height="32" fill="#2c2b28" fill-opacity="0.07"></rect>
+    <ellipse class="w-lamp" cx="166" cy="128" rx="26" ry="18" fill="url(#study-lamp)"></ellipse>
+    <circle cx="135" cy="126" r="9" fill="none" stroke="#2c2b28" stroke-width="1.2" stroke-opacity="0.34"></circle>
+    <g stroke="#2c2b28" stroke-linecap="round" fill="none">
+      <path d="M118 112 v32 M196 112 v32" stroke-width="2.2" stroke-opacity="0.46"></path>
+      <path d="M150 112 v32" stroke-width="1.4" stroke-opacity="0.28"></path>
+      <path d="M114 138 h86 M126 138 v6 M138 138 v6 M186 138 v6" stroke-width="1.2" stroke-opacity="0.32"></path>
+      <path d="M154 133 h24 M157 133 v5 M175 133 v5" stroke-width="1.3" stroke-opacity="0.44"></path>
+      <path d="M160 132 q4 -3 8 0 q4 -3 8 0" stroke-width="1.1" stroke-opacity="0.5"></path>
+    </g>
+    <!-- the scholar, bent over the book: his head, his robe -->
+    <circle cx="165" cy="121" r="3.2" fill="#2c2b28" fill-opacity="0.5"></circle>
+    <path d="M158 138 C158 130 160 126 165 125 C170 126 173 130 173 138 Z" fill="#2c2b28" fill-opacity="0.34"></path>
+    <!-- the thatched roof, its eaves turned up at the ends -->
+    <g filter="url(#brush-study)">
+      <path d="M98 114 C108 114 114 110 120 102 L134 86 C150 82 166 82 182 86 L196 102 C202 110 208 114 218 113 C200 118 116 118 98 114 Z" fill="url(#ink-roof)"></path>
+      <path d="M98 114 C108 114 114 110 120 102 L134 86 C150 82 166 82 182 86 L196 102 C202 110 208 114 218 113" fill="none" stroke="#2c2b28" stroke-width="1.8" stroke-opacity="0.5" stroke-linecap="round"></path>
+      <path d="M128 98 l-4 12 M140 92 l-3 18 M152 89 l-1 21 M164 89 v21 M176 91 l2 19 M188 97 l4 13" fill="none" stroke="#2c2b28" stroke-width="1" stroke-opacity="0.24" stroke-linecap="round"></path>
+    </g>
+    <!-- a willow leaning in over the roof from the right, its strands hanging -->
+    <g stroke="#2c2b28" stroke-linecap="round" fill="none">
+      <path d="M252 150 C248 132 254 116 248 98 C244 86 236 78 226 74" stroke-width="3" stroke-opacity="0.48"></path>
+      <path d="M226 74 C214 70 204 72 196 78 M248 100 C258 90 270 86 282 88 M247 92 C250 80 258 72 270 68" stroke-width="1.6" stroke-opacity="0.42"></path>
+      <path d={willowStrands} stroke-width="0.9" stroke-opacity="0.3"></path>
     </g>
   </svg>
   <svg class="l-near" viewBox="0 0 1440 520" preserveAspectRatio="xMaxYMax slice">

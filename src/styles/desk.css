@@ -125,6 +125,22 @@ html {
 .ink-land.is-near .l-sun { transform: scale(2); }
 .ink-land.is-near .l-mid { transform: scale(2.1); }
 .ink-land.is-near .l-near { transform: scale(3.4) translateY(9%); }
+/* 小書齋: on the water's edge in the margin left of the page's words (the column is 1034px wide), beside 每季落筆. Its width
+   follows the margin, so it never runs under the words; a screen whose margin is too narrow for it goes without it, and a
+   phone sets it small in the corner of its shorter scene. Pushed in on the about page, it slides off to the left. */
+.ink-land .l-study {
+  inset: auto;
+  right: calc(50% + 517px + 12px);
+  bottom: 96px;
+  width: min(340px, calc(50% - 517px - 28px));
+  height: auto;
+  aspect-ratio: 8 / 5;
+  transform-origin: 100% 100%;
+}
+.ink-land .l-study .w-lamp { display: none; }
+.ink-land.is-near .l-study { transform: translateX(-70%) scale(1.6); opacity: 0; }
+.zoom-fx .ink-land .l-study { transition: transform 1.3s cubic-bezier(0.5, 0, 0.4, 1), opacity 1.3s ease; }
+@media (min-width: 641px) and (max-width: 1380px) { .ink-land .l-study { display: none; } }
 
 /* — the weather over the landscape: html[data-weather] (layouts/weather.js) is clear, cloudy, fog, rain, storm or night;
      without it, clear — */
@@ -168,6 +184,7 @@ html[data-weather="storm"] .ink-land .w-dim { opacity: 0.34; }
 html[data-weather="storm"] .ink-land .w-cloud { opacity: 0.88; }
 html[data-weather="fog"] .ink-land .l-far { opacity: 0.45; }
 html[data-weather="fog"] .ink-land .l-mid { opacity: 0.6; }
+html[data-weather="fog"] .ink-land .l-study { opacity: 0.55; }
 html[data-weather="rain"] .ink-land .l-far { opacity: 0.8; }
 html[data-weather="storm"] .ink-land .l-far { opacity: 0.7; }
 html[data-weather="fog"] .ink-land .w-fog { display: block; }
@@ -177,6 +194,7 @@ html[data-weather="storm"] .ink-land .w-rain { --speed: 0.7; }
 html[data-weather="storm"] .ink-land .w-flash { display: block; }
 html[data-weather="night"] .ink-land :is(.w-moon) { display: inline; }
 html[data-weather="night"] .ink-land .w-night { display: block; }
+html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 
 @keyframes ink-drop {
   0% { transform: translate(0, -40px) rotate(12deg); opacity: 0; }
@@ -414,6 +432,7 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
   /* the landscape smaller and under the masthead, so the whole scene, sun and all, fits above the page's words instead of behind them */
   .ink-land { top: 96px; height: 220px; }
   .ink-land .l-mist { height: 60px; }
+  .ink-land .l-study { right: auto; left: 2px; bottom: 34px; width: 104px; }
   .desk-top { right: 16px; bottom: 16px; }
 }
 

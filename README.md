@@ -11,6 +11,7 @@ https://paul-learning.dev
 - **框架**: Astro (靜態網站生成)
 - **內容來源**: Notion API (`@notionhq/client`)
 - **樣式**: 月門水墨：粉牆、墨色、紅日，每頁頂上一片水墨山水（`src/components/Landscape.astro`，手機也顯示）
+  - 山水左邊、文章欄外的水邊有一間小書齋（竹、柳、讀書人；夜裡點燈）。版面左邊太窄的螢幕不畫它，手機縮小放在角落
   - 首頁就是「所有文章」；舊的 `/archive/` 轉到首頁
   - 山水跟著台中的天氣變：晴、多雲、霧、雨、雷雨、夜晚（`src/layouts/weather.js`，向 Open-Meteo 查，免金鑰；結果在瀏覽器存半小時）。查天氣時訪客的 IP 會被 Open-Meteo 看到
   - 「書架」是暗門後的書櫃：點導覽列的書架，頁面從中間裂開、書架從暗處浮上來；「關於我」用推進山水轉場（`src/layouts/deskFx.js`）
