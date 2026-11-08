@@ -38,6 +38,7 @@ jobs:
           path: |
             .notion-cache
             public/assets/notion
+            public/assets/think
           key: notion-cache-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             notion-cache-

@@ -25,6 +25,11 @@ author:
     - type: playbox
       url: "https://easylive1989.github.io/paul-playbox/"
 
+# where the content comes from: think (Think Space's public articles and books) or notion (the old databases)
+source: think
+think:
+  baseUrl: "https://think.paul-learning.dev"
+
 notion:
   databaseId: "31c8303f78f78086a16fdffcd6dd1777"
   booksDatabaseId: "56d746743d0c41ddb48f302dba008592"

@@ -135,7 +135,8 @@ export async function responsiveImage(localPath: string): Promise<ResponsiveImag
   const original = path.join(publicDir, localPath);
   if (!fs.existsSync(original)) return passThrough;
   try {
-    const animated = /\.gif$/i.test(localPath);
+    // a GIF, or a WebP Think Space made from one, keeps moving
+    const animated = /\.gif$/i.test(localPath) || (/\.webp$/i.test(localPath) && ((await sharp(original).metadata()).pages ?? 1) > 1);
     const meta = await sharp(original, { animated }).metadata();
     const w = meta.width ?? 0;
     const h = (animated && meta.pageHeight) || meta.height || 0; // a GIF of a single frame has no pageHeight

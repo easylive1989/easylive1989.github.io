@@ -21,6 +21,21 @@ import {
   pruneBlockCache,
 } from './notionCache';
 import path from 'node:path';
+import { computeMeta } from './articleMeta';
+import { excerptOf, firstImageOf } from './excerpt';
+import {
+  drawThink, thinkArticleBody, thinkArticles, thinkBookNotes, thinkBooks, thinkNoteBodies, thinkNotes, type Content,
+} from './think';
+
+export type { Content } from './think';
+
+/** Think Space, unless site.config.yaml says notion (kept until the Think Space build is trusted) */
+const fromThink = (): boolean => loadConfig().source !== 'notion';
+
+/** Notion blocks, with what the pages say about them */
+function notionContent(blocks: NotionBlock[]): Content {
+  return { blocks, meta: computeMeta(blocks), excerpt: (max) => excerptOf(blocks, max), firstImage: firstImageOf(blocks) };
+}
 
 const isProductionBuild = (): boolean => process.env.NODE_ENV === 'production';
 
@@ -46,6 +61,7 @@ let cachedArticles: Article[] | null = null;
 
 export async function getAllArticles(): Promise<Article[]> {
   if (cachedArticles) return cachedArticles;
+  if (fromThink()) return (cachedArticles = await thinkArticles());
   const config = loadConfig();
   const client = getNotionClient();
   if (!client) return [];
@@ -86,7 +102,7 @@ export async function getArticlesByCategory(slug: string): Promise<Article[]> {
 
 export interface ArticleWithContent {
   article: Article;
-  blocks: NotionBlock[];
+  content: Content;
   categorySlug: string;
   categoryName: string;
 }
@@ -95,6 +111,11 @@ export async function getArticle(
   catSlug: string,
   articleId: string,
 ): Promise<ArticleWithContent | null> {
+  if (fromThink()) {
+    const article = (await getAllArticles()).find((a) => a.id === articleId);
+    if (!article || categorySlug(article.category) !== catSlug) return null;
+    return { article, content: await drawThink((await thinkArticleBody(article.id)) ?? ''), categorySlug: catSlug, categoryName: article.category };
+  }
   const client = getNotionClient();
   if (!client) return null;
 
@@ -116,7 +137,7 @@ export async function getArticle(
 
   return {
     article,
-    blocks,
+    content: notionContent(blocks),
     categorySlug: catSlug,
     categoryName: article.category,
   };
@@ -126,6 +147,7 @@ let cachedBooks: Book[] | null = null;
 
 export async function getAllBooks(): Promise<Book[]> {
   if (cachedBooks) return cachedBooks;
+  if (fromThink()) return (cachedBooks = await enrichBookCovers(await thinkBooks()));
   const config = loadConfig();
   const client = getNotionClient();
   if (!client || !config.notion.booksDatabaseId) return [];
@@ -160,11 +182,11 @@ function hasContent(blocks: NotionBlock[]): boolean {
   });
 }
 
-let cachedBookNotes: Promise<Map<string, NotionBlock[]>> | null = null;
+let cachedBookNotes: Promise<Map<string, unknown>> | null = null;
 
 /** The notes of every finished book that has any, by book id. */
-export function getBookNotes(): Promise<Map<string, NotionBlock[]>> {
-  return (cachedBookNotes ??= loadBookNotes());
+export function getBookNotes(): Promise<Map<string, unknown>> {
+  return (cachedBookNotes ??= fromThink() ? thinkBookNotes() : loadBookNotes());
 }
 
 async function loadBookNotes(): Promise<Map<string, NotionBlock[]>> {
@@ -194,8 +216,13 @@ async function loadBookNotes(): Promise<Map<string, NotionBlock[]>> {
 }
 
 /** One book's notes, ready to render: its pictures downloaded and pointed at their local copies. */
-export async function getBookNoteBlocks(bookId: string): Promise<NotionBlock[]> {
-  const raw = (await getBookNotes()).get(bookId);
+export async function getBookNoteContent(bookId: string): Promise<Content> {
+  if (fromThink()) return drawThink(((await getBookNotes()).get(bookId) as string | undefined) ?? '');
+  return notionContent(await getBookNoteBlocks(bookId));
+}
+
+async function getBookNoteBlocks(bookId: string): Promise<NotionBlock[]> {
+  const raw = (await getBookNotes()).get(bookId) as NotionBlock[] | undefined;
   if (!raw) return [];
   const { blocks, imageMap } = replaceImageUrls(raw, 'reading', bookId);
   const publicDir = path.resolve(process.cwd(), 'public');
@@ -212,6 +239,7 @@ let cachedNotes: Note[] | null = null;
 
 export async function getAllNotes(): Promise<Note[]> {
   if (cachedNotes) return cachedNotes;
+  if (fromThink()) return (cachedNotes = await thinkNotes());
   const config = loadConfig();
   const client = getNotionClient();
   if (!client || !config.notion.notesDatabaseId) return (cachedNotes = []);
@@ -220,11 +248,11 @@ export async function getAllNotes(): Promise<Note[]> {
   return cachedNotes;
 }
 
-let cachedNoteBodies: Promise<Map<string, NotionBlock[]>> | null = null;
+let cachedNoteBodies: Promise<Map<string, unknown>> | null = null;
 
 /** The body of every note that has one, by note id. */
-export function getNoteBodies(): Promise<Map<string, NotionBlock[]>> {
-  return (cachedNoteBodies ??= loadNoteBodies());
+export function getNoteBodies(): Promise<Map<string, unknown>> {
+  return (cachedNoteBodies ??= fromThink() ? thinkNoteBodies() : loadNoteBodies());
 }
 
 async function loadNoteBodies(): Promise<Map<string, NotionBlock[]>> {
@@ -254,8 +282,13 @@ async function loadNoteBodies(): Promise<Map<string, NotionBlock[]>> {
 }
 
 /** One note's body, ready to render: its pictures downloaded and pointed at their local copies. */
-export async function getNoteBlocks(noteId: string): Promise<NotionBlock[]> {
-  const raw = (await getNoteBodies()).get(noteId);
+export async function getNoteContent(noteId: string): Promise<Content> {
+  if (fromThink()) return drawThink(((await getNoteBodies()).get(noteId) as string | undefined) ?? '');
+  return notionContent(await getNoteBlocks(noteId));
+}
+
+async function getNoteBlocks(noteId: string): Promise<NotionBlock[]> {
+  const raw = (await getNoteBodies()).get(noteId) as NotionBlock[] | undefined;
   if (!raw) return [];
   const { blocks, imageMap } = replaceImageUrls(raw, 'notes', noteId);
   const publicDir = path.resolve(process.cwd(), 'public');
