@@ -237,13 +237,6 @@
   .archive-sheet .arc-scope h1 { font-size: 32px; }
 }
 
-/* the orchid at the foot of the list, in its clay pot */
-.archive-sheet .arc-orchid { display: flex; justify-content: flex-end; margin-top: 48px; padding-right: 6%; }
-.archive-sheet .arc-orchid svg { width: 120px; height: 150px; }
-@media (max-width: 760px) {
-  .archive-sheet .arc-orchid { display: none; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .archive-sheet *,
   .archive-sheet *::before,
