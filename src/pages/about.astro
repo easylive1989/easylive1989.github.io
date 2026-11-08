@@ -52,7 +52,7 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
     </section>
 
     <section class="ab-sec" aria-labelledby="ab-talks">
-      <h2 id="ab-talks"><i aria-hidden="true"></i>演講</h2>
+      <h2 id="ab-talks"><i aria-hidden="true"></i>公開演講</h2>
       <ul class="ab-list">
         {TALKS.map(([year, title, host, url]) => (
           <li>
@@ -64,7 +64,7 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
     </section>
 
     <section class="ab-sec" aria-labelledby="ab-find">
-      <h2 id="ab-find"><i aria-hidden="true"></i>找到我</h2>
+      <h2 id="ab-find"><i aria-hidden="true"></i>如何找到我</h2>
       <div class="ab-ch">
         {channels(config).map(([name, label, url]) => (
           <a href={url} {...away(url)}><b>{name}</b><span>{label}</span></a>
