@@ -125,16 +125,16 @@ html {
 .ink-land.is-near .l-sun { transform: scale(2); }
 .ink-land.is-near .l-mid { transform: scale(2.1); }
 .ink-land.is-near .l-near { transform: scale(3.4) translateY(9%); }
-/* 小書齋: on the water's edge in the margin left of the page's words (the column is 1034px wide), beside 每季落筆. Its width
+/* 小書齋: half in a drift of mist at the foot of the far hills, on the scene's waterline, in the margin left of the page's words (the column is 1034px wide), beside 每季落筆. Its width
    follows the margin, so it never runs under the words; a screen whose margin is too narrow for it, a phone among them,
    goes without it. Pushed in on the about page, it slides off to the left. */
 .ink-land .l-study {
   inset: auto;
-  right: calc(50% + 517px + 12px);
-  bottom: 96px;
-  width: min(340px, calc(50% - 517px - 28px));
+  right: calc(50% + 517px + 13px);
+  bottom: 20px;
+  width: min(340px, calc(50% - 517px - 29px));
   height: auto;
-  aspect-ratio: 8 / 5;
+  aspect-ratio: 34 / 21;
   transform-origin: 100% 100%;
 }
 .ink-land .l-study .w-lamp { display: none; }
