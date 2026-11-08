@@ -79,6 +79,50 @@ const rain = Array.from({ length: 58 }, (_, i) => ({
       <path d="M1030 271 v-12 M1025 265 h10 M1027 261 h6"></path>
     </g>
   </svg>
+  <!-- 小書齋: a little study by the water at the foot of the far hills on the left, beside the page's words, half lost in a drift
+       of mist: its roof and a pine over it in mid ink, its walls going into the mist, and below it a landing and a skiff coming
+       out of the mist, faint. At night its lamp glows through the mist. -->
+  <svg class="l-study" viewBox="0 0 340 210">
+    <defs>
+      <linearGradient id="study-roof" gradientUnits="userSpaceOnUse" x1="0" y1="72" x2="0" y2="100"><stop offset="0" stop-color="#2c2b28" stop-opacity="0.46"></stop><stop offset="1" stop-color="#2c2b28" stop-opacity="0.16"></stop></linearGradient>
+      <linearGradient id="study-drift" gradientUnits="userSpaceOnUse" x1="0" y1="104" x2="0" y2="150"><stop offset="0" stop-color="#f2f0eb" stop-opacity="0"></stop><stop offset="0.45" stop-color="#f2f0eb" stop-opacity="0.92"></stop><stop offset="0.75" stop-color="#f2f0eb" stop-opacity="0.92"></stop><stop offset="1" stop-color="#f2f0eb" stop-opacity="0.2"></stop></linearGradient>
+      <linearGradient id="study-side" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"></stop><stop offset="0.25" stop-color="#fff"></stop><stop offset="0.8" stop-color="#fff"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></linearGradient>
+      <mask id="study-edge" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="210"><rect width="340" height="210" fill="url(#study-side)"></rect></mask>
+      <radialGradient id="study-lamp" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f3d9a0" stop-opacity="0.75"></stop><stop offset="1" stop-color="#f3d9a0" stop-opacity="0"></stop></radialGradient>
+      <filter id="study-blur" x="-10%" y="-40%" width="120%" height="180%"><feGaussianBlur stdDeviation="5"></feGaussianBlur></filter>
+      <filter id="brush-study" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="21"></feTurbulence><feDisplacementMap in="SourceGraphic" scale="3"></feDisplacementMap><feGaussianBlur stdDeviation="0.3"></feGaussianBlur></filter>
+    </defs>
+    <g filter="url(#brush-study)">
+      <!-- a pine behind it, in the near rock's dabs -->
+      <path d="M100 118 C98 96 104 80 96 60" fill="none" stroke="#2c2b28" stroke-width="2.6" stroke-opacity="0.4" stroke-linecap="round"></path>
+      <ellipse cx="96" cy="58" rx="20" ry="5.5" fill="#2c2b28" fill-opacity="0.36"></ellipse>
+      <ellipse cx="112" cy="70" rx="16" ry="4.5" fill="#2c2b28" fill-opacity="0.32"></ellipse>
+      <ellipse cx="84" cy="76" rx="12" ry="4" fill="#2c2b28" fill-opacity="0.3"></ellipse>
+      <!-- the study: a back wall with a round window, its posts, a scholar at his book -->
+      <rect x="128" y="98" width="64" height="30" fill="#2c2b28" fill-opacity="0.06"></rect>
+      <circle cx="142" cy="110" r="7" fill="none" stroke="#2c2b28" stroke-width="1.1" stroke-opacity="0.28"></circle>
+      <path d="M128 98 v30 M192 98 v30" stroke="#2c2b28" stroke-width="2" stroke-opacity="0.38" stroke-linecap="round"></path>
+      <circle cx="170" cy="106" r="2.8" fill="#2c2b28" fill-opacity="0.42"></circle>
+      <path d="M164 120 C164 113 166 110 170 109 C174 110 176 113 176 120 Z" fill="#2c2b28" fill-opacity="0.28"></path>
+      <!-- the thatched roof, its eaves turned up at the ends -->
+      <path d="M110 99 C119 99 124 96 129 89 L141 76 C155 72 167 72 181 76 L192 89 C197 96 202 99 212 98 C196 103 124 103 110 99 Z" fill="#f2f0eb"></path>
+      <path d="M110 99 C119 99 124 96 129 89 L141 76 C155 72 167 72 181 76 L192 89 C197 96 202 99 212 98 C196 103 124 103 110 99 Z" fill="url(#study-roof)"></path>
+      <path d="M110 99 C119 99 124 96 129 89 L141 76 C155 72 167 72 181 76 L192 89 C197 96 202 99 212 98" fill="none" stroke="#2c2b28" stroke-width="1.7" stroke-opacity="0.44" stroke-linecap="round"></path>
+    </g>
+    <!-- the drift of mist across its walls, and the lamp glowing through it at night -->
+    <rect x="-20" y="104" width="380" height="46" fill="url(#study-drift)" filter="url(#study-blur)"></rect>
+    <ellipse class="w-lamp" cx="168" cy="114" rx="26" ry="14" fill="url(#study-lamp)"></ellipse>
+    <!-- the shore, the landing and the skiff below the mist, and the water -->
+    <g mask="url(#study-edge)" filter="url(#brush-study)">
+      <path d="M40 160 C90 156 150 154 196 156 C206 157 212 160 216 166" fill="none" stroke="#2c2b28" stroke-width="1.3" stroke-opacity="0.18" stroke-linecap="round"></path>
+      <g stroke="#2c2b28" stroke-linecap="round" fill="none">
+        <path d="M196 162 h84" stroke-width="2" stroke-opacity="0.28"></path>
+        <path d="M216 162 v10 M240 162 v9 M264 162 v10 M280 162 v8" stroke-width="1.4" stroke-opacity="0.24"></path>
+        <path d="M30 182 h70 M130 188 h56 M210 184 h80 M80 198 h60 M180 202 h70" stroke-width="1.1" stroke-opacity="0.11"></path>
+      </g>
+      <path d="M262 176 C272 182 298 182 310 174 C298 178 274 178 262 176 Z" fill="#2c2b28" fill-opacity="0.26"></path>
+    </g>
+  </svg>
   <svg class="l-near" viewBox="0 0 1440 520" preserveAspectRatio="xMaxYMax slice">
     <defs>
       <linearGradient id="ink-near" gradientUnits="userSpaceOnUse" x1="0" y1="414" x2="0" y2="520"><stop offset="0" stop-color="#2c2b28" stop-opacity="0.46"></stop><stop offset="1" stop-color="#2c2b28" stop-opacity="0.06"></stop></linearGradient>

@@ -125,6 +125,22 @@ html {
 .ink-land.is-near .l-sun { transform: scale(2); }
 .ink-land.is-near .l-mid { transform: scale(2.1); }
 .ink-land.is-near .l-near { transform: scale(3.4) translateY(9%); }
+/* 小書齋: half in a drift of mist at the foot of the far hills, on the scene's waterline, in the margin left of the page's words (the column is 1034px wide), beside 每季落筆. Its width
+   follows the margin, so it never runs under the words; a screen whose margin is too narrow for it, a phone among them,
+   goes without it. Pushed in on the about page, it slides off to the left. */
+.ink-land .l-study {
+  inset: auto;
+  right: calc(50% + 517px + 13px);
+  bottom: 20px;
+  width: min(340px, calc(50% - 517px - 29px));
+  height: auto;
+  aspect-ratio: 34 / 21;
+  transform-origin: 100% 100%;
+}
+.ink-land .l-study .w-lamp { display: none; }
+.ink-land.is-near .l-study { transform: translateX(-70%) scale(1.6); opacity: 0; }
+.zoom-fx .ink-land .l-study { transition: transform 1.3s cubic-bezier(0.5, 0, 0.4, 1), opacity 1.3s ease; }
+@media (max-width: 1380px) { .ink-land .l-study { display: none; } }
 
 /* — the weather over the landscape: html[data-weather] (layouts/weather.js) is clear, cloudy, fog, rain, storm or night;
      without it, clear — */
@@ -168,6 +184,7 @@ html[data-weather="storm"] .ink-land .w-dim { opacity: 0.34; }
 html[data-weather="storm"] .ink-land .w-cloud { opacity: 0.88; }
 html[data-weather="fog"] .ink-land .l-far { opacity: 0.45; }
 html[data-weather="fog"] .ink-land .l-mid { opacity: 0.6; }
+html[data-weather="fog"] .ink-land .l-study { opacity: 0.55; }
 html[data-weather="rain"] .ink-land .l-far { opacity: 0.8; }
 html[data-weather="storm"] .ink-land .l-far { opacity: 0.7; }
 html[data-weather="fog"] .ink-land .w-fog { display: block; }
@@ -177,6 +194,7 @@ html[data-weather="storm"] .ink-land .w-rain { --speed: 0.7; }
 html[data-weather="storm"] .ink-land .w-flash { display: block; }
 html[data-weather="night"] .ink-land :is(.w-moon) { display: inline; }
 html[data-weather="night"] .ink-land .w-night { display: block; }
+html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 
 @keyframes ink-drop {
   0% { transform: translate(0, -40px) rotate(12deg); opacity: 0; }
