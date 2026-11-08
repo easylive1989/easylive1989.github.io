@@ -14,7 +14,7 @@
   --brass-dark: #6e5228;
   --brass-ink: #2a1d0e;
 
-  /* Three voices. Display: a brush-written 楷 for the blog's name and every heading, the ink study's own hand.
+  /* Three voices. Display: a brush-written 楷 for the blog's name alone, the ink study's own hand (a seal, not a typeface for every heading).
      Reading: 宋 for the words, as before (its own Latin sits better beside the Chinese than Source Serif 4's larger one).
      UI: a quiet 黑 for the chrome (tabs, chips, dates, counts), so it steps back from the words. */
   --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "DFKai-SB", "Noto Serif TC", serif;
@@ -59,7 +59,7 @@ body.desk-body {
   --color-accent-800: #7f2a22;
   --color-accent-900: #51201b;
 
-  --font-heading: var(--font-display);
+  --font-heading: var(--font-reading);
   --font-body: var(--font-reading);
   --font-heading-weight: 600;
 
@@ -311,7 +311,7 @@ html[data-weather="night"] .ink-land .w-night { display: block; }
 }
 .desk-body .paper + .paper { margin-top: 40px; }
 .desk-body .masthead .rules { display: none; }
-.desk-body .masthead h1 { font-family: var(--font-display); font-weight: 400; letter-spacing: 0.02em; line-height: 1.25; margin: 0; }
+.desk-body .masthead h1 { font-weight: 600; letter-spacing: 0.02em; line-height: 1.25; margin: 0; }
 
 /* — Broadsheet's buttons, made pills — */
 .desk-body .btn {

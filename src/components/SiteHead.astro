@@ -17,9 +17,9 @@ const config = loadConfig();
 const BASE = import.meta.env.BASE_URL;
 const { siteTitle = config.site.title, description = config.site.description, ogImage, article } = Astro.props;
 const title = Astro.props.title ?? siteTitle;
-// Three voices (desk.css): LXGW WenKai TC, a brush-written 楷, for names and headings; Noto Serif TC with Source Serif 4 for
-// the Latin, for reading; Noto Sans TC for the chrome around them (tabs, chips, dates)
-const TYPE = 'https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@400;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap';
+// Three voices (desk.css): LXGW WenKai TC, a brush-written 楷, for the blog's name; Noto Serif TC (300 is the ink study's
+// headings) with Source Serif 4 for the Latin, for reading and headings; Noto Sans TC for the chrome (tabs, chips, dates)
+const TYPE = 'https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@300;400;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap';
 
 const pageTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
 const canonicalUrl = new URL(Astro.url.pathname, config.site.url);

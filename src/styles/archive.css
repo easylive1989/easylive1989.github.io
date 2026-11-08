@@ -17,7 +17,7 @@
 /* — a category page's heading — */
 .archive-sheet .arc-scope { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; margin-bottom: 24px; }
 .archive-sheet .arc-back { flex-basis: 100%; font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; }
-.archive-sheet .arc-scope h1 { margin: 0; font-family: var(--font-display); font-size: 44px; font-weight: 400; line-height: 1.2; letter-spacing: 0.12em; }
+.archive-sheet .arc-scope h1 { margin: 0; font-size: 44px; font-weight: 300; line-height: 1.2; letter-spacing: 0.12em; }
 .archive-sheet .arc-scope-n { margin: 0; font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.14em; color: var(--muted); }
 
 /* — 每季落筆: the heatmap on a pale card over the landscape — */
@@ -154,7 +154,7 @@
 }
 .archive-sheet .year-block[hidden] { display: none; }
 .archive-sheet .year-side { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
-.archive-sheet .yr-n { font-family: var(--font-display); font-size: 44px; font-weight: 400; line-height: 1; letter-spacing: 0.02em; }
+.archive-sheet .yr-n { font-size: 44px; font-weight: 300; line-height: 1; letter-spacing: 0.04em; }
 .archive-sheet .yr-l { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.16em; color: var(--muted); }
 
 .archive-sheet .rows { min-width: 0; }
@@ -172,11 +172,9 @@
 .archive-sheet .archive-row[hidden] { display: none; }
 .archive-sheet .row-date { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.04em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .archive-sheet .row-title {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: 0.02em;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.45;
   text-wrap: pretty;
   transition: color 0.15s;
 }
@@ -210,7 +208,7 @@
 @media (max-width: 760px) {
   .archive-sheet .year-block { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .archive-sheet .year-side { flex-direction: row; align-items: baseline; gap: 12px; padding-top: 0; }
-  .archive-sheet .yr-n { font-size: 32px; }
+  .archive-sheet .yr-n { font-size: 30px; }
 
   .archive-sheet .archive-row,
   .archive-sheet.is-scoped .archive-row {
@@ -225,7 +223,7 @@
   .archive-sheet .row-cat { grid-area: cat; }
   .archive-sheet.is-scoped .row-cat { display: none; }
   .archive-sheet .row-min { grid-area: min; }
-  .archive-sheet .row-title { grid-area: title; font-size: 18px; }
+  .archive-sheet .row-title { grid-area: title; font-size: 16px; }
 }
 
 /* a phone: the chips run to the screen's left edge; an open search takes a line of its own */
