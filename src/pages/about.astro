@@ -1,7 +1,7 @@
 ---
 import DeskLayout from '../layouts/DeskLayout.astro';
 import { loadConfig } from '../lib/config';
-import { MY_BOOK, IRONMAN, TALKS, TAGLINE, channels } from '../lib/profile';
+import { MY_BOOK, IRONMAN, TALKS, channels } from '../lib/profile';
 
 // Who Paul is: his portrait in the moon gate, then the book he wrote, his Ironman runs and his talks, and where to find him. The landscape behind is pushed in (Landscape.astro `near`): 推進山水 ends here.
 const config = loadConfig();
@@ -19,7 +19,6 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
       <div class="ab-who">
         <p class="ab-hi">Hi, I'm</p>
         <h1>{config.author.name}</h1>
-        <p class="ab-tag"><i aria-hidden="true"></i>{TAGLINE}</p>
       </div>
     </header>
 
@@ -91,9 +90,7 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
   .ab-gate img { display: block; width: 100%; height: 100%; object-fit: cover; }
   .ab-who { flex: 1 1 300px; min-width: 0; }
   .ab-hi { margin: 0; font-size: 15px; letter-spacing: 0.24em; color: var(--muted); }
-  .ab-who h1 { margin: 10px 0 16px; font-size: 66px; font-weight: 300; line-height: 1; letter-spacing: 0.06em; }
-  .ab-tag { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 16px; letter-spacing: 0.14em; color: var(--stone); }
-  .ab-tag i { width: 8px; height: 8px; border-radius: 50%; background: var(--sun); }
+  .ab-who h1 { margin: 10px 0 0; font-size: 66px; font-weight: 300; line-height: 1; letter-spacing: 0.06em; }
   .ab-bio { max-width: 40em; margin: 48px 0 0; font-size: 19px; line-height: 2.05; }
 
   /* — sections: a red dot and the name in the left column, the content on the right — */
@@ -200,7 +197,6 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
     .ab-hero { gap: 34px; padding-top: 12px; justify-content: center; text-align: center; }
     .ab-gate { width: 180px; height: 180px; }
     .ab-who h1 { font-size: 44px; }
-    .ab-tag { justify-content: center; }
     .ab-bio { font-size: 17px; line-height: 1.95; }
     .ab-list li { grid-template-columns: 48px minmax(0, 1fr); gap: 12px; }
     .ab-y { font-size: 22px; }
