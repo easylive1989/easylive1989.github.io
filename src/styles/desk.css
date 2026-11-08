@@ -150,15 +150,6 @@ html {
 }
 .ink-land .w-rain .w-storm { display: none; }
 .ink-land .w-flash { position: absolute; inset: 0; background: #fbfaf7; opacity: 0; animation: ink-flash 7s linear infinite; }
-.ink-land .w-label {
-  position: absolute;
-  right: 3%;
-  top: 84px;
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  color: var(--muted);
-}
 
 html[data-weather="cloudy"] .ink-land .w-sun { opacity: 0.62; }
 html[data-weather="cloudy"] .ink-land .w-birds,
@@ -402,7 +393,6 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
   /* the landscape smaller and under the masthead, so the whole scene, sun and all, fits above the page's words instead of behind them */
   .ink-land { top: 96px; height: 220px; }
   .ink-land .l-mist { height: 60px; }
-  .ink-land .w-label { top: 6px; }
   .desk-top { right: 16px; bottom: 16px; }
 }
 

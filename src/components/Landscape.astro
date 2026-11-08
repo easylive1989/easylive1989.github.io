@@ -100,10 +100,9 @@ const rain = Array.from({ length: 58 }, (_, i) => ({
     </g>
   </svg>
   <i class="l-mist"></i>
-  <!-- the weather over the whole scene: night's wash, fog drifting, ink rain, a lightning flash, and a line saying what it is -->
+  <!-- the weather over the whole scene: night's wash, fog drifting, ink rain, a lightning flash -->
   <i class="w-night"></i>
   <div class="w-fog"><i></i><i></i><i></i></div>
   <div class="w-rain">{rain.map((r) => <i class:list={{ 'w-storm': r.storm }} style={r.style}></i>)}</div>
   <i class="w-flash"></i>
-  <p class="w-label"></p>
 </div>
