@@ -36,7 +36,6 @@ interface Row {
 
 interface YearGroup {
   year: number;
-  count: number;
   items: Row[];
 }
 
@@ -54,7 +53,7 @@ for (const r of rows) {
 }
 const yearGroups: YearGroup[] = Array.from(byYear.entries())
   .sort((a, b) => b[0] - a[0])
-  .map(([year, items]) => ({ year, count: items.length, items }));
+  .map(([year, items]) => ({ year, items }));
 
 const years = Array.from(byYear.keys());
 const oldestYear = years.length ? Math.min(...years) : new Date().getFullYear();
@@ -137,7 +136,6 @@ if (notes.length) chipData.push({ name: NOTE_CAT, count: notes.length, color: ca
       <div class="year-block" data-year={g.year}>
         <div class="year-side">
           <div class="yr-n num">{g.year}</div>
-          <div class="yr-l num" data-total={g.count}>{g.count} 篇</div>
         </div>
         <div class="rows">
           {g.items.map((r) => {
@@ -198,11 +196,6 @@ if (notes.length) chipData.push({ name: NOTE_CAT, count: notes.length, color: ca
           if (show) visibleInSection++;
         }
         sec.hidden = visibleInSection === 0;
-        var yl = sec.querySelector('.yr-l');
-        if (yl) {
-          var t = parseInt(yl.getAttribute('data-total') || '0', 10);
-          yl.textContent = visibleInSection === t ? t + ' 篇' : visibleInSection + ' / ' + t + ' 篇';
-        }
         if (visibleInSection > 0) anyVisible = true;
       }
       if (emptyEl) emptyEl.hidden = anyVisible;

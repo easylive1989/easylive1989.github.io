@@ -155,7 +155,6 @@
 .archive-sheet .year-block[hidden] { display: none; }
 .archive-sheet .year-side { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
 .archive-sheet .yr-n { font-size: 44px; font-weight: 300; line-height: 1; letter-spacing: 0.04em; }
-.archive-sheet .yr-l { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.16em; color: var(--muted); }
 
 .archive-sheet .rows { min-width: 0; }
 .archive-sheet .archive-row {

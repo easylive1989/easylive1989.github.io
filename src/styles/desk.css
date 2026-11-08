@@ -207,14 +207,15 @@ html[data-weather="night"] .ink-land .w-night { display: block; }
 .blog-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 34px;
+  line-height: 1.2;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
-.blog-brand i { flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--sun); }
+.blog-brand i { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--sun); }
 .blog-brand:hover { color: var(--ink); }
 /* the tabs: a segmented pill, every segment the same width and height, the lit one an ink stone inset in it */
 .blog-tabs {
@@ -407,7 +408,8 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
 /* a phone: the name and the feed on one line, the tabs on the next */
 @media (max-width: 640px) {
   .blog-head { padding: 16px 16px 0; gap: 10px; }
-  .blog-brand { margin-right: auto; font-size: 22px; letter-spacing: 0.08em; }
+  .blog-brand { margin-right: auto; gap: 12px; font-size: 28px; letter-spacing: 0.08em; }
+  .blog-brand i { width: 18px; height: 18px; }
   .blog-tabs { order: 3; flex: 1 1 100%; margin-left: 0; }
   .blog-tabs a { padding: 0 8px; }
   .desk-main { padding: 28px 16px 0; }
