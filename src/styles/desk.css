@@ -14,7 +14,12 @@
   --brass-dark: #6e5228;
   --brass-ink: #2a1d0e;
 
+  /* Three voices. Display: a brush-written 楷 for the blog's name alone, the ink study's own hand (a seal, not a typeface for every heading).
+     Reading: 宋 for the words, as before (its own Latin sits better beside the Chinese than Source Serif 4's larger one).
+     UI: a quiet 黑 for the chrome (tabs, chips, dates, counts), so it steps back from the words. */
+  --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "DFKai-SB", "Noto Serif TC", serif;
   --font-reading: "Noto Serif TC", "Source Serif 4", "Songti TC", "PMingLiU", serif;
+  --font-ui: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
 }
 
 /* — the ink study's palette, in Broadsheet's names — */
@@ -204,33 +209,47 @@ html[data-weather="night"] .ink-land .w-night { display: block; }
   align-items: center;
   gap: 12px;
   color: var(--ink);
+  font-family: var(--font-display);
   font-size: 26px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
 }
-.blog-brand i { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--sun); }
+.blog-brand i { flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--sun); }
 .blog-brand:hover { color: var(--ink); }
+/* the tabs: a segmented pill, every segment the same width and height, the lit one an ink stone inset in it */
 .blog-tabs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
   margin-left: auto;
-  padding: 0 4px;
-  border: 1px solid rgba(44, 43, 40, 0.2);
-  border-radius: 24px;
-  background: rgba(250, 249, 246, 0.7);
+  padding: 3px;
+  border: 1px solid rgba(44, 43, 40, 0.16);
+  border-radius: 999px;
+  background: rgba(250, 249, 246, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 .blog-tabs a {
   display: flex;
   align-items: center;
-  height: 44px;
-  padding: 0 16px;
-  font-size: 16px;
+  justify-content: center;
+  height: 36px;
+  padding: 0 20px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  /* letter-spacing trails the last character; indent by the same so the label sits in the true middle */
+  text-indent: 0.16em;
+  white-space: nowrap;
   color: var(--stone);
-  border-radius: 22px;
+  border-radius: 999px;
+  transition: background-color 0.2s, color 0.2s;
 }
-.blog-tabs a:hover { color: var(--ink); }
-.blog-tabs a.on { height: 38px; padding: 0 16px; color: var(--plaster); background: var(--ink); border-radius: 19px; }
+.blog-tabs a:hover { color: var(--ink); background: rgba(44, 43, 40, 0.05); }
+.blog-tabs a.on,
+.blog-tabs a.on:hover { font-weight: 500; color: var(--plaster); background: var(--ink); }
 .blog-rss {
   display: grid;
   place-items: center;
@@ -299,9 +318,10 @@ html[data-weather="night"] .ink-land .w-night { display: block; }
   min-height: 44px;
   padding: 0 20px;
   border-radius: 22px;
-  font-family: var(--font-reading);
+  font-family: var(--font-ui);
   font-weight: 400;
-  font-size: 15px;
+  font-size: 14px;
+  letter-spacing: 0.06em;
   text-decoration: none;
 }
 .desk-body .btn-primary { background: var(--ink); color: var(--plaster); }
@@ -387,8 +407,9 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
 /* a phone: the name and the feed on one line, the tabs on the next */
 @media (max-width: 640px) {
   .blog-head { padding: 16px 16px 0; gap: 10px; }
-  .blog-brand { margin-right: auto; font-size: 20px; letter-spacing: 0.04em; }
-  .blog-tabs { order: 3; flex: 1 1 100%; margin-left: 0; justify-content: space-between; }
+  .blog-brand { margin-right: auto; font-size: 22px; letter-spacing: 0.08em; }
+  .blog-tabs { order: 3; flex: 1 1 100%; margin-left: 0; }
+  .blog-tabs a { padding: 0 8px; }
   .desk-main { padding: 28px 16px 0; }
   /* the landscape smaller and under the masthead, so the whole scene, sun and all, fits above the page's words instead of behind them */
   .ink-land { top: 96px; height: 220px; }

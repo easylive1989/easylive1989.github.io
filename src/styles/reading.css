@@ -58,7 +58,9 @@ html[data-arrive="door-open"] .shelf-room { animation: shelf-rise 1s cubic-bezie
   height: 44px;
   padding: 0 18px;
   font: inherit;
-  font-size: 15px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  letter-spacing: 0.08em;
   color: var(--chalk);
   background: transparent;
   border: 1px solid rgba(236, 235, 230, 0.45);
@@ -71,7 +73,9 @@ html[data-arrive="door-open"] .shelf-room { animation: shelf-rise 1s cubic-bezie
   height: 38px;
   padding: 0 14px;
   font: inherit;
-  font-size: 14px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.08em;
   color: var(--chalk);
   background: transparent;
   border: 0;
@@ -101,7 +105,9 @@ html[data-arrive="door-open"] .shelf-room { animation: shelf-rise 1s cubic-bezie
   height: 40px;
   padding: 0 14px;
   font: inherit;
-  font-size: 14px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.08em;
   color: var(--chalk);
   background: transparent;
   border: 1px solid rgba(236, 235, 230, 0.3);
@@ -142,7 +148,7 @@ html[data-arrive="door-open"] .shelf-room { animation: shelf-rise 1s cubic-bezie
   border-radius: 22px;
 }
 .shelf-bar .search svg { flex: none; }
-.shelf-bar .search input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; font-size: 15px; color: var(--chalk); outline: none; }
+.shelf-bar .search input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; font-family: var(--font-ui); font-size: 14px; color: var(--chalk); outline: none; }
 .shelf-bar .search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
 .shelf-bar .search-x {
   flex: none;

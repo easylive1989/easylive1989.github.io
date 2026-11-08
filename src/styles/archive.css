@@ -16,9 +16,9 @@
 
 /* — a category page's heading — */
 .archive-sheet .arc-scope { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; margin-bottom: 24px; }
-.archive-sheet .arc-back { flex-basis: 100%; font-size: 14px; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; }
+.archive-sheet .arc-back { flex-basis: 100%; font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; }
 .archive-sheet .arc-scope h1 { margin: 0; font-size: 44px; font-weight: 300; line-height: 1.2; letter-spacing: 0.12em; }
-.archive-sheet .arc-scope-n { margin: 0; font-size: 14px; letter-spacing: 0.14em; color: var(--muted); }
+.archive-sheet .arc-scope-n { margin: 0; font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.14em; color: var(--muted); }
 
 /* — 每季落筆: the heatmap on a pale card over the landscape — */
 .archive-sheet .arc-heat {
@@ -30,7 +30,7 @@
   background: rgba(250, 249, 246, 0.84);
   border: 1px solid rgba(44, 43, 40, 0.12);
 }
-.archive-sheet .arc-heat figcaption { margin-bottom: 10px; font-size: 13px; letter-spacing: 0.14em; color: var(--muted); }
+.archive-sheet .arc-heat figcaption { margin-bottom: 10px; font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.14em; color: var(--muted); }
 
 /* — filter bar — */
 .archive-sheet .filter-bar {
@@ -59,20 +59,22 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 44px;
+  height: 40px;
   padding: 0 16px;
   font: inherit;
-  font-size: 14px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.08em;
   color: var(--ink);
   background: rgba(250, 249, 246, 0.7);
   border: 1px solid rgba(44, 43, 40, 0.22);
-  border-radius: 22px;
+  border-radius: 20px;
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s, border-color 0.15s;
 }
 .archive-sheet .chip:hover { border-color: rgba(44, 43, 40, 0.45); }
 .archive-sheet .chip.is-on { color: var(--plaster); background: var(--ink); border-color: var(--ink); }
-.archive-sheet .chip .ct { font-size: 12px; opacity: 0.65; }
+.archive-sheet .chip .ct { font-size: 12px; letter-spacing: 0; opacity: 0.6; font-variant-numeric: tabular-nums; }
 .archive-sheet .chip .dot,
 .archive-sheet .row-cat .dot {
   flex: none;
@@ -88,8 +90,8 @@
   flex: none;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   color: var(--stone);
   background: rgba(250, 249, 246, 0.7);
@@ -121,7 +123,8 @@
   border: 0;
   background: none;
   font: inherit;
-  font-size: 15px;
+  font-family: var(--font-ui);
+  font-size: 14px;
   color: var(--ink);
   outline: none;
 }
@@ -152,7 +155,7 @@
 .archive-sheet .year-block[hidden] { display: none; }
 .archive-sheet .year-side { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
 .archive-sheet .yr-n { font-size: 44px; font-weight: 300; line-height: 1; letter-spacing: 0.04em; }
-.archive-sheet .yr-l { font-size: 12px; letter-spacing: 0.16em; color: var(--muted); }
+.archive-sheet .yr-l { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.16em; color: var(--muted); }
 
 .archive-sheet .rows { min-width: 0; }
 .archive-sheet .archive-row {
@@ -167,7 +170,7 @@
 }
 .archive-sheet .archive-row:last-child { border-bottom: 0; }
 .archive-sheet .archive-row[hidden] { display: none; }
-.archive-sheet .row-date { font-size: 13px; color: var(--muted); }
+.archive-sheet .row-date { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.04em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .archive-sheet .row-title {
   font-size: 18px;
   font-weight: 600;
@@ -180,11 +183,13 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  font-size: 13px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.06em;
   color: var(--stone);
 }
 .archive-sheet .row-cat-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.archive-sheet .row-min { font-size: 13px; text-align: right; color: var(--muted); white-space: nowrap; }
+.archive-sheet .row-min { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.04em; text-align: right; color: var(--muted); white-space: nowrap; }
 .archive-sheet a.archive-row:hover .row-title,
 .archive-sheet a.archive-row:focus-visible .row-title { color: var(--sun); }
 /* a 碎碎念 with nothing written under its title has no page to go to */
