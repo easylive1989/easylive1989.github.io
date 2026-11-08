@@ -217,6 +217,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
 
   .art-masthead { margin-bottom: 44px; }
   .art-kicker {
+    font-family: var(--font-ui);
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
@@ -233,16 +234,17 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
 
   .art-title {
     max-width: 22em;
-    font-family: var(--font-reading);
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-weight: 700;
     font-size: 44px;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
     text-wrap: balance;
     overflow-wrap: break-word;
   }
 
   .byline {
+    font-family: var(--font-ui);
     display: flex;
     align-items: center;
     gap: var(--space-2);
