@@ -24,6 +24,12 @@ export interface SiteConfig {
     url: string;
   };
   author: Author;
+  /** where the posts, 碎碎念 and books come from: Think Space (its public articles and books), or Notion as before */
+  source?: 'think' | 'notion';
+  think?: {
+    /** overridden by THINK_BASE_URL */
+    baseUrl: string;
+  };
   notion: {
     databaseId: string;
     booksDatabaseId?: string;

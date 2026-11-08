@@ -1,10 +1,9 @@
 ---
 import DeskLayout from '../../layouts/DeskLayout.astro';
-import NotionRenderer from '../../components/notion/NotionRenderer.astro';
+import Body from '../../components/Body.astro';
 import '../../styles/prose.css';
-import { getAllBooks, getBookNotes, getBookNoteBlocks } from '../../lib/data';
+import { getAllBooks, getBookNotes, getBookNoteContent } from '../../lib/data';
 import { bookStatus } from '../../lib/bookCover';
-import { excerptOf } from '../../lib/excerpt';
 
 // The notes kept in a finished book, as a page of their own: where the bookshelf's
 // 「看讀書筆記」 leads, and where a search engine, a feed reader or a shared link lands.
@@ -16,9 +15,9 @@ export async function getStaticPaths() {
 }
 
 const { book } = Astro.props;
-const blocks = await getBookNoteBlocks(book.id);
+const content = await getBookNoteContent(book.id);
 const cats = book.categories.filter(Boolean);
-const excerpt = excerptOf(blocks, 90);
+const excerpt = content.excerpt(90);
 const description = excerpt ? `讀完《${book.title}》的筆記：${excerpt}` : `讀完《${book.title}》留下的筆記。`;
 const BASE = import.meta.env.BASE_URL;
 
@@ -51,7 +50,7 @@ function fmtDate(iso: string): string {
     </header>
 
     <div class="prose">
-      <NotionRenderer blocks={blocks} />
+      <Body content={content} />
     </div>
 
     <footer class="note-end">

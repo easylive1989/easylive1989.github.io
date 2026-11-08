@@ -41,3 +41,10 @@ public/assets/notion/
 
 # what this checkout last sent to Claude Design (see .claude/skills/sync-claude-design)
 .claude/skills/sync-claude-design/last-sync.json
+
+# the Notion → Think Space migration's id map and dry-run preview (scripts/migrate-to-think.mjs)
+scripts/.think-migration.json
+scripts/.think-migration-preview/
+
+# Think Space pictures and videos, downloaded at build time (cached in CI)
+public/assets/think/

@@ -1,0 +1,9 @@
+---
+// A page's text: drawn from Think Space's markdown, or from Notion's blocks as before.
+import NotionRenderer from './notion/NotionRenderer.astro';
+import type { Content } from '../lib/data';
+
+interface Props { content: Content }
+const { content } = Astro.props;
+---
+{content.html !== undefined ? <Fragment set:html={content.html} /> : <NotionRenderer blocks={content.blocks ?? []} />}

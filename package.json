@@ -7,13 +7,16 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check:nav": "node scripts/check-blog-nav.mjs"
+    "check:nav": "node scripts/check-blog-nav.mjs",
+    "test": "node --test scripts/*.test.mjs",
+    "migrate:think": "node scripts/migrate-to-think.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.17",
     "@notionhq/client": "^2.3.0",
     "astro": "^5.17.2",
     "dotenv": "^17.3.1",
+    "marked": "18.1.1",
     "sharp": "^0.34.5",
     "yaml": "^2.8.2"
   },

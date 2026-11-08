@@ -1,6 +1,6 @@
 ---
 import DeskLayout from '../../layouts/DeskLayout.astro';
-import NotionRenderer from '../../components/notion/NotionRenderer.astro';
+import Body from '../../components/Body.astro';
 import '../../styles/prose.css';
 import { loadConfig } from '../../lib/config';
 import {
@@ -9,8 +9,6 @@ import {
   getArticlesByCategory,
 } from '../../lib/data';
 import { categorySlug } from '../../lib/category';
-import { computeMeta } from '../../lib/articleMeta';
-import { excerptOf, firstImageOf } from '../../lib/excerpt';
 
 export async function getStaticPaths() {
   const paths = await getAllArticlesForStaticPaths();
@@ -26,7 +24,7 @@ if (!data) {
   return Astro.redirect('/404');
 }
 
-const { article, blocks, categoryName } = data;
+const { article, content, categoryName } = data;
 const catSlug = categorySlug(article.category);
 
 const allArticles = await getArticlesByCategory(catSlug);
@@ -34,10 +32,10 @@ const currentIndex = allArticles.findIndex((a) => a.id === slug);
 const prevArticle = currentIndex < allArticles.length - 1 ? allArticles[currentIndex + 1] : null;
 const nextArticle = currentIndex > 0 ? allArticles[currentIndex - 1] : null;
 
-const meta = computeMeta(blocks);
+const meta = content.meta;
 // what the page says about itself in search results and link previews: Notion's summary, or the opening of the article
-const description = article.summary || excerptOf(blocks) || undefined;
-const ogImage = firstImageOf(blocks) ?? undefined;
+const description = article.summary || content.excerpt() || undefined;
+const ogImage = content.firstImage ?? undefined;
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -96,7 +94,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
 
       <div class="art-main">
         <div class="prose" id="article-prose">
-          <NotionRenderer blocks={blocks} />
+          <Body content={content} />
         </div>
 
         <div class="end-block">

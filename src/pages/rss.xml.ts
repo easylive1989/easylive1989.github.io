@@ -1,8 +1,7 @@
 import rss from '@astrojs/rss';
-import { getAllArticles, getArticle, getAllNotes, getNoteBodies } from '../lib/data';
+import { getAllArticles, getArticle, getAllNotes, getNoteBodies, getNoteContent } from '../lib/data';
 import { loadConfig } from '../lib/config';
 import { categorySlug } from '../lib/category';
-import { excerptOf } from '../lib/excerpt';
 import type { APIContext } from 'astro';
 
 // The feed: every article and every 碎碎念 with something written under its title, newest first, each with a few lines
@@ -14,25 +13,25 @@ export async function GET(context: APIContext) {
   const articleItems = await Promise.all(
     articles.map(async (article) => {
       const slug = categorySlug(article.category);
-      const blocks = article.summary ? [] : ((await getArticle(slug, article.id))?.blocks ?? []);
+      const excerpt = article.summary ? '' : ((await getArticle(slug, article.id))?.content.excerpt(160) ?? '');
       return {
         title: article.title,
         pubDate: new Date(article.createdTime),
         link: `/${slug}/${article.id}/`,
-        description: article.summary || excerptOf(blocks, 160) || undefined,
+        description: article.summary || excerpt || undefined,
         categories: [article.category],
       };
     }),
   );
-  const noteItems = notes
+  const noteItems = await Promise.all(notes
     .filter((n) => bodies.has(n.id))
-    .map((note) => ({
+    .map(async (note) => ({
       title: note.title,
       pubDate: new Date(note.createdTime),
       link: `/notes/${note.id}/`,
-      description: excerptOf(bodies.get(note.id)!, 160) || undefined,
+      description: (await getNoteContent(note.id)).excerpt(160) || undefined,
       categories: ['碎碎念'],
-    }));
+    })));
 
   return rss({
     title: config.site.title,

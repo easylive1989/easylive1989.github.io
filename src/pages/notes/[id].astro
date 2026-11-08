@@ -1,9 +1,8 @@
 ---
 import DeskLayout from '../../layouts/DeskLayout.astro';
-import NotionRenderer from '../../components/notion/NotionRenderer.astro';
+import Body from '../../components/Body.astro';
 import '../../styles/prose.css';
-import { getAllNotes, getNoteBodies, getNoteBlocks } from '../../lib/data';
-import { excerptOf, firstImageOf } from '../../lib/excerpt';
+import { getAllNotes, getNoteBodies, getNoteContent } from '../../lib/data';
 
 // One of the 碎碎念, as a page of its own: where 所有文章 leads, and where a search engine or a shared link lands.
 export async function getStaticPaths() {
@@ -13,9 +12,9 @@ export async function getStaticPaths() {
 }
 
 const { note, newer, older } = Astro.props;
-const blocks = await getNoteBlocks(note.id);
-const description = excerptOf(blocks) || `碎碎念：${note.title}`;
-const ogImage = firstImageOf(blocks) ?? undefined;
+const content = await getNoteContent(note.id);
+const description = content.excerpt() || `碎碎念：${note.title}`;
+const ogImage = content.firstImage ?? undefined;
 const BASE = import.meta.env.BASE_URL;
 
 function fmtDate(iso: string): string {
@@ -44,7 +43,7 @@ function fmtDate(iso: string): string {
     </header>
 
     <div class="prose">
-      <NotionRenderer blocks={blocks} />
+      <Body content={content} />
     </div>
 
     {(older || newer) && (
