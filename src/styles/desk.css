@@ -86,8 +86,10 @@ html {
 
 .desk-body ::selection { background: rgba(200, 64, 47, 0.2); }
 .desk-body :focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
-.desk-body a { color: var(--ink); }
-.desk-body a:hover { color: var(--sun); }
+/* the default for a plain link, at no specificity at all, so any link with a style of its own (a dark button's light words, say)
+   keeps it */
+:where(.desk-body a) { color: var(--ink); }
+:where(.desk-body a:hover) { color: var(--sun); }
 
 /* — the ink landscape (Landscape.astro): four layers, the camera far back, or pushed in on the about page — */
 .ink-land {
