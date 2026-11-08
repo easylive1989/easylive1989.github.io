@@ -23,18 +23,16 @@ html:has(body.shelf-body) { background: #22211f; }
 }
 .shelf-room > * { max-width: 1180px; margin-left: auto; margin-right: auto; }
 
-/* arriving through the door: the shelf rises out of the dark and comes into focus */
-html[data-arrive="door-open"] .shelf-room { animation: shelf-rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-@keyframes shelf-rise {
-  from { opacity: 0; transform: scale(0.9) translateY(40px); filter: blur(8px) brightness(0.6); }
-  to { opacity: 1; transform: none; filter: none; }
+/* arriving through the door: the shelf fades in out of the dark */
+html[data-arrive="door-open"] .shelf-room { animation: shelf-fade 0.8s ease both; }
+@keyframes shelf-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-/* leaving: it sinks back before the door closes */
+/* leaving: it fades back into the dark before the door closes */
 .shelf-room.is-leaving {
   opacity: 0;
-  transform: scale(0.94) translateY(30px);
-  filter: blur(6px) brightness(0.6);
-  transition: opacity 0.45s ease, transform 0.45s ease, filter 0.45s ease;
+  transition: opacity 0.45s ease;
 }
 
 .shelf-room :focus-visible { outline: 2px solid #d8604c; outline-offset: 2px; }
