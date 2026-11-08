@@ -15,9 +15,16 @@ const { category } = Astro.params;
 const { categoryName } = Astro.props;
 const categories = await getAllCategories();
 const articles = await getArticlesByCategory(category!);
+// newest first; the description names how many there are, the years they span and the latest one
+const sorted = [...articles].sort((a, b) => b.createdTime.localeCompare(a.createdTime));
+const years = sorted.map((a) => new Date(a.createdTime).getFullYear());
+const span = years.length ? (Math.min(...years) === Math.max(...years) ? `${years[0]} 年` : `${Math.min(...years)} 到 ${Math.max(...years)} 年`) : '';
+const description = sorted.length
+  ? `保羅的學習筆記「${categoryName}」系列，${span}共 ${sorted.length} 篇文章。最新一篇：〈${sorted[0].title}〉。`
+  : undefined;
 ---
 
-<DeskLayout title={categoryName} width="reading" tab="archive">
+<DeskLayout title={categoryName} description={description} width="reading" tab="archive">
   <ArchiveView
     articles={articles}
     allCategories={categories}

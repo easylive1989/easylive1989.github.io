@@ -12,6 +12,8 @@ interface Props {
   title?: string;
   description?: string;
   ogImage?: string;
+  /** An article's dates and category, for link previews (SiteHead). */
+  article?: { published: string; modified?: string; section?: string };
   /** The tab this page sits under, lit in the masthead. */
   tab: Tab;
   /** `wide` gives shelf-style pages more room than a reading column. */
@@ -28,13 +30,13 @@ const TABS: [Tab, string, string][] = [
   ['reading', '書架', `${BASE}reading/`],
   ['about', '關於我', `${BASE}about/`],
 ];
-const { title, description, ogImage, tab, width = 'reading', bodyClass, landscape = 'far' } = Astro.props;
+const { title, description, ogImage, article, tab, width = 'reading', bodyClass, landscape = 'far' } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="zh-TW">
   <head>
-    <SiteHead title={title} siteTitle={BLOG} description={description} ogImage={ogImage} />
+    <SiteHead title={title} siteTitle={BLOG} description={description} ogImage={ogImage} article={article} />
     <!-- the ink study's light and heavy weights, on top of the 400–700 SiteHead loads for the room -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;900&display=swap" />
     <!-- Arriving through one of the blog's transitions (deskFx.js): the page that started it left a note saying which,

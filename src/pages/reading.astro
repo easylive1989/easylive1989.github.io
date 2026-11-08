@@ -118,6 +118,8 @@ for (const b of allBooks) for (const c of b.categories) if (c) counts.set(c, (co
 const cats = Array.from(counts.entries())
   .sort((a, b) => categoryRank(a[0]) - categoryRank(b[0]) || b[1] - a[1])
   .map(([name, count]) => ({ name, count, glow: GLOW[name] ?? '#b7b4ac' }));
+const notedCount = onShelf.filter((b) => bookStatus(b) === 'read' && noted.has(b.id)).length;
+const description = `保羅讀過的 ${onShelf.length} 本書和想讀的 ${wish.length} 本，依讀完的年份排在書架上，按類型分成${cats.map((c) => c.name).join('、')}${notedCount ? `；其中 ${notedCount} 本留有讀書筆記` : ''}。`;
 const views: [string, string, number][] = [
   ['all', '全部', allBooks.length],
   ['read', '已讀', onShelf.length],
@@ -125,7 +127,7 @@ const views: [string, string, number][] = [
 ];
 ---
 
-<DeskLayout title="書架" width="wide" tab="reading" bodyClass="shelf-body">
+<DeskLayout title="書架" description={description} width="wide" tab="reading" bodyClass="shelf-body">
   <section class="shelf-room" aria-labelledby="shelf-h">
     <h1 id="shelf-h" class="sr-only">書架</h1>
 

@@ -7,8 +7,9 @@ const articles = await getAllArticles();
 const categories = await getAllCategories();
 const notes = await getAllNotes();
 const bodies = await getNoteBodies();
+const description = `保羅的學習筆記全部 ${articles.length + notes.length} 篇文章，依年份排列：${categories.map((c) => c.name).join('、')}${notes.length ? '，還有一些碎碎念' : ''}。可以依分類篩選、搜尋標題。`;
 ---
 
-<DeskLayout title="所有文章" width="reading" tab="archive">
+<DeskLayout title="所有文章" description={description} width="reading" tab="archive">
   <ArchiveView articles={articles} allCategories={categories} notes={notes.map((n) => ({ ...n, hasBody: bodies.has(n.id) }))} />
 </DeskLayout>

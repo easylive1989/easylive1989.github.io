@@ -10,6 +10,7 @@ import {
 } from '../../lib/data';
 import { categorySlug } from '../../lib/category';
 import { computeMeta } from '../../lib/articleMeta';
+import { excerptOf, firstImageOf } from '../../lib/excerpt';
 
 export async function getStaticPaths() {
   const paths = await getAllArticlesForStaticPaths();
@@ -34,6 +35,9 @@ const prevArticle = currentIndex < allArticles.length - 1 ? allArticles[currentI
 const nextArticle = currentIndex > 0 ? allArticles[currentIndex - 1] : null;
 
 const meta = computeMeta(blocks);
+// what the page says about itself in search results and link previews: Notion's summary, or the opening of the article
+const description = article.summary || excerptOf(blocks) || undefined;
+const ogImage = firstImageOf(blocks) ?? undefined;
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -46,7 +50,14 @@ const articleUrl = (id: string) => `${BASE}${catSlug}/${id}/`;
 const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ?? '#';
 ---
 
-<DeskLayout title={article.title} description={article.summary || undefined} width="reading" tab="archive">
+<DeskLayout
+  title={article.title}
+  description={description}
+  ogImage={ogImage}
+  article={{ published: article.createdTime, modified: article.lastEditedTime, section: categoryName }}
+  width="reading"
+  tab="archive"
+>
   <div class="article-progress" aria-hidden="true"><div class="article-progress-fill" id="article-progress-fill"></div></div>
 
   <article class="paper art">
