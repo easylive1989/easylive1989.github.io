@@ -118,22 +118,22 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
   }
   .ab-sec h2 i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--sun); }
 
-  /* the book, on a stone tablet */
+  /* the book, on a sheet of rice paper */
   .ab-book {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 28px;
     padding: 28px;
-    color: var(--plaster);
-    background: var(--stone);
+    color: var(--ink);
+    background: var(--plaster-hi);
+    border: 1px solid rgba(44, 43, 40, 0.16);
     border-radius: 2px;
-    box-shadow: 0 6px 0 #3a3833;
   }
-  .ab-book img { flex: none; width: 140px; height: auto; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35); }
+  .ab-book img { flex: none; width: 140px; height: auto; box-shadow: 0 8px 20px rgba(44, 43, 40, 0.18); }
   .ab-book > div { flex: 1 1 260px; min-width: 0; }
-  .ab-book h3 { margin: 0 0 8px; font-size: 22px; font-weight: 600; line-height: 1.45; color: var(--plaster); }
-  .ab-by { margin: 0 0 14px; font-size: 14px; letter-spacing: 0.08em; color: #d6d3cb; }
+  .ab-book h3 { margin: 0 0 8px; font-size: 22px; font-weight: 600; line-height: 1.45; color: var(--ink); }
+  .ab-by { margin: 0 0 14px; font-size: 14px; letter-spacing: 0.08em; color: var(--muted); }
   .ab-blurb { margin: 0 0 20px; font-size: 16px; line-height: 1.85; }
   .ab-buy {
     display: inline-flex;
@@ -141,12 +141,12 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
     height: 44px;
     padding: 0 20px;
     font-size: 15px;
-    color: var(--ink);
-    background: var(--plaster);
+    color: var(--plaster);
+    background: var(--ink);
     border-radius: 22px;
     text-decoration: none;
   }
-  .ab-buy:hover { color: var(--sun); }
+  .ab-buy:hover { color: var(--plaster); background: var(--sun); }
 
   /* the Ironman runs and the talks */
   .ab-list { list-style: none; margin: 0; padding: 0; }
