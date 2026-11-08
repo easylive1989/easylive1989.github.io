@@ -67,17 +67,11 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
         <a class="card-kicker" href={`${BASE}${catSlug}/`}>{categoryName}</a>
         <span class="art-dot" aria-hidden="true">·</span>
         <time class="num" datetime={article.createdTime}>{fmtDate(article.createdTime)}</time>
-        <span class="art-dot" aria-hidden="true">·</span>
-        <span class="num">{meta.readMinutes} min read</span>
-        <span class="art-dot" aria-hidden="true">·</span>
-        <span class="num">{meta.chars.toLocaleString()} 字</span>
       </div>
       <h1 class="art-title">{article.title}</h1>
       <div class="byline">
         <img class="byline-avatar" src={`${BASE}${config.author.avatar}`} alt="" width="32" height="32" />
         <span class="byline-name">{config.author.name}</span>
-        <span class="art-dot" aria-hidden="true">·</span>
-        <span class="byline-place">Taichung</span>
       </div>
     </header>
 
@@ -267,7 +261,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
   /* — two columns: contents on the left, prose on the right — */
   .art-body {
     display: grid;
-    grid-template-columns: 200px minmax(0, 660px);
+    grid-template-columns: minmax(220px, 320px) minmax(0, 660px);
     gap: 44px;
     align-items: start;
   }
@@ -281,8 +275,8 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
     scrollbar-width: thin;
   }
   .toc-label {
-    margin-bottom: var(--space-2);
-    font-size: 11px;
+    margin-bottom: var(--space-3);
+    font-size: 22px;
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -296,10 +290,10 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
   .toc-link {
     display: block;
     margin-left: -1px;
-    padding: 5px 0 5px 14px;
+    padding: 8px 0 8px 18px;
     border-left: 2px solid transparent;
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 26px;
+    line-height: 1.4;
     color: var(--color-neutral-700);
     text-decoration: none;
     overflow-wrap: break-word;
@@ -311,8 +305,8 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
     color: var(--color-accent-700);
     border-left-color: var(--color-accent);
   }
-  .toc-link-h3 { padding-left: 26px; font-size: 12.5px; }
-  .toc-link-h4 { padding-left: 38px; font-size: 12.5px; }
+  .toc-link-h3 { padding-left: 42px; font-size: 25px; }
+  .toc-link-h4 { padding-left: 66px; font-size: 25px; }
 
   /* — end of the article — */
   .end-block { max-width: 660px; margin-top: 3.4em; text-align: center; }
