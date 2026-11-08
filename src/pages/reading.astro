@@ -6,7 +6,7 @@ import { bookStatus, bookFinishedYear, categoryRank } from '../lib/bookCover';
 import type { Book } from '../lib/notion';
 
 // The bookshelf: the dark room behind the secret door (DeskLayout's deskFx.js opens it from any blog page). One shelf per
-// year, newest on top, spines coloured by category; the books still to read lie in stacks on the bottom shelf. Pass over a
+// year, newest on top, spines coloured by category; the books not yet started stay off the shelf. Pass over a
 // spine and it lifts with a card; click it and it comes off the shelf and turns to its cover.
 const allBooks = await getAllBooks();
 const noted = await getBookNotes(); // the finished books with notes in them get a page of their own (reading/[id].astro)
@@ -51,7 +51,7 @@ interface Spine {
   style: string;
 }
 
-function spine(b: Book, flat: boolean): Spine {
+function spine(b: Book): Spine {
   const k = hash(b.title);
   const cats = b.categories.filter(Boolean);
   const tones = KIND[cats[0]] ?? OTHER;
@@ -59,14 +59,12 @@ function spine(b: Book, flat: boolean): Spine {
   const status = bookStatus(b);
   const notes = status === 'read' && noted.has(b.id) ? `${BASE}reading/${b.id}/` : '';
   const meta =
-    (status === 'reading' ? '閱讀中' : status === 'unstarted' ? '想讀' : b.finishedDate ? `${fmtMonth(b.finishedDate)} 讀完` : '已讀') +
+    (status === 'reading' ? '閱讀中' : b.finishedDate ? `${fmtMonth(b.finishedDate)} 讀完` : '已讀') +
     (notes ? '・有讀書筆記' : '');
-  const size = flat
-    ? `width:${130 + (k % 56)}px;height:${22 + (k % 9)}px;margin-left:${((k >> 4) % 17) - 8}px`
-    : `height:${118 + (k % 46)}px;width:${30 + ((k >> 3) % 13)}px`;
+  const size = `height:${118 + (k % 46)}px;width:${30 + ((k >> 3) % 13)}px`;
   return {
     title: b.title,
-    short: shortTitle(b.title, flat ? 14 : 10),
+    short: shortTitle(b.title, 10),
     cats,
     meta,
     notes,
@@ -81,7 +79,6 @@ function spine(b: Book, flat: boolean): Spine {
 // Newest first; a book still being read counts as the newest of its year.
 const finishedKey = (b: Book) => b.finishedDate ?? '9999';
 const onShelf = allBooks.filter((b) => bookStatus(b) !== 'unstarted');
-const wish = allBooks.filter((b) => bookStatus(b) === 'unstarted').sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant'));
 const byYear = new Map<number, Book[]>();
 for (const b of onShelf) {
   const y = bookFinishedYear(b) ?? new Date().getFullYear();
@@ -92,58 +89,38 @@ for (const b of onShelf) {
 interface Shelf {
   id: string;
   label: string;
-  flat: boolean;
   books: Spine[];
-  stacks: Spine[][];
 }
 const shelves: Shelf[] = Array.from(byYear.entries())
   .sort((a, b) => b[0] - a[0])
   .map(([year, books]) => ({
     id: String(year),
     label: String(year),
-    flat: false,
-    books: books.sort((a, b) => finishedKey(b).localeCompare(finishedKey(a))).map((b) => spine(b, false)),
-    stacks: [],
+    books: books.sort((a, b) => finishedKey(b).localeCompare(finishedKey(a))).map((b) => spine(b)),
   }));
-if (wish.length) {
-  const books = wish.map((b) => spine(b, true));
-  const stacks: Spine[][] = [];
-  for (let i = 0; i < books.length; i += 6) stacks.push(books.slice(i, i + 6));
-  shelves.push({ id: 'wish', label: '想讀', flat: true, books, stacks });
-}
 
 // The category chips, in the shelving order of the categories; a book counts in every category it is tagged with.
 const counts = new Map<string, number>();
-for (const b of allBooks) for (const c of b.categories) if (c) counts.set(c, (counts.get(c) ?? 0) + 1);
+for (const b of onShelf) for (const c of b.categories) if (c) counts.set(c, (counts.get(c) ?? 0) + 1);
 const cats = Array.from(counts.entries())
   .sort((a, b) => categoryRank(a[0]) - categoryRank(b[0]) || b[1] - a[1])
   .map(([name, count]) => ({ name, count, glow: GLOW[name] ?? '#b7b4ac' }));
 const notedCount = onShelf.filter((b) => bookStatus(b) === 'read' && noted.has(b.id)).length;
-const description = `保羅讀過的 ${onShelf.length} 本書和想讀的 ${wish.length} 本，依讀完的年份排在書架上，按類型分成${cats.map((c) => c.name).join('、')}${notedCount ? `；其中 ${notedCount} 本留有讀書筆記` : ''}。`;
-const views: [string, string, number][] = [
-  ['all', '全部', allBooks.length],
-  ['read', '已讀', onShelf.length],
-  ['wish', '想讀', wish.length],
-];
+const description = `保羅讀過的 ${onShelf.length} 本書，依讀完的年份排在書架上，按類型分成${cats.map((c) => c.name).join('、')}${notedCount ? `；其中 ${notedCount} 本留有讀書筆記` : ''}。`;
 ---
 
 <DeskLayout title="書架" description={description} width="wide" tab="reading" bodyClass="shelf-body">
   <section class="shelf-room" aria-labelledby="shelf-h">
     <h1 id="shelf-h" class="sr-only">書架</h1>
 
-    <!-- 闔上暗門, 全部／已讀／想讀, the categories and the search, in one row that stays at the top -->
+    <!-- 闔上暗門, the categories and the search, in one row that stays at the top -->
     <div class="shelf-bar">
       <button type="button" class="shelf-close" data-door-close>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
         闔上暗門
       </button>
-      <div class="shelf-views" id="shelf-views" role="group" aria-label="已讀或想讀">
-        {views.map(([id, label, n]) => (
-          <button type="button" data-view={id} aria-pressed={id === 'all' ? 'true' : 'false'}>{label} <span class="num">{n}</span></button>
-        ))}
-      </div>
       <div class="shelf-chips" id="shelf-chips" role="group" aria-label="分類">
-        <button class="chip is-on" type="button" data-cat="*" aria-pressed="true">所有分類 <span class="ct num">{allBooks.length}</span></button>
+        <button class="chip is-on" type="button" data-cat="*" aria-pressed="true">所有分類 <span class="ct num">{onShelf.length}</span></button>
         {cats.map((c) => (
           <button class="chip" type="button" data-cat={c.name} aria-pressed="false">
             <span class="dot" style={`--c:${c.glow}`}></span>{c.name}<span class="ct num">{c.count}</span>
@@ -162,33 +139,19 @@ const views: [string, string, number][] = [
       </div>
     </div>
 
-    <!-- The bookcase: a shelf a year, the books still to read lying in stacks at the bottom -->
+    <!-- The bookcase: a shelf a year -->
     <div class="case" id="shelf-case">
       {shelves.map((s) => (
-        <section class:list={['shelf', { 'is-flat': s.flat }]} data-shelf={s.id} aria-label={s.flat ? '想讀的書' : `${s.label} 年讀的書`}>
-          {s.flat ? (
-            <div class="row">
-              {s.stacks.map((stack) => (
-                <div class="stack">
-                  {stack.map((b) => (
-                    <button type="button" class="bk flat" style={b.style} data-title={b.title} data-cats={b.cats.join('|')} data-meta={b.meta} data-notes={b.notes} data-cover={b.cover} data-from={b.coverFrom} aria-label={b.aria}>
-                      <span class="bk-t">{b.short}</span>
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div class="row">
-              {s.books.map((b) => (
-                <button type="button" class="bk" style={b.style} data-title={b.title} data-cats={b.cats.join('|')} data-meta={b.meta} data-notes={b.notes} data-cover={b.cover} data-from={b.coverFrom} aria-label={b.aria}>
-                  <span class="bk-t">{b.short}</span>
-                  {b.notes && <i class="bk-slip" aria-hidden="true"></i>}
-                  {b.reading && <i class="bk-ribbon" aria-hidden="true"></i>}
-                </button>
-              ))}
-            </div>
-          )}
+        <section class="shelf" data-shelf={s.id} aria-label={`${s.label} 年讀的書`}>
+          <div class="row">
+            {s.books.map((b) => (
+              <button type="button" class="bk" style={b.style} data-title={b.title} data-cats={b.cats.join('|')} data-meta={b.meta} data-notes={b.notes} data-cover={b.cover} data-from={b.coverFrom} aria-label={b.aria}>
+                <span class="bk-t">{b.short}</span>
+                {b.notes && <i class="bk-slip" aria-hidden="true"></i>}
+                {b.reading && <i class="bk-ribbon" aria-hidden="true"></i>}
+              </button>
+            ))}
+          </div>
           <div class="plank" aria-hidden="true"></div>
           <p class="plate"><b>{s.label}</b><span class="plate-n num" data-total={s.books.length}>{s.books.length} 本</span></p>
         </section>
@@ -229,7 +192,6 @@ const views: [string, string, number][] = [
     if (!room) return;
     var shelves = Array.prototype.slice.call(room.querySelectorAll('.shelf'));
     var books = Array.prototype.slice.call(room.querySelectorAll('.bk'));
-    var viewsEl = document.getElementById('shelf-views');
     var chips = document.getElementById('shelf-chips');
     var find = document.getElementById('shelf-find');
     var box = document.getElementById('shelf-search');
@@ -237,16 +199,13 @@ const views: [string, string, number][] = [
     var clearBtn = document.getElementById('shelf-x');
     var tip = document.getElementById('shelf-tip');
     var dialog = document.getElementById('shelf-pick');
-    var view = 'all';
     var cat = '*';
     var kw = '';
 
-    // — filtering: the shelves a view leaves out are hidden; the books a category or a word leaves out sink back, dimmed —
+    // — filtering: the books a category or a word leaves out sink back, dimmed —
     function apply() {
       var filtering = cat !== '*' || !!kw;
       shelves.forEach(function (sh) {
-        var isWish = sh.getAttribute('data-shelf') === 'wish';
-        sh.hidden = (view === 'read' && isWish) || (view === 'wish' && !isWish);
         var bks = sh.querySelectorAll('.bk');
         var shown = 0;
         for (var i = 0; i < bks.length; i++) {
@@ -271,13 +230,6 @@ const views: [string, string, number][] = [
         all[i].classList.toggle('is-on', on);
       }
     }
-    if (viewsEl) viewsEl.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-view]');
-      if (!b) return;
-      view = b.getAttribute('data-view');
-      press(viewsEl, 'data-view', view);
-      apply();
-    });
     if (chips) chips.addEventListener('click', function (e) {
       var c = e.target.closest('[data-cat]');
       if (!c) return;
