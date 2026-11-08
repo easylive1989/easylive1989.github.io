@@ -1,7 +1,7 @@
 ---
 import DeskLayout from '../layouts/DeskLayout.astro';
 import { loadConfig } from '../lib/config';
-import { MY_BOOK, IRONMAN, TALKS, TAGLINE, channels } from '../lib/profile';
+import { MY_BOOK, IRONMAN, TALKS, channels } from '../lib/profile';
 
 // Who Paul is: his portrait in the moon gate, then the book he wrote, his Ironman runs and his talks, and where to find him. The landscape behind is pushed in (Landscape.astro `near`): 推進山水 ends here.
 const config = loadConfig();
@@ -19,7 +19,6 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
       <div class="ab-who">
         <p class="ab-hi">Hi, I'm</p>
         <h1>{config.author.name}</h1>
-        <p class="ab-tag"><i aria-hidden="true"></i>{TAGLINE}</p>
       </div>
     </header>
 
@@ -52,7 +51,7 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
     </section>
 
     <section class="ab-sec" aria-labelledby="ab-talks">
-      <h2 id="ab-talks"><i aria-hidden="true"></i>演講</h2>
+      <h2 id="ab-talks"><i aria-hidden="true"></i>公開演講</h2>
       <ul class="ab-list">
         {TALKS.map(([year, title, host, url]) => (
           <li>
@@ -64,7 +63,7 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
     </section>
 
     <section class="ab-sec" aria-labelledby="ab-find">
-      <h2 id="ab-find"><i aria-hidden="true"></i>找到我</h2>
+      <h2 id="ab-find"><i aria-hidden="true"></i>如何找到我</h2>
       <div class="ab-ch">
         {channels(config).map(([name, label, url]) => (
           <a href={url} {...away(url)}><b>{name}</b><span>{label}</span></a>
@@ -91,9 +90,7 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
   .ab-gate img { display: block; width: 100%; height: 100%; object-fit: cover; }
   .ab-who { flex: 1 1 300px; min-width: 0; }
   .ab-hi { margin: 0; font-size: 15px; letter-spacing: 0.24em; color: var(--muted); }
-  .ab-who h1 { margin: 10px 0 16px; font-size: 66px; font-weight: 300; line-height: 1; letter-spacing: 0.06em; }
-  .ab-tag { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 16px; letter-spacing: 0.14em; color: var(--stone); }
-  .ab-tag i { width: 8px; height: 8px; border-radius: 50%; background: var(--sun); }
+  .ab-who h1 { margin: 10px 0 0; font-size: 66px; font-weight: 300; line-height: 1; letter-spacing: 0.06em; }
   .ab-bio { max-width: 40em; margin: 48px 0 0; font-size: 19px; line-height: 2.05; }
 
   /* — sections: a red dot and the name in the left column, the content on the right — */
@@ -118,22 +115,18 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
   }
   .ab-sec h2 i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--sun); }
 
-  /* the book, on a stone tablet */
+  /* the book, laid straight on the page */
   .ab-book {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 28px;
-    padding: 28px;
-    color: var(--plaster);
-    background: var(--stone);
-    border-radius: 2px;
-    box-shadow: 0 6px 0 #3a3833;
+    color: var(--ink);
   }
-  .ab-book img { flex: none; width: 140px; height: auto; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35); }
+  .ab-book img { flex: none; width: 140px; height: auto; box-shadow: 0 8px 20px rgba(44, 43, 40, 0.18); }
   .ab-book > div { flex: 1 1 260px; min-width: 0; }
-  .ab-book h3 { margin: 0 0 8px; font-size: 22px; font-weight: 600; line-height: 1.45; color: var(--plaster); }
-  .ab-by { margin: 0 0 14px; font-size: 14px; letter-spacing: 0.08em; color: #d6d3cb; }
+  .ab-book h3 { margin: 0 0 8px; font-size: 22px; font-weight: 600; line-height: 1.45; color: var(--ink); }
+  .ab-by { margin: 0 0 14px; font-size: 14px; letter-spacing: 0.08em; color: var(--muted); }
   .ab-blurb { margin: 0 0 20px; font-size: 16px; line-height: 1.85; }
   .ab-buy {
     display: inline-flex;
@@ -141,12 +134,12 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
     height: 44px;
     padding: 0 20px;
     font-size: 15px;
-    color: var(--ink);
-    background: var(--plaster);
+    color: var(--plaster);
+    background: var(--ink);
     border-radius: 22px;
     text-decoration: none;
   }
-  .ab-buy:hover { color: var(--sun); }
+  .ab-buy:hover { color: var(--plaster); background: var(--sun); }
 
   /* the Ironman runs and the talks */
   .ab-list { list-style: none; margin: 0; padding: 0; }
@@ -204,9 +197,7 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
     .ab-hero { gap: 34px; padding-top: 12px; justify-content: center; text-align: center; }
     .ab-gate { width: 180px; height: 180px; }
     .ab-who h1 { font-size: 44px; }
-    .ab-tag { justify-content: center; }
     .ab-bio { font-size: 17px; line-height: 1.95; }
-    .ab-book { padding: 20px; }
     .ab-list li { grid-template-columns: 48px minmax(0, 1fr); gap: 12px; }
     .ab-y { font-size: 22px; }
     .ab-r { grid-column: 2; justify-self: start; }

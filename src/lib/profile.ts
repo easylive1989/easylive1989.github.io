@@ -5,9 +5,6 @@ import type { SiteConfig } from './config';
  * him. The about page (pages/about.astro) reads it.
  */
 
-/** The line under his name on the about page. */
-export const TAGLINE = '台中 · 歡迎聊合作';
-
 /** Where the two iThome Ironman series live outside this site. */
 export const ITHOME_SERIES: Record<string, string> = {
   '30 天輕鬆學會 Flutter 測試': 'https://ithelp.ithome.com.tw/users/20129825/ironman/5974',
