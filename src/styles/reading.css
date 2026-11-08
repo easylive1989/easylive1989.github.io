@@ -6,7 +6,7 @@
 html:has(body.shelf-body) { background: #22211f; }
 .shelf-body .ink-land,
 .shelf-body .blog-head,
-.shelf-body .desk-floor { display: none; }
+.shelf-body .desk-foot { display: none; }
 .shelf-body .desk-page { background: #22211f; }
 .shelf-body .desk-main { max-width: none; padding: 0; }
 .shelf-body .desk-top { color: #ecebe6; background: #2c2b28; border-color: rgba(236, 235, 230, 0.3); }

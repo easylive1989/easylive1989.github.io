@@ -1,11 +1,11 @@
-/* The desk — shared chrome for the blog, every page that isn't the room itself.
+/* The desk — shared chrome for every page of the site.
    The blog wears the ink study's colours (月門水墨): a plaster wall, ink for the type, the red sun as the one accent, an ink
-   landscape across the top of every page and a strip of stone floor at the foot. Broadsheet's tokens (broadsheet.css) are
-   remapped here under body.desk-body only, so prose.css and the Broadsheet components pick the new colours up without the
-   room, which shares those two files, changing. Page-specific layout lives with each page; the primitives below are shared. */
+   landscape across the top of every page. Broadsheet's tokens (broadsheet.css) are
+   remapped here under body.desk-body, so prose.css and the Broadsheet components pick the new colours up. Page-specific
+   layout lives with each page; the primitives below are shared. */
 
 :root {
-  /* Materials lifted from the room (study.js palette): the bookshelf's wood and brass */
+  /* the bookshelf's wood and brass */
   --wood: #5b3522;
   --wood-dark: #3b2216;
   --wood-light: #7a4a2c;
@@ -119,18 +119,8 @@ html {
 .ink-land.is-near .l-mid { transform: scale(2.1); }
 .ink-land.is-near .l-near { transform: scale(3.4) translateY(9%); }
 
-/* — the stone floor at the foot of every page — */
-.desk-floor {
-  flex: none;
-  height: 110px;
-  margin-top: 72px;
-  border-top: 4px solid var(--stone);
-  background-color: var(--stone-light);
-  background-image:
-    linear-gradient(90deg, rgba(40, 40, 40, 0.25) 1px, rgba(0, 0, 0, 0) 1px),
-    linear-gradient(0deg, rgba(40, 40, 40, 0.25) 1px, rgba(0, 0, 0, 0) 1px);
-  background-size: 150px 40px;
-}
+/* — air at the foot of every page — */
+.desk-foot { flex: none; height: 96px; }
 
 /* — masthead: the blog's name with the red sun, its three tabs in a pill, and the feed — */
 .blog-head {
@@ -337,8 +327,10 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
   .blog-brand { margin-right: auto; font-size: 20px; letter-spacing: 0.04em; }
   .blog-tabs { order: 3; flex: 1 1 100%; margin-left: 0; justify-content: space-between; }
   .desk-main { padding: 28px 16px 0; }
+  /* the landscape smaller and under the masthead, so the whole scene, sun and all, fits above the page's words instead of behind them */
+  .ink-land { top: 96px; height: 220px; }
+  .ink-land .l-mist { height: 60px; }
   .desk-top { right: 16px; bottom: 16px; }
-  .desk-floor { height: 80px; margin-top: 56px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -346,6 +338,6 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
 }
 
 @media print {
-  .blog-head, .desk-top, .ink-land, .desk-floor { display: none; }
+  .blog-head, .desk-top, .ink-land, .desk-foot { display: none; }
   html, body.desk-body { background: #fff; }
 }

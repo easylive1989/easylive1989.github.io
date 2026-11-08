@@ -1,5 +1,6 @@
-// Checks every blog page in a build: the blog's name ends its title, and exactly one tab is lit, the one its kind of page sits
-// under. The room (index.html) keeps the site's own name. Run after `npm run build`: node scripts/check-blog-nav.mjs [dist]
+// Checks every page in a build: the blog's name ends its title (the home page, 所有文章, is titled with the name alone), and
+// exactly one tab is lit, the one its kind of page sits under. /archive/ is only a redirect to the home page and is skipped.
+// Run after `npm run build`: node scripts/check-blog-nav.mjs [dist]
 import fs from 'node:fs';
 import path from 'node:path';
 import { parse } from 'yaml';
@@ -23,20 +24,23 @@ const problems = [];
 const titleOf = (html) => html.match(/<title>([^<]*)<\/title>/)?.[1] ?? '';
 let checked = 0;
 for (const rel of pages) {
-  if (rel === 'index.html' || rel.startsWith('study/')) continue; // the room, and the bare bodies the room fetches
+  if (rel === 'archive/index.html') continue; // the redirect to the home page
   checked++;
   const html = fs.readFileSync(path.join(dist, rel), 'utf8');
   const title = titleOf(html);
-  if (!title.endsWith(` | ${site.blogTitle}`)) problems.push(`${rel}: title "${title}"`);
+  const titleOk = rel === 'index.html' ? title === site.blogTitle : title.endsWith(` | ${site.blogTitle}`);
+  if (!titleOk) problems.push(`${rel}: title "${title}"`);
   const lit = [...html.matchAll(/data-tab="(\w+)"[^>]*aria-current="true"/g)].map((m) => m[1]);
   if (lit.length !== 1 || lit[0] !== expected(rel)) problems.push(`${rel}: lit [${lit.join(', ')}], expected ${expected(rel)}`);
   if (/class="[^"]*\b(desk-hud|crumbs)\b/.test(html)) problems.push(`${rel}: still has the old HUD or crumbs`);
 }
-const roomTitle = titleOf(fs.readFileSync(path.join(dist, 'index.html'), 'utf8'));
-if (roomTitle !== site.title) problems.push(`index.html: title "${roomTitle}", expected "${site.title}"`);
+const archive = path.join(dist, 'archive/index.html');
+if (!fs.existsSync(archive) || !/http-equiv="refresh"[^>]*url=\//i.test(fs.readFileSync(archive, 'utf8'))) {
+  problems.push('archive/index.html: expected a redirect to the home page');
+}
 
 if (problems.length) {
   console.error(problems.join('\n'));
   process.exit(1);
 }
-console.log(`ok: ${checked} blog pages`);
+console.log(`ok: ${checked} pages`);

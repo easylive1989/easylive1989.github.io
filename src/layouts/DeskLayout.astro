@@ -26,7 +26,7 @@ interface Props {
 const BASE = import.meta.env.BASE_URL;
 const BLOG = loadConfig().site.blogTitle;
 const TABS: [Tab, string, string][] = [
-  ['archive', '所有文章', `${BASE}archive/`],
+  ['archive', '所有文章', `${BASE}`],
   ['reading', '書架', `${BASE}reading/`],
   ['about', '關於我', `${BASE}about/`],
 ];
@@ -37,8 +37,6 @@ const { title, description, ogImage, article, tab, width = 'reading', bodyClass,
 <html lang="zh-TW">
   <head>
     <SiteHead title={title} siteTitle={BLOG} description={description} ogImage={ogImage} article={article} />
-    <!-- the ink study's light and heavy weights, on top of the 400–700 SiteHead loads for the room -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;900&display=swap" />
     <!-- Arriving through one of the blog's transitions (deskFx.js): the page that started it left a note saying which,
          read before the first paint so the page can begin where the transition left off -->
     <script is:inline>
@@ -59,7 +57,7 @@ const { title, description, ogImage, article, tab, width = 'reading', bodyClass,
 
       <!-- The blog's masthead: its name beside the red sun, its three tabs in a pill, and the feed -->
       <header class:list={['blog-head', `desk-${width}`]}>
-        <a class="blog-brand" href={`${BASE}archive/`}><i aria-hidden="true"></i><span>{BLOG}</span></a>
+        <a class="blog-brand" href={`${BASE}`}><i aria-hidden="true"></i><span>{BLOG}</span></a>
         <nav class="blog-tabs" aria-label="部落格">
           {TABS.map(([id, label, href]) => (
             <a href={href} data-tab={id} class:list={{ on: id === tab }} aria-current={id === tab ? 'true' : undefined}>{label}</a>
@@ -74,7 +72,7 @@ const { title, description, ogImage, article, tab, width = 'reading', bodyClass,
         <slot />
       </main>
 
-      <div class="desk-floor" aria-hidden="true"></div>
+      <div class="desk-foot" aria-hidden="true"></div>
     </div>
 
     <!-- The way back up, once the page has scrolled a way down -->

@@ -5,8 +5,7 @@ import '../../styles/prose.css';
 import { getAllNotes, getNoteBodies, getNoteBlocks } from '../../lib/data';
 import { excerptOf, firstImageOf } from '../../lib/excerpt';
 
-// One of the 碎碎念, as a page of its own. The room lays the newest of them on the desk
-// (through /study/{id}/); this is where a search engine or a shared link lands.
+// One of the 碎碎念, as a page of its own: where 所有文章 leads, and where a search engine or a shared link lands.
 export async function getStaticPaths() {
   const [notes, bodies] = await Promise.all([getAllNotes(), getNoteBodies()]);
   const sorted = notes.filter((n) => bodies.has(n.id)).sort((a, b) => b.createdTime.localeCompare(a.createdTime));
@@ -37,7 +36,7 @@ function fmtDate(iso: string): string {
     <header class="masthead note-masthead">
       <div class="rules" aria-hidden="true"><i></i><i></i></div>
       <div class="kicker note-kicker">
-        <a class="card-kicker" href={`${BASE}archive/`}>碎碎念</a>
+        <a class="card-kicker" href={`${BASE}`}>碎碎念</a>
         <span class="dot" aria-hidden="true">·</span>
         <time class="num" datetime={note.createdTime}>{fmtDate(note.createdTime)}</time>
       </div>

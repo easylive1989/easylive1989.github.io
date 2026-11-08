@@ -1,7 +1,7 @@
 site:
-  title: "保羅的書房"
+  title: "保羅的學習筆記"
   blogTitle: "保羅的學習筆記"
-  description: "保羅的書房：架上是技術筆記與讀過的書，桌上是做著玩的小作品。"
+  description: "保羅的學習筆記：Flutter、自動化測試與軟體開發的技術筆記，還有讀過的書和讀書筆記。"
   url: "https://paul-learning.dev"
 
 author:

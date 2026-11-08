@@ -1,8 +1,7 @@
-/* Broadsheet — design-system tokens and the component classes the study page uses
+/* Broadsheet — design-system tokens and the component classes the blog uses
    (buttons, tags, card kicker, text input). Ported from the design project's
-   _ds/broadsheet/styles.css; the print-plate / halftone / table / dialog
-   sections are left out because nothing on /study references them.
-   The Source Serif 4 webfont is loaded from study.astro's <head>. */
+   _ds/broadsheet/styles.css; desk.css remaps its colours and type to the ink
+   study's. The webfonts are loaded from SiteHead. */
 
 :root {
   --color-bg: #f3f2f2;

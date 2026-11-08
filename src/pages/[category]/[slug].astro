@@ -110,7 +110,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
           <p class="end-kicker">— 全文完 —</p>
           <p class="end-text">如果這篇對你有幫助，可以分享給朋友，或追蹤後續更新。我在 Threads 也會貼一些零碎想法。</p>
           <div class="end-actions">
-            <a class="btn btn-primary" href={`${BASE}archive/`}>← 所有文章</a>
+            <a class="btn btn-primary" href={`${BASE}`}>← 所有文章</a>
             {nextArticle && (
               <a class="btn btn-secondary end-next" href={articleUrl(nextArticle.id)}>下一篇：{nextArticle.title}</a>
             )}

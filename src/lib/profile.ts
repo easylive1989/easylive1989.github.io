@@ -2,10 +2,10 @@ import type { SiteConfig } from './config';
 
 /**
  * Who Paul is, beyond what site.config.yaml says: the book he wrote, his iThome Ironman runs, his talks and where to find
- * him. The room (study.ts) and the blog's about page (pages/about.astro) both read it, so the two never tell different stories.
+ * him. The about page (pages/about.astro) reads it.
  */
 
-/** The line under his name, in the room's self-portrait card and on the about page. */
+/** The line under his name on the about page. */
 export const TAGLINE = '台中 · 歡迎聊合作';
 
 /** Where the two iThome Ironman series live outside this site. */
@@ -14,7 +14,7 @@ export const ITHOME_SERIES: Record<string, string> = {
   'Flutter 開發設計雜談': 'https://ithelp.ithome.com.tw/users/20129825/ironman/4992',
 };
 
-/** The book he wrote. The room draws its cover itself: `front` holds the lines on it besides the title and author. */
+/** The book he wrote. `front` holds the lines on its cover besides the title and author. */
 export const MY_BOOK = {
   title: '不可不知的 Flutter App 自動化測試實戰攻略',
   author: '吳政樺（Paul）',
@@ -30,7 +30,7 @@ export const MY_BOOK = {
   },
 };
 
-/** The iThome Ironman runs, oldest first, the order the room stands its bears in: [year, result, series, url, took a prize]. */
+/** The iThome Ironman runs, oldest first: [year, result, series, url, took a prize]. */
 export const IRONMAN: [string, string, string, string, boolean][] = [
   ['2020', '鐵人練成', '在 Kata 中尋找 Clean Code', 'https://ithelp.ithome.com.tw/users/20129825/ironman/3440?page=1', false],
   ['2022', '佳作', 'Flutter 開發設計雜談', ITHOME_SERIES['Flutter 開發設計雜談'], true],

@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /study/
 
 Sitemap: https://paul-learning.dev/sitemap-index.xml

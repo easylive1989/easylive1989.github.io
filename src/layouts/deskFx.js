@@ -89,11 +89,11 @@ async function leaveShelf() {
   let back = null;
   try {
     const ref = document.referrer ? new URL(document.referrer) : null;
-    if (ref && ref.origin === location.origin && !ref.pathname.startsWith('/reading/') && ref.pathname !== '/') back = ref;
+    if (ref && ref.origin === location.origin && !ref.pathname.startsWith('/reading/')) back = ref;
   } catch {}
   try { sessionStorage.setItem('desk-arrive', 'door-close'); } catch {}
   if (back && history.length > 1) history.back();
-  else location.href = back ? back.href : '/archive/';
+  else location.href = back ? back.href : '/';
 }
 
 /** A copy of the landscape over a plaster veil, its layers gliding to the other view; then the next page. */

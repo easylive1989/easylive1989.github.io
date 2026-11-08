@@ -3,11 +3,10 @@ import DeskLayout from '../layouts/DeskLayout.astro';
 import { loadConfig } from '../lib/config';
 import { MY_BOOK, IRONMAN, TALKS, TAGLINE, channels } from '../lib/profile';
 
-// Who Paul is, for the blog: his portrait in the moon gate, then the book, the Ironman runs and the talks that stand on the
-// room's display shelves, and where to find him. The landscape behind is pushed in (Landscape.astro `near`): 推進山水 ends here.
+// Who Paul is: his portrait in the moon gate, then the book he wrote, his Ironman runs and his talks, and where to find him. The landscape behind is pushed in (Landscape.astro `near`): 推進山水 ends here.
 const config = loadConfig();
 const BASE = import.meta.env.BASE_URL;
-const runs = [...IRONMAN].reverse(); // newest first here; the room keeps them oldest first for its bears
+const runs = [...IRONMAN].reverse(); // newest first
 const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener' });
 ---
 
