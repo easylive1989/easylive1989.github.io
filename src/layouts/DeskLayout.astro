@@ -39,6 +39,16 @@ const { title, description, ogImage, article, tab, width = 'reading', bodyClass,
     <SiteHead title={title} siteTitle={BLOG} description={description} ogImage={ogImage} article={article} />
     <!-- Arriving through one of the blog's transitions (deskFx.js): the page that started it left a note saying which,
          read before the first paint so the page can begin where the transition left off -->
+    <!-- Taichung's weather as last looked up (weather.js keeps it for half an hour), set before the first paint so the sky does
+         not open clear and then cloud over -->
+    <script is:inline>
+      (function () {
+        try {
+          var w = JSON.parse(localStorage.getItem('desk-weather') || 'null');
+          if (w && typeof w.kind === 'string') document.documentElement.setAttribute('data-weather', w.kind);
+        } catch (e) {}
+      })();
+    </script>
     <script is:inline>
       (function () {
         try {
@@ -102,6 +112,7 @@ const { title, description, ogImage, article, tab, width = 'reading', bodyClass,
     </script>
     <script>
       import './deskFx.js';
+      import './weather.js';
     </script>
   </body>
 </html>

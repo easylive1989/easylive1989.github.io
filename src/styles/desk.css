@@ -121,6 +121,76 @@ html {
 .ink-land.is-near .l-mid { transform: scale(2.1); }
 .ink-land.is-near .l-near { transform: scale(3.4) translateY(9%); }
 
+/* — the weather over the landscape: html[data-weather] (layouts/weather.js) is clear, cloudy, fog, rain, storm or night;
+     without it, clear — */
+.ink-land .w-sun { opacity: 0.82; }
+.ink-land :is(.w-moon, .w-sky, .w-night, .w-fog, .w-rain, .w-flash) { display: none; }
+.ink-land .w-dim { opacity: 0; }
+.ink-land .w-cloud { opacity: 0; animation: ink-drift 90s ease-in-out infinite alternate; }
+.ink-land .w-night { position: absolute; inset: 0; background: linear-gradient(rgba(44, 43, 40, 0.08), rgba(44, 43, 40, 0)); }
+.ink-land .w-fog i {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  background: linear-gradient(90deg, rgba(242, 240, 235, 0), rgba(242, 240, 235, 0.88) 28%, rgba(242, 240, 235, 0.88) 72%, rgba(242, 240, 235, 0));
+  filter: blur(10px);
+  animation: ink-fog 38s ease-in-out infinite alternate;
+}
+.ink-land .w-fog i:nth-child(1) { top: 34%; height: 18%; }
+.ink-land .w-fog i:nth-child(2) { top: 56%; height: 16%; animation-duration: 46s; animation-direction: alternate-reverse; }
+.ink-land .w-fog i:nth-child(3) { top: 74%; height: 14%; animation-duration: 30s; }
+.ink-land .w-rain { position: absolute; inset: 0; overflow: hidden; }
+.ink-land .w-rain i {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  background: linear-gradient(rgba(44, 43, 40, 0), rgba(44, 43, 40, 0.34));
+  opacity: 0;
+  animation: ink-drop calc(var(--d) * var(--speed, 1)) linear infinite;
+}
+.ink-land .w-rain .w-storm { display: none; }
+.ink-land .w-flash { position: absolute; inset: 0; background: #fbfaf7; opacity: 0; animation: ink-flash 7s linear infinite; }
+.ink-land .w-label {
+  position: absolute;
+  right: 3%;
+  top: 84px;
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+html[data-weather="cloudy"] .ink-land .w-sun { opacity: 0.62; }
+html[data-weather="cloudy"] .ink-land .w-birds,
+html:is([data-weather="fog"], [data-weather="rain"], [data-weather="storm"], [data-weather="night"]) .ink-land :is(.w-sun, .w-birds) { display: none; }
+html:is([data-weather="cloudy"], [data-weather="rain"], [data-weather="storm"]) .ink-land .w-sky { display: inline; }
+html[data-weather="cloudy"] .ink-land .w-dim { opacity: 0.06; }
+html[data-weather="cloudy"] .ink-land .w-cloud { opacity: 0.28; }
+html[data-weather="rain"] .ink-land .w-dim { opacity: 0.24; }
+html[data-weather="rain"] .ink-land .w-cloud { opacity: 0.72; }
+html[data-weather="storm"] .ink-land .w-dim { opacity: 0.34; }
+html[data-weather="storm"] .ink-land .w-cloud { opacity: 0.88; }
+html[data-weather="fog"] .ink-land .l-far { opacity: 0.45; }
+html[data-weather="fog"] .ink-land .l-mid { opacity: 0.6; }
+html[data-weather="rain"] .ink-land .l-far { opacity: 0.8; }
+html[data-weather="storm"] .ink-land .l-far { opacity: 0.7; }
+html[data-weather="fog"] .ink-land .w-fog { display: block; }
+html:is([data-weather="rain"], [data-weather="storm"]) .ink-land .w-rain { display: block; }
+html[data-weather="storm"] .ink-land .w-rain .w-storm { display: block; }
+html[data-weather="storm"] .ink-land .w-rain { --speed: 0.7; }
+html[data-weather="storm"] .ink-land .w-flash { display: block; }
+html[data-weather="night"] .ink-land :is(.w-moon) { display: inline; }
+html[data-weather="night"] .ink-land .w-night { display: block; }
+
+@keyframes ink-drop {
+  0% { transform: translate(0, -40px) rotate(12deg); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translate(-90px, 540px) rotate(12deg); opacity: 0; }
+}
+@keyframes ink-drift { from { transform: translateX(-36px); } to { transform: translateX(36px); } }
+@keyframes ink-fog { from { transform: translateX(-5%); } to { transform: translateX(5%); } }
+@keyframes ink-flash { 0%, 88%, 100% { opacity: 0; } 89% { opacity: 0.5; } 90.5% { opacity: 0; } 92% { opacity: 0.3; } 94% { opacity: 0; } }
+
 /* — air at the foot of every page — */
 .desk-foot { flex: none; height: 96px; }
 
@@ -332,11 +402,17 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
   /* the landscape smaller and under the masthead, so the whole scene, sun and all, fits above the page's words instead of behind them */
   .ink-land { top: 96px; height: 220px; }
   .ink-land .l-mist { height: 60px; }
+  .ink-land .w-label { top: 6px; }
   .desk-top { right: 16px; bottom: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .desk-top { transition: none; }
+  .ink-land :is(.w-cloud, .w-fog i) { animation: none; }
+  .ink-land .w-rain i { animation: none; opacity: 0.6; transform: translateY(var(--y, 140px)) rotate(12deg); }
+  .ink-land .w-rain i:nth-child(3n) { --y: 260px; }
+  .ink-land .w-rain i:nth-child(3n + 1) { --y: 50px; }
+  .ink-land .w-flash { display: none !important; }
 }
 
 @media print {

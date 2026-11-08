@@ -12,6 +12,7 @@ https://paul-learning.dev
 - **內容來源**: Notion API (`@notionhq/client`)
 - **樣式**: 月門水墨：粉牆、墨色、紅日，每頁頂上一片水墨山水（`src/components/Landscape.astro`，手機也顯示）
   - 首頁就是「所有文章」；舊的 `/archive/` 轉到首頁
+  - 山水跟著台中的天氣變：晴、多雲、霧、雨、雷雨、夜晚（`src/layouts/weather.js`，向 Open-Meteo 查，免金鑰；結果在瀏覽器存半小時）。查天氣時訪客的 IP 會被 Open-Meteo 看到
   - 「書架」是暗門後的書櫃：點導覽列的書架，頁面從中間裂開、書架從暗處浮上來；「關於我」用推進山水轉場（`src/layouts/deskFx.js`）
 - **部署**: GitHub Pages
   - `public/sw.js` 是退役用的 Service Worker：之前 3D 書房留下的快取會被它清掉並自行解除註冊，過幾個月可以刪掉
@@ -23,7 +24,8 @@ src/
 ├── components/       # SiteHead、Landscape（水墨山水）、ArchiveView、Notion block 渲染元件
 │   └── notion/       # Notion block 渲染元件
 ├── layouts/          # DeskLayout：每頁共用（粉牆、山水、刊頭：站名、三個分頁、RSS）
-│   └── deskFx.js     # 頁與頁之間的機關：書架的暗門、關於我的推進山水
+│   ├── deskFx.js     # 頁與頁之間的機關：書架的暗門、關於我的推進山水
+│   └── weather.js    # 查台中現在的天氣，決定山水上的雲、霧、雨或月亮
 ├── lib/              # 工具函式 (Notion API、資料處理、圖片等)
 │   ├── excerpt.ts    # 沒有摘要的頁面，從內文開頭取描述、取第一張圖當分享圖
 │   └── profile.ts    # 他是誰：寫的書、鐵人賽、演講、聯絡方式（關於我頁）

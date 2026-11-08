@@ -4,13 +4,20 @@
  * birds, a range of steep peaks with pines on their tops, and a near rock with a pine leaning out of it. Each is a layer of its
  * own, its ink darkest along the ridge and fading down into mist, its edges roughened like a brush's. `near` is the same scene
  * with the camera pushed in: the about page's view. The 推進山水 transition (deskFx.js) moves the layers from one to the other,
- * so the two pages join up.
+ * so the two pages join up. Over it hangs Taichung's weather: clear, cloudy, fog, rain, a thunderstorm, or night.
  */
 interface Props {
   near?: boolean;
 }
 
 const { near = false } = Astro.props;
+
+// The weather over it follows Taichung's (layouts/weather.js sets html[data-weather]; desk.css shows the layers for it).
+// The ink rain: 34 strokes, and 24 more that fall only in a thunderstorm. Where each falls and how fast is fixed.
+const rain = Array.from({ length: 58 }, (_, i) => ({
+  storm: i >= 34,
+  style: `left:${(i * 37 + (i >= 34 ? 17 : 0)) % 100}%;height:${18 + ((i * 7) % 16)}px;--d:${(1.1 + (i % 5) * 0.16).toFixed(2)}s;animation-delay:${(-((i * 0.29) % 2)).toFixed(2)}s`,
+}));
 ---
 
 <div class:list={['ink-land', { 'is-near': near }]} aria-hidden="true">
@@ -27,8 +34,30 @@ const { near = false } = Astro.props;
     <rect x="0" y="300" width="1440" height="80" fill="#f2f0eb" opacity="0.35"></rect>
   </svg>
   <svg class="l-sun" viewBox="0 0 1440 520" preserveAspectRatio="xMaxYMax slice">
-    <circle cx="1188" cy="176" r="24" fill="#c8402f" opacity="0.82"></circle>
-    <path d="M968 148 q7 -6 14 0 q7 -6 14 0 M1012 132 q6 -5 12 0 q6 -5 12 0 M1050 156 q5 -4 10 0 q5 -4 10 0" fill="none" stroke="#2c2b28" stroke-width="1.4" opacity="0.38"></path>
+    <circle class="w-sun" cx="1188" cy="176" r="24" fill="#c8402f"></circle>
+    <!-- at night the sun is a pale moon in a halo -->
+    <g class="w-moon">
+      <defs><radialGradient id="moon-halo" cx="50%" cy="50%" r="50%"><stop offset="0.45" stop-color="#f7f4ec" stop-opacity="0.9"></stop><stop offset="1" stop-color="#f7f4ec" stop-opacity="0"></stop></radialGradient></defs>
+      <circle cx="1188" cy="176" r="56" fill="url(#moon-halo)"></circle>
+      <circle cx="1188" cy="176" r="22" fill="#e4e0d4" stroke="#b9b5ad" stroke-width="1"></circle>
+      <circle cx="1196" cy="170" r="20" fill="#f2f0eb" opacity="0.55"></circle>
+    </g>
+    <path class="w-birds" d="M968 148 q7 -6 14 0 q7 -6 14 0 M1012 132 q6 -5 12 0 q6 -5 12 0 M1050 156 q5 -4 10 0 q5 -4 10 0" fill="none" stroke="#2c2b28" stroke-width="1.4" opacity="0.38"></path>
+    <!-- an overcast sky: a grey wash from the top that fades before the hills, and in it streaks of ink cloud, drifting -->
+    <g class="w-sky">
+      <defs>
+        <linearGradient id="sky-dim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2b28" stop-opacity="1"></stop><stop offset="0.72" stop-color="#2c2b28" stop-opacity="0"></stop></linearGradient>
+        <linearGradient id="sky-cloud" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="380"><stop offset="0" stop-color="#ffffff" stop-opacity="1"></stop><stop offset="0.6" stop-color="#ffffff" stop-opacity="0.6"></stop><stop offset="1" stop-color="#ffffff" stop-opacity="0"></stop></linearGradient>
+        <filter id="sky-ink" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.0022 0.011" numOctaves="4" seed="5" result="n"></feTurbulence>
+          <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.17  0 0 0 0 0.17  0 0 0 0 0.16  0 0 0 1.8 -0.62" result="ink"></feColorMatrix>
+          <feComposite in="ink" in2="SourceGraphic" operator="in"></feComposite>
+          <feGaussianBlur stdDeviation="2.5"></feGaussianBlur>
+        </filter>
+      </defs>
+      <rect class="w-dim" x="0" y="0" width="1440" height="520" fill="url(#sky-dim)"></rect>
+      <g class="w-cloud"><rect x="-240" y="0" width="1920" height="400" fill="url(#sky-cloud)" filter="url(#sky-ink)"></rect></g>
+    </g>
   </svg>
   <svg class="l-mid" viewBox="0 0 1440 520" preserveAspectRatio="xMaxYMax slice">
     <defs>
@@ -71,4 +100,10 @@ const { near = false } = Astro.props;
     </g>
   </svg>
   <i class="l-mist"></i>
+  <!-- the weather over the whole scene: night's wash, fog drifting, ink rain, a lightning flash, and a line saying what it is -->
+  <i class="w-night"></i>
+  <div class="w-fog"><i></i><i></i><i></i></div>
+  <div class="w-rain">{rain.map((r) => <i class:list={{ 'w-storm': r.storm }} style={r.style}></i>)}</div>
+  <i class="w-flash"></i>
+  <p class="w-label"></p>
 </div>
