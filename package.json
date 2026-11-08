@@ -7,7 +7,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check:nav": "node scripts/check-blog-nav.mjs"
+    "check:nav": "node scripts/check-blog-nav.mjs",
+    "test": "node --test scripts/*.test.mjs",
+    "migrate:think": "node scripts/migrate-to-think.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.17",
