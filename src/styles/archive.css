@@ -1,113 +1,78 @@
-/* Archive and category pages — a broadsheet index on two sheets of paper: the masthead, then the filter bar over the list.
-   Everything is scoped under .archive-sheet; tokens come from broadsheet.css / desk.css. */
+/* Archive and category pages, on the plaster wall: the heatmap under the landscape, the categories in one row that scrolls
+   sideways with the search behind an icon at its end, then the index, one block per year.
+   Everything is scoped under .archive-sheet; tokens come from desk.css (the ink study's palette). */
 
 .archive-sheet {
-  --pad: 44px;
-  --muted: color-mix(in srgb, var(--color-text) 62%, transparent);
-  --hair: var(--color-divider);
-  --cat-1: var(--color-accent);
-  --cat-2: var(--color-accent-2);
-  --cat-3: #b58a00; /* process yellow, darkened so a dot still reads on paper */
+  --muted: var(--color-neutral-700);
+  --hair: rgba(44, 43, 40, 0.16);
+  --cat-1: var(--ink);
+  --cat-2: var(--sun);
+  --cat-3: #6f8a9a;
 
   font-family: var(--font-reading);
 }
 
 .archive-sheet .num { font-variant-numeric: tabular-nums lining-nums; }
 
-/* — masthead — */
-.archive-sheet .masthead { padding: 28px var(--pad) 32px; }
-.archive-sheet .masthead .rules { margin-bottom: var(--space-4); }
-.archive-sheet .mast-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 44px;
-  align-items: end;
-}
-.archive-sheet .masthead h1 {
-  font-family: var(--font-reading);
-  font-size: 56px;
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.025em;
-  text-wrap: balance;
-}
-.archive-sheet .masthead h1.is-long { font-size: 44px; }
+/* — a category page's heading — */
+.archive-sheet .arc-scope { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; margin-bottom: 24px; }
+.archive-sheet .arc-back { flex-basis: 100%; font-size: 14px; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; }
+.archive-sheet .arc-scope h1 { margin: 0; font-size: 44px; font-weight: 300; line-height: 1.2; letter-spacing: 0.12em; }
+.archive-sheet .arc-scope-n { margin: 0; font-size: 14px; letter-spacing: 0.14em; color: var(--muted); }
 
-/* — the index sheet: the filter bar is its top edge — */
-.archive-sheet .archive-index { padding: 0 var(--pad) 26px; }
+/* — 每季落筆: the heatmap on a pale card over the landscape — */
+.archive-sheet .arc-heat {
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  background: rgba(250, 249, 246, 0.84);
+  border: 1px solid rgba(44, 43, 40, 0.12);
+}
+.archive-sheet .arc-heat figcaption { margin-bottom: 10px; font-size: 13px; letter-spacing: 0.14em; color: var(--muted); }
 
 /* — filter bar — */
 .archive-sheet .filter-bar {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  margin: 0 calc(var(--pad) * -1);
-  padding: 20px var(--pad) 14px;
-  background: var(--color-bg);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(44, 43, 40, 0.2);
 }
-/* while stuck: a soft edge beneath */
-.archive-sheet .filter-bar.is-stuck {
-  box-shadow: 0 1px 0 var(--color-text), 0 10px 14px -10px color-mix(in srgb, var(--color-text) 40%, transparent);
+.archive-sheet .chips {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 3px 40px 3px 0;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
 }
-
-.archive-sheet .filter-main { display: flex; align-items: center; gap: var(--space-2); }
-.archive-sheet .search { position: relative; flex: 1 1 260px; max-width: 360px; min-width: 0; }
-.archive-sheet .search .input { padding: 6px 62px 6px 34px; min-height: 36px; font-family: var(--font-reading); }
-.archive-sheet .search .input::-webkit-search-cancel-button { display: none; }
-.archive-sheet .search-icon {
-  position: absolute;
-  left: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted);
-  pointer-events: none;
-}
-.archive-sheet .kbd {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 1px 6px;
-  font-family: var(--font-reading);
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--muted);
-  background: var(--color-bg);
-  border: 1px solid var(--hair);
-  border-radius: var(--radius-md);
-  pointer-events: none;
-  transition: opacity 0.12s;
-}
-.archive-sheet .search:focus-within .kbd { opacity: 0; }
-
-.archive-sheet .sort-btn {
-  flex: none;
-  min-height: 36px;
-  padding: 0 var(--space-3);
-  font-size: 13px;
-  font-family: var(--font-reading);
-  gap: var(--space-2);
-  white-space: nowrap;
-}
-.archive-sheet .sort-prefix { color: var(--muted); font-weight: 400; }
-
-.archive-sheet .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--space-2); }
+.archive-sheet .chips::-webkit-scrollbar { display: none; }
 .archive-sheet .chip {
-  gap: 7px;
-  padding: 5px 12px;
-  border: 1px solid transparent;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
   font: inherit;
-  font-size: 12px;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
+  font-size: 14px;
+  color: var(--ink);
+  background: rgba(250, 249, 246, 0.7);
+  border: 1px solid rgba(44, 43, 40, 0.22);
+  border-radius: 22px;
   cursor: pointer;
-  transition: border-color 0.12s, background-color 0.12s, color 0.12s;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
 }
-.archive-sheet .chip.tag-accent { border-color: var(--color-accent-300); }
-.archive-sheet .chip.tag-outline { border-color: var(--hair); color: color-mix(in srgb, var(--color-text) 78%, transparent); }
-.archive-sheet .chip.tag-outline:hover { border-color: var(--color-accent); color: var(--color-accent-700); }
-.archive-sheet .chip .ct { font-size: 11px; opacity: 0.65; }
+.archive-sheet .chip:hover { border-color: rgba(44, 43, 40, 0.45); }
+.archive-sheet .chip.is-on { color: var(--plaster); background: var(--ink); border-color: var(--ink); }
+.archive-sheet .chip .ct { font-size: 12px; opacity: 0.65; }
 .archive-sheet .chip .dot,
 .archive-sheet .row-cat .dot {
   flex: none;
@@ -116,166 +81,157 @@
   border-radius: 50%;
   background: var(--c, var(--color-neutral-500));
 }
+/* on a category page the bar holds only the search: it sits at the right */
+.archive-sheet.is-scoped .filter-bar { justify-content: flex-end; }
+
+.archive-sheet .find {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--stone);
+  background: rgba(250, 249, 246, 0.7);
+  border: 1px solid rgba(44, 43, 40, 0.22);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.archive-sheet .find:hover { color: var(--plaster); background: var(--ink); }
+.archive-sheet .find[hidden],
+.archive-sheet .search[hidden] { display: none; }
+.archive-sheet .search {
+  flex: 0 1 280px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 6px 0 16px;
+  color: var(--muted);
+  background: var(--plaster-hi);
+  border: 1px solid rgba(44, 43, 40, 0.35);
+  border-radius: 22px;
+}
+.archive-sheet .search svg { flex: none; }
+.archive-sheet .search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
+}
+.archive-sheet .search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+.archive-sheet .search-x {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.archive-sheet .search-x:hover { color: var(--ink); background: rgba(44, 43, 40, 0.06); }
 
 /* — the index: one block per year — */
 .archive-sheet .year-block {
   display: grid;
-  grid-template-columns: 168px minmax(0, 1fr);
-  border-top: 2px solid var(--color-text);
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 24px;
+  padding: 18px 0 8px;
+  border-bottom: 1px solid rgba(44, 43, 40, 0.16);
 }
-.archive-sheet .year-side { padding: 20px 24px 22px 0; }
-.archive-sheet .yr-n {
-  font-size: 56px;
-  font-weight: 700;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-}
-.archive-sheet .yr-l {
-  margin-top: 10px;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
+.archive-sheet .year-block[hidden] { display: none; }
+.archive-sheet .year-side { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+.archive-sheet .yr-n { font-size: 44px; font-weight: 300; line-height: 1; letter-spacing: 0.04em; }
+.archive-sheet .yr-l { font-size: 12px; letter-spacing: 0.16em; color: var(--muted); }
 
-.archive-sheet .rows { min-width: 0; padding-left: 24px; border-left: 1px solid var(--hair); }
-
+.archive-sheet .rows { min-width: 0; }
 .archive-sheet .archive-row {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr) 164px 48px 16px;
-  column-gap: 14px;
+  grid-template-columns: 52px minmax(0, 1fr) 210px 52px;
+  column-gap: 16px;
   align-items: baseline;
-  padding: 14px 0;
-  border-top: 1px solid var(--hair);
-  color: var(--color-text);
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(44, 43, 40, 0.08);
+  color: var(--ink);
   text-decoration: none;
 }
-.archive-sheet .archive-row.is-first { border-top-color: transparent; }
+.archive-sheet .archive-row:last-child { border-bottom: 0; }
+.archive-sheet .archive-row[hidden] { display: none; }
 .archive-sheet .row-date { font-size: 13px; color: var(--muted); }
 .archive-sheet .row-title {
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: -0.005em;
+  line-height: 1.45;
   text-wrap: pretty;
-  text-decoration: underline transparent;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 5px;
-  transition: color 0.15s, text-decoration-color 0.15s;
+  transition: color 0.15s;
 }
 .archive-sheet .row-cat {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
-  font-size: 12px;
-  color: color-mix(in srgb, var(--color-text) 75%, transparent);
+  font-size: 13px;
+  color: var(--stone);
 }
 .archive-sheet .row-cat-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.archive-sheet .row-min { font-size: 12px; text-align: right; color: var(--muted); white-space: nowrap; }
-.archive-sheet .row-arrow {
-  font-size: 15px;
-  text-align: right;
-  color: var(--color-accent);
-  opacity: 0;
-  transform: translate(-6px, 5px);
-  transition: opacity 0.15s, transform 0.18s;
-}
+.archive-sheet .row-min { font-size: 13px; text-align: right; color: var(--muted); white-space: nowrap; }
 .archive-sheet a.archive-row:hover .row-title,
-.archive-sheet a.archive-row:focus-visible .row-title {
-  color: var(--color-accent-700);
-  text-decoration-color: currentColor;
-}
-.archive-sheet .archive-row:hover .row-arrow,
-.archive-sheet .archive-row:focus-visible .row-arrow { opacity: 1; transform: none; }
+.archive-sheet a.archive-row:focus-visible .row-title { color: var(--sun); }
 /* a 碎碎念 with nothing written under its title has no page to go to */
 .archive-sheet div.archive-row .row-title { font-weight: 400; color: var(--muted); }
 .archive-sheet .archive-row:focus-visible { outline-offset: -2px; }
 
 /* a category page: every row has the same category, so give the title the room */
-.archive-sheet.is-scoped .archive-row { grid-template-columns: 46px minmax(0, 1fr) 48px 16px; }
+.archive-sheet.is-scoped .archive-row { grid-template-columns: 52px minmax(0, 1fr) 52px; }
 .archive-sheet.is-scoped .row-cat { display: none; }
 
-.archive-sheet .archive-empty {
-  padding: 56px 0 44px;
-  text-align: center;
-  border-top: 2px solid var(--color-text);
-  color: var(--muted);
-}
+.archive-sheet .archive-empty { padding: 56px 0 44px; text-align: center; color: var(--muted); }
 .archive-sheet .archive-empty[hidden] { display: none; }
-.archive-sheet .archive-empty p { margin: 0 0 var(--space-3); font-size: 17px; font-style: italic; }
-.archive-sheet .archive-empty .btn { font-family: var(--font-reading); }
-
-/* — colophon — */
-.archive-sheet .archive-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  padding-top: var(--space-3);
-  border-top: 2px solid var(--color-text);
-  font-size: 12px;
-  color: var(--muted);
-}
+.archive-sheet .archive-empty p { margin: 0 0 16px; font-size: 16px; letter-spacing: 0.06em; }
 
 /* — narrow screens — */
-/* the sheet is narrower than its full width, with no room for the heatmap beside the figures: it drops underneath */
-@media (max-width: 1040px) {
-  .archive-sheet .mast-grid { grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
-}
-
-@media (max-width: 960px) {
-  .archive-sheet .masthead h1 { font-size: 48px; }
-  .archive-sheet .masthead h1.is-long { font-size: 40px; }
-}
-
 @media (max-width: 760px) {
-  .archive-sheet { --pad: 18px; }
-  .archive-sheet .masthead { padding-top: 22px; padding-bottom: 24px; }
-  .archive-sheet .archive-index { padding-bottom: 20px; }
+  .archive-sheet .year-block { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .archive-sheet .year-side { flex-direction: row; align-items: baseline; gap: 12px; padding-top: 0; }
+  .archive-sheet .yr-n { font-size: 30px; }
 
-  .archive-sheet .masthead h1,
-  .archive-sheet .masthead h1.is-long { font-size: 34px; line-height: 1.12; }
-
-  .archive-sheet .filter-bar { position: static; padding-top: 16px; padding-bottom: 12px; }
-  .archive-sheet .filter-main { flex-wrap: wrap; }
-  .archive-sheet .search { flex: 1 1 100%; max-width: none; }
-  .archive-sheet .search .input { padding-right: 12px; }
-  .archive-sheet .kbd { display: none; } /* no keyboard shortcut to advertise on a phone */
-
-  .archive-sheet .year-block { grid-template-columns: minmax(0, 1fr); }
-  .archive-sheet .year-side {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 4px 12px;
-    padding: 18px 0 6px;
-  }
-  .archive-sheet .yr-n { font-size: 40px; }
-  .archive-sheet .yr-l { margin-top: 0; }
-
-  .archive-sheet .rows { padding-left: 0; border-left: 0; }
   .archive-sheet .archive-row,
   .archive-sheet.is-scoped .archive-row {
-    grid-template-columns: auto minmax(0, 1fr) auto 14px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas:
-      "date cat min arrow"
-      "title title title title";
+      "date cat min"
+      "title title title";
     column-gap: 12px;
     row-gap: 4px;
-    padding: 12px 0 13px;
   }
   .archive-sheet .row-date { grid-area: date; }
   .archive-sheet .row-cat { grid-area: cat; }
   .archive-sheet.is-scoped .row-cat { display: none; }
   .archive-sheet .row-min { grid-area: min; }
-  .archive-sheet .row-arrow { grid-area: arrow; opacity: 0.55; transform: none; }
-  .archive-sheet .row-title { grid-area: title; font-size: 18px; }
+  .archive-sheet .row-title { grid-area: title; font-size: 16px; }
+}
+
+/* a phone: the chips run to the screen's left edge; an open search takes a line of its own */
+@media (max-width: 640px) {
+  .archive-sheet .filter-bar { flex-wrap: wrap; }
+  .archive-sheet .chips { margin-left: -16px; padding-left: 16px; }
+  .archive-sheet .search { flex: 1 1 100%; order: 3; }
+  .archive-sheet .arc-heat { padding: 10px; }
+  .archive-sheet .arc-scope h1 { font-size: 32px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .archive-sheet *,
   .archive-sheet *::before,
   .archive-sheet *::after { transition: none !important; }
-  .archive-sheet .row-arrow { transform: none; }
 }

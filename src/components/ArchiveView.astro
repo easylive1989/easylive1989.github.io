@@ -9,7 +9,7 @@ interface Props {
   articles: Article[];
   allCategories: Category[];
   scopeCategoryName?: string;
-  /** 碎碎念 to list among the articles. They count in the masthead's figures like any article, and a note with nothing written under its title gets no link. */
+  /** 碎碎念 to list among the articles. They count in the heatmap like any article, and a note with nothing written under its title gets no link. */
   notes?: (Note & { hasBody: boolean })[];
 }
 
@@ -45,7 +45,7 @@ const rows: Row[] = [
   ...articles.map((a) => ({ title: a.title, cat: a.category, createdTime: a.createdTime, href: `${BASE}${categorySlug(a.category)}/${a.id}/` })),
   ...notes.map((n) => ({ title: n.title, cat: NOTE_CAT, createdTime: n.createdTime, href: n.hasBody ? `${BASE}notes/${n.id}/` : null })),
 ].sort((a, b) => b.createdTime.localeCompare(a.createdTime));
-// One block of the list per year. The figures in the masthead count these same rows.
+// One block of the list per year.
 const byYear = new Map<number, Row[]>();
 for (const r of rows) {
   const year = new Date(r.createdTime).getFullYear();
@@ -54,26 +54,20 @@ for (const r of rows) {
 }
 const yearGroups: YearGroup[] = Array.from(byYear.entries())
   .sort((a, b) => b[0] - a[0])
-  .map(([year, items]) => ({
-    year,
-    count: items.length,
-    items,
-  }));
+  .map(([year, items]) => ({ year, count: items.length, items }));
 
 const years = Array.from(byYear.keys());
 const oldestYear = years.length ? Math.min(...years) : new Date().getFullYear();
 const newestYear = years.length ? Math.max(...years) : new Date().getFullYear();
-const yearSpan = Math.max(1, newestYear - oldestYear + 1);
-const totalPosts = rows.length;
 
-// The heatmap in the masthead: how many of them each quarter of each year saw.
+// The heatmap at the top: how many of them each quarter of each year saw.
 const byQuarter: Record<number, number[]> = {};
 for (const r of rows) {
   const d = new Date(r.createdTime);
   (byQuarter[d.getFullYear()] ??= [0, 0, 0, 0])[Math.floor(d.getMonth() / 3)]++;
 }
 
-// Process-ink palette for categories: cyan, magenta, and a darkened yellow that holds up on paper.
+// The ink study's colours for the categories: ink, the red sun, a grey-blue wash; 碎碎念 in stone grey.
 const palette = ['var(--cat-1)', 'var(--cat-2)', 'var(--cat-3)'];
 function catColor(name: string): string {
   const idx = allCategories.findIndex((c) => c.name === name);
@@ -86,123 +80,88 @@ const chipData = allCategories.map((c) => ({
   count: articles.filter((a) => a.category === c.name).length,
   color: catColor(c.name),
 }));
-// 碎碎念 stand as one more category, in the chips and in the masthead's count of them
+// 碎碎念 stand as one more category among the chips
 if (notes.length) chipData.push({ name: NOTE_CAT, count: notes.length, color: catColor(NOTE_CAT) });
-
-const heroTitle = isScoped ? scopeCategoryName! : '所有文章';
 ---
 
 <div class:list={['archive-sheet', { 'is-scoped': isScoped }]} id="top">
-  <!-- Masthead, a sheet of its own: double rule, then the headline over its figures, beside the heatmap -->
-  <header class="paper masthead">
-    <div class="rules" aria-hidden="true"><i></i><i></i></div>
-    <div class="mast-grid">
-      <div class="mast-text">
-        <h1 class:list={{ 'is-long': heroTitle.length > 10 }}>{heroTitle}</h1>
-        <dl class="mast-stats">
-          <div class="mast-stat"><dt>posts</dt><dd class="num">{totalPosts}</dd></div>
-          <div class="mast-stat"><dt>{yearSpan === 1 ? 'year' : 'years'}</dt><dd class="num">{yearSpan}</dd></div>
-          <div class="mast-stat"><dt>categories</dt><dd class="num">{chipData.length}</dd></div>
-        </dl>
-      </div>
+  {isScoped ? (
+    <!-- A category page names its category; 所有文章 shows no heading, the heatmap opens the page -->
+    <header class="arc-scope">
+      <a class="arc-back" href={`${BASE}archive/`}>← 所有文章</a>
+      <h1>{scopeCategoryName}</h1>
+      <p class="arc-scope-n num">{rows.length} 篇</p>
+    </header>
+  ) : (
+    <h1 class="sr-only">所有文章</h1>
+  )}
 
-      {years.length > 0 && (
-        <QuarterHeat
-          label="每年每季發文數量熱度圖"
-          counts={byQuarter}
-          from={oldestYear}
-          to={newestYear}
-          unit="篇"
-        />
-      )}
-    </div>
-  </header>
+  {years.length > 0 && (
+    <figure class="arc-heat">
+      <figcaption>每季落筆</figcaption>
+      <QuarterHeat label="每年每季發文數量熱度圖" counts={byQuarter} from={oldestYear} to={newestYear} unit="篇" />
+    </figure>
+  )}
 
-  <!-- The index, on the sheet under it: the filter bar over the list -->
-  <div class="paper archive-index">
-    <!-- Filter bar: search, sort, categories -->
-    <section class="filter-bar" id="archive-bar" aria-label="篩選文章">
-      <div class="filter-main">
-        <div class="search">
-          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="6.5"></circle>
-            <path d="M16 16l4.5 4.5"></path>
-          </svg>
-          <input
-            id="archive-q"
-            class="input"
-            type="search"
-            placeholder="搜尋標題…"
-            autocomplete="off"
-            aria-label="搜尋文章標題"
-          />
-          <kbd class="kbd" id="archive-kbd" aria-hidden="true">⌘K</kbd>
-        </div>
-        <button class="btn btn-secondary sort-btn" id="archive-sort" type="button" data-dir="desc" aria-label="切換排序">
-          <span class="sort-prefix">排序</span>
-          <span class="sort-label">↓ 新到舊</span>
+  <!-- Filter bar: the categories in one row that scrolls sideways, the search behind an icon at its end -->
+  <section class="filter-bar" id="archive-bar" aria-label="篩選文章">
+    {!isScoped && (
+      <div class="chips" id="archive-chips" role="group" aria-label="依分類篩選">
+        <button class="chip is-on" type="button" data-cat="*" aria-pressed="true">
+          全部 <span class="ct num">{rows.length}</span>
         </button>
-      </div>
-      {!isScoped && (
-        <div class="chips" id="archive-chips" role="group" aria-label="依分類篩選">
-          <button class="chip tag tag-accent" type="button" data-cat="*" aria-pressed="true">
-            全部 <span class="ct num">{rows.length}</span>
+        {chipData.map((c) => (
+          <button class="chip" type="button" data-cat={c.name} aria-pressed="false">
+            <span class="dot" style={`--c:${c.color}`}></span>
+            {c.name}
+            <span class="ct num">{c.count}</span>
           </button>
-          {chipData.map((c) => (
-            <button class="chip tag tag-outline" type="button" data-cat={c.name} aria-pressed="false">
-              <span class="dot" style={`--c:${c.color}`}></span>
-              {c.name}
-              <span class="ct num">{c.count}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </section>
-
-    <!-- The index itself, one block per year -->
-    <section class="archive-list" id="archive-list" aria-label="文章列表">
-      {yearGroups.map((g) => (
-        <div class="year-block" data-year={g.year}>
-          <div class="year-side">
-            <div class="yr-n num">{g.year}</div>
-            <div class="yr-l num" data-total={g.count}>{g.count} 篇</div>
-          </div>
-          <div class="rows">
-            {g.items.map((r, i) => {
-              const Tag = r.href ? 'a' : 'div';
-              return (
-                <Tag
-                  class:list={['archive-row', { 'is-first': i === 0 }]}
-                  href={r.href ?? undefined}
-                  data-cat={r.cat}
-                  data-title={r.title}
-                  data-date={r.createdTime}
-                >
-                  <span class="row-date num">{fmtMonthDay(r.createdTime)}</span>
-                  <span class="row-title">{r.title}</span>
-                  <span class="row-cat" title={r.cat}>
-                    <span class="dot" style={`--c:${catColor(r.cat)}`}></span>
-                    <span class="row-cat-name">{r.cat}</span>
-                  </span>
-                  <span class="row-min num">{estimateMin(r.title)} min</span>
-                  {r.href && <span class="row-arrow" aria-hidden="true">↗</span>}
-                </Tag>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-      <div class="archive-empty" id="archive-empty" hidden={yearGroups.length > 0}>
-        <p>沒有符合的文章。</p>
-        <button class="btn btn-secondary" id="archive-reset" type="button">清除篩選</button>
+        ))}
       </div>
-    </section>
+    )}
+    <button class="find" id="archive-find" type="button" aria-label="搜尋標題" title="搜尋標題（⌘K）" aria-expanded="false" aria-controls="archive-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+    </button>
+    <div class="search" id="archive-search" hidden>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input id="archive-q" type="search" placeholder="搜尋標題…" autocomplete="off" aria-label="搜尋文章標題" />
+      <button class="search-x" id="archive-x" type="button" aria-label="清除並收起搜尋">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+  </section>
 
-    <!-- Quiet colophon; the masthead has the way back, the desk's corner button the way up -->
-    <footer class="archive-foot">
-      <span>paul-learning.dev · © {new Date().getFullYear()} Paul Wu · built with Astro</span>
-    </footer>
-  </div>
+  <!-- The index itself, one block per year -->
+  <section class="archive-list" id="archive-list" aria-label="文章列表">
+    {yearGroups.map((g) => (
+      <div class="year-block" data-year={g.year}>
+        <div class="year-side">
+          <div class="yr-n num">{g.year}</div>
+          <div class="yr-l num" data-total={g.count}>{g.count} 篇</div>
+        </div>
+        <div class="rows">
+          {g.items.map((r) => {
+            const Tag = r.href ? 'a' : 'div';
+            return (
+              <Tag class="archive-row" href={r.href ?? undefined} data-cat={r.cat} data-title={r.title} data-date={r.createdTime}>
+                <span class="row-date num">{fmtMonthDay(r.createdTime)}</span>
+                <span class="row-title">{r.title}</span>
+                <span class="row-cat" title={r.cat}>
+                  <span class="dot" style={`--c:${catColor(r.cat)}`}></span>
+                  <span class="row-cat-name">{r.cat}</span>
+                </span>
+                <span class="row-min num">{estimateMin(r.title)} min</span>
+              </Tag>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+    <div class="archive-empty" id="archive-empty" hidden={yearGroups.length > 0}>
+      <p>找不到符合的文章，換個關鍵字或分類試試。</p>
+      <button class="btn btn-secondary" id="archive-reset" type="button">清除篩選</button>
+    </div>
+  </section>
 </div>
 
 <script is:inline>
@@ -211,33 +170,15 @@ const heroTitle = isScoped ? scopeCategoryName! : '所有文章';
     if (!list) return;
     var q = document.getElementById('archive-q');
     var chips = document.getElementById('archive-chips');
-    var sortBtn = document.getElementById('archive-sort');
+    var find = document.getElementById('archive-find');
+    var box = document.getElementById('archive-search');
+    var clearBtn = document.getElementById('archive-x');
     var emptyEl = document.getElementById('archive-empty');
     var resetBtn = document.getElementById('archive-reset');
-    var bar = document.getElementById('archive-bar');
-    var kbd = document.getElementById('archive-kbd');
     var sections = Array.prototype.slice.call(list.querySelectorAll('.year-block'));
 
     var activeCat = '*';
     var kw = '';
-
-    // The shortcut hint should match the keyboard in front of the reader.
-    if (kbd && !/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || '')) {
-      kbd.textContent = 'Ctrl K';
-    }
-
-    // Rows are separated by hairlines drawn above every row but the first *visible* one.
-    function markFirst() {
-      for (var s = 0; s < sections.length; s++) {
-        var rows = sections[s].querySelectorAll('.archive-row');
-        var first = true;
-        for (var i = 0; i < rows.length; i++) {
-          var visible = rows[i].style.display !== 'none';
-          rows[i].classList.toggle('is-first', visible && first);
-          if (visible) first = false;
-        }
-      }
-    }
 
     function apply() {
       var anyVisible = false;
@@ -252,10 +193,10 @@ const heroTitle = isScoped ? scopeCategoryName! : '所有文章';
           var catOk = activeCat === '*' || cat === activeCat;
           var kwOk = !kw || title.indexOf(kw) >= 0 || cat.toLowerCase().indexOf(kw) >= 0;
           var show = catOk && kwOk;
-          row.style.display = show ? '' : 'none';
+          row.hidden = !show;
           if (show) visibleInSection++;
         }
-        sec.style.display = visibleInSection > 0 ? '' : 'none';
+        sec.hidden = visibleInSection === 0;
         var yl = sec.querySelector('.yr-l');
         if (yl) {
           var t = parseInt(yl.getAttribute('data-total') || '0', 10);
@@ -264,32 +205,51 @@ const heroTitle = isScoped ? scopeCategoryName! : '所有文章';
         if (visibleInSection > 0) anyVisible = true;
       }
       if (emptyEl) emptyEl.hidden = anyVisible;
-      markFirst();
     }
 
     function setChip(cat) {
+      activeCat = cat;
       if (!chips) return;
       var all = chips.querySelectorAll('.chip');
       for (var i = 0; i < all.length; i++) {
         var on = (all[i].getAttribute('data-cat') || '*') === cat;
         all[i].setAttribute('aria-pressed', on ? 'true' : 'false');
-        all[i].classList.toggle('tag-accent', on);
-        all[i].classList.toggle('tag-outline', !on);
+        all[i].classList.toggle('is-on', on);
       }
-      activeCat = cat;
     }
 
+    // The search lives behind an icon: it opens on a click (or ⌘K) and folds back once it is empty and left, or cleared.
+    function openSearch() {
+      if (!box || !find) return;
+      box.hidden = false;
+      find.hidden = true;
+      find.setAttribute('aria-expanded', 'true');
+      if (q) { q.focus(); q.select(); }
+    }
+    function closeSearch(clear) {
+      if (!box || !find) return;
+      if (clear && q) { q.value = ''; kw = ''; apply(); }
+      box.hidden = true;
+      find.hidden = false;
+      find.setAttribute('aria-expanded', 'false');
+    }
+
+    if (find) find.addEventListener('click', openSearch);
+    if (clearBtn) {
+      // keep the input's blur from folding the box away before the click lands
+      clearBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      clearBtn.addEventListener('click', function () { closeSearch(true); if (find) find.focus(); });
+    }
     if (q) {
       q.addEventListener('input', function () {
         kw = q.value.trim().toLowerCase();
         apply();
       });
       q.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && q.value) {
-          q.value = '';
-          kw = '';
-          apply();
-        }
+        if (e.key === 'Escape') { closeSearch(true); if (find) find.focus(); }
+      });
+      q.addEventListener('blur', function () {
+        if (!q.value) closeSearch(false);
       });
     }
 
@@ -304,77 +264,18 @@ const heroTitle = isScoped ? scopeCategoryName! : '所有文章';
 
     if (resetBtn) {
       resetBtn.addEventListener('click', function () {
-        if (q) q.value = '';
-        kw = '';
+        closeSearch(true);
         setChip('*');
         apply();
-        if (q) q.focus();
       });
     }
 
-    if (sortBtn) {
-      sortBtn.addEventListener('click', function () {
-        var cur = sortBtn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
-        var next = cur === 'asc' ? 'desc' : 'asc';
-        sortBtn.setAttribute('data-dir', next);
-        var label = sortBtn.querySelector('.sort-label');
-        if (label) label.textContent = next === 'desc' ? '↓ 新到舊' : '↑ 舊到新';
-
-        // Reorder year blocks
-        var ordered = sections.slice().sort(function (a, b) {
-          var ya = parseInt(a.getAttribute('data-year') || '0', 10);
-          var yb = parseInt(b.getAttribute('data-year') || '0', 10);
-          return next === 'desc' ? yb - ya : ya - yb;
-        });
-        for (var i = 0; i < ordered.length; i++) list.insertBefore(ordered[i], emptyEl);
-
-        // Reorder rows inside each block by date
-        for (var j = 0; j < ordered.length; j++) {
-          var host = ordered[j].querySelector('.rows');
-          if (!host) continue;
-          var rows = Array.prototype.slice.call(host.querySelectorAll('.archive-row'));
-          rows.sort(function (a, b) {
-            var da = a.getAttribute('data-date') || '';
-            var db = b.getAttribute('data-date') || '';
-            return next === 'desc' ? db.localeCompare(da) : da.localeCompare(db);
-          });
-          for (var k = 0; k < rows.length; k++) host.appendChild(rows[k]);
-        }
-        sections = ordered;
-        markFirst();
-      });
-    }
-
-    // ⌘K / Ctrl+K focuses search
+    // ⌘K / Ctrl+K opens the search
     document.addEventListener('keydown', function (e) {
       if ((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        if (q) {
-          q.focus();
-          q.select();
-        }
+        openSearch();
       }
     });
-
-    // The bar sticks to the top of the window on desktop; give it its edge only while it is stuck.
-    if (bar) {
-      var desktop = window.matchMedia('(min-width: 761px)');
-      var queued = false;
-      var update = function () {
-        queued = false;
-        var stuck = desktop.matches && bar.getBoundingClientRect().top <= 0.5 && window.scrollY > 0;
-        bar.classList.toggle('is-stuck', stuck);
-      };
-      var onScroll = function () {
-        if (queued) return;
-        queued = true;
-        window.requestAnimationFrame(update);
-      };
-      window.addEventListener('scroll', onScroll, { passive: true });
-      window.addEventListener('resize', onScroll);
-      update();
-    }
-
-    markFirst();
   })();
 </script>

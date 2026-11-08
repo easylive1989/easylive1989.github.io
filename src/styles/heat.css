@@ -1,5 +1,5 @@
 /* A heatmap of the quarters: the years run across the top, the four quarters down the side.
-   Broadsheet ink: neutral-200 for nothing, cyan for something. Tokens come from broadsheet.css. */
+   Ink washes on the plaster: an outlined cell for nothing, darker greys for more, solid ink for the busiest. Tokens from desk.css. */
 
 .heat {
   margin: 0;
@@ -9,48 +9,46 @@
 }
 .heat-grid {
   display: grid;
-  /* the column of quarter labels, then a 28px cell and its gap for every year; narrower when the sheet is */
-  width: calc(23px + var(--n) * 31px);
+  /* the column of quarter labels, then a 28px cell and its gap for every year; narrower when the screen is */
+  width: calc(26px + var(--n) * 33px);
   max-width: 100%;
-  grid-template-columns: 23px repeat(var(--n), minmax(0, 1fr));
-  gap: 3px;
+  grid-template-columns: 26px repeat(var(--n), minmax(0, 1fr));
+  gap: 4px;
   align-items: center;
 }
 .heat-y {
   text-align: center;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
   line-height: 1.6;
-  color: var(--color-text);
+  color: var(--color-neutral-700);
 }
 .heat-q {
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  font-size: 11px;
   color: var(--color-neutral-700);
 }
 .heat-cell {
   display: grid;
   place-items: center;
-  aspect-ratio: 1;
-  border-radius: 2px;
-  background: var(--color-neutral-200);
+  aspect-ratio: 30 / 26;
+  box-sizing: border-box;
+  border-radius: 3px;
+  border: 1px solid rgba(44, 43, 40, 0.12);
   font-size: 11px;
-  font-weight: 600;
   font-style: normal;
   color: var(--color-text);
 }
-.heat-cell[data-v="1"] { background: color-mix(in srgb, var(--color-accent) 24%, var(--color-neutral-200)); }
-.heat-cell[data-v="2"] { background: color-mix(in srgb, var(--color-accent) 48%, var(--color-neutral-200)); }
-.heat-cell[data-v="3"] { background: color-mix(in srgb, var(--color-accent) 74%, var(--color-neutral-200)); color: var(--color-bg); }
-.heat-cell[data-v="4"] { background: var(--color-accent); color: var(--color-bg); }
+.heat-cell[data-v="1"] { border-color: transparent; background: #e3e0d9; color: #4f4c47; }
+.heat-cell[data-v="2"] { border-color: transparent; background: #c9c5bd; color: #2c2b28; }
+.heat-cell[data-v="3"] { border-color: transparent; background: #9a968e; color: #1f1e1c; }
+.heat-cell[data-v="4"] { border-color: transparent; background: #2c2b28; color: #f2f0eb; }
 .heat-legend {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 4px;
-  margin-top: var(--space-2);
+  margin-top: 10px;
   font-size: 11px;
   color: var(--color-neutral-700);
 }
 .heat-legend span { margin: 0 3px; }
-.heat-legend .heat-cell { width: 12px; }
+.heat-legend .heat-cell { width: 14px; }

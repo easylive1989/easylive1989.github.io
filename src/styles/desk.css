@@ -1,14 +1,11 @@
 /* The desk — shared chrome for the blog, every page that isn't the room itself.
-   The blog is the site's other way of being read: reached from the room's 部落格
-   tab, or from a search, a feed or a shared link. So: a plain light ground, the
-   Broadsheet paper to read on, and a masthead with the blog's three tabs and the
-   way into the room. Page-specific layout lives with each page; the primitives
-   below are shared. */
+   The blog wears the ink study's colours (月門水墨): a plaster wall, ink for the type, the red sun as the one accent, an ink
+   landscape across the top of every page and a strip of stone floor at the foot. Broadsheet's tokens (broadsheet.css) are
+   remapped here under body.desk-body only, so prose.css and the Broadsheet components pick the new colours up without the
+   room, which shares those two files, changing. Page-specific layout lives with each page; the primitives below are shared. */
 
 :root {
-  --desk-ground: #e6e4e2;
-
-  /* Materials lifted from the room (study.js palette) */
+  /* Materials lifted from the room (study.js palette): the bookshelf's wood and brass */
   --wood: #5b3522;
   --wood-dark: #3b2216;
   --wood-light: #7a4a2c;
@@ -17,87 +14,200 @@
   --brass-dark: #6e5228;
   --brass-ink: #2a1d0e;
 
-  --font-reading: "Source Serif 4", "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --font-reading: "Noto Serif TC", "Source Serif 4", "Songti TC", "PMingLiU", serif;
+}
+
+/* — the ink study's palette, in Broadsheet's names — */
+body.desk-body {
+  --plaster: #f2f0eb;
+  --plaster-hi: #fbfaf7;
+  --ink: #2c2b28;
+  --stone: #4f4c47;
+  --stone-light: #8a8d8c;
+  --muted: #6a675f;
+  --sun: #c8402f;
+
+  --color-bg: var(--plaster);
+  --color-surface: var(--plaster-hi);
+  --color-text: var(--ink);
+  --color-accent: var(--sun);
+  --color-accent-2: #6f8a9a;
+  --color-divider: rgba(44, 43, 40, 0.16);
+
+  --color-neutral-100: #f7f5f1;
+  --color-neutral-200: #e6e3dc;
+  --color-neutral-300: #d6d2ca;
+  --color-neutral-400: #b9b5ad;
+  --color-neutral-500: #9a968e;
+  --color-neutral-600: #7d7972;
+  --color-neutral-700: #6a675f;
+  --color-neutral-800: #4f4c47;
+  --color-neutral-900: #2c2b28;
+
+  --color-accent-100: #f8e9e5;
+  --color-accent-200: #f0cfc7;
+  --color-accent-300: #e3a698;
+  --color-accent-400: #d77d68;
+  --color-accent-500: #cf5a46;
+  --color-accent-600: #c8402f;
+  --color-accent-700: #a8352a;
+  --color-accent-800: #7f2a22;
+  --color-accent-900: #51201b;
+
+  --font-heading: var(--font-reading);
+  --font-body: var(--font-reading);
+  --font-heading-weight: 600;
+
+  --shadow-sm: 0 1px 2px rgba(44, 43, 40, 0.12);
+  --shadow-md: 0 6px 18px rgba(44, 43, 40, 0.14);
+  --shadow-lg: 0 18px 40px rgba(44, 43, 40, 0.2);
+
+  background: var(--plaster);
+  color: var(--ink);
+  font-family: var(--font-reading);
+  overflow-x: clip;
+}
+
+/* the page in one wrapper (DeskLayout), so the secret door can split a copy of it */
+.desk-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--plaster);
 }
 
 html {
-  background: var(--desk-ground);
+  background: #f2f0eb;
   -webkit-font-smoothing: antialiased;
   /* Reserve the scrollbar so filtering that shortens a page doesn't shift it sideways. */
   scrollbar-gutter: stable;
 }
 
-body.desk-body {
-  min-height: 100vh;
-  background: var(--desk-ground);
-  font-family: var(--font-reading);
+.desk-body ::selection { background: rgba(200, 64, 47, 0.2); }
+.desk-body :focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
+.desk-body a { color: var(--ink); }
+.desk-body a:hover { color: var(--sun); }
+
+/* — the ink landscape (Landscape.astro): four layers, the camera far back, or pushed in on the about page — */
+.ink-land {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 520px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ink-land svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 80% 46%;
+}
+.ink-land .l-mist {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 110px;
+  background: linear-gradient(rgba(242, 240, 235, 0), var(--plaster));
+}
+.ink-land.is-near .l-far { transform: scale(1.5); }
+.ink-land.is-near .l-sun { transform: scale(2); }
+.ink-land.is-near .l-mid { transform: scale(2.1); }
+.ink-land.is-near .l-near { transform: scale(3.4) translateY(9%); }
+
+/* — the stone floor at the foot of every page — */
+.desk-floor {
+  flex: none;
+  height: 110px;
+  margin-top: 72px;
+  border-top: 4px solid var(--stone);
+  background-color: var(--stone-light);
+  background-image:
+    linear-gradient(90deg, rgba(40, 40, 40, 0.25) 1px, rgba(0, 0, 0, 0) 1px),
+    linear-gradient(0deg, rgba(40, 40, 40, 0.25) 1px, rgba(0, 0, 0, 0) 1px);
+  background-size: 150px 40px;
 }
 
-/* the back-to-top button's card */
-.sheet {
-  background: var(--color-bg);
-  box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-md);
-}
-
-/* — masthead: the blog's name, its three tabs and, set apart, the way into the room — */
-/* It takes the page frame's width and side padding, so it lines up with the paper's edges, and scrolls away with the page.
-   The tabs and the way into the room sit in two frames of the same make, a gap between them, as the room's dock has its two
-   windows: leaving for the room never reads as one more tab. */
+/* — masthead: the blog's name with the red sun, its three tabs in a pill, and the feed — */
 .blog-head {
+  position: relative;
+  z-index: 2;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
-  padding: 26px var(--space-6) 4px;
+  padding: 22px 40px 0;
 }
 .blog-head a { text-decoration: none; }
-.blog-head a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.blog-brand { font-size: 28px; font-weight: 700; letter-spacing: 0.02em; color: var(--color-text); }
-.blog-tabs, .blog-rss, .blog-room {
+.blog-brand {
   display: flex;
-  align-items: stretch;
-  height: 36px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
-  border-radius: var(--radius-md);
-}
-.blog-tabs { gap: 22px; margin-left: auto; padding: 0 16px; }
-/* the lit tab's line runs along the frame's inner bottom edge */
-.blog-tabs a { display: flex; align-items: center; border-block: 2px solid transparent; font-size: 15px; color: var(--color-neutral-700); }
-.blog-tabs a:hover { color: var(--color-text); }
-.blog-tabs a.on { border-bottom-color: var(--color-accent); color: var(--color-text); font-weight: 600; }
-.blog-room {
   align-items: center;
-  gap: 6px;
-  margin-left: var(--space-3);
-  padding: 0 12px;
-  font-size: 14px;
-  color: var(--color-accent-700);
-  white-space: nowrap;
+  gap: 12px;
+  color: var(--ink);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
 }
+.blog-brand i { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--sun); }
+.blog-brand:hover { color: var(--ink); }
+.blog-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 0 4px;
+  border: 1px solid rgba(44, 43, 40, 0.2);
+  border-radius: 24px;
+  background: rgba(250, 249, 246, 0.7);
+}
+.blog-tabs a {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 16px;
+  color: var(--stone);
+  border-radius: 22px;
+}
+.blog-tabs a:hover { color: var(--ink); }
+.blog-tabs a.on { height: 38px; padding: 0 16px; color: var(--plaster); background: var(--ink); border-radius: 19px; }
 .blog-rss {
-  justify-content: center;
-  align-items: center;
-  width: 36px;
-  margin-left: var(--space-3);
-  color: var(--color-accent-700);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+  color: var(--stone);
+  border: 1px solid rgba(44, 43, 40, 0.2);
+  border-radius: 50%;
+  background: rgba(250, 249, 246, 0.7);
 }
 .blog-rss svg { width: 14px; height: 14px; fill: currentColor; }
-.blog-rss:hover, .blog-room:hover { background: var(--color-accent); color: #fff; }
-.blog-room svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.blog-rss:hover { color: var(--plaster); background: var(--ink); }
 
 /* — back to the top: the masthead scrolls away, so this corner button brings the page back up — */
 .desk-top {
   position: fixed;
   z-index: 10;
-  right: var(--space-6);
-  bottom: var(--space-6);
+  right: 24px;
+  bottom: 24px;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border: 0;
-  color: var(--color-accent-700);
+  border: 1px solid rgba(44, 43, 40, 0.2);
+  border-radius: 50%;
+  color: var(--stone);
+  background: var(--plaster-hi);
+  box-shadow: var(--shadow-md);
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
@@ -105,102 +215,130 @@ body.desk-body {
   transition: opacity 0.2s, transform 0.2s, visibility 0.2s, background 0.15s, color 0.15s;
 }
 .desk-top.is-shown { opacity: 1; visibility: visible; transform: none; }
-.desk-top:hover { background: var(--color-accent); color: #fff; }
-.desk-top:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.desk-top:hover { background: var(--ink); color: var(--plaster); }
 
 /* — page frame — */
 .desk-main {
-  position: relative; /* no z-index: it would trap fixed children (the reading progress bar) under the vignette */
+  position: relative; /* no z-index: it would trap fixed children (the reading progress bar) under other layers */
+  flex: 1 0 auto;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
-  padding: var(--space-4) var(--space-6) var(--space-8);
+  padding: 40px 40px 0;
 }
-.desk-reading { max-width: 1040px; }
+.desk-reading { max-width: 1100px; }
 .desk-wide { max-width: 1180px; }
 
-/* — paper: a sheet lying on the desk — */
-.paper {
+/* — paper: on the plaster wall the sheets lose their card; the class stays for the pages' structure — */
+.desk-body .paper {
   position: relative;
-  background: var(--color-bg);
-  color: var(--color-text);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  background: transparent;
+  color: var(--ink);
+  box-shadow: none;
+  border-radius: 0;
 }
-.paper + .paper { margin-top: var(--space-6); }
+.desk-body .paper + .paper { margin-top: 40px; }
+.desk-body .masthead .rules { display: none; }
+.desk-body .masthead h1 { font-weight: 600; letter-spacing: 0.02em; line-height: 1.25; margin: 0; }
 
-/* — masthead: the double rule the room's title card uses — */
-.masthead .rules { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
-.masthead .rules i { display: block; background: var(--color-text); }
-.masthead .rules i:first-child { height: 3px; }
-.masthead .rules i:last-child { height: 1px; }
-.masthead h1 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.08; margin: 0; }
+/* — Broadsheet's buttons, made pills — */
+.desk-body .btn {
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 22px;
+  font-family: var(--font-reading);
+  font-weight: 400;
+  font-size: 15px;
+  text-decoration: none;
+}
+.desk-body .btn-primary { background: var(--ink); color: var(--plaster); }
+.desk-body .btn-primary:hover { background: #45433e; color: var(--plaster); }
+.desk-body .btn-secondary { border-color: rgba(44, 43, 40, 0.3); color: var(--ink); }
+.desk-body .btn-secondary:hover { background: rgba(44, 43, 40, 0.06); color: var(--ink); }
+.desk-body .btn-ghost { color: var(--stone); }
+.desk-body .btn-ghost:hover { background: rgba(44, 43, 40, 0.06); color: var(--ink); }
+.desk-body .card-kicker { color: var(--sun); letter-spacing: 0.14em; }
 
-/* — the figures under a masthead's headline: a numeral over its label, a hairline between one and the next — */
-.mast-stats { display: flex; flex-wrap: wrap; margin: 26px 0 0; padding: 0; }
-.mast-stat {
-  display: flex;
-  flex-direction: column-reverse; /* numeral over label, label first in the markup */
-  gap: 6px;
-  padding: 0 28px;
-  border-left: 1px solid var(--color-divider);
-}
-.mast-stat:first-child { padding-left: 0; border-left: 0; }
-.mast-stat dd {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: 38px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-.mast-stat dt {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-neutral-700);
-}
-
-/* — brass plate: the little label on the shelf, for section headings — */
-.plate-brass {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: 5px 16px;
-  background: linear-gradient(180deg, var(--brass-light), var(--brass) 48%, #9b7539);
-  color: var(--brass-ink);
-  border-radius: 2px;
-  font-family: var(--font-heading);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-shadow: 0 1px 0 rgba(255, 240, 200, 0.5);
-  box-shadow:
-    inset 0 0 0 3px var(--brass),
-    inset 0 0 0 4px var(--brass-dark),
-    0 2px 5px rgba(0, 0, 0, 0.25);
+/* text only a screen reader needs: the page's heading where the design shows none */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* — tabular numerals for dates and counts — */
 .num { font-variant-numeric: tabular-nums lining-nums; }
 
-@media (max-width: 760px) {
-  .blog-head { padding: 16px var(--space-2) 4px; }
-  .desk-main { padding: var(--space-3) var(--space-2) var(--space-6); }
-  .desk-top { right: var(--space-3); bottom: var(--space-3); }
-  .mast-stats { margin-top: 20px; }
-  .mast-stat { padding: 0 16px; }
-  .mast-stat dd { font-size: 30px; }
-}
+/* — the blog's transitions (deskFx.js) — */
 
-/* a phone: the name on a line of its own, the tabs and the way into the room on the next */
+/* the secret door: a copy of the page split down the middle, the halves sliding apart onto the dark room behind */
+.door-fx { position: fixed; inset: 0; z-index: 100; overflow: hidden; background: #191917; }
+.door-room {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 50% 45% at 50% 0%, rgba(226, 232, 240, 0.16), rgba(226, 232, 240, 0) 70%), #22211f;
+}
+.door-leaf { position: absolute; inset: 0; transition: transform 1.1s cubic-bezier(0.7, 0, 0.2, 1); }
+.door-leaf.door-l.is-apart { transform: translateX(-58%); }
+.door-leaf.door-r.is-apart { transform: translateX(58%); }
+.door-pane { position: absolute; inset: 0; overflow: hidden; }
+/* the left half reaches 2px past the middle, under the right one, so no seam shows while the two meet */
+.door-l .door-pane { clip-path: inset(0 calc(50% - 2px) 0 0); }
+.door-r .door-pane { clip-path: inset(0 0 0 50%); }
+.door-copy { position: absolute !important; left: 0; width: 100%; visibility: visible !important; }
+.door-copy * { animation: none !important; }
+/* the wall's thickness, seen only once the halves part */
+.door-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(90deg, #a9a49a, #dcd7cd 50%, #a9a49a);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.door-l .door-edge { left: calc(50% - 30px); box-shadow: 20px 0 44px rgba(0, 0, 0, 0.5); }
+.door-r .door-edge { left: 50%; box-shadow: -20px 0 44px rgba(0, 0, 0, 0.5); }
+.door-leaf.is-apart .door-edge { opacity: 1; }
+.door-seam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: #f4f7fb;
+  box-shadow: 0 0 20px 6px rgba(220, 230, 245, 0.75);
+  opacity: 0;
+}
+.door-fx.is-opening .door-seam { animation: door-seam 1s ease-out forwards; }
+.door-fx.is-opening .door-pane { animation: door-rumble 0.3s ease-in-out; }
+@keyframes door-seam { 0% { opacity: 0; transform: scaleY(0); } 30% { opacity: 1; transform: scaleY(1); } 100% { opacity: 0; transform: scaleY(1); } }
+@keyframes door-rumble { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-3px); } 40% { transform: translateX(3px); } 60% { transform: translateX(-2px); } 80% { transform: translateX(1px); } }
+/* coming back through the door: the page stays hidden until its copy is in place, apart, ready to close */
+html[data-arrive="door-close"] .desk-page { visibility: hidden; }
+
+/* 推進山水: the words fade off the plaster, the landscape's layers push in (or pull back), the next page's words fade in */
+.zoom-fx { position: fixed; inset: 0; z-index: 100; pointer-events: none; background: var(--plaster); opacity: 0; transition: opacity 0.35s ease; }
+.zoom-fx.is-on { opacity: 1; }
+.zoom-fx .ink-land svg { transition: transform 1.3s cubic-bezier(0.5, 0, 0.4, 1); }
+html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 0.7s ease both; }
+@keyframes desk-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* a phone: the name and the feed on one line, the tabs on the next */
 @media (max-width: 640px) {
-  /* the frames keep a gap between them however narrow the line */
-  .blog-head { flex-wrap: wrap; gap: 6px var(--space-2); }
-  .blog-brand { flex-basis: 100%; font-size: 23px; }
-  .blog-tabs { margin-left: 0; gap: 18px; padding: 0 12px; }
-  .blog-rss { margin-left: auto; }
-  .blog-room { margin-left: 0; }
-  /* four figures no longer fit on a line: two rows of two */
-  .mast-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-3); }
-  .mast-stat:nth-child(odd) { padding-left: 0; border-left: 0; }
+  .blog-head { padding: 16px 16px 0; gap: 10px; }
+  .blog-brand { margin-right: auto; font-size: 20px; letter-spacing: 0.04em; }
+  .blog-tabs { order: 3; flex: 1 1 100%; margin-left: 0; justify-content: space-between; }
+  .desk-main { padding: 28px 16px 0; }
+  .desk-top { right: 16px; bottom: 16px; }
+  .desk-floor { height: 80px; margin-top: 56px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -208,7 +346,6 @@ body.desk-body {
 }
 
 @media print {
-  .blog-head, .desk-top { display: none; }
+  .blog-head, .desk-top, .ink-land, .desk-floor { display: none; }
   html, body.desk-body { background: #fff; }
-  .paper { box-shadow: none; }
 }

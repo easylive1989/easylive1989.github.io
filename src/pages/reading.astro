@@ -1,396 +1,368 @@
 ---
 import DeskLayout from '../layouts/DeskLayout.astro';
-import QuarterHeat from '../components/QuarterHeat.astro';
 import '../styles/reading.css';
 import { getAllBooks, getBookNotes } from '../lib/data';
-import {
-  bookStatus,
-  bookFinishedYear,
-  bookFinishedQuarter,
-  coverGradient,
-  normaliseKind,
-  categoryRank,
-} from '../lib/bookCover';
+import { bookStatus, bookFinishedYear, categoryRank } from '../lib/bookCover';
 import type { Book } from '../lib/notion';
 
+// The bookshelf: the dark room behind the secret door (DeskLayout's deskFx.js opens it from any blog page). One shelf per
+// year, newest on top, spines coloured by category; the books still to read lie in stacks on the bottom shelf. Pass over a
+// spine and it lifts with a card; click it and it comes off the shelf and turns to its cover.
 const allBooks = await getAllBooks();
-const noted = await getBookNotes(); // the books with notes in them get a page of their own
+const noted = await getBookNotes(); // the finished books with notes in them get a page of their own (reading/[id].astro)
 const BASE = import.meta.env.BASE_URL;
 
-const totalCount = allBooks.length;
-const readCount = allBooks.filter((b) => bookStatus(b) === 'read').length;
-const wishlistCount = allBooks.filter((b) => bookStatus(b) === 'unstarted').length;
+// Spine colours by a book's first category, two shades each; a book without one is bound in cream.
+const KIND: Record<string, [string, string][]> = {
+  軟體工程: [['#24364d', '#e9e2cf'], ['#2c4360', '#ece6d4']],
+  自我進化: [['#2f4a39', '#ece4c8'], ['#3a5845', '#efe8cf']],
+  商業策略: [['#7a2622', '#f3e4c8'], ['#8c3b2e', '#f6e7c8']],
+  財富人文: [['#9a6b32', '#fbf0d8'], ['#86592a', '#f7ead0']],
+  思維模型: [['#5d6b72', '#f1ede4'], ['#4c5960', '#eee9df']],
+};
+const OTHER: [string, string][] = [['#e6d8b8', '#3a2a1c'], ['#d9cba8', '#3a2a1c']];
+// the categories' dots, brighter than the spines so they read on the dark shelf
+const GLOW: Record<string, string> = { 軟體工程: '#6f93c0', 自我進化: '#6fa57f', 商業策略: '#d8604c', 財富人文: '#d3a866', 思維模型: '#9aabb4' };
+// and darker, for the pale card a book comes out on
+const DOTS: Record<string, string> = Object.fromEntries(Object.entries(KIND).map(([k, v]) => [k, v[0][0]]));
 
-interface Shelf {
-  /** Stable key: the year, or "wish". */
-  id: string;
-  year?: number;
-  /** Big line on the brass plate. */
-  label: string;
-  count: number;
-  books: Book[];
-  note?: string;
-  wish?: boolean;
+/** The same book always stands the same height and width, and lies the same way, whatever else is on the shelf. */
+function hash(t: string): number {
+  let x = 0;
+  for (let i = 0; i < t.length; i++) x = (x * 31 + t.charCodeAt(i)) | 0;
+  return Math.abs(x);
+}
+function shortTitle(full: string, n: number): string {
+  const head = full.split(/[：:｜|（(]/)[0].trim() || full;
+  return head.length > n ? head.slice(0, n - 1) + '…' : head;
+}
+const fmtMonth = (iso: string) => `${iso.slice(0, 4)}.${iso.slice(5, 7)}`;
+
+interface Spine {
+  title: string;
+  short: string;
+  cats: string[];
+  meta: string;
+  notes: string;
+  cover: string;
+  coverFrom: string;
+  reading: boolean;
+  aria: string;
+  style: string;
+}
+
+function spine(b: Book, flat: boolean): Spine {
+  const k = hash(b.title);
+  const cats = b.categories.filter(Boolean);
+  const tones = KIND[cats[0]] ?? OTHER;
+  const [bg, fg] = tones[k % tones.length];
+  const status = bookStatus(b);
+  const notes = status === 'read' && noted.has(b.id) ? `${BASE}reading/${b.id}/` : '';
+  const meta =
+    (status === 'reading' ? '閱讀中' : status === 'unstarted' ? '想讀' : b.finishedDate ? `${fmtMonth(b.finishedDate)} 讀完` : '已讀') +
+    (notes ? '・有讀書筆記' : '');
+  const size = flat
+    ? `width:${130 + (k % 56)}px;height:${22 + (k % 9)}px;margin-left:${((k >> 4) % 17) - 8}px`
+    : `height:${118 + (k % 46)}px;width:${30 + ((k >> 3) % 13)}px`;
+  return {
+    title: b.title,
+    short: shortTitle(b.title, flat ? 14 : 10),
+    cats,
+    meta,
+    notes,
+    cover: b.coverUrl ?? '',
+    coverFrom: KIND[cats[0]] ? bg : '#6b5a44',
+    reading: status === 'reading',
+    aria: b.title + (notes ? '（有讀書筆記）' : ''),
+    style: `--bg:${bg};--fg:${fg};${size}`,
+  };
 }
 
 // Newest first; a book still being read counts as the newest of its year.
 const finishedKey = (b: Book) => b.finishedDate ?? '9999';
-
-const shelfBooks = allBooks.filter((b) => bookStatus(b) !== 'unstarted');
-const wishlistBooks = allBooks
-  .filter((b) => bookStatus(b) === 'unstarted')
-  .sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant'));
+const onShelf = allBooks.filter((b) => bookStatus(b) !== 'unstarted');
+const wish = allBooks.filter((b) => bookStatus(b) === 'unstarted').sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant'));
 const byYear = new Map<number, Book[]>();
-for (const b of shelfBooks) {
+for (const b of onShelf) {
   const y = bookFinishedYear(b) ?? new Date().getFullYear();
   if (!byYear.has(y)) byYear.set(y, []);
   byYear.get(y)!.push(b);
 }
-for (const items of byYear.values()) {
-  items.sort((a, b) => finishedKey(b).localeCompare(finishedKey(a)));
-}
 
-const yearShelves: Shelf[] = Array.from(byYear.entries())
+interface Shelf {
+  id: string;
+  label: string;
+  flat: boolean;
+  books: Spine[];
+  stacks: Spine[][];
+}
+const shelves: Shelf[] = Array.from(byYear.entries())
   .sort((a, b) => b[0] - a[0])
-  .map(([year, items]) => ({
+  .map(([year, books]) => ({
     id: String(year),
-    year,
     label: String(year),
-    count: items.length,
-    books: items,
+    flat: false,
+    books: books.sort((a, b) => finishedKey(b).localeCompare(finishedKey(a))).map((b) => spine(b, false)),
+    stacks: [],
   }));
-
-const wishShelf: Shelf | null =
-  wishlistBooks.length > 0
-    ? { id: 'wish', label: '想讀', count: wishlistBooks.length, books: wishlistBooks, wish: true }
-    : null;
-
-const views = [
-  { id: 'read', shelves: yearShelves, emptyText: '書架還是空的。' },
-  { id: 'wish', shelves: wishShelf ? [wishShelf] : [], emptyText: '還沒加任何想讀的書。' },
-];
-
-// Heatmap data
-const heatYears = Array.from(byYear.keys()).filter((y) => y > 0).sort();
-const oldestYear = heatYears[0] ?? new Date().getFullYear();
-const newestYear = heatYears[heatYears.length - 1] ?? new Date().getFullYear();
-
-const heatBucket: Record<number, [number, number, number, number]> = {};
-for (const b of allBooks) {
-  if (bookStatus(b) !== 'read') continue;
-  const y = bookFinishedYear(b);
-  const q = bookFinishedQuarter(b);
-  if (y == null || q == null) continue;
-  heatBucket[y] ??= [0, 0, 0, 0];
-  heatBucket[y][q - 1]++;
+if (wish.length) {
+  const books = wish.map((b) => spine(b, true));
+  const stacks: Spine[][] = [];
+  for (let i = 0; i < books.length; i += 6) stacks.push(books.slice(i, i + 6));
+  shelves.push({ id: 'wish', label: '想讀', flat: true, books, stacks });
 }
 
-// Raw Notion 類型 counts — books appear in every category they're tagged with.
-// The chips run in the shelving order of the categories, not by how many books each has.
-const rawCatCounts = new Map<string, number>();
-for (const b of allBooks) {
-  for (const c of b.categories) {
-    if (!c) continue;
-    rawCatCounts.set(c, (rawCatCounts.get(c) ?? 0) + 1);
-  }
-}
-const chipsData = Array.from(rawCatCounts.entries())
+// The category chips, in the shelving order of the categories; a book counts in every category it is tagged with.
+const counts = new Map<string, number>();
+for (const b of allBooks) for (const c of b.categories) if (c) counts.set(c, (counts.get(c) ?? 0) + 1);
+const cats = Array.from(counts.entries())
   .sort((a, b) => categoryRank(a[0]) - categoryRank(b[0]) || b[1] - a[1])
-  .map(([name, count]) => ({
-    name,
-    count,
-    dotClass: `dot-${normaliseKind(name)}`,
-  }));
-
-// Books on a real shelf are never quite the same height. Every cover keeps the
-// column width but takes one of a few aspect ratios (3:4 is the tallest) and
-// stands on the plank, so the skyline wavers a little.
-const COVER_RATIOS = [0.75, 0.78, 0.8, 0.765, 0.82, 0.77];
-function coverRatio(title: string): number {
-  let h = 0;
-  for (let i = 0; i < title.length; i++) h = (h * 31 + title.charCodeAt(i)) | 0;
-  return COVER_RATIOS[Math.abs(h) % COVER_RATIOS.length];
-}
-
-const yearsSpan = Math.max(0, newestYear - oldestYear + 1);
+  .map(([name, count]) => ({ name, count, glow: GLOW[name] ?? '#b7b4ac' }));
+const views: [string, string, number][] = [
+  ['all', '全部', allBooks.length],
+  ['read', '已讀', onShelf.length],
+  ['wish', '想讀', wish.length],
+];
 ---
 
-<DeskLayout title="書架" width="reading" tab="reading">
-  <div class="reading" id="top">
+<DeskLayout title="書架" width="wide" tab="reading" bodyClass="shelf-body">
+  <section class="shelf-room" aria-labelledby="shelf-h">
+    <h1 id="shelf-h" class="sr-only">書架</h1>
 
-    <!-- 1 · masthead sheet -->
-    <section class="paper masthead rd-masthead" aria-labelledby="rd-h1">
-      <div class="rules" aria-hidden="true"><i></i><i></i></div>
-      <div class="rd-mast-grid">
-        <div class="rd-mast-main">
-          <h1 id="rd-h1">讀過的<em>書</em></h1>
-          <dl class="mast-stats">
-            <div class="mast-stat"><dt>total</dt><dd class="num">{totalCount}</dd></div>
-            <div class="mast-stat"><dt>read</dt><dd class="num">{readCount}</dd></div>
-            <div class="mast-stat"><dt>wishlist</dt><dd class="num">{wishlistCount}</dd></div>
-            <div class="mast-stat"><dt>years</dt><dd class="num">{yearsSpan}</dd></div>
-          </dl>
-        </div>
-
-        <QuarterHeat
-          label="每年每季讀完的書數量熱度圖"
-          counts={heatBucket}
-          from={oldestYear}
-          to={newestYear}
-          unit="本"
-        />
+    <!-- 闔上暗門, 全部／已讀／想讀, the categories and the search, in one row that stays at the top -->
+    <div class="shelf-bar">
+      <button type="button" class="shelf-close" data-door-close>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+        闔上暗門
+      </button>
+      <div class="shelf-views" id="shelf-views" role="group" aria-label="已讀或想讀">
+        {views.map(([id, label, n]) => (
+          <button type="button" data-view={id} aria-pressed={id === 'all' ? 'true' : 'false'}>{label} <span class="num">{n}</span></button>
+        ))}
       </div>
-    </section>
-
-    <!-- 2 · filter strip -->
-    <section class="paper rd-filter" aria-label="篩選書單">
-      <div class="rd-frow">
-        <label class="rd-search">
-          <span class="ico" aria-hidden="true">⌕</span>
-          <input id="reading-q" class="input" type="search" placeholder="搜尋書名 / 類型…" autocomplete="off" />
-          <kbd class="kbd" id="reading-kbd">⌘K</kbd>
-        </label>
-        <button class="btn btn-secondary rd-sort" id="reading-sort" type="button" data-dir="desc">
-          <span class="sort-pre">排序：</span><span class="sort-label">↓ 最近讀完</span>
-        </button>
-        <div class="seg" role="tablist" aria-label="已讀或想讀" id="reading-view">
-          <button type="button" role="tab" data-view="read" aria-current="true">
-            已讀 <span class="seg-ct num">{shelfBooks.length}</span>
-          </button>
-          <button type="button" role="tab" data-view="wish" aria-current="false">
-            想讀 <span class="seg-ct num">{wishlistBooks.length}</span>
-          </button>
-        </div>
-      </div>
-      <div class="rd-frow rd-chips" id="reading-chips" role="group" aria-label="類型">
-        <button type="button" class="chip tag tag-accent" data-cat="*" aria-current="true">
-          全部 <span class="ct num">{totalCount}</span>
-        </button>
-        {chipsData.map((c) => (
-          <button type="button" class="chip tag tag-outline" data-cat={c.name} aria-current="false">
-            <i class={`dot ${c.dotClass}`}></i>
-            {c.name}
-            <span class="ct num">{c.count}</span>
+      <div class="shelf-chips" id="shelf-chips" role="group" aria-label="分類">
+        <button class="chip is-on" type="button" data-cat="*" aria-pressed="true">所有分類 <span class="ct num">{allBooks.length}</span></button>
+        {cats.map((c) => (
+          <button class="chip" type="button" data-cat={c.name} aria-pressed="false">
+            <span class="dot" style={`--c:${c.glow}`}></span>{c.name}<span class="ct num">{c.count}</span>
           </button>
         ))}
       </div>
-    </section>
+      <button class="find" id="shelf-find" type="button" aria-label="搜尋書名" title="搜尋書名（⌘K）" aria-expanded="false" aria-controls="shelf-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      </button>
+      <div class="search" id="shelf-search" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input id="shelf-q" type="search" placeholder="搜尋書名…" autocomplete="off" aria-label="搜尋書名" />
+        <button class="search-x" id="shelf-x" type="button" aria-label="清除並收起搜尋">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+      </div>
+    </div>
 
-    <!-- 3 · the bookcase -->
-    <section class="bookcase" id="reading-shelves" data-view="read" aria-label="書架">
-      <div class="bc-back">
-        {views.map((v) => (
-          <div class="rd-view" data-view-content={v.id} hidden={v.id !== 'read'}>
-            {v.shelves.length === 0 && (
-              <div class="rd-shelf rd-shelf--empty">
-                <p class="rd-empty">{v.emptyText}</p>
-              </div>
-            )}
-            {v.shelves.map((s) => (
-              <section
-                class:list={['year-section', { 'is-wish': s.wish }]}
-                data-year={s.year ?? ''}
-                data-shelf={s.id}
-              >
-                <h2 class="shelf-plate plate-brass">
-                  <span class="pl-main num">{s.label}</span>
-                  <span class="pl-count num" data-total={s.count}>{s.count} 本</span>
-                  {s.note && <span class="pl-note">{s.note}</span>}
-                </h2>
-                <div class="rd-shelf">
-                  {s.books.map((b) => {
-                    const cv = coverGradient(b);
-                    const status = bookStatus(b);
-                    const rawCats = b.categories.filter(Boolean);
-                    const rawCat = rawCats[0] ?? '';
-                    const ar = coverRatio(b.title);
-                    return (
-                      <div
-                        class={`book is-${status}`}
-                        data-title={b.title}
-                        data-cats={b.categories.join('|')}
-                        data-date={b.finishedDate ?? ''}
-                        data-progress={b.progress}
-                        title={b.title}
-                      >
-                        <div class="slot">
-                          {b.coverUrl ? (
-                            <div class="cover cover--img" style={`--ar:${ar}`}>
-                              <img src={b.coverUrl} alt={b.title} loading="lazy" draggable="false" />
-                            </div>
-                          ) : (
-                            <div
-                              class="cover"
-                              style={`--ar:${ar};background:linear-gradient(135deg, ${cv.from} 0%, ${cv.to} 100%)`}
-                            >
-                              <span class="pub">{rawCat}</span>
-                              <span class="ttl">{b.title}</span>
-                            </div>
-                          )}
-                          {status === 'reading' && <i class="ribbon" aria-hidden="true"></i>}
-                        </div>
-                        <div class="cap">
-                          {status === 'reading' && <span class="now">● 閱讀中</span>}
-                          {noted.has(b.id) ? <a class="t" href={`${BASE}reading/${b.id}/`}>{b.title}</a> : <span class="t">{b.title}</span>}
-                          {rawCats.length > 0 && (
-                            <span class="ks">
-                              {rawCats.slice(0, 2).map((c) => (
-                                <span class="k">
-                                  <i class={`dot dot-${normaliseKind(c)}`}></i>
-                                  {c}
-                                </span>
-                              ))}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+    <!-- The bookcase: a shelf a year, the books still to read lying in stacks at the bottom -->
+    <div class="case" id="shelf-case">
+      {shelves.map((s) => (
+        <section class:list={['shelf', { 'is-flat': s.flat }]} data-shelf={s.id} aria-label={s.flat ? '想讀的書' : `${s.label} 年讀的書`}>
+          {s.flat ? (
+            <div class="row">
+              {s.stacks.map((stack) => (
+                <div class="stack">
+                  {stack.map((b) => (
+                    <button type="button" class="bk flat" style={b.style} data-title={b.title} data-cats={b.cats.join('|')} data-meta={b.meta} data-notes={b.notes} data-cover={b.cover} data-from={b.coverFrom} aria-label={b.aria}>
+                      <span class="bk-t">{b.short}</span>
+                    </button>
+                  ))}
                 </div>
-              </section>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+          ) : (
+            <div class="row">
+              {s.books.map((b) => (
+                <button type="button" class="bk" style={b.style} data-title={b.title} data-cats={b.cats.join('|')} data-meta={b.meta} data-notes={b.notes} data-cover={b.cover} data-from={b.coverFrom} aria-label={b.aria}>
+                  <span class="bk-t">{b.short}</span>
+                  {b.notes && <i class="bk-slip" aria-hidden="true"></i>}
+                  {b.reading && <i class="bk-ribbon" aria-hidden="true"></i>}
+                </button>
+              ))}
+            </div>
+          )}
+          <div class="plank" aria-hidden="true"></div>
+          <p class="plate"><b>{s.label}</b><span class="plate-n num" data-total={s.books.length}>{s.books.length} 本</span></p>
+        </section>
+      ))}
+    </div>
+  </section>
 
-        <div class="rd-shelf rd-shelf--empty" id="reading-empty" hidden>
-          <p class="rd-empty">沒有符合的書。</p>
-        </div>
-      </div>
-    </section>
+  <!-- The card a spine lifts with -->
+  <div class="tip" id="shelf-tip" role="tooltip" hidden>
+    <p class="tip-t"></p>
+    <p class="tip-m"></p>
   </div>
 
-  <script is:inline>
-    (function () {
-      var host = document.getElementById('reading-shelves');
-      if (!host) return;
-      var q = document.getElementById('reading-q');
-      var kbd = document.getElementById('reading-kbd');
-      var chips = document.getElementById('reading-chips');
-      var sortBtn = document.getElementById('reading-sort');
-      var view = document.getElementById('reading-view');
-      var emptyEl = document.getElementById('reading-empty');
-      var readContainer = host.querySelector('[data-view-content="read"]');
-      var wishContainer = host.querySelector('[data-view-content="wish"]');
-      var sections = readContainer ? Array.from(readContainer.querySelectorAll('.year-section')) : [];
-      var wishSections = wishContainer ? Array.from(wishContainer.querySelectorAll('.year-section')) : [];
-
-      var activeCat = '*';
-      var kw = '';
-      var currentView = 'read';
-
-      // The shortcut hint should match the keyboard in front of you.
-      if (kbd && !/Mac|iPhone|iPad/.test(navigator.platform || '')) kbd.textContent = 'Ctrl K';
-
-      function bookMatches(book) {
-        var catsRaw = book.getAttribute('data-cats') || '';
-        var cats = catsRaw ? catsRaw.split('|') : [];
-        var title = (book.getAttribute('data-title') || '').toLowerCase();
-        var catsLower = catsRaw.toLowerCase();
-        var catOk = activeCat === '*' || cats.indexOf(activeCat) >= 0;
-        var kwOk = !kw || title.indexOf(kw) >= 0 || catsLower.indexOf(kw) >= 0;
-        return catOk && kwOk;
-      }
-
-      function apply() {
-        var anyVisible = false;
-        var list = currentView === 'read' ? sections : wishSections;
-        list.forEach(function (sec) {
-          var books = Array.from(sec.querySelectorAll('.book'));
-          var visible = 0;
-          books.forEach(function (book) {
-            var show = bookMatches(book);
-            book.hidden = !show;
-            if (show) visible++;
-          });
-          sec.hidden = visible === 0;
-          if (visible > 0) anyVisible = true;
-          var ct = sec.querySelector('.pl-count');
-          if (ct) {
-            var total = books.length;
-            ct.textContent = visible === total ? total + ' 本' : visible + ' / ' + total + ' 本';
-          }
-        });
-        // A view with no shelves at all already says so itself.
-        if (emptyEl) emptyEl.hidden = anyVisible || list.length === 0;
-      }
-
-      if (q) {
-        q.addEventListener('input', function () {
-          kw = q.value.trim().toLowerCase();
-          apply();
-        });
-      }
-
-      if (chips) {
-        var chipEls = Array.from(chips.querySelectorAll('.chip'));
-        chipEls.forEach(function (c) {
-          c.addEventListener('click', function () {
-            chipEls.forEach(function (x) {
-              x.setAttribute('aria-current', 'false');
-              x.classList.remove('tag-accent');
-              x.classList.add('tag-outline');
-            });
-            c.setAttribute('aria-current', 'true');
-            c.classList.remove('tag-outline');
-            c.classList.add('tag-accent');
-            activeCat = c.getAttribute('data-cat') || '*';
-            apply();
-          });
-        });
-      }
-
-      if (sortBtn) {
-        sortBtn.addEventListener('click', function () {
-          if (currentView !== 'read' || !readContainer) return;
-          var cur = sortBtn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
-          var next = cur === 'asc' ? 'desc' : 'asc';
-          sortBtn.setAttribute('data-dir', next);
-          var label = sortBtn.querySelector('.sort-label');
-          if (label) label.textContent = next === 'desc' ? '↓ 最近讀完' : '↑ 最舊讀完';
-          var ordered = sections.slice().sort(function (a, b) {
-            var ya = parseInt(a.getAttribute('data-year') || '0', 10);
-            var yb = parseInt(b.getAttribute('data-year') || '0', 10);
-            return next === 'desc' ? yb - ya : ya - yb;
-          });
-          ordered.forEach(function (sec) { readContainer.appendChild(sec); });
-          // A book still being read has no date yet: it is the newest.
-          var key = function (el) { return el.getAttribute('data-date') || '9999'; };
-          ordered.forEach(function (sec) {
-            var shelf = sec.querySelector('.rd-shelf');
-            if (!shelf) return;
-            var books = Array.from(shelf.querySelectorAll('.book'));
-            books.sort(function (a, b) {
-              return next === 'desc' ? key(b).localeCompare(key(a)) : key(a).localeCompare(key(b));
-            });
-            books.forEach(function (bk) { shelf.appendChild(bk); });
-          });
-        });
-      }
-
-      if (view) {
-        var viewBtns = Array.from(view.querySelectorAll('button[data-view]'));
-        viewBtns.forEach(function (b) {
-          b.addEventListener('click', function () {
-            var v = b.getAttribute('data-view') || 'read';
-            if (v === currentView) return;
-            viewBtns.forEach(function (x) { x.setAttribute('aria-current', 'false'); });
-            b.setAttribute('aria-current', 'true');
-            currentView = v;
-            host.setAttribute('data-view', v);
-            if (readContainer) readContainer.hidden = v !== 'read';
-            if (wishContainer) wishContainer.hidden = v !== 'wish';
-            if (sortBtn) sortBtn.hidden = v !== 'read';
-            apply();
-          });
-        });
-      }
-
-      document.addEventListener('keydown', function (e) {
-        if ((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === 'k') {
-          e.preventDefault();
-          if (q) q.focus();
-        }
-      });
-    })();
-  </script>
+  <!-- The book taken off the shelf, turned to its cover; on a phone it slides up from the bottom -->
+  <dialog class="pick" id="shelf-pick" aria-labelledby="pick-title">
+    <div class="pick-card">
+      <div class="pick-cover">
+        <span class="pc-cat"></span>
+        <span class="pc-title"></span>
+        <img alt="" hidden />
+      </div>
+      <div class="pick-body">
+        <p class="pick-meta"></p>
+        <h2 id="pick-title"></h2>
+        <p class="pick-cats"></p>
+        <div class="pick-actions">
+          <a class="pick-notes" href="#" hidden>看讀書筆記 →</a>
+          <button type="button" class="pick-back" autofocus>放回書架</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
 </DeskLayout>
+
+<script is:inline define:vars={{ DOTS }}>
+  (function () {
+    var room = document.querySelector('.shelf-room');
+    if (!room) return;
+    var shelves = Array.prototype.slice.call(room.querySelectorAll('.shelf'));
+    var books = Array.prototype.slice.call(room.querySelectorAll('.bk'));
+    var viewsEl = document.getElementById('shelf-views');
+    var chips = document.getElementById('shelf-chips');
+    var find = document.getElementById('shelf-find');
+    var box = document.getElementById('shelf-search');
+    var q = document.getElementById('shelf-q');
+    var clearBtn = document.getElementById('shelf-x');
+    var tip = document.getElementById('shelf-tip');
+    var dialog = document.getElementById('shelf-pick');
+    var view = 'all';
+    var cat = '*';
+    var kw = '';
+
+    // — filtering: the shelves a view leaves out are hidden; the books a category or a word leaves out sink back, dimmed —
+    function apply() {
+      var filtering = cat !== '*' || !!kw;
+      shelves.forEach(function (sh) {
+        var isWish = sh.getAttribute('data-shelf') === 'wish';
+        sh.hidden = (view === 'read' && isWish) || (view === 'wish' && !isWish);
+        var bks = sh.querySelectorAll('.bk');
+        var shown = 0;
+        for (var i = 0; i < bks.length; i++) {
+          var b = bks[i];
+          var cats = (b.getAttribute('data-cats') || '').split('|');
+          var ok = (cat === '*' || cats.indexOf(cat) >= 0) && (!kw || (b.getAttribute('data-title') || '').toLowerCase().indexOf(kw) >= 0);
+          b.classList.toggle('dim', !ok);
+          if (ok) shown++;
+        }
+        var n = sh.querySelector('.plate-n');
+        var total = n ? n.getAttribute('data-total') : '0';
+        if (n) n.textContent = filtering ? shown + ' / ' + total + ' 本' : total + ' 本';
+        sh.classList.toggle('is-empty', filtering && shown === 0);
+      });
+    }
+    function press(group, attr, value) {
+      if (!group) return;
+      var all = group.querySelectorAll('[' + attr + ']');
+      for (var i = 0; i < all.length; i++) {
+        var on = all[i].getAttribute(attr) === value;
+        all[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+        all[i].classList.toggle('is-on', on);
+      }
+    }
+    if (viewsEl) viewsEl.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-view]');
+      if (!b) return;
+      view = b.getAttribute('data-view');
+      press(viewsEl, 'data-view', view);
+      apply();
+    });
+    if (chips) chips.addEventListener('click', function (e) {
+      var c = e.target.closest('[data-cat]');
+      if (!c) return;
+      cat = c.getAttribute('data-cat');
+      press(chips, 'data-cat', cat);
+      apply();
+    });
+
+    // — the search behind its icon —
+    function openSearch() {
+      box.hidden = false; find.hidden = true; find.setAttribute('aria-expanded', 'true');
+      q.focus(); q.select();
+    }
+    function closeSearch(clear) {
+      if (clear) { q.value = ''; kw = ''; apply(); }
+      box.hidden = true; find.hidden = false; find.setAttribute('aria-expanded', 'false');
+    }
+    find.addEventListener('click', openSearch);
+    clearBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    clearBtn.addEventListener('click', function () { closeSearch(true); find.focus(); });
+    q.addEventListener('input', function () { kw = q.value.trim().toLowerCase(); apply(); });
+    q.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); closeSearch(true); find.focus(); } });
+    q.addEventListener('blur', function () { if (!q.value) closeSearch(false); });
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); }
+    });
+
+    // — a spine lifts with a card: the full title, its categories, when it was read —
+    var hover = window.matchMedia('(hover: hover)');
+    function catsHtml(b, colors) {
+      return (b.getAttribute('data-cats') || '').split('|').filter(Boolean).map(function (c) {
+        return '<span class="cat"><i style="background:' + (colors[c] || '#a19d94') + '"></i>' + c.replace(/</g, '&lt;') + '</span>';
+      }).join('');
+    }
+    function showTip(b) {
+      if (dialog.open) return;
+      tip.querySelector('.tip-t').textContent = b.getAttribute('data-title');
+      tip.querySelector('.tip-m').innerHTML = catsHtml(b, DOTS) + '<span class="m"></span>';
+      tip.querySelector('.tip-m .m').textContent = b.getAttribute('data-meta');
+      tip.hidden = false;
+      var r = b.getBoundingClientRect();
+      var x = Math.max(140, Math.min(window.innerWidth - 140, r.left + r.width / 2));
+      var below = r.top < 150;
+      tip.style.left = x + 'px';
+      tip.style.top = (below ? r.bottom : r.top) + 'px';
+      tip.style.transform = 'translate(-50%,' + (below ? '12px' : 'calc(-100% - 12px)') + ')';
+    }
+    function hideTip() { tip.hidden = true; }
+    books.forEach(function (b) {
+      b.addEventListener('mouseenter', function () { if (hover.matches) showTip(b); });
+      b.addEventListener('mouseleave', hideTip);
+      b.addEventListener('focus', function () { if (b.matches(':focus-visible')) showTip(b); });
+      b.addEventListener('blur', hideTip);
+      b.addEventListener('click', function () { pick(b); });
+    });
+    room.addEventListener('scroll', hideTip, true);
+    addEventListener('scroll', hideTip, { passive: true });
+
+    // — a book comes off the shelf: it flies from its place to the middle, turning from spine to cover —
+    var cover = dialog.querySelector('.pick-cover');
+    var img = cover.querySelector('img');
+    img.addEventListener('error', function () { img.hidden = true; });
+    function pick(b) {
+      hideTip();
+      var r = b.getBoundingClientRect();
+      var card = dialog.querySelector('.pick-card');
+      card.style.setProperty('--dx', Math.round(r.left + r.width / 2 - window.innerWidth / 2) + 'px');
+      card.style.setProperty('--dy', Math.round(r.top + r.height / 2 - window.innerHeight / 2) + 'px');
+      var title = b.getAttribute('data-title');
+      var cats = (b.getAttribute('data-cats') || '').split('|').filter(Boolean);
+      cover.style.background = 'linear-gradient(160deg,' + b.getAttribute('data-from') + ' 0%,#141312 135%)';
+      cover.querySelector('.pc-cat').textContent = cats[0] || '';
+      cover.querySelector('.pc-title').textContent = title;
+      var src = b.getAttribute('data-cover');
+      img.hidden = !src;
+      if (src) { img.src = src; img.alt = '《' + title + '》書封'; } else { img.removeAttribute('src'); }
+      dialog.querySelector('.pick-meta').textContent = b.getAttribute('data-meta');
+      dialog.querySelector('#pick-title').textContent = title;
+      dialog.querySelector('.pick-cats').innerHTML = catsHtml(b, DOTS);
+      var notes = dialog.querySelector('.pick-notes');
+      var href = b.getAttribute('data-notes');
+      notes.hidden = !href;
+      if (href) notes.href = href;
+      dialog.showModal();
+    }
+    dialog.querySelector('.pick-back').addEventListener('click', function () { dialog.close(); });
+    // a click on the darkened room around the card puts the book back too
+    dialog.addEventListener('click', function (e) { if (e.target === dialog) dialog.close(); });
+  })();
+</script>

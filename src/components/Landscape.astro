@@ -1,0 +1,20 @@
+---
+/**
+ * The ink landscape across the top of every blog page: far hills, the red sun with its birds, middle hills and near hills,
+ * each a layer of its own, fading down into the plaster. `near` is the same scene with the camera pushed in: the about page's
+ * view. The 推進山水 transition (DeskLayout's script) moves the layers from one to the other, so the two pages join up.
+ */
+interface Props {
+  near?: boolean;
+}
+
+const { near = false } = Astro.props;
+---
+
+<div class:list={['ink-land', { 'is-near': near }]} aria-hidden="true">
+  <svg class="l-far" viewBox="0 0 1440 520" preserveAspectRatio="xMaxYMax slice"><path d="M0 360 L120 310 L210 330 L330 262 L420 300 L520 280 L640 330 L760 268 L860 226 L950 270 L1040 210 L1120 244 L1230 190 L1330 256 L1440 226 L1440 520 L0 520 Z" fill="#2c2b28" opacity="0.05"></path></svg>
+  <svg class="l-sun" viewBox="0 0 1440 520" preserveAspectRatio="xMaxYMax slice"><circle cx="1188" cy="176" r="24" fill="#c8402f" opacity="0.82"></circle><path d="M968 148 q7 -6 14 0 q7 -6 14 0 M1012 132 q6 -5 12 0 q6 -5 12 0 M1050 156 q5 -4 10 0 q5 -4 10 0" fill="none" stroke="#2c2b28" stroke-width="1.4" opacity="0.38"></path></svg>
+  <svg class="l-mid" viewBox="0 0 1440 520" preserveAspectRatio="xMaxYMax slice"><path d="M560 520 L700 400 L770 424 L880 326 L960 378 L1050 302 L1150 370 L1240 340 L1330 392 L1440 360 L1440 520 Z" fill="#2c2b28" opacity="0.08"></path></svg>
+  <svg class="l-near" viewBox="0 0 1440 520" preserveAspectRatio="xMaxYMax slice"><path d="M760 520 L860 452 L930 466 L1020 412 L1100 450 L1190 424 L1290 460 L1380 440 L1440 452 L1440 520 Z" fill="#2c2b28" opacity="0.12"></path></svg>
+  <i class="l-mist"></i>
+</div>

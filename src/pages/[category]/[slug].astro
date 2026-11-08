@@ -99,7 +99,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
           <p class="end-kicker">— 全文完 —</p>
           <p class="end-text">如果這篇對你有幫助，可以分享給朋友，或追蹤後續更新。我在 Threads 也會貼一些零碎想法。</p>
           <div class="end-actions">
-            <a class="btn btn-primary" href={BASE}>← 回書房</a>
+            <a class="btn btn-primary" href={`${BASE}archive/`}>← 所有文章</a>
             {nextArticle && (
               <a class="btn btn-secondary end-next" href={articleUrl(nextArticle.id)}>下一篇：{nextArticle.title}</a>
             )}
@@ -202,7 +202,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
   }
 
   /* — the sheet — */
-  .art { padding: 48px 56px 56px; }
+  .art { padding: 12px 0 0; }
 
   .art-masthead { margin-bottom: 44px; }
   .art-kicker {
@@ -223,6 +223,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
   .art-title {
     max-width: 22em;
     font-family: var(--font-reading);
+    font-weight: 600;
     font-size: 44px;
     line-height: 1.2;
     letter-spacing: -0.02em;
@@ -243,7 +244,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
   .byline-avatar {
     width: 32px;
     height: 32px;
-    border-radius: var(--radius-md);
+    border-radius: 50%;
     object-fit: cover;
     background: var(--color-surface);
     box-shadow: 0 0 0 1px var(--color-divider);
@@ -302,7 +303,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
 
   /* — end of the article — */
   .end-block { max-width: 660px; margin-top: 3.4em; text-align: center; }
-  .end-block .rules { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-4); }
+  .end-block .rules { display: none; }
   .end-block .rules i { display: block; background: var(--color-text); }
   .end-block .rules i:first-child { height: 3px; }
   .end-block .rules i:last-child { height: 1px; }
@@ -328,7 +329,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
     gap: var(--space-2);
   }
   .end-next { max-width: 100%; text-align: left; line-height: 1.4; }
-  .end-rule { height: 1px; margin-top: var(--space-4); background: var(--color-text); }
+  .end-rule { height: 1px; margin-top: var(--space-4); background: var(--color-divider); }
 
   /* — previous / next — */
   .pn {
@@ -343,6 +344,9 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
     align-content: start;
     gap: 6px;
     padding: var(--space-4) var(--space-4) var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-divider);
+    border-radius: 6px;
     color: var(--color-text);
     text-decoration: none;
     transition: transform 0.15s, box-shadow 0.15s;
@@ -358,14 +362,14 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
   .pn-date { font-size: 12px; color: var(--color-neutral-700); }
 
   @media (max-width: 860px) {
-    .art { padding: 40px 36px 44px; }
+    .art { padding: 8px 0 0; }
     .art-body { grid-template-columns: minmax(0, 1fr); gap: 0; }
     .art-toc { display: none; }
     .end-block { max-width: none; }
   }
 
   @media (max-width: 760px) {
-    .art { --prose-bleed: 16px; padding: 28px 16px 32px; }
+    .art { --prose-bleed: 16px; padding: 4px 0 0; }
     .art-masthead { margin-bottom: var(--space-6); }
     .art-title { font-size: 30px; line-height: 1.25; }
     .byline { margin-top: var(--space-4); }
