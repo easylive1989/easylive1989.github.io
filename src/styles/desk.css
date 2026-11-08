@@ -126,8 +126,8 @@ html {
 .ink-land.is-near .l-mid { transform: scale(2.1); }
 .ink-land.is-near .l-near { transform: scale(3.4) translateY(9%); }
 /* 小書齋: on the water's edge in the margin left of the page's words (the column is 1034px wide), beside 每季落筆. Its width
-   follows the margin, so it never runs under the words; a screen whose margin is too narrow for it goes without it, and a
-   phone sets it small in the corner of its shorter scene. Pushed in on the about page, it slides off to the left. */
+   follows the margin, so it never runs under the words; a screen whose margin is too narrow for it, a phone among them,
+   goes without it. Pushed in on the about page, it slides off to the left. */
 .ink-land .l-study {
   inset: auto;
   right: calc(50% + 517px + 12px);
@@ -140,7 +140,7 @@ html {
 .ink-land .l-study .w-lamp { display: none; }
 .ink-land.is-near .l-study { transform: translateX(-70%) scale(1.6); opacity: 0; }
 .zoom-fx .ink-land .l-study { transition: transform 1.3s cubic-bezier(0.5, 0, 0.4, 1), opacity 1.3s ease; }
-@media (min-width: 641px) and (max-width: 1380px) { .ink-land .l-study { display: none; } }
+@media (max-width: 1380px) { .ink-land .l-study { display: none; } }
 
 /* — the weather over the landscape: html[data-weather] (layouts/weather.js) is clear, cloudy, fog, rain, storm or night;
      without it, clear — */
@@ -432,7 +432,6 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
   /* the landscape smaller and under the masthead, so the whole scene, sun and all, fits above the page's words instead of behind them */
   .ink-land { top: 96px; height: 220px; }
   .ink-land .l-mist { height: 60px; }
-  .ink-land .l-study { right: auto; left: 2px; bottom: 34px; width: 104px; }
   .desk-top { right: 16px; bottom: 16px; }
 }
 
