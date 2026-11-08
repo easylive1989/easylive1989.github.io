@@ -118,17 +118,13 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
   }
   .ab-sec h2 i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--sun); }
 
-  /* the book, on a sheet of rice paper */
+  /* the book, laid straight on the page */
   .ab-book {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 28px;
-    padding: 28px;
     color: var(--ink);
-    background: var(--plaster-hi);
-    border: 1px solid rgba(44, 43, 40, 0.16);
-    border-radius: 2px;
   }
   .ab-book img { flex: none; width: 140px; height: auto; box-shadow: 0 8px 20px rgba(44, 43, 40, 0.18); }
   .ab-book > div { flex: 1 1 260px; min-width: 0; }
@@ -206,7 +202,6 @@ const away = (url: string) => (url.startsWith('mailto:') ? {} : { target: '_blan
     .ab-who h1 { font-size: 44px; }
     .ab-tag { justify-content: center; }
     .ab-bio { font-size: 17px; line-height: 1.95; }
-    .ab-book { padding: 20px; }
     .ab-list li { grid-template-columns: 48px minmax(0, 1fr); gap: 12px; }
     .ab-y { font-size: 22px; }
     .ab-r { grid-column: 2; justify-self: start; }
