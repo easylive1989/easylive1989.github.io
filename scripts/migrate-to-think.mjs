@@ -73,8 +73,10 @@ async function folder(name, parentId) {
 async function withRetry(fn) {
   for (let attempt = 1; ; attempt++) {
     try { return await fn(); } catch (err) {
-      if (attempt >= 4 || !['rate_limited', 'notionhq_client_request_timeout', 'internal_server_error', 'service_unavailable'].includes(err?.code)) throw err;
-      await sleep(1500 * attempt);
+      if (attempt >= 10 || !['rate_limited', 'notionhq_client_request_timeout', 'internal_server_error', 'service_unavailable'].includes(err?.code)) throw err;
+      // Notion's rate limit can last longer than a few seconds: back off, as Notion asks (Retry-After when it says)
+      const after = Number(err?.headers?.get?.('retry-after'));
+      await sleep(after > 0 ? after * 1000 : Math.min(60000, 1000 * 2 ** attempt));
     }
   }
 }
