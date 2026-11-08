@@ -1,7 +1,7 @@
 // The blog's two pieces of stage machinery, between its pages.
 //
 // 書架 is a secret door: on any blog page, following the 書架 tab splits a copy of the page down the middle, the halves slide
-// apart onto a dark room, and the bookshelf page (reading.astro) rises out of it. Its 「闔上暗門」 button sinks the shelf and
+// apart onto a dark room, and the bookshelf page (reading.astro) fades in out of it. Its 「闔上暗門」 button fades the shelf out and
 // goes back, where the halves slide together again: from the back/forward cache, the copy is still there, apart; on a fresh
 // load it is built again.
 //
@@ -81,7 +81,7 @@ async function closeDoor() {
   busy = false;
 }
 
-/** The shelf sinks back into the dark, then the page the door was opened from (or 所有文章) closes over it. */
+/** The shelf fades back into the dark, then the page the door was opened from (or 所有文章) closes over it. */
 async function leaveShelf() {
   busy = true;
   document.querySelector('.shelf-room')?.classList.add('is-leaving');
