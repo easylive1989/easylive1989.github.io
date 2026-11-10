@@ -6,11 +6,23 @@
  * with the camera pushed in: the about page's view. The 推進山水 transition (deskFx.js) moves the layers from one to the other,
  * so the two pages join up. Over it hangs Taichung's weather: clear, cloudy, fog, rain, a thunderstorm, or night.
  */
+import { BREEZE, GROVES, culmPath, culmPoints, feel, groveLeaves } from '../lib/bamboo.mjs';
+
 interface Props {
   near?: boolean;
 }
 
 const { near = false } = Astro.props;
+
+// The bamboo by the 小書齋, at rest in a light breeze: each culm's path, and the grove's leaves in two shades (lib/bamboo.mjs).
+const rest = feel(...BREEZE);
+const bamboo = Object.fromEntries(
+  Object.entries(GROVES).map(([name, culms]) => {
+    const pts = culms.map((c) => culmPoints(c, rest, 0, 1, true));
+    const leaves = groveLeaves(culms, pts, rest, 0, true);
+    return [name, { culms: culms.map((c, i) => ({ ...c, d: culmPath(pts[i]) })), leaves: leaves.map((d, i) => ({ d, opacity: culms.leafOpacity[i] })) }];
+  }),
+);
 
 // The weather over it follows Taichung's (layouts/weather.js sets html[data-weather]; desk.css shows the layers for it).
 // The ink rain: 34 strokes, and 24 more that fall only in a thunderstorm. Where each falls and how fast is fixed.
@@ -80,7 +92,7 @@ const rain = Array.from({ length: 58 }, (_, i) => ({
     </g>
   </svg>
   <!-- 小書齋: a little study by the water at the foot of the far hills on the left, beside the page's words, half lost in a drift
-       of mist: its roof and a pine over it in mid ink, its walls going into the mist, and below it a landing and a skiff coming
+       of mist: its roof and a grove of bamboo beside and behind it in mid ink, its walls going into the mist, and below it a landing and a skiff coming
        out of the mist, faint. At night its lamp glows through the mist. -->
   <svg class="l-study" viewBox="0 0 340 210">
     <defs>
@@ -90,14 +102,26 @@ const rain = Array.from({ length: 58 }, (_, i) => ({
       <mask id="study-edge" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="210"><rect width="340" height="210" fill="url(#study-side)"></rect></mask>
       <radialGradient id="study-lamp" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f3d9a0" stop-opacity="0.75"></stop><stop offset="1" stop-color="#f3d9a0" stop-opacity="0"></stop></radialGradient>
       <filter id="study-blur" x="-10%" y="-40%" width="120%" height="180%"><feGaussianBlur stdDeviation="5"></feGaussianBlur></filter>
+      <!-- the brush for the bamboo: the same grain, with room around the grove for it to bend into -->
+      <filter id="brush-bamboo" x="-40%" y="-20%" width="180%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="21"></feTurbulence><feDisplacementMap in="SourceGraphic" scale="3"></feDisplacementMap><feGaussianBlur stdDeviation="0.3"></feGaussianBlur></filter>
       <filter id="brush-study" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="21"></feTurbulence><feDisplacementMap in="SourceGraphic" scale="3"></feDisplacementMap><feGaussianBlur stdDeviation="0.3"></feGaussianBlur></filter>
     </defs>
+    <!-- 竹林: a grove of bamboo left of the study, and a paler one behind it, rising over its roof; their feet are in the mist.
+         They bend in Taichung's wind (layouts/bambooSway.js redraws them every frame); drawn here at rest in a light breeze,
+         from the same shapes (lib/bamboo.mjs). -->
+    <g class="s-bamboo">
+      {(['back', 'front'] as const).map((name) => (
+        <g class="b-grove" data-grove={name}>
+          <g filter="url(#brush-bamboo)" fill="none" stroke="#2c2b28" stroke-linecap="round">
+            {bamboo[name].culms.map((c) => <path class="b-culm" d={c.d} stroke-width={c.width.toFixed(2)} stroke-opacity={c.opacity.toFixed(2)}></path>)}
+          </g>
+          <g filter="url(#brush-bamboo)" fill="#2c2b28">
+            {bamboo[name].leaves.map((l) => <path class="b-leaves" d={l.d} fill-opacity={l.opacity.toFixed(2)}></path>)}
+          </g>
+        </g>
+      ))}
+    </g>
     <g filter="url(#brush-study)">
-      <!-- a pine behind it, in the near rock's dabs -->
-      <path d="M100 118 C98 96 104 80 96 60" fill="none" stroke="#2c2b28" stroke-width="2.6" stroke-opacity="0.4" stroke-linecap="round"></path>
-      <ellipse cx="96" cy="58" rx="20" ry="5.5" fill="#2c2b28" fill-opacity="0.36"></ellipse>
-      <ellipse cx="112" cy="70" rx="16" ry="4.5" fill="#2c2b28" fill-opacity="0.32"></ellipse>
-      <ellipse cx="84" cy="76" rx="12" ry="4" fill="#2c2b28" fill-opacity="0.3"></ellipse>
       <!-- the study: a back wall with a round window, its posts, a scholar at his book -->
       <rect x="128" y="98" width="64" height="30" fill="#2c2b28" fill-opacity="0.06"></rect>
       <circle cx="142" cy="110" r="7" fill="none" stroke="#2c2b28" stroke-width="1.1" stroke-opacity="0.28"></circle>

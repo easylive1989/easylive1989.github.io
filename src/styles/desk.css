@@ -136,6 +136,7 @@ html {
   height: auto;
   aspect-ratio: 34 / 21;
   transform-origin: 100% 100%;
+  overflow: visible; /* the bamboo may bend a little past the edges of its box */
 }
 .ink-land .l-study .w-lamp { display: none; }
 .ink-land.is-near .l-study { transform: translateX(-70%) scale(1.6); opacity: 0; }
