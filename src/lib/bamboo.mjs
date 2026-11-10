@@ -19,16 +19,16 @@ export const SEGMENTS = 7;
 const LEAF_NODES = [0.58, 0.7, 0.8, 0.9, 1];
 
 /**
- * The culms of a grove: `xs` are their feet along `y`, `tall` their lengths (in the study's viewBox units).
+ * The culms of a grove: their feet are at `xs` and `ys`, `tall` their lengths (in the study's viewBox units).
  * `sprays` is how many leaves hang from each upper node.
  */
-function grove({ seed, xs, y, tall, width, sprays, opacity }) {
+function grove({ seed, xs, ys, tall, width, sprays, opacity }) {
   const r = seeded(seed);
   const culms = xs.map((x, i) => {
     const nodes = LEAF_NODES.filter(() => r() < 0.8);
     return {
       x,
-      y,
+      y: ys[i],
       len: tall[i],
       width: width * (0.8 + r() * 0.4),
       opacity: opacity * (0.85 + r() * 0.3),
@@ -54,12 +54,12 @@ function grove({ seed, xs, y, tall, width, sprays, opacity }) {
   return Object.assign(culms, { leafOpacity: [opacity * 0.72, opacity * 0.95] });
 }
 
-/** The two groves: one left of the study, in mid ink, and a paler one behind it, rising over its roof. */
+/** One grove left of the study, in two depths: its near culms in mid ink, its far ones paler, running on behind the study's left end. */
 export const GROVES = {
   front: grove({
     seed: 7,
     xs: [36, 48, 58, 70, 82, 94, 104],
-    y: 130,
+    ys: [130, 130, 130, 130, 130, 130, 130],
     tall: [86, 112, 128, 140, 120, 132, 98],
     width: 2.6,
     sprays: 3,
@@ -67,9 +67,11 @@ export const GROVES = {
   }),
   back: grove({
     seed: 19,
-    xs: [140, 151, 162, 173, 184, 195, 204],
-    y: 96,
-    tall: [70, 88, 96, 82, 92, 74, 58],
+    // the far side of the same grove: among the near culms and on behind the study's left end, where their feet are
+    // hidden by its roof
+    xs: [44, 64, 88, 116, 128, 140, 152],
+    ys: [130, 130, 130, 100, 96, 94, 94],
+    tall: [108, 124, 116, 86, 94, 82, 70],
     width: 1.9,
     sprays: 2,
     opacity: 0.24,
