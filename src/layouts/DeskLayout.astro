@@ -31,6 +31,7 @@ const TABS: [Tab, string, string][] = [
   ['about', '關於我', `${BASE}about/`],
 ];
 const { title, description, ogImage, article, tab, width = 'reading', bodyClass, landscape = 'far' } = Astro.props;
+const tabIndex = TABS.findIndex(([id]) => id === tab);
 ---
 
 <!doctype html>
@@ -65,10 +66,15 @@ const { title, description, ogImage, article, tab, width = 'reading', bodyClass,
     <div class="desk-page">
       <Landscape near={landscape === 'near'} />
 
-      <!-- The blog's masthead: its name beside the red sun, its three tabs in a pill, and the feed -->
+      <!-- The room the masthead takes at the top; the masthead itself is pinned to the screen (desk.css) -->
+      <div class="blog-head-space" aria-hidden="true"></div>
+
+      <!-- The blog's masthead: its name beside the red sun, its three tabs in a pill, and the feed. It stays on the screen,
+           on every page and through every transition between them; the ink stone slides to the tab being opened -->
       <header class:list={['blog-head', `desk-${width}`]}>
         <a class="blog-brand" href={`${BASE}`}><i aria-hidden="true"></i><span>{BLOG}</span></a>
-        <nav class="blog-tabs" aria-label="部落格">
+        <nav class="blog-tabs" aria-label="部落格" style={`--i:${tabIndex}`} data-i={tabIndex}>
+          <i class="blog-tabs-ink" aria-hidden="true"></i>
           {TABS.map(([id, label, href]) => (
             <a href={href} data-tab={id} class:list={{ on: id === tab }} aria-current={id === tab ? 'true' : undefined}>{label}</a>
           ))}
@@ -95,9 +101,11 @@ const { title, description, ogImage, article, tab, width = 'reading', bodyClass,
         if (!btn) return;
         var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         var queued = false;
+        var head = document.querySelector('.blog-head');
         var update = function () {
           queued = false;
           btn.classList.toggle('is-shown', window.scrollY > window.innerHeight / 2);
+          if (head) head.classList.toggle('is-stuck', window.scrollY > 8);
         };
         window.addEventListener('scroll', function () {
           if (queued) return;
