@@ -18,6 +18,7 @@ export interface Book {
   finishedDate: string | null; // ISO date or null
   isbn: string | null;
   coverUrl?: string | null;    // populated by enrichBookCovers at build time
+  notesSpaceId?: string;       // Think Space only: the reading notes are this public whiteboard
 }
 
 /** A short note from the "碎碎念" database: a title and whatever is written on the page. */

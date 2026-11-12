@@ -33,7 +33,7 @@ interface ThinkArticle {
 }
 interface ThinkBook {
   id: string; title: string; author?: string; category?: string; percent: number; finishedMonth?: string; isbn?: string;
-  note?: string; notesArticleId?: string;
+  note?: string; notesArticleId?: string; notesSpaceId?: string;
 }
 export interface ThinkBookRecord extends Book { notesArticleId?: string }
 
@@ -126,6 +126,7 @@ async function loadAll(): Promise<Loaded> {
     finishedDate: b.finishedMonth ? `${b.finishedMonth}-01` : null,
     isbn: b.isbn ?? null,
     ...(b.notesArticleId && loaded.bookNotes.has(b.id) ? { notesArticleId: b.notesArticleId } : {}),
+    ...(b.notesSpaceId ? { notesSpaceId: b.notesSpaceId } : {}),
   }));
 
   if (isProductionBuild()) {
@@ -136,6 +137,9 @@ async function loadAll(): Promise<Loaded> {
   }
   return loaded;
 }
+
+/** Think Space itself, for links to its public pages (a whiteboard is /s/<id>) */
+export const thinkBaseUrl = baseUrl;
 
 export const thinkArticles = async () => (await load()).posts.map((p) => p.article);
 export const thinkNotes = async () => (await load()).notes.map((n) => n.note);
