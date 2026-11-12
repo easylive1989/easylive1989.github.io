@@ -218,7 +218,7 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 }
 .blog-head-space { flex: none; height: var(--head-full); }
 .blog-head {
-  --col: 1100px;
+  --col: 1100px; /* the same column on every page, the wide bookshelf included, so the name and tabs never move between pages */
   position: fixed;
   z-index: 110;
   top: 0;
@@ -229,13 +229,11 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
   align-items: center;
   gap: 14px;
   box-sizing: border-box;
-  max-width: none;
   padding: 22px max(40px, calc((100% - var(--col)) / 2 + 40px)) 0;
   border-bottom: 1px solid transparent;
   transition: padding 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.6s ease;
   view-transition-name: blog-head;
 }
-.blog-head.desk-wide { --col: 1180px; }
 .blog-head.is-stuck {
   padding-top: 10px;
   padding-bottom: 9px;

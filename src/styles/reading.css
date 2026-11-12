@@ -1,5 +1,5 @@
 /* /reading — the bookshelf, the dark room behind the secret door.
-   The page drops the blog's plaster and landscape (the door is the way in; 闔上暗門, or any of the masthead's other tabs, the
+   The page drops the blog's plaster and landscape (the door is the way in; the masthead's other tabs, which close it again, the
    way out), keeps the masthead in its dark dress (desk.css), and stands a
    bookcase in a dark room lit from above: a bar of filters that stays at the top, then a shelf a year, spines coloured by
    category. */
@@ -37,7 +37,7 @@ html[data-arrive="door-open"] .shelf-room { animation: shelf-fade 0.8s ease both
 
 .shelf-room :focus-visible { outline: 2px solid #d8604c; outline-offset: 2px; }
 
-/* — the bar: 闔上暗門, the categories, the search — */
+/* — the bar: the categories, the search — */
 .shelf-bar {
   position: sticky;
   top: var(--head-h);
@@ -48,24 +48,6 @@ html[data-arrive="door-open"] .shelf-room { animation: shelf-fade 0.8s ease both
   padding: 18px 0 14px;
   background: var(--room);
 }
-.shelf-close {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 18px;
-  font: inherit;
-  font-family: var(--font-ui);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: var(--chalk);
-  background: transparent;
-  border: 1px solid rgba(236, 235, 230, 0.45);
-  border-radius: 22px;
-  cursor: pointer;
-}
-.shelf-close:hover { color: var(--room); background: var(--chalk); }
 .shelf-chips {
   flex: 1 1 0;
   min-width: 0;

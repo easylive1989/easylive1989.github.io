@@ -1,8 +1,8 @@
 // The blog's two pieces of stage machinery, between its pages.
 //
 // 書架 is a secret door: on any blog page, following the 書架 tab splits a copy of the page down the middle, the halves slide
-// apart onto a dark room, and the bookshelf page (reading.astro) fades in out of it. Its 「闔上暗門」 button fades the shelf out and
-// goes back, where the halves slide together again: from the back/forward cache, the copy is still there, apart; on a fresh
+// apart onto a dark room, and the bookshelf page (reading.astro) fades in out of it. Any other tab on the masthead fades the shelf out and
+// goes there (back, when it is the page the door was opened from), where the halves slide together again: from the back/forward cache, the copy is still there, apart; on a fresh
 // load it is built again.
 //
 // 關於我 is 推進山水: the words fade off the plaster, leaving the ink landscape, whose four layers push in to the about page's
@@ -147,13 +147,7 @@ async function unzoom(fx) {
 }
 
 document.addEventListener('click', (e) => {
-  if (busy) { if (e.target.closest('a, [data-door-close]')) e.preventDefault(); return; }
-  if (e.target.closest('[data-door-close]')) {
-    e.preventDefault();
-    slideInk(document.querySelector('.blog-tabs [data-tab="archive"]'));
-    leaveShelf();
-    return;
-  }
+  if (busy) { if (e.target.closest('a')) e.preventDefault(); return; }
   if (reduce.matches || plainClick(e)) return;
   const a = e.target.closest('a[href]');
   if (!a || !page()) return;
