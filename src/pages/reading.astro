@@ -113,12 +113,8 @@ const description = `保羅讀過的 ${onShelf.length} 本書，依讀完的年�
   <section class="shelf-room" aria-labelledby="shelf-h">
     <h1 id="shelf-h" class="sr-only">書架</h1>
 
-    <!-- 闔上暗門, the categories and the search, in one row that stays at the top -->
+    <!-- the categories and the search, in one row that stays at the top, under the masthead -->
     <div class="shelf-bar">
-      <button type="button" class="shelf-close" data-door-close>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
-        闔上暗門
-      </button>
       <div class="shelf-chips" id="shelf-chips" role="group" aria-label="分類">
         <button class="chip is-on" type="button" data-cat="*" aria-pressed="true">所有分類 <span class="ct num">{onShelf.length}</span></button>
         {cats.map((c) => (
