@@ -1,11 +1,11 @@
 /* /reading — the bookshelf, the dark room behind the secret door.
-   The page drops the blog's plaster, landscape and masthead (the door is the way in and 闔上暗門 the way out) and stands a
+   The page drops the blog's plaster and landscape (the door is the way in; 闔上暗門, or any of the masthead's other tabs, the
+   way out), keeps the masthead in its dark dress (desk.css), and stands a
    bookcase in a dark room lit from above: a bar of filters that stays at the top, then a shelf a year, spines coloured by
    category. */
 
 html:has(body.shelf-body) { background: #22211f; }
 .shelf-body .ink-land,
-.shelf-body .blog-head,
 .shelf-body .desk-foot { display: none; }
 .shelf-body .desk-page { background: #22211f; }
 .shelf-body .desk-main { max-width: none; padding: 0; }
@@ -40,12 +40,12 @@ html[data-arrive="door-open"] .shelf-room { animation: shelf-fade 0.8s ease both
 /* — the bar: 闔上暗門, the categories, the search — */
 .shelf-bar {
   position: sticky;
-  top: 0;
+  top: var(--head-h);
   z-index: 5;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 22px 0 14px;
+  padding: 18px 0 14px;
   background: var(--room);
 }
 .shelf-close {

@@ -193,7 +193,7 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
     left: 0;
     right: 0;
     height: 3px;
-    z-index: 30;
+    z-index: 120; /* over the pinned masthead */
     pointer-events: none;
   }
   .article-progress-fill {
@@ -267,8 +267,8 @@ const threadsUrl = config.author.links.find((l) => l.type === 'threads')?.url ??
 
   .art-toc {
     position: sticky;
-    top: var(--space-6);
-    max-height: calc(100vh - 2 * var(--space-6));
+    top: calc(var(--head-h) + var(--space-6));
+    max-height: calc(100vh - var(--head-h) - 2 * var(--space-6));
     overflow-y: auto;
     scrollbar-width: thin;
   }

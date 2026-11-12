@@ -209,18 +209,40 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 /* — air at the foot of every page — */
 .desk-foot { flex: none; height: 96px; }
 
-/* — masthead: the blog's name with the red sun, its three tabs in a pill, and the feed — */
+/* — masthead: the blog's name with the red sun, its three tabs in a pill, and the feed. Pinned to the top of the screen on
+     every page, above the transitions' veils (z-index 100), so it never leaves while a page changes; once the page scrolls
+     it tightens and frosts over the words passing under it — */
+:root {
+  --head-full: 66px; /* the room it takes at the top of a page (.blog-head-space) */
+  --head-h: 64px; /* its height once the page scrolls: what a pinned bar or a heading jumped to must clear */
+}
+.blog-head-space { flex: none; height: var(--head-full); }
 .blog-head {
-  position: relative;
-  z-index: 2;
+  --col: 1100px;
+  position: fixed;
+  z-index: 110;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 14px;
-  width: 100%;
   box-sizing: border-box;
-  margin: 0 auto;
-  padding: 22px 40px 0;
+  max-width: none;
+  padding: 22px max(40px, calc((100% - var(--col)) / 2 + 40px)) 0;
+  border-bottom: 1px solid transparent;
+  transition: padding 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.6s ease;
+  view-transition-name: blog-head;
+}
+.blog-head.desk-wide { --col: 1180px; }
+.blog-head.is-stuck {
+  padding-top: 10px;
+  padding-bottom: 9px;
+  background: rgba(242, 240, 235, 0.86);
+  border-bottom-color: rgba(44, 43, 40, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 .blog-head a { text-decoration: none; }
 .blog-brand {
@@ -233,11 +255,16 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
   line-height: 1.2;
   font-weight: 700;
   letter-spacing: 0.12em;
+  transition: font-size 0.3s ease, color 0.6s ease;
 }
+.blog-head.is-stuck .blog-brand { font-size: 26px; }
 .blog-brand i { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--sun); }
 .blog-brand:hover { color: var(--ink); }
-/* the tabs: a segmented pill, every segment the same width and height, the lit one an ink stone inset in it */
+/* the tabs: a segmented pill, every segment the same width and height, the lit one an ink stone inset in it. The stone is
+   one piece (.blog-tabs-ink) that slides to the tab being opened, so the move reads before the next page arrives */
 .blog-tabs {
+  --n: 3;
+  position: relative;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
@@ -249,8 +276,21 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
   background: rgba(250, 249, 246, 0.72);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  transition: background-color 0.6s ease, border-color 0.6s ease;
+}
+.blog-tabs-ink {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px - (var(--n) - 1) * 2px) / var(--n));
+  border-radius: 999px;
+  background: var(--ink);
+  transform: translateX(calc(var(--i, 0) * (100% + 2px)));
+  transition: transform 0.5s cubic-bezier(0.6, 0, 0.2, 1), background-color 0.6s ease;
 }
 .blog-tabs a {
+  position: relative; /* over the ink stone */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,11 +305,11 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
   white-space: nowrap;
   color: var(--stone);
   border-radius: 999px;
-  transition: background-color 0.2s, color 0.2s;
+  transition: background-color 0.2s, color 0.3s;
 }
 .blog-tabs a:hover { color: var(--ink); background: rgba(44, 43, 40, 0.05); }
 .blog-tabs a.on,
-.blog-tabs a.on:hover { font-weight: 500; color: var(--plaster); background: var(--ink); }
+.blog-tabs a.on:hover { font-weight: 500; color: var(--plaster); background: transparent; }
 .blog-rss {
   display: grid;
   place-items: center;
@@ -284,7 +324,27 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 .blog-rss svg { width: 14px; height: 14px; fill: currentColor; }
 .blog-rss:hover { color: var(--plaster); background: var(--ink); }
 
-/* — back to the top: the masthead scrolls away, so this corner button brings the page back up — */
+/* the masthead in the dark room: on the bookshelf, and while the secret door opens onto it or closes behind it */
+:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-head {
+  --ink: #ecebe6;
+  --plaster: #22211f;
+  --stone: #b7b4ac;
+}
+:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-head.is-stuck { background: rgba(34, 33, 31, 0.86); border-bottom-color: rgba(236, 235, 230, 0.1); }
+:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-tabs { background: rgba(255, 255, 255, 0.05); border-color: rgba(236, 235, 230, 0.2); }
+:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-tabs a:hover { background: rgba(236, 235, 230, 0.08); }
+:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-rss { background: rgba(255, 255, 255, 0.05); border-color: rgba(236, 235, 230, 0.3); }
+:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-rss:hover { color: #22211f; background: #ecebe6; }
+.blog-rss { transition: color 0.6s ease, background-color 0.6s ease, border-color 0.6s ease; }
+
+/* between pages that support it, the masthead is carried across rather than drawn again, and the page under it crossfades */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
+::view-transition-old(root),
+::view-transition-new(root) { animation-duration: 0.25s; }
+
+/* — back to the top: a corner button that brings the page back up — */
 .desk-top {
   position: fixed;
   z-index: 10;
@@ -421,13 +481,18 @@ html[data-arrive="door-close"] .desk-page { visibility: hidden; }
 .zoom-fx { position: fixed; inset: 0; z-index: 100; pointer-events: none; background: var(--plaster); opacity: 0; transition: opacity 0.35s ease; }
 .zoom-fx.is-on { opacity: 1; }
 .zoom-fx .ink-land svg { transition: transform 1.3s cubic-bezier(0.5, 0, 0.4, 1); }
-html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 0.7s ease both; }
+html[data-arrive="zoom"] .desk-page > :not(.ink-land, .blog-head) { animation: desk-fade-in 0.7s ease both; }
 @keyframes desk-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* a phone: the name and the feed on one line, the tabs on the next */
 @media (max-width: 640px) {
+  :root { --head-full: 114px; --head-h: 62px; }
   .blog-head { padding: 16px 16px 0; gap: 10px; }
+  /* pinned, it keeps only the tabs: the name and the feed would take a sixth of a phone's screen */
+  .blog-head.is-stuck { padding: 8px 16px 9px; }
+  .blog-head.is-stuck :is(.blog-brand, .blog-rss) { display: none; }
   .blog-brand { margin-right: auto; gap: 12px; font-size: 28px; letter-spacing: 0.08em; }
+  .blog-head.is-stuck .blog-brand { font-size: 28px; }
   .blog-brand i { width: 18px; height: 18px; }
   .blog-tabs { order: 3; flex: 1 1 100%; margin-left: 0; }
   .blog-tabs a { padding: 0 8px; }
@@ -440,6 +505,7 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
 
 @media (prefers-reduced-motion: reduce) {
   .desk-top { transition: none; }
+  .blog-head, .blog-brand, .blog-tabs, .blog-tabs-ink, .blog-tabs a, .blog-rss { transition: none; }
   .ink-land :is(.w-cloud, .w-fog i) { animation: none; }
   .ink-land .w-rain i { animation: none; opacity: 0.6; transform: translateY(var(--y, 140px)) rotate(12deg); }
   .ink-land .w-rain i:nth-child(3n) { --y: 260px; }
@@ -448,6 +514,6 @@ html[data-arrive="zoom"] .desk-page > :not(.ink-land) { animation: desk-fade-in 
 }
 
 @media print {
-  .blog-head, .desk-top, .ink-land, .desk-foot { display: none; }
+  .blog-head, .blog-head-space, .desk-top, .ink-land, .desk-foot { display: none; }
   html, body.desk-body { background: #fff; }
 }
