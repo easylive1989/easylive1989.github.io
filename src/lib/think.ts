@@ -1,10 +1,11 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { codeToHtml, bundledLanguages, type BundledLanguage } from 'shiki';
 import { loadConfig } from './config';
 import { categorySlug } from './category';
 import { responsiveImage, IMAGE_SIZES } from './images';
-import { excerptFrom, renderThinkMarkdown } from './think-markdown.mjs';
+import { excerptFrom, leadImage, renderThinkMarkdown } from './think-markdown.mjs';
 import type { Article, Book, Note } from './notion';
 import type { ArticleMeta } from './articleMeta';
 
@@ -109,8 +110,9 @@ async function loadAll(): Promise<Loaded> {
       loaded.hrefs.set(a.id, `${BASE}notes/${a.id}/`);
     } else if (a.category !== BOOK_NOTES_FOLDER) {
       const category = a.category || config.notion.defaultCategory;
+      const cover = leadImage(a.body);
       loaded.posts.push({
-        article: { id: a.id, title: a.title, category, createdTime, lastEditedTime: iso(a.updatedAt), summary: a.summary ?? '' },
+        article: { id: a.id, title: a.title, category, createdTime, lastEditedTime: iso(a.updatedAt), summary: a.summary ?? '', ...(cover ? { cover } : {}) },
         body: a.body,
       });
       loaded.hrefs.set(a.id, `${BASE}${categorySlug(category)}/${a.id}/`);
@@ -158,6 +160,8 @@ export async function thinkBookNotes(): Promise<Map<string, string>> {
 // ---------------------------------------------------------------- drawing
 
 const ASSETS = '/assets/think';
+/** a cover in the list is drawn at most 240px wide */
+const COVER_WIDTHS = [240, 480];
 
 /** a Think Space picture or video, kept in public/ (cached between builds) and dist/ */
 async function download(src: string, id: string): Promise<string | null> {
@@ -185,6 +189,47 @@ async function download(src: string, id: string): Promise<string | null> {
     fs.copyFileSync(path.join(dir, file), dist);
   }
   return `${ASSETS}/${file}`;
+}
+
+/** a picture from the web, kept beside Think Space's under covers/ by a hash of its address */
+async function downloadExternal(url: string): Promise<string | null> {
+  const publicDir = path.resolve(process.cwd(), 'public');
+  const dir = path.join(publicDir, ASSETS, 'covers');
+  const id = createHash('md5').update(url).digest('hex').slice(0, 16);
+  fs.mkdirSync(dir, { recursive: true });
+  let file = fs.readdirSync(dir).find((f) => f.startsWith(`${id}.`));
+  if (!file) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`answered ${res.status}`);
+      const type = res.headers.get('content-type')?.split(';')[0] ?? '';
+      const ext = { 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif' }[type];
+      if (!ext) throw new Error(`is ${type || 'of no type'}`);
+      file = `${id}.${ext}`;
+      fs.writeFileSync(path.join(dir, file), Buffer.from(await res.arrayBuffer()));
+    } catch (err: any) {
+      console.warn(`Could not download the cover ${url}: ${err.message}`);
+      return null;
+    }
+  }
+  return `${ASSETS}/covers/${file}`;
+}
+
+export interface Cover { src: string; srcset?: string; width?: number; height?: number }
+
+/** The list shows a cover at most 240px wide: a small WebP of an article's 首圖, or, when it cannot be downloaded, the picture where it is. */
+export async function coverOf(src: string | undefined): Promise<Cover | null> {
+  if (!src) return null;
+  const BASE = (import.meta.env?.BASE_URL ?? '/').replace(/\/$/, '');
+  const file = /^\/api\/files\/([A-Za-z0-9_-]+)\/display$/.exec(src);
+  const local = file ? await download(src, file[1]) : await downloadExternal(src);
+  if (!local) return file ? null : { src };
+  const out = await responsiveImage(local, COVER_WIDTHS);
+  return {
+    src: `${BASE}${out.src}`,
+    ...(out.variants.length > 1 ? { srcset: out.variants.map((v) => `${BASE}${v.src} ${v.width}w`).join(', ') } : {}),
+    ...(out.width ? { width: out.width, height: out.height } : {}),
+  };
 }
 
 const attr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');

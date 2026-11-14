@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { renderThinkMarkdown, excerptFrom } from '../src/lib/think-markdown.mjs';
+import { renderThinkMarkdown, excerptFrom, leadImage } from '../src/lib/think-markdown.mjs';
 
 const hooks = {
   highlight: async (code, lang) => `<pre data-lang="${lang}">${code}</pre>`,
@@ -60,4 +60,12 @@ test('the prose for an excerpt and the reading time', async () => {
   assert.ok(out.chars > 10);
   assert.equal(excerptFrom(['短句。'], 120), '短句。');
   assert.equal(excerptFrom(['一'.repeat(200)], 10), `${'一'.repeat(10)}…`);
+});
+
+test('the 首圖 is the picture a body opens with, before any words', () => {
+  assert.equal(leadImage('![](/api/files/kcm_O-1/display)\n\n工程師或多或少…'), '/api/files/kcm_O-1/display');
+  assert.equal(leadImage('\n![封面](https://images.unsplash.com/photo-1?ixlib=rb-4.1.0&q=85)\n\n文字'), 'https://images.unsplash.com/photo-1?ixlib=rb-4.1.0&q=85');
+  assert.equal(leadImage('在軟體開發中有個 Baby Step 原則。\n\n![](/api/files/l18F/display)'), null);
+  assert.equal(leadImage('![](/api/videos/abc)\n\n影片不是封面'), null);
+  assert.equal(leadImage(''), null);
 });

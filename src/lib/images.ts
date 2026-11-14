@@ -127,7 +127,7 @@ export interface ResponsiveImage {
  * so the page holds its place before it loads. The files sit next to the original in public/, where the CI cache keeps them between
  * builds, and are copied into dist/ as downloadImages does. SVGs, and anything sharp cannot read, are passed through as they are.
  */
-export async function responsiveImage(localPath: string): Promise<ResponsiveImage> {
+export async function responsiveImage(localPath: string, sizes: number[] = IMAGE_WIDTHS): Promise<ResponsiveImage> {
   const passThrough = { src: localPath, variants: [] };
   if (!/\.(png|jpe?g|gif|webp)$/i.test(localPath)) return passThrough;
   const publicDir = path.resolve(process.cwd(), 'public');
@@ -141,7 +141,7 @@ export async function responsiveImage(localPath: string): Promise<ResponsiveImag
     const w = meta.width ?? 0;
     const h = (animated && meta.pageHeight) || meta.height || 0; // a GIF of a single frame has no pageHeight
     if (!w || !h) return passThrough;
-    const widths = [...new Set([...IMAGE_WIDTHS.filter((x) => x < w), Math.min(w, IMAGE_WIDTHS.at(-1)!)])];
+    const widths = [...new Set([...sizes.filter((x) => x < w), Math.min(w, sizes.at(-1)!)])];
     const variants = [];
     for (const width of widths) {
       const src = localPath.replace(/\.[^.]+$/, `-${width}.webp`);
