@@ -7,6 +7,8 @@ export interface Article {
   createdTime: string;
   lastEditedTime: string;
   summary: string;
+  /** the picture the article opens with, as its markdown names it (`/api/files/…/display` or a web address); the list shows it as the article's cover */
+  cover?: string;
 }
 
 export interface Book {

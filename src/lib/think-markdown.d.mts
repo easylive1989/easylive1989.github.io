@@ -1,5 +1,6 @@
 export function slugify(s: string): string;
 export function excerptFrom(parts: string[], max?: number): string;
+export function leadImage(body: string): string | null;
 export function renderThinkMarkdown(markdown: string, hooks: {
   highlight(code: string, lang: string): Promise<string>;
   media(src: string, alt: string): Promise<string>;

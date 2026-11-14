@@ -50,6 +50,15 @@ export function excerptFrom(parts, max = 120) {
  * Gives the HTML, the table of contents (levels 1–3 of the markdown), the prose (for an excerpt), the number of
  * characters and ASCII words (for the reading time) and the first picture's markdown address.
  */
+/**
+ * The picture a body opens with, before any words: its 首圖, which the list shows as the article's cover. A Think Space file
+ * (`/api/files/…/display`) or a picture on the web; a picture further down is part of the text, not a cover.
+ */
+export function leadImage(body) {
+  const m = /^!\[[^\]]*\]\(<?([^)\s>]+)>?(?:\s+"[^"]*")?\)/.exec(body.trimStart());
+  return m && (/^\/api\/files\/[A-Za-z0-9_-]+\/display$/.test(m[1]) || /^https?:\/\//.test(m[1])) ? m[1] : null;
+}
+
 export async function renderThinkMarkdown(markdown, hooks) {
   const toc = [];
   let firstMedia = null;

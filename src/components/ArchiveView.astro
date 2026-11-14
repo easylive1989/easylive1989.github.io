@@ -2,6 +2,7 @@
 import type { Article, Note } from '../lib/notion';
 import type { Category } from '../lib/data';
 import { categorySlug } from '../lib/category';
+import { coverOf, type Cover } from '../lib/think';
 import QuarterHeat from './QuarterHeat.astro';
 import '../styles/archive.css';
 
@@ -23,6 +24,13 @@ function fmtMonthDay(iso: string): string {
   return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/** An article without a 首圖 gets a quiet ink wash in its place, its blots set by its title so no two rows look quite the same. */
+function washOf(title: string): string {
+  let h = 0;
+  for (const ch of title) h = (h * 31 + ch.codePointAt(0)!) >>> 0;
+  return `--wx:${20 + (h % 40)}%;--wy:${55 + ((h >> 6) % 25)}%;--wx2:${55 + ((h >> 11) % 30)}%;--wy2:${25 + ((h >> 16) % 25)}%`;
+}
+
 function estimateMin(title: string): number {
   return Math.max(3, Math.min(15, Math.round(title.length / 8) + 3));
 }
@@ -32,6 +40,8 @@ interface Row {
   cat: string;
   createdTime: string;
   href: string | null;
+  /** the article's 首圖, small; 碎碎念 and articles that open with words have none */
+  cover: Cover | null;
 }
 
 interface YearGroup {
@@ -41,8 +51,10 @@ interface YearGroup {
 
 // Everything the page lists, newest first: the articles and, each by its date, the 碎碎念.
 const rows: Row[] = [
-  ...articles.map((a) => ({ title: a.title, cat: a.category, createdTime: a.createdTime, href: `${BASE}${categorySlug(a.category)}/${a.id}/` })),
-  ...notes.map((n) => ({ title: n.title, cat: NOTE_CAT, createdTime: n.createdTime, href: n.hasBody ? `${BASE}notes/${n.id}/` : null })),
+  ...(await Promise.all(articles.map(async (a) => ({
+    title: a.title, cat: a.category, createdTime: a.createdTime, href: `${BASE}${categorySlug(a.category)}/${a.id}/`, cover: await coverOf(a.cover),
+  })))),
+  ...notes.map((n) => ({ title: n.title, cat: NOTE_CAT, createdTime: n.createdTime, href: n.hasBody ? `${BASE}notes/${n.id}/` : null, cover: null })),
 ].sort((a, b) => b.createdTime.localeCompare(a.createdTime));
 // One block of the list per year.
 const byYear = new Map<number, Row[]>();
@@ -143,6 +155,13 @@ if (notes.length) chipData.push({ name: NOTE_CAT, count: notes.length, color: ca
             return (
               <Tag class="archive-row" href={r.href ?? undefined} data-cat={r.cat} data-title={r.title} data-date={r.createdTime}>
                 <span class="row-date num">{fmtMonthDay(r.createdTime)}</span>
+                {r.cover ? (
+                  <span class="row-cover" aria-hidden="true">
+                    <img src={r.cover.src} srcset={r.cover.srcset} sizes={r.cover.srcset && '104px'} width={r.cover.width} height={r.cover.height} alt="" loading="lazy" decoding="async" />
+                  </span>
+                ) : (
+                  <span class="row-cover is-wash" style={washOf(r.title)} aria-hidden="true"></span>
+                )}
                 <span class="row-title">{r.title}</span>
                 <span class="row-cat" title={r.cat}>
                   <span class="dot" style={`--c:${catColor(r.cat)}`}></span>
