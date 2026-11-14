@@ -1,10 +1,11 @@
 // 船痕: the mouse moves over the page like a little boat over still water, and behind it the water parts — two thin lines
-// of pale ink open out from its bow to either side, the way a wake spreads in a V, with a fainter ripple inside each. The
+// of ripple open out from its bow to either side, the way a wake spreads in a V, with a fainter ripple inside each. The
 // lines keep drifting outward as they fade, so in two or three seconds the water is still again. A quick boat throws a
 // wide wake; a slow one barely stirs the water; a boat at rest leaves none.
 //
-// The wake is on the page, not the screen: scroll and it goes up with the words it was drawn over. It is laid on with
-// multiply, pale enough to read as ripples in the wall and not as a film over the type.
+// The wake is on the page, not the screen: scroll and it goes up with the words it was drawn over. It is drawn the way a
+// real ripple shows on still water, by the light it bends: each crest is a breath of shadow on its near side and a thin
+// glint of light on its far side, and almost nothing else, so it reads as water over the wall and never as a mark on it.
 //
 // Only for a mouse (a fine pointer that hovers): touch screens and pens go without it, and so does reduced motion. The
 // canvas draws only while a wake is still fading, and stops when the tab is in the background.
@@ -14,11 +15,12 @@ const LIFE = 2400; // ms a stretch of wake takes to spread out and settle
 const STEP = 6; // px of travel between points on the wake
 const MAX = 480; // points at once, oldest let go first
 const PAUSE = 150; // ms without moving before the next movement starts a new wake
-const INK = '84, 96, 102'; // ink thinned with water: a little grey-blue, like a wet line on paper
-/** the lines of each wake, on both sides: how far out they spread (of the whole), and how dark */
+const SHADE = '70, 82, 90'; // the shadow side of a crest: a little grey-blue
+const GLINT = '255, 255, 252'; // the light side
+/** the lines of each wake, on both sides: how far out they spread (of the whole), and how strong */
 const LINES = [
-  { k: 1, a: 0.2 },
-  { k: 0.58, a: 0.12 },
+  { k: 1, a: 1 },
+  { k: 0.58, a: 0.6 },
 ];
 
 const mouse = matchMedia('(hover: hover) and (pointer: fine)');
@@ -82,11 +84,21 @@ if (!off) {
   }
 
   /** where a line of the wake is now, for the point p, `age` ms after the boat passed it */
-  function at(p, age, side, k) {
-    const out = p.s * k * 1.7 * Math.pow(Math.min(age / LIFE, 1), 0.75); // keeps opening as it goes, so the arms run out in a V
+  function at(p, age, side, k, edge = 0) {
+    const out = edge + p.s * k * 1.7 * Math.pow(Math.min(age / LIFE, 1), 0.75); // keeps opening as it goes, so the arms run out in a V
     const ripple = Math.sin(age * 0.004 + p.x * 0.05 + p.y * 0.05) * 1.2; // the water is never quite flat
     const d = side * (out + ripple * k);
     return [p.x + p.nx * d - scrollX, p.y + p.ny * d - scrollY];
+  }
+
+  /** one line of the wake from point j to end, `edge` px further out than the crest */
+  function trace(j, end, now, side, k, edge) {
+    ctx.beginPath();
+    for (let q = j; q <= end; q++) {
+      const [x, y] = at(pts[q], Math.max(0, now - pts[q].t), side, k, edge);
+      if (q === j) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
   }
 
   function draw(now) {
@@ -111,18 +123,15 @@ if (!off) {
       if (alpha <= 0.01) continue;
       for (const side of [-1, 1]) {
         for (const line of LINES) {
-          ctx.beginPath();
-          for (let q = j; q <= end; q++) {
-            const [x, y] = at(pts[q], Math.max(0, now - pts[q].t), side, line.k);
-            if (q === j) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          // a wide, faint wash with a hair of a line down its middle: barely more than water on the paper
-          ctx.strokeStyle = `rgba(${INK}, ${line.a * alpha * 0.3})`;
-          ctx.lineWidth = 7 * line.k + 2;
+          // the shadow, just inside the crest
+          trace(j, end, now, side, line.k, -0.8);
+          ctx.strokeStyle = `rgba(${SHADE}, ${line.a * alpha * 0.07})`;
+          ctx.lineWidth = 2.6;
           ctx.stroke();
-          ctx.strokeStyle = `rgba(${INK}, ${line.a * alpha * 0.45})`;
-          ctx.lineWidth = 0.8 + 0.4 * life;
+          // the glint, just outside it
+          trace(j, end, now, side, line.k, 1.4);
+          ctx.strokeStyle = `rgba(${GLINT}, ${line.a * alpha * 0.6})`;
+          ctx.lineWidth = 1.4;
           ctx.stroke();
         }
       }
