@@ -20,17 +20,32 @@
 .archive-sheet .arc-scope h1 { margin: 0; font-size: 44px; font-weight: 300; line-height: 1.2; letter-spacing: 0.12em; }
 .archive-sheet .arc-scope-n { margin: 0; font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.14em; color: var(--muted); }
 
-/* — 每季落筆: the heatmap on a pale card over the landscape — */
+/* — the heatmap: no card, a pool of paper that fades into the landscape, sealed 筆耕 at its corner — */
 .archive-sheet .arc-heat {
+  position: relative;
   width: fit-content;
   max-width: 100%;
   box-sizing: border-box;
-  margin: 16px 0 0;
-  padding: 14px 16px;
-  background: rgba(250, 249, 246, 0.84);
-  border: 1px solid rgba(44, 43, 40, 0.12);
+  margin: 14px 0 0;
+  padding: 24px 34px 30px 26px;
+  background: radial-gradient(ellipse 60% 62% at 50% 50%, rgba(250, 248, 242, 0.9) 55%, rgba(250, 248, 242, 0.55) 78%, rgba(250, 248, 242, 0) 100%);
 }
-.archive-sheet .arc-heat figcaption { margin-bottom: 10px; font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.14em; color: var(--muted); }
+.archive-sheet .arc-heat::after {
+  content: '筆耕';
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  padding: 4px 3px;
+  writing-mode: vertical-rl;
+  font-family: var(--font-display);
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 1px;
+  color: #f6efe6;
+  background: #b8402f;
+  border-radius: 3px;
+  opacity: 0.88;
+}
 
 /* — filter bar — */
 .archive-sheet .filter-bar {
@@ -270,7 +285,7 @@
   .archive-sheet .filter-bar { flex-wrap: wrap; }
   .archive-sheet .chips { margin-left: -16px; padding-left: 16px; }
   .archive-sheet .search { flex: 1 1 100%; order: 3; }
-  /* a phone shows the landscape and goes without 每季落筆 */
+  /* a phone shows the landscape and goes without the heatmap */
   .archive-sheet .arc-heat { display: none; }
   .archive-sheet .filter-bar { margin-top: 160px; }
   .archive-sheet .arc-scope h1 { font-size: 32px; }

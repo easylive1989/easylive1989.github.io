@@ -1,54 +1,65 @@
-/* A heatmap of the quarters: the years run across the top, the four quarters down the side.
-   Ink washes on the plaster: an outlined cell for nothing, darker greys for more, solid ink for the busiest. Tokens from desk.css. */
+/* A heatmap of the quarters: the years run across the top, the four seasons down the side.
+   Ink washes bled into the paper: a speck of ink for nothing, deeper washes for more, solid ink for the busiest. Tokens from desk.css. */
 
 .heat {
   margin: 0;
-  /* as wide as its grid, or as its legend when only a year or two stand above it */
   width: fit-content;
   max-width: 100%;
 }
 .heat-grid {
   display: grid;
-  /* the column of quarter labels, then a 28px cell and its gap for every year; narrower when the screen is */
+  /* the column of seasons, then a 28px cell and its gap for every year; narrower when the screen is */
   width: calc(26px + var(--n) * 33px);
   max-width: 100%;
   grid-template-columns: 26px repeat(var(--n), minmax(0, 1fr));
   gap: 4px;
   align-items: center;
 }
+.heat-y,
+.heat-q {
+  font-family: var(--font-display);
+  color: var(--color-neutral-700);
+}
 .heat-y {
   text-align: center;
   font-size: 11px;
   line-height: 1.6;
-  color: var(--color-neutral-700);
 }
-.heat-q {
-  font-size: 11px;
-  color: var(--color-neutral-700);
-}
+.heat-q { font-size: 12px; }
 .heat-cell {
+  position: relative;
+  z-index: 0;
   display: grid;
   place-items: center;
   aspect-ratio: 30 / 26;
-  box-sizing: border-box;
-  border-radius: 3px;
-  border: 1px solid rgba(44, 43, 40, 0.12);
   font-size: 11px;
   font-style: normal;
   color: var(--color-text);
 }
-.heat-cell[data-v="1"] { border-color: transparent; background: #e3e0d9; color: #4f4c47; }
-.heat-cell[data-v="2"] { border-color: transparent; background: #c9c5bd; color: #2c2b28; }
-.heat-cell[data-v="3"] { border-color: transparent; background: #9a968e; color: #1f1e1c; }
-.heat-cell[data-v="4"] { border-color: transparent; background: #2c2b28; color: #f2f0eb; }
-.heat-legend {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  margin-top: 10px;
-  font-size: 11px;
-  color: var(--color-neutral-700);
+/* the wash under the number, its edges roughened by the filter in QuarterHeat */
+.heat-cell::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: 30%;
+  filter: url(#heat-ink-bleed);
 }
-.heat-legend span { margin: 0 3px; }
-.heat-legend .heat-cell { width: 14px; }
+.heat-cell[data-v="0"]::before {
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: rgba(44, 43, 40, 0.18);
+  filter: none;
+}
+.heat-cell[data-v="1"]::before { background: rgba(44, 43, 40, 0.14); }
+.heat-cell[data-v="2"]::before { background: rgba(44, 43, 40, 0.28); }
+.heat-cell[data-v="3"]::before { background: rgba(44, 43, 40, 0.55); }
+.heat-cell[data-v="4"]::before { background: rgba(28, 26, 24, 0.92); }
+.heat-cell[data-v="3"],
+.heat-cell[data-v="4"] { color: #f6f1e4; }
+.heat-defs { position: absolute; }
