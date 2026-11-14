@@ -18,6 +18,7 @@ https://paul-learning.dev
   - 首頁就是「所有文章」；舊的 `/archive/` 轉到首頁
   - 文章列表每篇標題前有一張封面：文章開頭（任何文字之前）的那張首圖，build 時縮成小 WebP，平常淡成水墨色、指到才恢復顏色；開頭沒有圖的文章和碎碎念用一塊淡墨暈染加小紅印代替（`leadImage` 在 `src/lib/think-markdown.mjs`，`coverOf` 在 `src/lib/think.ts`）。手機上封面移到每列右邊
   - 山水跟著台中的天氣變：晴、多雲、霧、雨、雷雨、夜晚（`src/layouts/weather.js`，向 Open-Meteo 查，免金鑰；結果在瀏覽器存半小時）。查天氣時訪客的 IP 會被 Open-Meteo 看到
+  - 滑鼠滑過頁面會留下淡淡的墨痕，慢慢暈開、兩三秒後消散；慢慢移墨比較濃、快速劃過是細細的飛白（`src/layouts/inkTrail.js`）。只給滑鼠用：手機、觸控與「減少動態」時不畫。網址加 `?ink=0` 可以關掉
   - 「書架」是暗門後的書櫃：點導覽列的書架，頁面從中間裂開、書架從暗處浮上來；「關於我」用推進山水轉場（`src/layouts/deskFx.js`）
 - **部署**: GitHub Pages
   - `public/sw.js` 是退役用的 Service Worker：之前 3D 書房留下的快取會被它清掉並自行解除註冊，過幾個月可以刪掉
