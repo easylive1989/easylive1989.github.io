@@ -10,7 +10,7 @@ import type { Article, Book, Note } from './notion';
 import type { ArticleMeta } from './articleMeta';
 
 /**
- * The blog's content from Think Space (https://think.paul-learning.dev), read when the site is built, with no token:
+ * The blog's content from Think Space (https://paul.thinkspace.page), read when the site is built, with no token:
  * the public articles (GET /api/public/articles, then each by id) and the public books (GET /api/public/books).
  * - an article in 部落格/碎碎念 is one of the 碎碎念
  * - an article a book names as its notes is that book's 讀書筆記
