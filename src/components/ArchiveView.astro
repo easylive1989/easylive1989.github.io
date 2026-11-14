@@ -31,10 +31,6 @@ function washOf(title: string): string {
   return `--wx:${20 + (h % 40)}%;--wy:${55 + ((h >> 6) % 25)}%;--wx2:${55 + ((h >> 11) % 30)}%;--wy2:${25 + ((h >> 16) % 25)}%`;
 }
 
-function estimateMin(title: string): number {
-  return Math.max(3, Math.min(15, Math.round(title.length / 8) + 3));
-}
-
 interface Row {
   title: string;
   cat: string;
@@ -167,7 +163,6 @@ if (notes.length) chipData.push({ name: NOTE_CAT, count: notes.length, color: ca
                   <span class="dot" style={`--c:${catColor(r.cat)}`}></span>
                   <span class="row-cat-name">{r.cat}</span>
                 </span>
-                <span class="row-min num">{estimateMin(r.title)} min</span>
               </Tag>
             );
           })}

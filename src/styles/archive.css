@@ -159,7 +159,7 @@
 .archive-sheet .rows { min-width: 0; }
 .archive-sheet .archive-row {
   display: grid;
-  grid-template-columns: 52px 104px minmax(0, 1fr) 170px 52px;
+  grid-template-columns: 52px 104px minmax(0, 1fr) 170px;
   column-gap: 16px;
   align-items: center;
   padding: 12px 0;
@@ -180,6 +180,7 @@
 .archive-sheet .row-cat {
   display: flex;
   align-items: center;
+  justify-content: flex-end; /* the row's last column: it ends where the row ends */
   gap: 8px;
   min-width: 0;
   font-family: var(--font-ui);
@@ -188,7 +189,6 @@
   color: var(--stone);
 }
 .archive-sheet .row-cat-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.archive-sheet .row-min { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.04em; text-align: right; color: var(--muted); white-space: nowrap; }
 .archive-sheet a.archive-row:hover .row-title,
 .archive-sheet a.archive-row:focus-visible .row-title { color: var(--sun); }
 /* a 碎碎念 with nothing written under its title has no page to go to */
@@ -232,7 +232,7 @@
 }
 
 /* a category page: every row has the same category, so give the title the room */
-.archive-sheet.is-scoped .archive-row { grid-template-columns: 52px 104px minmax(0, 1fr) 52px; }
+.archive-sheet.is-scoped .archive-row { grid-template-columns: 52px 104px minmax(0, 1fr); }
 .archive-sheet.is-scoped .row-cat { display: none; }
 
 .archive-sheet .archive-empty { padding: 56px 0 44px; text-align: center; color: var(--muted); }
@@ -250,7 +250,7 @@
   .archive-sheet.is-scoped .archive-row {
     grid-template-columns: auto auto minmax(0, 1fr) 72px;
     grid-template-areas:
-      "date cat min cover"
+      "date cat . cover"
       "title title title cover";
     align-items: start;
     column-gap: 12px;
@@ -260,9 +260,8 @@
   .archive-sheet .row-cover img { filter: grayscale(0.6) sepia(0.1); }
   .archive-sheet .row-cover.is-wash::after { margin: 7px 0 0 calc(100% - 12px); width: 5px; height: 5px; }
   .archive-sheet .row-date { grid-area: date; }
-  .archive-sheet .row-cat { grid-area: cat; }
+  .archive-sheet .row-cat { grid-area: cat; justify-content: flex-start; }
   .archive-sheet.is-scoped .row-cat { display: none; }
-  .archive-sheet .row-min { grid-area: min; justify-self: start; }
   .archive-sheet .row-title { grid-area: title; font-size: 16px; }
 }
 
