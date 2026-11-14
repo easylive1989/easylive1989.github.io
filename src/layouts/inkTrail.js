@@ -14,11 +14,11 @@ const LIFE = 2400; // ms a stretch of wake takes to spread out and settle
 const STEP = 6; // px of travel between points on the wake
 const MAX = 480; // points at once, oldest let go first
 const PAUSE = 150; // ms without moving before the next movement starts a new wake
-const INK = '44, 43, 40'; // --ink
+const INK = '84, 96, 102'; // ink thinned with water: a little grey-blue, like a wet line on paper
 /** the lines of each wake, on both sides: how far out they spread (of the whole), and how dark */
 const LINES = [
-  { k: 1, a: 0.44 },
-  { k: 0.58, a: 0.26 },
+  { k: 1, a: 0.2 },
+  { k: 0.58, a: 0.12 },
 ];
 
 const mouse = matchMedia('(hover: hover) and (pointer: fine)');
@@ -117,12 +117,12 @@ if (!off) {
             if (q === j) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
           }
-          // a soft wash with a finer line down its middle, like ink on damp paper
-          ctx.strokeStyle = `rgba(${INK}, ${line.a * alpha * 0.2})`;
-          ctx.lineWidth = 4 * line.k + 1;
+          // a wide, faint wash with a hair of a line down its middle: barely more than water on the paper
+          ctx.strokeStyle = `rgba(${INK}, ${line.a * alpha * 0.3})`;
+          ctx.lineWidth = 7 * line.k + 2;
           ctx.stroke();
-          ctx.strokeStyle = `rgba(${INK}, ${line.a * alpha * 0.5})`;
-          ctx.lineWidth = 1 + 0.5 * life;
+          ctx.strokeStyle = `rgba(${INK}, ${line.a * alpha * 0.45})`;
+          ctx.lineWidth = 0.8 + 0.4 * life;
           ctx.stroke();
         }
       }
