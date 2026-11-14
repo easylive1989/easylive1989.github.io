@@ -21,6 +21,10 @@ https://paul-learning.dev
   - 「書架」是暗門後的書櫃：點導覽列的書架，頁面從中間裂開、書架從暗處浮上來；「關於我」用推進山水轉場（`src/layouts/deskFx.js`）
 - **部署**: GitHub Pages
   - `public/sw.js` 是退役用的 Service Worker：之前 3D 書房留下的快取會被它清掉並自行解除註冊，過幾個月可以刪掉
+  - `public/invoice-scanner/` 是獨立的小工具，不屬於部落格（原樣複製到 `/invoice-scanner/`，`check-blog-nav` 會跳過它）：
+    進項發票掃描，整理營業稅 401 申報要用的欄位。電子發票讀左邊 QR Code（zxing-wasm，瀏覽器內解碼）；
+    傳統發票、收據拍照後用使用者自己在設定填的 Claude 或 Gemini API key 從瀏覽器辨識。資料存在瀏覽器 localStorage，
+    可依申報期別彙總、匯出 CSV。解析與驗證邏輯在 `invoice-core.js`，測試在 `scripts/invoice-scanner.test.mjs`
 
 ## 專案結構
 

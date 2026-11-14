@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>進項發票掃描（401 申報）</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #fff; --ink: #1d1d1b; --muted: #6b6a66; --line: #e3e1da;
+    --accent: #b8432f; --accent-ink: #fff; --ok: #2f7d4f; --warn: #b7791f; --bad: #b8432f;
+    --radius: 12px; font-size: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --card: #22221f; --ink: #ecebe6; --muted: #a09e97; --line: #3a3934; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    padding-bottom: env(safe-area-inset-bottom); }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); display: flex; align-items: center;
+    justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 18px; margin: 0; }
+  main { max-width: 720px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  button, .btn { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    border-radius: 10px; padding: 10px 14px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .actions button { padding: 16px 10px; font-size: 16px; font-weight: 600; }
+  .actions small { display: block; font-weight: 400; font-size: 12px; opacity: .85; margin-top: 4px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .muted { color: var(--muted); font-size: 13px; }
+  select, input { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--bg); color: var(--ink); width: 100%; }
+  label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  .stat b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  ul.list { list-style: none; margin: 0; padding: 0; }
+  ul.list li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 12px 4px;
+    border-top: 1px solid var(--line); cursor: pointer; }
+  ul.list li:first-child { border-top: 0; }
+  .num { font-variant-numeric: tabular-nums; text-align: right; }
+  .tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 999px; border: 1px solid currentColor; margin-left: 4px; }
+  .tag.ok { color: var(--ok); } .tag.warn { color: var(--warn); } .tag.bad { color: var(--bad); }
+  .err { color: var(--bad); font-size: 12px; }
+  .flag input, .flag select { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--bg)); }
+  .bad input, .bad select { border-color: var(--bad); }
+  dialog { border: 0; border-radius: var(--radius); padding: 0; width: min(560px, 100vw - 16px);
+    max-height: calc(100dvh - 16px); background: var(--card); color: var(--ink); }
+  dialog::backdrop { background: rgba(0,0,0,.5); }
+  dialog form { padding: 16px; display: grid; gap: 12px; }
+  dialog h2 { margin: 0; font-size: 17px; }
+  .preview { max-width: 100%; max-height: 220px; border-radius: 8px; display: block; margin: 0 auto; }
+  #scanner { position: fixed; inset: 0; background: #000; z-index: 20; display: none; flex-direction: column; }
+  #scanner.on { display: flex; }
+  #scanner video { flex: 1; width: 100%; object-fit: cover; min-height: 0; }
+  #scanner .guide { position: absolute; left: 50%; top: 45%; width: 62vmin; height: 62vmin; transform: translate(-50%, -50%);
+    border: 3px solid rgba(255,255,255,.9); border-radius: 16px; box-shadow: 0 0 0 100vmax rgba(0,0,0,.35); pointer-events: none; }
+  #scanner .bar { padding: 16px; display: flex; gap: 10px; justify-content: space-between; align-items: center; color: #fff; background: #000; }
+  #busy { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; place-items: center; z-index: 30; color: #fff; }
+  #busy.on { display: grid; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--bg);
+    padding: 10px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: opacity .2s; z-index: 40; pointer-events: none; max-width: 90vw; }
+  #toast.on { opacity: 1; }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+<header>
+  <h1>進項發票掃描 · 401</h1>
+  <button id="btnSettings" aria-label="設定">⚙︎ 設定</button>
+</header>
+
+<main>
+  <section class="actions">
+    <button class="primary" id="btnScan">掃電子發票<small>相機對準左邊 QR Code</small></button>
+    <button id="btnPhoto">拍照 / 上傳<small>傳統發票、收據、可多張</small></button>
+    <input type="file" id="fileInput" accept="image/*" multiple hidden>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content: space-between">
+      <label style="flex:1; min-width: 160px">申報期別
+        <select id="period"></select>
+      </label>
+      <button id="btnExport">匯出 CSV</button>
+    </div>
+    <div class="summary" id="summary"></div>
+  </section>
+
+  <section class="card">
+    <ul class="list" id="list"></ul>
+    <p class="muted" id="empty">還沒有資料。掃一張電子發票，或拍一張傳統發票試試。</p>
+  </section>
+
+  <p class="hint">
+    電子發票只讀左邊的 QR Code，在瀏覽器裡解碼，不會上傳。傳統發票和收據的照片會用你在設定裡填的 API key，
+    直接從瀏覽器傳到 Anthropic 或 Google 辨識。資料只存在這台裝置的瀏覽器裡。<br>
+    格式代號與可否扣抵是依一般規則自動判斷，申報前請自行或請會計師確認。
+  </p>
+</main>
+
+<div id="scanner">
+  <video id="video" playsinline muted></video>
+  <div class="guide"></div>
+  <div class="bar">
+    <span id="scanMsg">把發票左邊的 QR Code 放進框裡</span>
+    <button id="btnStopScan">關閉</button>
+  </div>
+</div>
+
+<div id="busy"><div id="busyMsg">辨識中…</div></div>
+<div id="toast"></div>
+
+<dialog id="dlgSettings">
+  <form method="dialog">
+    <h2>設定</h2>
+    <label>貴公司統編（用來檢查買方統編）
+      <input id="sCompany" inputmode="numeric" maxlength="8" placeholder="12345678">
+    </label>
+    <label>預設扣抵代號
+      <select id="sDeduct"><option value="1">1 進貨及費用</option><option value="2">2 固定資產</option></select>
+    </label>
+    <label>辨識服務（傳統發票、收據）
+      <select id="sProvider"><option value="claude">Claude（Anthropic）</option><option value="gemini">Gemini（Google）</option></select>
+    </label>
+    <div id="claudeBox" class="grid2">
+      <label>Claude API key<input id="sClaudeKey" type="password" autocomplete="off" placeholder="sk-ant-..."></label>
+      <label>模型<input id="sClaudeModel" placeholder="claude-sonnet-5-5"></label>
+    </div>
+    <div id="geminiBox" class="grid2">
+      <label>Gemini API key<input id="sGeminiKey" type="password" autocomplete="off" placeholder="AIza..."></label>
+      <label>模型<input id="sGeminiModel" placeholder="gemini-flash-latest"></label>
+    </div>
+    <p class="hint">API key 只存在這個瀏覽器的 localStorage。這是你自己用的工具，別在公用電腦上存 key。</p>
+    <div class="row" style="justify-content: space-between">
+      <button type="button" id="btnClearAll" style="color: var(--bad)">清除全部資料</button>
+      <button class="primary" value="save">儲存</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgEdit">
+  <form method="dialog" id="editForm">
+    <h2 id="editTitle">確認內容</h2>
+    <img id="editImg" class="preview" alt="" hidden>
+    <div id="editReason" class="muted"></div>
+    <div class="grid2">
+      <label data-f="format_code">格式代號
+        <select name="format_code">
+          <option value="25">25 三聯式收銀機／電子發票</option>
+          <option value="21">21 三聯式／電子計算機</option>
+          <option value="22">22 二聯式收銀機／其他憑證</option>
+          <option value="">— 收據（不可扣抵）</option>
+        </select>
+      </label>
+      <label data-f="date">發票日期<input name="date" type="date"></label>
+      <label data-f="invoice_no">發票號碼<input name="invoice_no" placeholder="AB12345678" autocapitalize="characters"></label>
+      <label data-f="seller_tax_id">賣方統編<input name="seller_tax_id" inputmode="numeric" maxlength="8"></label>
+      <label data-f="seller_name" style="grid-column: 1 / -1">賣方名稱<input name="seller_name"></label>
+      <label data-f="buyer_tax_id">買方統編<input name="buyer_tax_id" inputmode="numeric" maxlength="8"></label>
+      <label data-f="tax_type">課稅別
+        <select name="tax_type"><option value="1">1 應稅</option><option value="2">2 零稅率</option><option value="3">3 免稅</option></select>
+      </label>
+      <label data-f="sales_amount">銷售額（未稅）<input name="sales_amount" inputmode="numeric"></label>
+      <label data-f="tax">稅額<input name="tax" inputmode="numeric"></label>
+      <label data-f="total">總計<input name="total" inputmode="numeric"></label>
+      <label data-f="deduct_code">扣抵代號
+        <select name="deduct_code"><option value="1">1 進貨及費用</option><option value="2">2 固定資產</option><option value="0">不可扣抵</option></select>
+      </label>
+    </div>
+    <div id="editErrors"></div>
+    <div class="row" style="justify-content: space-between">
+      <button type="button" id="btnDelete" style="color: var(--bad)">刪除</button>
+      <div class="row">
+        <button type="button" id="btnRecalc">用總計回推稅額</button>
+        <button class="primary" value="save">確認</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<script type="module">
+import { readBarcodes } from 'https://cdn.jsdelivr.net/npm/zxing-wasm@3.1.6/dist/es/reader/index.js';
+import {
+  classifyQr, parseEInvoice, fillAmounts, splitTax, validate, filingPeriod, toCsv, summarize,
+  normalizeInvoiceNo, FORMAT_CODES,
+} from './invoice-core.js';
+
+// ---------- 儲存 ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('inv401.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('inv401.' + k, JSON.stringify(v)); } catch { toast('瀏覽器不允許儲存，資料只會留到關閉頁面'); } },
+};
+let settings = Object.assign(
+  { company: '', deduct: '1', provider: 'claude', claudeKey: '', claudeModel: 'claude-sonnet-5-5', geminiKey: '', geminiModel: 'gemini-flash-latest' },
+  store.get('settings', {}),
+);
+let records = store.get('records', []);
+const images = new Map(); // id → dataURL，只留在記憶體
+const saveRecords = () => store.set('records', records);
+const opts = () => ({ companyTaxId: settings.company });
+
+// ---------- 小工具 ----------
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = (n) => (n == null || n === '' ? '—' : Number(n).toLocaleString('zh-TW'));
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2600); }
+function busy(on, msg = '辨識中…') { $('#busyMsg').textContent = msg; $('#busy').classList.toggle('on', on); }
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+// ---------- 畫面 ----------
+function render() {
+  const periods = [...new Set(records.map((r) => filingPeriod(r.date)).filter(Boolean))].sort().reverse();
+  const sel = $('#period');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全部</option>' + periods.map((p) => `<option>${esc(p)}</option>`).join('');
+  sel.value = periods.includes(cur) || cur === '' ? cur : periods[0] ?? '';
+  if (!sel.dataset.init && periods.length) { sel.value = periods[0]; sel.dataset.init = 1; }
+  const period = sel.value;
+
+  const s = summarize(records, period, opts());
+  $('#summary').innerHTML = `
+    <div class="stat"><span>進貨及費用 銷售額</span><b>${fmt(s[1].sales)}</b></div>
+    <div class="stat"><span>進貨及費用 稅額</span><b>${fmt(s[1].tax)}</b></div>
+    <div class="stat"><span>固定資產 銷售額</span><b>${fmt(s[2].sales)}</b></div>
+    <div class="stat"><span>固定資產 稅額</span><b>${fmt(s[2].tax)}</b></div>
+    <div class="stat" style="grid-column: 1 / -1"><span>張數</span><b>${s.count} 張${s.nonDeductible ? `，其中 ${s.nonDeductible} 張不可扣抵` : ''}</b></div>`;
+
+  const rows = records.filter((r) => !period || filingPeriod(r.date) === period)
+    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '') || b.created - a.created);
+  $('#empty').hidden = rows.length > 0;
+  $('#list').innerHTML = rows.map((r) => {
+    const v = validate(r, opts());
+    const nErr = Object.keys(v.errors).length;
+    const tags = [
+      r.format_code ? `<span class="tag">${r.format_code}</span>` : '<span class="tag">收據</span>',
+      !r.reviewed ? '<span class="tag warn">待確認</span>' : '',
+      nErr ? `<span class="tag bad">${nErr} 個問題</span>` : '',
+      !v.deductible ? '<span class="tag warn">不可扣抵</span>' : '',
+    ].join('');
+    return `<li data-id="${esc(r.id)}">
+      <div><b>${esc(r.invoice_no || '（無號碼）')}</b>${tags}</div>
+      <div class="num"><b>${fmt(r.total)}</b></div>
+      <div class="muted">${esc(r.date || '日期未知')} · ${esc(r.seller_name || r.seller_tax_id || '賣方未知')}</div>
+      <div class="muted num">稅 ${fmt(r.tax)}</div>
+    </li>`;
+  }).join('');
+}
+$('#period').addEventListener('change', render);
+$('#list').addEventListener('click', (e) => { const li = e.target.closest('li[data-id]'); if (li) openEditor(li.dataset.id); });
+
+// ---------- 新增紀錄 ----------
+function addRecord(r, image) {
+  r = fillAmounts(r);
+  r.invoice_no = r.invoice_no ? normalizeInvoiceNo(r.invoice_no) : r.invoice_no;
+  if (r.deduct_code == null) r.deduct_code = Number(settings.deduct);
+  const dup = r.invoice_no && records.find((x) => x.invoice_no === r.invoice_no);
+  if (dup) { toast(`${r.invoice_no} 已經登錄過了`); openEditor(dup.id); return null; }
+  r.id = uid(); r.created = Date.now();
+  records.push(r);
+  if (image) images.set(r.id, image);
+  saveRecords(); render();
+  return r;
+}
+
+// ---------- 編輯 ----------
+const dlgEdit = $('#dlgEdit');
+const form = $('#editForm');
+let editingId = null;
+const FIELDS = ['format_code', 'date', 'invoice_no', 'seller_tax_id', 'seller_name', 'buyer_tax_id', 'tax_type', 'sales_amount', 'tax', 'total', 'deduct_code'];
+const NUM_FIELDS = new Set(['sales_amount', 'tax', 'total']);
+
+function readForm() {
+  const r = {};
+  for (const f of FIELDS) {
+    let v = form.elements[f].value.trim();
+    if (NUM_FIELDS.has(f)) v = v === '' ? null : Number(v.replace(/[,\s]/g, ''));
+    else if (f === 'format_code') v = v === '' ? null : Number(v);
+    else if (f === 'tax_type' || f === 'deduct_code') v = Number(v);
+    else if (f === 'invoice_no') v = normalizeInvoiceNo(v) || null;
+    else v = v || null;
+    r[f] = v;
+  }
+  return r;
+}
+
+function showErrors() {
+  const rec = records.find((x) => x.id === editingId);
+  const r = { ...rec, ...readForm() };
+  r.doc_type = r.format_code ? (rec.doc_type === 'receipt' ? 'invoice' : rec.doc_type) : 'receipt';
+  const v = validate(r, opts());
+  for (const lab of form.querySelectorAll('[data-f]')) {
+    const f = lab.dataset.f;
+    lab.classList.toggle('bad', Boolean(v.errors[f]));
+    lab.classList.toggle('flag', !v.errors[f] && (rec.uncertain_fields ?? []).includes(f));
+  }
+  $('#editErrors').innerHTML = Object.values(v.errors).map((m) => `<div class="err">• ${esc(m)}</div>`).join('')
+    + (v.deductible ? '' : `<div class="muted">• ${esc(v.reason)}</div>`);
+}
+
+function openEditor(id) {
+  const r = records.find((x) => x.id === id);
+  if (!r) return;
+  editingId = id;
+  for (const f of FIELDS) form.elements[f].value = r[f] ?? (f === 'format_code' ? '' : '');
+  form.elements.tax_type.value = r.tax_type ?? 1;
+  form.elements.deduct_code.value = r.deduct_code ?? settings.deduct;
+  const img = images.get(id);
+  $('#editImg').hidden = !img; if (img) $('#editImg').src = img;
+  $('#editTitle').textContent = r.source === 'qr' ? '電子發票（QR Code）' : `辨識結果（${r.source === 'gemini' ? 'Gemini' : 'Claude'}）`;
+  const unc = (r.uncertain_fields ?? []).length ? `黃框是 AI 不確定的欄位。` : '';
+  $('#editReason').textContent = [unc, r.notes].filter(Boolean).join(' ');
+  showErrors();
+  dlgEdit.showModal();
+}
+form.addEventListener('input', showErrors);
+$('#btnRecalc').addEventListener('click', () => {
+  const t = Number(form.elements.total.value.replace(/[,\s]/g, ''));
+  if (!t) return toast('先填總計');
+  if (form.elements.tax_type.value !== '1') { form.elements.sales_amount.value = t; form.elements.tax.value = 0; }
+  else { const s = splitTax(t); form.elements.sales_amount.value = s.sales_amount; form.elements.tax.value = s.tax; }
+  showErrors();
+});
+$('#btnDelete').addEventListener('click', () => {
+  if (!confirm('刪除這筆？')) return;
+  records = records.filter((x) => x.id !== editingId); images.delete(editingId);
+  saveRecords(); render(); dlgEdit.close();
+});
+dlgEdit.addEventListener('close', () => {
+  if (dlgEdit.returnValue !== 'save') return;
+  const i = records.findIndex((x) => x.id === editingId);
+  if (i < 0) return;
+  const upd = readForm();
+  const dup = upd.invoice_no && records.find((x) => x.id !== editingId && x.invoice_no === upd.invoice_no);
+  if (dup) toast(`注意：${upd.invoice_no} 重複登錄`);
+  const r = { ...records[i], ...upd, reviewed: true };
+  if (!r.format_code) r.doc_type = 'receipt'; else if (r.doc_type === 'receipt') r.doc_type = 'invoice';
+  records[i] = fillAmounts(r);
+  saveRecords(); render();
+});
+
+// ---------- 設定 ----------
+const dlgSet = $('#dlgSettings');
+function syncProviderBox() { const p = $('#sProvider').value; $('#claudeBox').hidden = p !== 'claude'; $('#geminiBox').hidden = p !== 'gemini'; }
+$('#btnSettings').addEventListener('click', () => {
+  $('#sCompany').value = settings.company; $('#sDeduct').value = settings.deduct; $('#sProvider').value = settings.provider;
+  $('#sClaudeKey').value = settings.claudeKey; $('#sClaudeModel').value = settings.claudeModel;
+  $('#sGeminiKey').value = settings.geminiKey; $('#sGeminiModel').value = settings.geminiModel;
+  syncProviderBox(); dlgSet.showModal();
+});
+$('#sProvider').addEventListener('change', syncProviderBox);
+dlgSet.addEventListener('close', () => {
+  if (dlgSet.returnValue !== 'save') return;
+  settings = {
+    company: $('#sCompany').value.trim(), deduct: $('#sDeduct').value, provider: $('#sProvider').value,
+    claudeKey: $('#sClaudeKey').value.trim(), claudeModel: $('#sClaudeModel').value.trim() || 'claude-sonnet-5-5',
+    geminiKey: $('#sGeminiKey').value.trim(), geminiModel: $('#sGeminiModel').value.trim() || 'gemini-flash-latest',
+  };
+  store.set('settings', settings); render(); toast('已儲存');
+});
+$('#btnClearAll').addEventListener('click', () => {
+  if (!confirm(`確定刪除全部 ${records.length} 筆資料？（設定會保留）`)) return;
+  records = []; images.clear(); saveRecords(); render(); dlgSet.close();
+});
+
+// ---------- 匯出 ----------
+$('#btnExport').addEventListener('click', () => {
+  const p = $('#period').value;
+  const rows = records.filter((r) => !p || filingPeriod(r.date) === p).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''));
+  if (!rows.length) return toast('沒有資料可以匯出');
+  const blob = new Blob([toCsv(rows, opts())], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `進項-${p || '全部'}.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
+// ---------- QR Code ----------
+const QR_OPTS = { formats: ['QRCode'], tryHarder: true, maxNumberOfSymbols: 4 };
+function findLeftQr(results) {
+  for (const res of results) {
+    const text = res.text || '';
+    if (classifyQr(text) === 'left') return text;
+    if (res.bytes && classifyQr(res.bytes) === 'left') return res.bytes;
+  }
+  return null;
+}
+
+let stream = null, scanning = false;
+async function startScan() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false,
+    });
+  } catch (e) {
+    toast('無法開啟相機：' + (e.message || e.name)); return;
+  }
+  const video = $('#video');
+  video.srcObject = stream; await video.play();
+  $('#scanner').classList.add('on'); $('#scanMsg').textContent = '把發票左邊的 QR Code 放進框裡';
+  scanning = true;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  let found = 0;
+  while (scanning) {
+    if (video.videoWidth) {
+      // 只取中間的正方形區域，掃得比較快
+      const side = Math.min(video.videoWidth, video.videoHeight) * 0.8;
+      const sx = (video.videoWidth - side) / 2, sy = (video.videoHeight - side) / 2;
+      const size = Math.min(1000, side);
+      canvas.width = canvas.height = size;
+      ctx.drawImage(video, sx, sy, side, side, 0, 0, size, size);
+      try {
+        const res = await readBarcodes(ctx.getImageData(0, 0, size, size), QR_OPTS);
+        const left = findLeftQr(res);
+        if (left) {
+          const r = parseEInvoice(left);
+          if (navigator.vibrate) navigator.vibrate(60);
+          const added = addRecord(r);
+          if (added) { found++; toast(`✓ ${r.invoice_no}  $${r.total}`); }
+          $('#scanMsg').textContent = `已掃 ${found} 張，可以繼續掃下一張`;
+          await new Promise((ok) => setTimeout(ok, 1200));
+          continue;
+        } else if (res.some((x) => classifyQr(x.text || '') === 'right')) {
+          $('#scanMsg').textContent = '這是右邊的 QR Code，請對準左邊那個';
+        }
+      } catch (e) { console.warn(e); }
+    }
+    await new Promise((ok) => setTimeout(ok, 150));
+  }
+}
+function stopScan() {
+  scanning = false;
+  stream?.getTracks().forEach((t) => t.stop()); stream = null;
+  $('#scanner').classList.remove('on');
+}
+$('#btnScan').addEventListener('click', startScan);
+$('#btnStopScan').addEventListener('click', stopScan);
+
+// ---------- 照片 ----------
+async function downscale(file, maxSide = 1600) {
+  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const k = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+
+$('#btnPhoto').addEventListener('click', () => $('#fileInput').click());
+$('#fileInput').addEventListener('change', async (e) => {
+  const files = [...e.target.files]; e.target.value = '';
+  if (!files.length) return;
+  let last = null, failed = 0;
+  for (let i = 0; i < files.length; i++) {
+    busy(true, files.length > 1 ? `辨識中… ${i + 1}/${files.length}` : '辨識中…');
+    try {
+      const r = await processImage(files[i]);
+      if (r) last = r;
+    } catch (err) {
+      failed++; console.error(err);
+      toast(`第 ${i + 1} 張失敗：${err.message}`);
+      if (err.fatal) break;
+    }
+  }
+  busy(false);
+  if (files.length === 1 && last) openEditor(last.id);
+  else if (files.length > 1) toast(`完成 ${files.length - failed} 張${failed ? `，失敗 ${failed} 張` : ''}，請逐筆確認`);
+});
+
+async function processImage(file) {
+  // 1) 先找電子發票 QR Code（原圖解析度最好）
+  try {
+    const left = findLeftQr(await readBarcodes(file, QR_OPTS));
+    if (left) {
+      const img = await downscale(file, 900);
+      return addRecord(parseEInvoice(left), img);
+    }
+  } catch (e) { console.warn('QR', e); }
+  // 2) 沒有 QR Code → AI 辨識
+  const dataUrl = await downscale(file);
+  const base64 = dataUrl.split(',')[1];
+  const raw = settings.provider === 'gemini' ? await callGemini(base64) : await callClaude(base64);
+  return addRecord(normalizeAi(raw, settings.provider), dataUrl);
+}
+
+// ---------- AI 辨識 ----------
+const DOC_TYPES = ['e_invoice', 'triplicate', 'triplicate_cash_register', 'duplicate_cash_register', 'other_tax_doc', 'receipt'];
+const FORMAT_BY_TYPE = { e_invoice: 25, triplicate: 21, triplicate_cash_register: 25, duplicate_cash_register: 22, other_tax_doc: 22, receipt: null };
+const nul = (t) => ({ type: [t, 'null'] });
+const SCHEMA = {
+  type: 'object',
+  properties: {
+    doc_type: { type: 'string', enum: DOC_TYPES },
+    invoice_no: { ...nul('string'), description: '發票號碼，2 碼英文 + 8 碼數字，例如 AB12345678；收據沒有就 null' },
+    date: { ...nul('string'), description: '西元日期 YYYY-MM-DD（民國年 + 1911）' },
+    seller_tax_id: { ...nul('string'), description: '賣方（營業人）統一編號 8 碼' },
+    seller_name: nul('string'),
+    buyer_tax_id: { ...nul('string'), description: '買受人統一編號 8 碼，沒有就 null' },
+    sales_amount: { ...nul('number'), description: '單據上印/寫的銷售額（未稅），沒有就 null' },
+    tax: { ...nul('number'), description: '單據上印/寫的營業稅額，沒有就 null' },
+    total: { ...nul('number'), description: '總計（含稅）' },
+    amount_in_chinese: { ...nul('string'), description: '國字大寫總計金額原文，例如「壹仟零伍拾元整」，沒有就 null' },
+    tax_type: { type: 'integer', enum: [1, 2, 3], description: '1 應稅 2 零稅率 3 免稅；看不出來用 1' },
+    uncertain_fields: { type: 'array', items: { type: 'string' }, description: '看不清楚、不確定的欄位名稱' },
+    notes: nul('string'),
+  },
+  required: ['doc_type', 'invoice_no', 'date', 'seller_tax_id', 'seller_name', 'buyer_tax_id', 'sales_amount', 'tax', 'total', 'amount_in_chinese', 'tax_type', 'uncertain_fields', 'notes'],
+};
+const PROMPT = `你是台灣公司的會計助理。從這張進項憑證照片擷取營業稅 401 申報需要的欄位，不需要品項明細。
+
+doc_type 判斷：
+- 印有「電子發票證明聯」→ e_invoice
+- 三聯式統一發票（手寫三聯式，或「電子計算機統一發票」）→ triplicate
+- 三聯式「收銀機統一發票」（印有買受人統編、銷售額、稅額）→ triplicate_cash_register
+- 二聯式收銀機統一發票 → duplicate_cash_register
+- 車票、水電帳單等載有稅額的其他憑證 → other_tax_doc
+- 收據、免用統一發票收據、手寫收據 → receipt
+
+規則：
+- 只填單據上實際看得到的數字，不要自己用總額推算稅額。
+- 看不清楚的欄位填 null，並把欄位名稱放進 uncertain_fields；勉強辨識但沒把握的也要列進去。
+- 1/7、0/6、4/9 等容易混淆的手寫數字，如果有國字大寫金額，以國字為準交叉確認。
+- 民國日期（例如 113.05.20 或 113年5月20日）要轉成西元 YYYY-MM-DD。
+- 照片不是發票或收據時，doc_type 用 receipt，notes 說明原因。`;
+
+async function callClaude(base64) {
+  if (!settings.claudeKey) throw Object.assign(new Error('請先到設定填 Claude API key'), { fatal: true });
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json', 'x-api-key': settings.claudeKey,
+      'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: settings.claudeModel, max_tokens: 1024,
+      tools: [{ name: 'record_invoice', description: '記錄一張進項憑證', input_schema: SCHEMA }],
+      tool_choice: { type: 'tool', name: 'record_invoice' },
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+        { type: 'text', text: PROMPT },
+      ] }],
+    }),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(`Claude ${res.status}：${j.error?.message ?? res.statusText}`), { fatal: res.status === 401 || res.status === 404 });
+  const tool = (j.content ?? []).find((c) => c.type === 'tool_use');
+  if (!tool) throw new Error('Claude 沒有回傳結構化結果');
+  return tool.input;
+}
+
+async function callGemini(base64) {
+  if (!settings.geminiKey) throw Object.assign(new Error('請先到設定填 Gemini API key'), { fatal: true });
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(settings.geminiModel)}:generateContent`;
+  const body = (withSchema) => JSON.stringify({
+    contents: [{ role: 'user', parts: [
+      { inline_data: { mime_type: 'image/jpeg', data: base64 } },
+      { text: PROMPT + (withSchema ? '' : `\n\n只輸出一個 JSON 物件，符合這個 schema：\n${JSON.stringify(SCHEMA)}`) },
+    ] }],
+    generationConfig: { responseMimeType: 'application/json', ...(withSchema ? { responseJsonSchema: SCHEMA } : {}) },
+  });
+  const post = (withSchema) => fetch(url, {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': settings.geminiKey }, body: body(withSchema),
+  });
+  let res = await post(true);
+  let j = await res.json().catch(() => ({}));
+  if (res.status === 400 && /schema/i.test(j.error?.message ?? '')) { res = await post(false); j = await res.json().catch(() => ({})); }
+  if (!res.ok) throw Object.assign(new Error(`Gemini ${res.status}：${j.error?.message ?? res.statusText}`), { fatal: [401, 403, 404].includes(res.status) });
+  const text = (j.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('').trim()
+    .replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+  try { return JSON.parse(text); } catch { throw new Error('Gemini 回傳的不是 JSON'); }
+}
+
+function normalizeAi(a, provider) {
+  const digits = (s) => (s == null ? null : String(s).replace(/\D/g, '') || null);
+  const docType = DOC_TYPES.includes(a.doc_type) ? a.doc_type : 'receipt';
+  return {
+    doc_type: docType,
+    format_code: FORMAT_BY_TYPE[docType],
+    invoice_no: a.invoice_no ? normalizeInvoiceNo(a.invoice_no) : null,
+    date: /^\d{4}-\d{2}-\d{2}$/.test(a.date ?? '') ? a.date : null,
+    seller_tax_id: digits(a.seller_tax_id),
+    seller_name: a.seller_name || null,
+    buyer_tax_id: digits(a.buyer_tax_id),
+    sales_amount: a.sales_amount ?? null,
+    tax: a.tax ?? null,
+    total: a.total ?? null,
+    amount_in_chinese: a.amount_in_chinese || null,
+    tax_type: [1, 2, 3].includes(Number(a.tax_type)) ? Number(a.tax_type) : 1,
+    deduct_code: docType === 'receipt' ? 0 : Number(settings.deduct),
+    uncertain_fields: Array.isArray(a.uncertain_fields) ? a.uncertain_fields : [],
+    notes: a.notes || null,
+    source: provider,
+    reviewed: false,
+  };
+}
+
+render();
+</script>
+</body>
+</html>

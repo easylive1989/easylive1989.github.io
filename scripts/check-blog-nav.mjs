@@ -25,6 +25,7 @@ const titleOf = (html) => html.match(/<title>([^<]*)<\/title>/)?.[1] ?? '';
 let checked = 0;
 for (const rel of pages) {
   if (rel === 'archive/index.html') continue; // the redirect to the home page
+  if (rel.startsWith('invoice-scanner/')) continue; // a standalone tool page from public/, not part of the blog
   checked++;
   const html = fs.readFileSync(path.join(dist, rel), 'utf8');
   const title = titleOf(html);
