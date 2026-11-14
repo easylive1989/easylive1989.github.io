@@ -319,7 +319,8 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
   border-radius: 50%;
   background: rgba(250, 249, 246, 0.7);
 }
-.blog-rss svg { width: 14px; height: 14px; fill: currentColor; }
+/* the glyph cropped to its own bounds (the viewBox) and drawn at about 40% of the circle, so it reads at a glance */
+.blog-rss svg { width: 20px; height: 20px; fill: currentColor; }
 .blog-rss:hover { color: var(--plaster); background: var(--ink); }
 
 /* the masthead in the dark room: on the bookshelf, and while the secret door opens onto it or closes behind it */
