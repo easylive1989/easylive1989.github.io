@@ -367,7 +367,7 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 .desk-top.is-shown { opacity: 1; visibility: visible; transform: none; }
 .desk-top:hover { background: var(--ink); color: var(--plaster); }
 
-/* — 墨痕: the mouse's trail of pale ink (layouts/inkTrail.js), soaked into the wall over the words, under the masthead and the
+/* — 船痕: the wake the mouse leaves, like a boat on still water (layouts/inkTrail.js), in pale ink over the words, under the masthead and the
      transitions' veils, never in the way of a click — */
 .ink-trail {
   position: fixed;

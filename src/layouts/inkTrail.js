@@ -1,60 +1,39 @@
-// 墨痕: the mouse leaves a trail of pale ink on the plaster as it moves, the way a brush tip dragged over 宣紙 would. Each
-// drop soaks outward a little and fades, so in two or three seconds the wall is clean again; nothing gathers where the
-// mouse rests. A slow hand leaves fuller, darker drops, a fast one a thin, dry streak.
+// 船痕: the mouse moves over the page like a little boat over still water, and behind it the water parts — two thin lines
+// of pale ink open out from its bow to either side, the way a wake spreads in a V, with a fainter ripple inside each. The
+// lines keep drifting outward as they fade, so in two or three seconds the water is still again. A quick boat throws a
+// wide wake; a slow one barely stirs the water; a boat at rest leaves none.
 //
-// The ink sits on the page, not the screen: scroll and the trail goes up with the words it was drawn over. It is laid on
-// with multiply, so it reads as ink soaked into the wall and never as a film over the type; it is pale enough not to
-// get in the way of reading.
+// The wake is on the page, not the screen: scroll and it goes up with the words it was drawn over. It is laid on with
+// multiply, pale enough to read as ripples in the wall and not as a film over the type.
 //
 // Only for a mouse (a fine pointer that hovers): touch screens and pens go without it, and so does reduced motion. The
-// canvas draws only while some ink is still drying, and stops when the tab is in the background.
+// canvas draws only while a wake is still fading, and stops when the tab is in the background.
 // ?ink=0 on the page's address turns it off.
 
-const LIFE = 2600; // ms a drop takes to soak in and fade away
-const STEP = 7; // px between drops along the stroke
-const MAX = 520; // drops at once, oldest let go first
-const INK = [44, 43, 40]; // --ink
+const LIFE = 2400; // ms a stretch of wake takes to spread out and settle
+const STEP = 6; // px of travel between points on the wake
+const MAX = 480; // points at once, oldest let go first
+const PAUSE = 150; // ms without moving before the next movement starts a new wake
+const INK = '44, 43, 40'; // --ink
+/** the lines of each wake, on both sides: how far out they spread (of the whole), and how dark */
+const LINES = [
+  { k: 1, a: 0.44 },
+  { k: 0.58, a: 0.26 },
+];
 
 const mouse = matchMedia('(hover: hover) and (pointer: fine)');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 const off = new URLSearchParams(location.search).get('ink') === '0';
-
-/** A soft, uneven blot of ink, drawn once and stamped many times: a few overlapping washes, darker toward the middle. */
-function blot(seed) {
-  const S = 96;
-  const c = document.createElement('canvas');
-  c.width = c.height = S;
-  const g = c.getContext('2d');
-  let s = seed;
-  const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  for (let i = 0; i < 7; i++) {
-    const a = rnd() * Math.PI * 2;
-    const d = rnd() * S * 0.12;
-    const x = S / 2 + Math.cos(a) * d;
-    const y = S / 2 + Math.sin(a) * d;
-    const r = S * (0.26 + rnd() * 0.2);
-    const grad = g.createRadialGradient(x, y, 0, x, y, r);
-    const [R, G, B] = INK;
-    grad.addColorStop(0, `rgba(${R},${G},${B},0.34)`);
-    grad.addColorStop(0.55, `rgba(${R},${G},${B},0.16)`);
-    grad.addColorStop(1, `rgba(${R},${G},${B},0)`);
-    g.fillStyle = grad;
-    g.beginPath();
-    g.arc(x, y, r, 0, Math.PI * 2);
-    g.fill();
-  }
-  return c;
-}
 
 if (!off) {
   const canvas = document.createElement('canvas');
   canvas.className = 'ink-trail';
   canvas.setAttribute('aria-hidden', 'true');
   const ctx = canvas.getContext('2d');
-  const blots = [11, 4271, 90001, 333667].map(blot);
-  /** drops: page x, page y, birth time, starting radius, how dark, which blot, its turn */
-  const drops = [];
-  let last = null; // the last place a drop was laid, in page coordinates, with its time
+  /** points the boat passed: page x, y, time, the normal to its heading (nx, ny), how far its wake spreads, which wake */
+  const pts = [];
+  let last = null; // where the boat last was, in page coordinates, its time and smoothed heading
+  let wake = 0;
   let frame = 0;
   let dpr = 1;
 
@@ -64,41 +43,50 @@ if (!off) {
     canvas.height = Math.round(innerHeight * dpr);
   }
 
-  function lay(x, y, speed, now) {
-    // slow: a full drop (r ≈ 13, dark); fast: a thin, dry one (r ≈ 5, pale)
-    const k = Math.min(speed / 2.2, 1); // px per ms
-    drops.push({
-      x: x + (Math.random() - 0.5) * 2,
-      y: y + (Math.random() - 0.5) * 2,
-      t: now,
-      r: 12 - 6 * k + Math.random() * 3,
-      a: 0.2 - 0.1 * k,
-      b: (Math.random() * blots.length) | 0,
-      rot: Math.random() * Math.PI * 2,
-    });
-    if (drops.length > MAX) drops.splice(0, drops.length - MAX);
-  }
-
   function move(e) {
     if (e.pointerType && e.pointerType !== 'mouse') return;
     const now = performance.now();
     const x = e.clientX + scrollX;
     const y = e.clientY + scrollY;
-    if (!last || now - last.t > 120) {
-      // the brush comes down afresh after a pause
-      last = { x, y, t: now };
-      lay(x, y, 0, now);
-    } else {
-      const dx = x - last.x;
-      const dy = y - last.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < STEP) return;
-      const speed = dist / Math.max(now - last.t, 1);
-      const n = Math.floor(dist / STEP);
-      for (let i = 1; i <= n; i++) lay(last.x + (dx * i) / n, last.y + (dy * i) / n, speed, now);
-      last = { x, y, t: now };
+    if (!last || now - last.t > PAUSE) {
+      wake++;
+      last = { x, y, t: now, hx: 0, hy: 0, v: 0 };
+      return;
     }
+    const dx = x - last.x;
+    const dy = y - last.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < STEP) return;
+    // the heading and speed, smoothed so a shaky hand still steers a steady boat
+    const v = dist / Math.max(now - last.t, 1);
+    const hx = last.hx * 0.6 + (dx / dist) * 0.4;
+    const hy = last.hy * 0.6 + (dy / dist) * 0.4;
+    const hl = Math.hypot(hx, hy) || 1;
+    const sv = last.v ? last.v * 0.7 + v * 0.3 : v;
+    const spread = Math.min(Math.max(sv * 55, 8), 64); // px the outer line drifts out to
+    const n = Math.floor(dist / STEP);
+    for (let i = 1; i <= n; i++) {
+      pts.push({
+        x: last.x + (dx * i) / n,
+        y: last.y + (dy * i) / n,
+        t: now - ((n - i) / n) * (now - last.t),
+        nx: -hy / hl,
+        ny: hx / hl,
+        s: spread,
+        w: wake,
+      });
+    }
+    if (pts.length > MAX) pts.splice(0, pts.length - MAX);
+    last = { x, y, t: now, hx, hy, v: sv };
     if (!frame) frame = requestAnimationFrame(draw);
+  }
+
+  /** where a line of the wake is now, for the point p, `age` ms after the boat passed it */
+  function at(p, age, side, k) {
+    const out = p.s * k * 1.7 * Math.pow(Math.min(age / LIFE, 1), 0.75); // keeps opening as it goes, so the arms run out in a V
+    const ripple = Math.sin(age * 0.004 + p.x * 0.05 + p.y * 0.05) * 1.2; // the water is never quite flat
+    const d = side * (out + ripple * k);
+    return [p.x + p.nx * d - scrollX, p.y + p.ny * d - scrollY];
   }
 
   function draw(now) {
@@ -106,26 +94,40 @@ if (!off) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, innerWidth, innerHeight);
     let i = 0;
-    while (i < drops.length && now - drops[i].t > LIFE) i++;
-    if (i) drops.splice(0, i);
-    const ox = scrollX;
-    const oy = scrollY;
-    for (const d of drops) {
-      const p = Math.max(0, now - d.t) / LIFE; // 0 → 1 over its life
-      const spread = 1 + 2.2 * Math.sqrt(p); // soaks outward fast at first, then slower
-      const r = d.r * spread;
-      const x = d.x - ox;
-      const y = d.y - oy;
-      if (x < -r || y < -r || x > innerWidth + r || y > innerHeight + r) continue;
-      ctx.globalAlpha = d.a * (1 - p) * (1 - p) / spread; // the same ink spread thinner, then dry
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(d.rot);
-      ctx.drawImage(blots[d.b], -r, -r, r * 2, r * 2);
-      ctx.restore();
+    while (i < pts.length && now - pts[i].t > LIFE) i++;
+    if (i) pts.splice(0, i);
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'round';
+    // in short runs, each one path, so the line flows on unbroken and only its darkness steps down with age
+    const RUN = 4;
+    for (let j = 0; j < pts.length - 1; j += RUN) {
+      let end = Math.min(j + RUN, pts.length - 1);
+      while (end > j && pts[end].w !== pts[j].w) end--;
+      if (end === j) continue;
+      const age = Math.max(0, now - pts[end].t);
+      const life = 1 - age / LIFE;
+      // fades as it settles, and rises out of the water just behind the bow
+      const alpha = life * life * Math.min(1, age / 120);
+      if (alpha <= 0.01) continue;
+      for (const side of [-1, 1]) {
+        for (const line of LINES) {
+          ctx.beginPath();
+          for (let q = j; q <= end; q++) {
+            const [x, y] = at(pts[q], Math.max(0, now - pts[q].t), side, line.k);
+            if (q === j) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          // a soft wash with a finer line down its middle, like ink on damp paper
+          ctx.strokeStyle = `rgba(${INK}, ${line.a * alpha * 0.2})`;
+          ctx.lineWidth = 4 * line.k + 1;
+          ctx.stroke();
+          ctx.strokeStyle = `rgba(${INK}, ${line.a * alpha * 0.5})`;
+          ctx.lineWidth = 1 + 0.5 * life;
+          ctx.stroke();
+        }
+      }
     }
-    ctx.globalAlpha = 1;
-    if (drops.length && !document.hidden) frame = requestAnimationFrame(draw);
+    if (pts.length && !document.hidden) frame = requestAnimationFrame(draw);
   }
 
   function setup() {
@@ -138,7 +140,8 @@ if (!off) {
       removeEventListener('pointermove', move);
       cancelAnimationFrame(frame);
       frame = 0;
-      drops.length = 0;
+      pts.length = 0;
+      last = null;
       canvas.remove();
     }
   }
@@ -149,10 +152,10 @@ if (!off) {
     if (!frame) frame = requestAnimationFrame(draw);
   });
   addEventListener('scroll', () => {
-    if (canvas.isConnected && drops.length && !frame) frame = requestAnimationFrame(draw);
+    if (canvas.isConnected && pts.length && !frame) frame = requestAnimationFrame(draw);
   }, { passive: true });
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && drops.length && !frame) frame = requestAnimationFrame(draw);
+    if (!document.hidden && pts.length && !frame) frame = requestAnimationFrame(draw);
   });
   mouse.addEventListener('change', setup);
   reduce.addEventListener('change', setup);
