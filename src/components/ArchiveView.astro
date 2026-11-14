@@ -105,7 +105,6 @@ if (notes.length) chipData.push({ name: NOTE_CAT, count: notes.length, color: ca
 
   {years.length > 0 && (
     <figure class="arc-heat">
-      <figcaption>每季落筆</figcaption>
       <QuarterHeat label="每年每季發文數量熱度圖" counts={byQuarter} from={oldestYear} to={newestYear} unit="篇" />
     </figure>
   )}
