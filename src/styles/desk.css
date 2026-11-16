@@ -129,14 +129,15 @@ html {
 /* 小書齋: half in a drift of mist at the foot of the far hills, on the scene's waterline, in the margin left of the page's words (the column is 1034px wide), beside 每季落筆.
    It grows and shrinks with the hills: they are a 1440-wide scene (xMaxYMax slice), drawn at full size up to 1440px and
    scaled by width/1440 past it, so the 小書齋 is 180px wide at 1440 and 12.5% of the scene's width past it, and its
-   waterline (20px at 1440) rises with them. It sits a little into the column, 55% of its own width, so its eaves just
-   overlap the year (2026) at the head of the list, and no further; a screen whose margin is too narrow for the rest of it,
-   a phone among them, goes without it. Pushed in on the about page, it slides off to the left. */
+   waterline (20px at 1440) rises with them. It sits a little into the column, 42% of its own width, its jetty running
+   under the year (2026) at the head of the list. It keeps its place by the column at every width, so a screen too narrow
+   for the margin simply cuts it off at the left edge (the scene's overflow is hidden), and a phone's is off-screen.
+   Pushed in on the about page, it slides off to the left. */
 .ink-land .l-study {
   inset: auto;
-  right: calc(50% + 517px + 13px - max(99px, 6.875cqw));
+  right: calc(50% + 517px + 13px - max(75.6px, 5.25cqw));
   bottom: max(20px, 1.389cqw);
-  width: min(max(180px, 12.5cqw), calc(50% - 517px - 29px + max(99px, 6.875cqw)));
+  width: max(180px, 12.5cqw);
   height: auto;
   aspect-ratio: 34 / 21;
   transform-origin: 100% 100%;
@@ -145,7 +146,6 @@ html {
 .ink-land .l-study .w-lamp { display: none; }
 .ink-land.is-near .l-study { transform: translateX(-70%) scale(1.6); opacity: 0; }
 .zoom-fx .ink-land .l-study { transition: transform 1.3s cubic-bezier(0.5, 0, 0.4, 1), opacity 1.3s ease; }
-@media (max-width: 1459px) { .ink-land .l-study { display: none; } }
 
 /* — the weather over the landscape: html[data-weather] (layouts/weather.js) is clear, cloudy, fog, rain, storm or night;
      without it, clear — */
