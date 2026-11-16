@@ -105,6 +105,7 @@ html {
   height: 520px;
   overflow: hidden;
   pointer-events: none;
+  container-type: inline-size; /* the 小書齋 sizes itself by the scene's width (cqw), as the hills do */
 }
 .ink-land svg {
   position: absolute;
@@ -125,14 +126,16 @@ html {
 .ink-land.is-near .l-sun { transform: scale(2); }
 .ink-land.is-near .l-mid { transform: scale(2.1); }
 .ink-land.is-near .l-near { transform: scale(3.4) translateY(9%); }
-/* 小書齋: half in a drift of mist at the foot of the far hills, on the scene's waterline, in the margin left of the page's words (the column is 1034px wide), beside 每季落筆. Its width
-   follows the margin, so it never runs under the words; a screen whose margin is too narrow for it, a phone among them,
-   goes without it. Pushed in on the about page, it slides off to the left. */
+/* 小書齋: half in a drift of mist at the foot of the far hills, on the scene's waterline, in the margin left of the page's words (the column is 1034px wide), beside 每季落筆.
+   It grows and shrinks with the hills: they are a 1440-wide scene (xMaxYMax slice), drawn at full size up to 1440px and
+   scaled by width/1440 past it, so the 小書齋 is 180px wide at 1440 and 12.5% of the scene's width past it, and its
+   waterline (20px at 1440) rises with them. It never runs under the words; a screen whose margin is too narrow for it at
+   that size, a phone among them, goes without it. Pushed in on the about page, it slides off to the left. */
 .ink-land .l-study {
   inset: auto;
   right: calc(50% + 517px + 13px);
-  bottom: 20px;
-  width: min(340px, calc(50% - 517px - 29px));
+  bottom: max(20px, 1.389cqw);
+  width: min(max(180px, 12.5cqw), calc(50% - 517px - 29px));
   height: auto;
   aspect-ratio: 34 / 21;
   transform-origin: 100% 100%;
@@ -141,7 +144,7 @@ html {
 .ink-land .l-study .w-lamp { display: none; }
 .ink-land.is-near .l-study { transform: translateX(-70%) scale(1.6); opacity: 0; }
 .zoom-fx .ink-land .l-study { transition: transform 1.3s cubic-bezier(0.5, 0, 0.4, 1), opacity 1.3s ease; }
-@media (max-width: 1380px) { .ink-land .l-study { display: none; } }
+@media (max-width: 1459px) { .ink-land .l-study { display: none; } }
 
 /* — the weather over the landscape: html[data-weather] (layouts/weather.js) is clear, cloudy, fog, rain, storm or night;
      without it, clear — */
