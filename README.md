@@ -21,7 +21,7 @@ https://paul-learning.dev
   - 「書架」是暗門後的書櫃：點導覽列的書架，頁面從中間裂開、書架從暗處浮上來；「關於我」用推進山水轉場（`src/layouts/deskFx.js`）
 - **部署**: GitHub Pages
   - 部署成功後，`.github/workflows/medium.yml` 把新文章送到 Medium（`scripts/publish-medium.mjs`，Medium 用的 HTML 在 `scripts/medium-html.mjs`）：
-    `medium-published.json` 沒列到的文章就是新的，送出後 workflow 把清單 commit 回 main，重 build 不會重發。第一次執行只把現有文章記進清單、不發。
+    `medium-published.json` 沒列到的文章就是新的，送出後 workflow 把清單 commit 回 master，重 build 不會重發。第一次執行只把現有文章記進清單、不發。
     只發文章（碎碎念、讀書筆記不發），預設發成草稿（repo variable `MEDIUM_PUBLISH_STATUS` 可改成 `public` 或 `unlisted`），canonical URL 指回部落格，分類當 tag，一次最多 3 篇。
     需要 secret `MEDIUM_TOKEN`（Medium 的 Integration token）。手動跑 workflow 勾 `dry_run`，或本機 `node scripts/publish-medium.mjs --dry-run`，只列出會發什麼
   - `public/sw.js` 是退役用的 Service Worker：之前 3D 書房留下的快取會被它清掉並自行解除註冊，過幾個月可以刪掉

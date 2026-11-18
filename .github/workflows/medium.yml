@@ -1,7 +1,7 @@
 name: Publish new articles to Medium
 
 # After the blog is deployed: the articles medium-published.json does not list yet are sent to Medium
-# (scripts/publish-medium.mjs), and the list is committed back so no article is sent twice.
+# (scripts/publish-medium.mjs), and the list is committed back to the default branch so no article is sent twice.
 on:
   workflow_run:
     workflows: [Build and Deploy]
