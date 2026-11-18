@@ -1,0 +1,71 @@
+name: Publish new articles to Medium
+
+# After the blog is deployed: the articles medium-published.json does not list yet are sent to Medium
+# (scripts/publish-medium.mjs), and the list is committed back to the default branch so no article is sent twice.
+on:
+  workflow_run:
+    workflows: [Build and Deploy]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 只列出會發的文章，不真的發
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# never two at once, and never cut short: a run stopped between sending and committing would send again
+concurrency:
+  group: medium
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Send new articles to Medium
+        env:
+          MEDIUM_TOKEN: ${{ secrets.MEDIUM_TOKEN }}
+          MEDIUM_PUBLISH_STATUS: ${{ vars.MEDIUM_PUBLISH_STATUS || 'draft' }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: node scripts/publish-medium.mjs $DRY_RUN
+
+      - name: Commit the list of what was sent
+        # also after a failure: what was sent before it must be remembered
+        if: always()
+        run: |
+          git add medium-published.json 2>/dev/null || exit 0
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(medium): 記錄已送到 Medium 的文章"
+          for attempt in 1 2 3; do
+            git pull --rebase origin "${{ github.event.repository.default_branch }}" && git push && exit 0
+            sleep 5
+          done
+          exit 1
+
+      - name: Notify Discord when the list could not be committed
+        if: failure()
+        run: |
+          curl -s -H "Content-Type: application/json" \
+            -d "{\"content\":\"❌ **Medium 同步的 workflow 失敗**（如果文章已送出但清單沒寫回，下次可能重複）\n[查看詳情](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\"}" \
+            "${{ secrets.DISCORD_WEBHOOK_URL }}"
