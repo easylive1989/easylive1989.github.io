@@ -1,0 +1,452 @@
+{
+  "articles": {
+    "a77108c0-f8c1-495a-949c-51c9ea6dfa02": {
+      "title": "用 Espresso 測試 Android (一)",
+      "skipped": "before-sync"
+    },
+    "3cf6d05c-364e-4b48-9f83-4228e7993519": {
+      "title": "用 Espresso 測試 Android (二)",
+      "skipped": "before-sync"
+    },
+    "2484ffa1-8233-4147-8721-8c34dfa6e720": {
+      "title": "在測試中使用 Fluent Interface",
+      "skipped": "before-sync"
+    },
+    "dfa8da3c-ff84-4aa4-8394-b3f8e4964b35": {
+      "title": "改善迴圈的可讀性（一）",
+      "skipped": "before-sync"
+    },
+    "b21e0866-0286-49ff-a4d4-ba2f38bb98af": {
+      "title": "改善迴圈的可讀性（二）",
+      "skipped": "before-sync"
+    },
+    "5ac46ed9-113e-46c3-a09d-ffc83683b4eb": {
+      "title": "BuildContext in Flutter",
+      "skipped": "before-sync"
+    },
+    "73b5ec49-a90f-405b-b79d-26b1a8a94434": {
+      "title": "Context that does not contains ...",
+      "skipped": "before-sync"
+    },
+    "d9b39d81-baf6-4922-b13b-49a3bd10b1c6": {
+      "title": "Rename 也會造成 Issue",
+      "skipped": "before-sync"
+    },
+    "d7389ba6-548e-4cc3-abf7-faa53ff0c0c9": {
+      "title": "Clean Architecture 讀後感",
+      "skipped": "before-sync"
+    },
+    "c4621cdc-d778-478e-b727-7267057e4a2d": {
+      "title": "Dart 非同步介紹(二) - Future",
+      "skipped": "before-sync"
+    },
+    "03f8eb41-17e4-4219-a5f1-f7d986c447f9": {
+      "title": "Dart 非同步介紹(一) - Event Loop",
+      "skipped": "before-sync"
+    },
+    "4b060431-d3c0-48dd-b19b-354aec837e5f": {
+      "title": "在 Null safety mockito 使用 any",
+      "skipped": "before-sync"
+    },
+    "5d93a741-01bc-4de2-9121-d14588dfabc9": {
+      "title": "Widget Test的14種find方法",
+      "skipped": "before-sync"
+    },
+    "5ce1786d-c134-4176-a858-34bc7acbe058": {
+      "title": "初探Flutter Widget Test",
+      "skipped": "before-sync"
+    },
+    "410e60af-7afa-4fb4-8e5a-3cad0b357a5a": {
+      "title": "使用 bloc_test 進行單元測試",
+      "skipped": "before-sync"
+    },
+    "19498dbc-6782-4529-bc8e-e88f68ad0b07": {
+      "title": "架設小遊戲機器人（上）",
+      "skipped": "before-sync"
+    },
+    "12a3e8ca-6df4-4cb3-b49c-9a4166dd0de8": {
+      "title": "架設小遊戲機器人（下）",
+      "skipped": "before-sync"
+    },
+    "59bb4b7d-a49d-411a-b1fc-ae17dd16540c": {
+      "title": "利用 Notion API 自動更新欄位",
+      "skipped": "before-sync"
+    },
+    "028c4c70-47cc-4ec8-ab29-7f7b5884e663": {
+      "title": "閱讀 IDE 給的提示",
+      "skipped": "before-sync"
+    },
+    "37bd6556-5dad-4fd0-a12c-4dc1487dbe7f": {
+      "title": "Dart 非同步介紹(三) - Stream",
+      "skipped": "before-sync"
+    },
+    "f8284d25-7a95-4f44-94f0-4b35532c881d": {
+      "title": "如何用 Github Action 建置 Flutter Android App",
+      "skipped": "before-sync"
+    },
+    "f1340b93-c729-4558-a504-a5bdc04cb4cd": {
+      "title": "如何自動上傳 apk / aab 到 Google Play Console",
+      "skipped": "before-sync"
+    },
+    "b58185d5-4943-4a95-9405-c7d5e4d00b5d": {
+      "title": "Flutter Notification 事件機制研究",
+      "skipped": "before-sync"
+    },
+    "80464d6b-d989-4782-b5c9-da416dcef23c": {
+      "title": "跳過 Widget 直接渲染畫面",
+      "skipped": "before-sync"
+    },
+    "d0c3579b-d735-46b1-a149-dd64d0a9175c": {
+      "title": "如何在 Flutter 中製作漂浮 Widget",
+      "skipped": "before-sync"
+    },
+    "d2441da1-6b45-4d5b-9d38-c082eb95bc0d": {
+      "title": "在 Flutter App 中整合 Google play In-App-Billing",
+      "skipped": "before-sync"
+    },
+    "e0ad0e42-60e7-4d76-b137-251b9dc6334b": {
+      "title": "深入瞭解 GetX 的 Obx 與 Rx",
+      "skipped": "before-sync"
+    },
+    "cda69629-0706-4675-b097-802b325573a0": {
+      "title": "使用 Nested Navigation 簡化路由設計",
+      "skipped": "before-sync"
+    },
+    "29d635f6-36e8-412e-92e6-4cd14a2b6f8a": {
+      "title": "畫面莫名其妙地重 build 了",
+      "skipped": "before-sync"
+    },
+    "0e841fa2-5758-41a2-93a8-b224963b87af": {
+      "title": "回顧三份工作的歷程",
+      "skipped": "before-sync"
+    },
+    "42c0a28e-4bb9-4a26-8716-c59edc56f828": {
+      "title": "Day 1 - 大家都喜歡簡單的程式碼，但是簡單卻不容易",
+      "skipped": "before-sync"
+    },
+    "c8de2500-0b45-45f5-8904-99b4087122a7": {
+      "title": "Day 2 - 使用適合的 Widget，省時又省力",
+      "skipped": "before-sync"
+    },
+    "35589425-c2a0-4a98-8ab5-778219a53036": {
+      "title": "Day 3 - Widget 你已經長大了，是該獨立自主了",
+      "skipped": "before-sync"
+    },
+    "06b914a1-212f-4049-9e78-411c1c018309": {
+      "title": "Day 4 - 把 Widget 作為參數，增加設計彈性",
+      "skipped": "before-sync"
+    },
+    "8a692409-65ea-44c7-8950-c1992f102494": {
+      "title": "Day 5 - 令人煩躁的按鈕事件傳遞",
+      "skipped": "before-sync"
+    },
+    "f16a21a5-f317-43d6-b6e3-10e68ab0d497": {
+      "title": "Day 6 - 用 NotificationListener 處理按鈕事件",
+      "skipped": "before-sync"
+    },
+    "75bb338a-7122-4100-892c-7f09a564661b": {
+      "title": "Day 7 - 跨元件分享狀態",
+      "skipped": "before-sync"
+    },
+    "bcbbb007-f734-40f8-aa8e-6ff355f450bd": {
+      "title": "Day 8 - 共享狀態加上複雜邏輯",
+      "skipped": "before-sync"
+    },
+    "9fa64103-6e6e-45df-9699-0dce829fa121": {
+      "title": "Day 9 - 跨頁面共享狀態",
+      "skipped": "before-sync"
+    },
+    "85a1b6d7-c2e1-4e9a-aabc-57fa085f0f9c": {
+      "title": "Day 10 - 暫存狀態 vs 程式狀態",
+      "skipped": "before-sync"
+    },
+    "2bbca631-7f98-4c24-93c1-e4e5861e1457": {
+      "title": "Day 11 - 四處可見地倒數計時",
+      "skipped": "before-sync"
+    },
+    "78943604-faef-4306-a706-25dbf6566cb6": {
+      "title": "Day 12 - 用 Nested Navigation 處理耦合的頁面",
+      "skipped": "before-sync"
+    },
+    "0f2cf500-6673-4319-9aa2-899451f23d89": {
+      "title": "Day 13 - 非同步處理怎麼寫？有差嗎？",
+      "skipped": "before-sync"
+    },
+    "306a0e22-933f-4c5d-b3e8-ba995da04aaa": {
+      "title": "Day 14 - 使用 Extension 偽裝成外部類別的方法",
+      "skipped": "before-sync"
+    },
+    "b2874a76-b84f-4b41-849e-509d1d244409": {
+      "title": "Day 15 - 用樣板模式處理多平台設計",
+      "skipped": "before-sync"
+    },
+    "01815780-7535-4804-be5c-09e64c13021d": {
+      "title": "Day 16- 老生常談的組合取代繼承",
+      "skipped": "before-sync"
+    },
+    "c12250ae-969c-4762-bf6d-b767060739f0": {
+      "title": "Day 17 - 使用 Value Object 的眉眉角角",
+      "skipped": "before-sync"
+    },
+    "43a4f032-392e-4d30-b60e-41cfc902a5a7": {
+      "title": "Day 18 - 事不關己，高高”掛“起",
+      "skipped": "before-sync"
+    },
+    "bc85d270-2b58-4df5-983c-b1ea1c652c41": {
+      "title": "Day 19 - 不好好讀文件，會踩好多坑",
+      "skipped": "before-sync"
+    },
+    "ef5ad24e-f95b-45fa-ab0d-b186af5f8dce": {
+      "title": "Day 20 - 讓設計與程式碼統一",
+      "skipped": "before-sync"
+    },
+    "ef86c64e-62b3-4c61-b33a-43edb62b4e41": {
+      "title": "Day 21 - 避免讓資料源綁架程式",
+      "skipped": "before-sync"
+    },
+    "c3252cf3-7fb3-4cb0-9782-135c7847a0ed": {
+      "title": "Day 22 - 使用依賴注入元件",
+      "skipped": "before-sync"
+    },
+    "f7d32289-0279-48fb-a483-fc7f6e080e4e": {
+      "title": "Day 23 - 暫存一些資料，增加使用者體驗",
+      "skipped": "before-sync"
+    },
+    "58fbe799-2c1f-4230-ba76-3e9d3119dc4e": {
+      "title": "Day 24 - 利用 Interceptor 處理  Token",
+      "skipped": "before-sync"
+    },
+    "85b725e2-374a-49de-8e8c-e4c001ffd6a7": {
+      "title": "Day 25 - 追蹤使用者行為",
+      "skipped": "before-sync"
+    },
+    "a2ed2316-1e77-46ab-8616-c567e909a9db": {
+      "title": "Day 26 - Flutter 例外的流程處理",
+      "skipped": "before-sync"
+    },
+    "ef3cf769-6c07-49a7-877e-f214d803122e": {
+      "title": "Day 27 - 不預期的錯誤",
+      "skipped": "before-sync"
+    },
+    "72dd24d0-3842-4bb9-8faa-f4ac8986fef2": {
+      "title": "Day 28 - 為程式撰寫單元測試",
+      "skipped": "before-sync"
+    },
+    "9b10c701-f36f-4a31-a3b0-9d1256090754": {
+      "title": "Day 29 - 用 Widget Test 測試畫面行為",
+      "skipped": "before-sync"
+    },
+    "da9f9899-61d5-4fd4-869e-03622323286d": {
+      "title": "Day 30 - 更好的設計",
+      "skipped": "before-sync"
+    },
+    "6452ac7a-3147-49c7-b6bc-effa1cabb17e": {
+      "title": "用 Flutter Web 製作 Chrome Extension 待讀文章看板",
+      "skipped": "before-sync"
+    },
+    "9f43854c-4d97-481f-9ed8-d37dc36b7008": {
+      "title": "如何使用 Flame 開發一個小遊戲",
+      "skipped": "before-sync"
+    },
+    "582c3064-e879-46a9-870b-3344bc06ac9e": {
+      "title": "如何處理善變的畫面",
+      "skipped": "before-sync"
+    },
+    "357c1c2e-0910-4674-85f3-0cb677703032": {
+      "title": "用 Widget Test 測試 Routing",
+      "skipped": "before-sync"
+    },
+    "07eef0ef-3386-46bc-9854-ede2f1c012d7": {
+      "title": "Flutter Theme 切換效果研究",
+      "skipped": "before-sync"
+    },
+    "c6551f22-f96d-4d20-b599-e245afda0b8d": {
+      "title": "Day 1 你準備好一起寫測試了嗎？",
+      "skipped": "before-sync"
+    },
+    "bdebd032-f86a-43ca-86fa-6eb6f588db64": {
+      "title": "Day 2 動手寫一個單元測試",
+      "skipped": "before-sync"
+    },
+    "86282b12-6e05-4573-9dac-88e476a1c713": {
+      "title": "Day 3 單元測試不總是那麼容易",
+      "skipped": "before-sync"
+    },
+    "885996e9-1a21-449a-8463-60411305ca6e": {
+      "title": "Day 4 測試替身與依賴注入",
+      "skipped": "before-sync"
+    },
+    "0f8b0682-19ef-448f-8dfd-f146df16a6a8": {
+      "title": "Day 5 這段程式碼改不了",
+      "skipped": "before-sync"
+    },
+    "ccccbfa1-e58c-44f6-97d2-eadebc59e58c": {
+      "title": "Day 6 不改變狀態也不回傳，那我怎麼測試？",
+      "skipped": "before-sync"
+    },
+    "ee521182-e730-4088-bab3-cac093fceeaf": {
+      "title": "Day 7 程式開發不只有正常路徑",
+      "skipped": "before-sync"
+    },
+    "72ec604b-8758-4e3f-8077-2cea9223b5d7": {
+      "title": "Day 8 假的，都是假的，但不是業障重",
+      "skipped": "before-sync"
+    },
+    "bce23403-f445-4c7c-a253-36b84cb67bd9": {
+      "title": "Day 9 如何在 Dart 中輕鬆測試時間",
+      "skipped": "before-sync"
+    },
+    "6abb5c56-4a6e-46af-ae94-673faed248ab": {
+      "title": "Day 10 測試每執行五秒，開發者就少了五秒",
+      "skipped": "before-sync"
+    },
+    "adee5b54-e14a-4d25-b26f-4e801ecc8ee5": {
+      "title": "Day 11 我們會重構程式碼，那測試呢？",
+      "skipped": "before-sync"
+    },
+    "9962ff9d-cb89-4951-bd6b-05032c01d79b": {
+      "title": "Day 12 單元測試回顧",
+      "skipped": "before-sync"
+    },
+    "3e778e51-e452-4c29-9d8b-77ce7de0a592": {
+      "title": "Day 13 Widget Test 是什麼？",
+      "skipped": "before-sync"
+    },
+    "9a9443d6-8258-4120-814f-d482b1530028": {
+      "title": "Day 14 Finder 與他們的驗證方式",
+      "skipped": "before-sync"
+    },
+    "fa6c3c26-7e8f-439e-88f0-96e72a65e159": {
+      "title": "Day 15 進階的 Finder 用法",
+      "skipped": "before-sync"
+    },
+    "e0607f4b-8f85-447f-bf99-1bd20e426167": {
+      "title": "Day 16 Widget Test 尬上測試替身",
+      "skipped": "before-sync"
+    },
+    "83f4f1a8-daed-4caf-86d7-b457812aca56": {
+      "title": "Day 17 模擬使用者互動",
+      "skipped": "before-sync"
+    },
+    "a202bb03-b582-4193-b863-921d8dcfd001": {
+      "title": "Day 18 如何用 Widget Test 測試 Routing",
+      "skipped": "before-sync"
+    },
+    "46ec2f19-b76b-4573-9323-a7019432a06e": {
+      "title": "Day 19 測試 Routing 回傳值",
+      "skipped": "before-sync"
+    },
+    "dc3be491-4196-4f85-a51b-876719b23b37": {
+      "title": "Day 20 再多的文字都比不上一張圖片",
+      "skipped": "before-sync"
+    },
+    "a7940b8e-b19d-4b8e-939b-1aff22120eae": {
+      "title": "Day 21 測試在 Widget 打開外部連結",
+      "skipped": "before-sync"
+    },
+    "922637f0-6cbb-4b74-a1ca-9e9020b4e25d": {
+      "title": "Day 22 在測試中也會畫面跑版？",
+      "skipped": "before-sync"
+    },
+    "32b7283b-9592-4cce-b818-209aa619fb7e": {
+      "title": "Day 23 學會 Widget Test 用法只是開始",
+      "skipped": "before-sync"
+    },
+    "7d28d6bc-643c-47fe-a896-46cea6073076": {
+      "title": "Day 24 為什麼要寫測試",
+      "skipped": "before-sync"
+    },
+    "04179584-d128-4062-8991-0a422282ca8c": {
+      "title": "Day 25 我該測試什麼？",
+      "skipped": "before-sync"
+    },
+    "b59b3178-1f04-4599-83cf-9cb683241abc": {
+      "title": "Day 26 我該怎麼測試？",
+      "skipped": "before-sync"
+    },
+    "5d852334-c400-4aa4-b69a-8a7dd55b1d3e": {
+      "title": "Day 27 測試足夠了嗎？",
+      "skipped": "before-sync"
+    },
+    "13434df4-0d17-4aa8-843d-0fe889dfc9f1": {
+      "title": "Day 28 設計與測試同樣重要",
+      "skipped": "before-sync"
+    },
+    "061afb2e-483d-4b26-befa-d4d8c9465158": {
+      "title": "Day 29 善用工具加速測試",
+      "skipped": "before-sync"
+    },
+    "9e03737a-d3de-48d9-b34d-9be9f8922bf5": {
+      "title": "Day 30 第三十天之後",
+      "skipped": "before-sync"
+    },
+    "f05a4b92-b958-4d0d-a7f6-50abd48e3f38": {
+      "title": "不可不知的 Flutter App 自動化測試實戰攻略",
+      "skipped": "before-sync"
+    },
+    "d4e2d293-d012-4624-86d9-8b9cdb88a745": {
+      "title": "如何在多台電腦間同步開發工具",
+      "skipped": "before-sync"
+    },
+    "8cfe8296-9a6d-4d32-bcbe-1db8e9393be3": {
+      "title": "如何讓 ListView 自動對齊",
+      "skipped": "before-sync"
+    },
+    "6523e438-0525-4200-bcc2-fddf2c167c24": {
+      "title": "減緩 PageView 動畫加上 Table 造成的卡頓",
+      "skipped": "before-sync"
+    },
+    "acb5add5-e325-478f-9f35-092a6480df71": {
+      "title": "自製 Flutter Tab Bar - 使用 CustomMultiChildLayout",
+      "skipped": "before-sync"
+    },
+    "3df91470-daac-46f5-8d96-11c56a0bd93a": {
+      "title": "自製 Flutter Tab Bar - 探索  Row 的佈局邏輯",
+      "skipped": "before-sync"
+    },
+    "831c821f-7751-4e58-96b9-0c4502c71763": {
+      "title": "自製 Flutter Tab Bar - 深入底層更新機制",
+      "skipped": "before-sync"
+    },
+    "dd7317b1-fbe3-4bb2-8201-cb3a61ed540a": {
+      "title": "Container - 一個你最熟悉又最陌生的 Widget",
+      "skipped": "before-sync"
+    },
+    "9b3a7e89-3ab5-40d8-a770-bc0301c82e31": {
+      "title": "避免隱晦的程式邏輯",
+      "skipped": "before-sync"
+    },
+    "ea5da255-a775-4eae-95ed-5ece1195f3b1": {
+      "title": "避免隱晦的程式邏輯 - Index",
+      "skipped": "before-sync"
+    },
+    "d592fd81-f8f5-4cf1-a884-c2e692376875": {
+      "title": "避免隱晦的程式邏輯 - 避免把細節當狀態",
+      "skipped": "before-sync"
+    },
+    "5cd39a72-4abc-463b-ba76-d975090f35e4": {
+      "title": "Vibe Coding 回顧",
+      "skipped": "before-sync"
+    },
+    "a9df8cfa-89be-4bf6-b5df-ab31e53b7fba": {
+      "title": "Widget Test 的 tap 原來這樣運作？一探 Flutter 測試點擊的祕密",
+      "skipped": "before-sync"
+    },
+    "16a27c02-344a-4d38-a5d4-edb46ee89799": {
+      "title": "這個 Flutter 小技巧，讓你看懂 Widget Test 到底哪裡壞了",
+      "skipped": "before-sync"
+    },
+    "399030cb-72d1-429c-98cb-6e2dcf302bf0": {
+      "title": "請 AI 來找碴！我的 Heptabase 筆記活化實驗",
+      "skipped": "before-sync"
+    },
+    "2064a7cf-17e6-4630-a00a-1c4bbc0e052b": {
+      "title": "開發筆記 - 把複雜的動畫任務變拆小",
+      "skipped": "before-sync"
+    },
+    "a3999243-55f9-46e2-a786-acf7dda1970a": {
+      "title": "為什麼寫程式不再有趣？",
+      "skipped": "before-sync"
+    }
+  }
+}
