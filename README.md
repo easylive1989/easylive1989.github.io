@@ -25,10 +25,6 @@ https://paul-learning.dev
     只發文章（碎碎念、讀書筆記不發），預設發成草稿（repo variable `MEDIUM_PUBLISH_STATUS` 可改成 `public` 或 `unlisted`），canonical URL 指回部落格，分類當 tag，一次最多 3 篇。
     需要 secret `MEDIUM_TOKEN`（Medium 的 Integration token）。手動跑 workflow 勾 `dry_run`，或本機 `node scripts/publish-medium.mjs --dry-run`，只列出會發什麼
   - `public/sw.js` 是退役用的 Service Worker：之前 3D 書房留下的快取會被它清掉並自行解除註冊，過幾個月可以刪掉
-  - `public/invoice-scanner/` 是獨立的小工具，不屬於部落格（原樣複製到 `/invoice-scanner/`，`check-blog-nav` 會跳過它）：
-    進項發票掃描，整理營業稅 401 申報要用的欄位。電子發票讀左邊 QR Code（zxing-wasm，瀏覽器內解碼）；
-    傳統發票、收據拍照後用使用者自己在設定填的 Claude 或 Gemini API key 從瀏覽器辨識。資料存在瀏覽器 localStorage，
-    可依申報期別彙總、匯出 CSV。解析與驗證邏輯在 `invoice-core.js`，測試在 `scripts/invoice-scanner.test.mjs`
 
 ## 專案結構
 
