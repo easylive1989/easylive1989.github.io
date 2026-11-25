@@ -5,6 +5,8 @@ export function renderThinkMarkdown(markdown: string, hooks: {
   highlight(code: string, lang: string): Promise<string>;
   media(src: string, alt: string): Promise<string>;
   mention(id: string): string | undefined;
+  /** where a bookmark's picture is on the blog; null draws the bookmark without it */
+  picture?(src: string): Promise<string | null>;
 }): Promise<{
   html: string;
   toc: { level: 1 | 2 | 3; text: string; id: string }[];

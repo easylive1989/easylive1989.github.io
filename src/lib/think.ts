@@ -265,7 +265,14 @@ export async function drawThink(markdown: string): Promise<Content> {
     } else if (!/^https?:\/\//.test(src)) return '';
     return `<figure><img src="${attr(url)}"${extra} alt="${attr(alt || 'Article image')}" loading="lazy" decoding="async" />${alt ? `<figcaption>${attr(alt)}</figcaption>` : ''}</figure>`;
   };
-  const out = await renderThinkMarkdown(markdown, { highlight, media, mention: (id: string) => hrefs.get(id) });
+  // a bookmark's picture is drawn at most 220px wide (prose.css)
+  const picture = async (src: string) => {
+    const file = /^\/api\/files\/([A-Za-z0-9_-]+)\/display$/.exec(src);
+    const local = file && await download(src, file[1]);
+    if (!local) return null;
+    return `${BASE}${(await responsiveImage(local, COVER_WIDTHS)).src}`;
+  };
+  const out = await renderThinkMarkdown(markdown, { highlight, media, picture, mention: (id: string) => hrefs.get(id) });
 
   // Mixed-language read speed, as for the Notion pages: Chinese ~350 chars/min, English ~220 words/min
   const cjk = out.chars - out.words;
