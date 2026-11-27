@@ -24,24 +24,16 @@ export interface SiteConfig {
     url: string;
   };
   author: Author;
-  /** where the posts, 碎碎念 and books come from: Think Space (its public articles and books), or Notion as before */
-  source?: 'think' | 'notion';
-  think?: {
+  /** where the posts and 碎碎念 come from (src/lib/think-api.mjs) */
+  think: {
     /** overridden by THINK_BASE_URL */
     baseUrl: string;
-  };
-  notion: {
-    databaseId: string;
-    booksDatabaseId?: string;
-    sideProjectsDatabaseId?: string;
-    playboxDatabaseId?: string;
-    notesDatabaseId?: string;
+    /** the category of an article right in 部落格, in none of its folders */
     defaultCategory: string;
   };
   build: {
     schedule: string;
     minArticles?: number;
-    minBooks?: number;
   };
 }
 

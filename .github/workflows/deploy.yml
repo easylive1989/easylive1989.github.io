@@ -32,24 +32,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Restore Notion cache
+      - name: Restore Think Space pictures cache
         uses: actions/cache@v4
         with:
-          path: |
-            .notion-cache
-            public/assets/notion
-            public/assets/think
-          key: notion-cache-${{ github.run_id }}-${{ github.run_attempt }}
+          path: public/assets/think
+          key: think-assets-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            notion-cache-
-
-      - name: Restore book covers cache
-        uses: actions/cache@v4
-        with:
-          path: .cache
-          key: book-covers-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            book-covers-
+            think-assets-
 
       - name: Build site
         id: build
@@ -58,8 +47,6 @@ jobs:
         shell: bash
         env:
           THINK_TOKEN: ${{ secrets.THINK_TOKEN }}
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
         run: npx astro build 2>&1 | tee build.log
 
       - name: Notify Discord on GitHub fetch failure

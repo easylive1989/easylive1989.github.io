@@ -5,7 +5,7 @@ import { categorySlug } from '../lib/category';
 import type { APIContext } from 'astro';
 
 // The feed: every article and every 碎碎念 with something written under its title, newest first, each with a few lines
-// of what it says (Notion's summary, or the opening of the text) so a reader sees more than a title.
+// of what it says (the article's summary, or the opening of the text) so a reader sees more than a title.
 export async function GET(context: APIContext) {
   const config = loadConfig();
   const [articles, notes, bodies] = await Promise.all([getAllArticles(), getAllNotes(), getNoteBodies()]);

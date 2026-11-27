@@ -8,8 +8,8 @@ import { parse } from 'yaml';
 const dist = process.argv[2] ?? 'dist';
 const { site } = parse(fs.readFileSync('site.config.yaml', 'utf8'));
 
-// the tab a page sits under, by where it is: the book notes under the bookshelf, everything else that is written under all articles
-const expected = (rel) => (rel === 'about/index.html' ? 'about' : rel.startsWith('reading/') ? 'reading' : 'archive');
+// the tab a page sits under, by where it is: the about page under 關於我, everything that is written under 所有文章
+const expected = (rel) => (rel === 'about/index.html' ? 'about' : 'archive');
 
 const pages = [];
 (function walk(dir) {

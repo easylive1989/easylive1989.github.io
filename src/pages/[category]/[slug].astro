@@ -33,7 +33,7 @@ const prevArticle = currentIndex < allArticles.length - 1 ? allArticles[currentI
 const nextArticle = currentIndex > 0 ? allArticles[currentIndex - 1] : null;
 
 const meta = content.meta;
-// what the page says about itself in search results and link previews: Notion's summary, or the opening of the article
+// what the page says about itself in search results and link previews: its summary, or the opening of the article
 const description = article.summary || content.excerpt() || undefined;
 const ogImage = content.firstImage ?? undefined;
 

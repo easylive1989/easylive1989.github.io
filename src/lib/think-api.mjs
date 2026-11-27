@@ -4,7 +4,7 @@
 //
 // What is on the blog: the articles in the top-level folder 部落格 and in its folders one level down.
 // - a folder under 部落格 is the article's category (an article right in 部落格 has none)
-// - an article with no publishedOn is a draft and is left out, except a book's reading notes, which have no date
+// - an article with no publishedOn is a draft and is left out
 // Used by src/lib/think.ts (the site) and scripts/publish-medium.mjs (Medium).
 
 export const ROOT_FOLDER = '部落格';
@@ -47,10 +47,8 @@ async function eachLimited(items, limit, fn) {
 }
 
 /**
- * The blog's articles and books.
- * - articles: { id, title, body, publishedOn?, summary?, updatedAt, category? }, only what the blog uses
- *   (no folderId, bookId or the like, so none can reach a page)
- * - books: every book on the shelf (/api/listed-books); notesArticleId only when that article is on the blog
+ * The blog's articles: { id, title, body, publishedOn, summary?, createdAt, updatedAt, category? }, only what the
+ * blog uses (no folderId, bookId or the like, so none can reach a page).
  */
 export async function loadBlog(get) {
   const folders = await (await get('/api/folders')).json();
@@ -58,45 +56,26 @@ export async function loadBlog(get) {
   if (!root) throw new Error(`Think Space has no top-level folder named ${ROOT_FOLDER}`);
   const blogFolders = [root, ...folders.filter((f) => f.parentId === root.id)];
 
-  const [listed, books] = await Promise.all([
-    Promise.all(blogFolders.map(async (folder) => {
-      const items = await (await get(`/api/articles?folder=${encodeURIComponent(folder.id)}`)).json();
-      return items.map((item) => ({ id: item.id, category: folder === root ? undefined : folder.name }));
-    })),
-    get('/api/listed-books').then((r) => r.json()),
-  ]);
-  const notesIds = new Set(books.map((b) => b.notesArticleId).filter(Boolean));
+  const listed = await Promise.all(blogFolders.map(async (folder) => {
+    const items = await (await get(`/api/articles?folder=${encodeURIComponent(folder.id)}`)).json();
+    return items.map((item) => ({ id: item.id, category: folder === root ? undefined : folder.name }));
+  }));
 
   const articles = [];
   await eachLimited(listed.flat(), 6, async ({ id, category }) => {
     const res = await get(`/api/articles/${encodeURIComponent(id)}`, { allowMissing: true });
     if (!res) return; // moved or removed since the list was read
     const a = await res.json();
-    if (!a.publishedOn && !notesIds.has(a.id)) return; // a draft
+    if (!a.publishedOn) return; // a draft
     if (a.format === 'html') console.warn(`Think Space article ${a.title} (${a.id}) is HTML, drawn as markdown`);
     articles.push({
-      id: a.id, title: a.title ?? '', body: a.body ?? '',
-      ...(a.publishedOn ? { publishedOn: a.publishedOn } : {}),
+      id: a.id, title: a.title ?? '', body: a.body ?? '', publishedOn: a.publishedOn,
       ...(a.summary ? { summary: a.summary } : {}),
       createdAt: toMs(a.createdAt ?? a.updatedAt), updatedAt: toMs(a.updatedAt),
       ...(category ? { category } : {}),
     });
   });
-
-  const onBlog = new Set(articles.map((a) => a.id));
-  return {
-    articles,
-    books: books.map((b) => ({
-      id: b.id, title: b.title ?? '',
-      ...(b.author ? { author: b.author } : {}),
-      ...(b.category ? { category: b.category } : {}),
-      percent: Number(b.percent) || 0,
-      ...(b.finishedMonth ? { finishedMonth: b.finishedMonth } : {}),
-      ...(b.isbn ? { isbn: b.isbn } : {}),
-      ...(b.notesArticleId && onBlog.has(b.notesArticleId) ? { notesArticleId: b.notesArticleId } : {}),
-      ...(b.coverFileId ? { coverFileId: b.coverFileId } : {}),
-    })),
-  };
+  return articles;
 }
 
 /** a time as milliseconds, whether Think Space gave a number or an ISO string */

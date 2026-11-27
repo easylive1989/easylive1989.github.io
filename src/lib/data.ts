@@ -1,56 +1,8 @@
-import 'dotenv/config';
-import { Client } from '@notionhq/client';
-import { loadConfig } from './config';
-import {
-  fetchDatabase,
-  fetchPageBlocks,
-  fetchBooksDatabase,
-  fetchNotesDatabase,
-  type Note,
-  type Article,
-  type NotionBlock,
-  type Book,
-} from './notion';
-import { enrichBookCovers } from './bookCovers';
-import { bookStatus } from './bookCover';
-import { replaceImageUrls, downloadImages } from './images';
 import { categorySlug } from './category';
-import {
-  loadCachedBlocks,
-  saveCachedBlocks,
-  pruneBlockCache,
-} from './notionCache';
-import path from 'node:path';
-import { computeMeta } from './articleMeta';
-import { excerptOf, firstImageOf } from './excerpt';
-import {
-  drawThink, thinkArticleBody, thinkArticles, thinkBookNotes, thinkBooks, thinkNoteBodies, thinkNotes, type Content,
-} from './think';
+import type { Article, Note } from './types';
+import { drawThink, thinkArticleBody, thinkArticles, thinkNoteBodies, thinkNotes, type Content } from './think';
 
 export type { Content } from './think';
-
-/** Think Space, unless site.config.yaml says notion (kept until the Think Space build is trusted) */
-const fromThink = (): boolean => loadConfig().source !== 'notion';
-
-/** Notion blocks, with what the pages say about them */
-function notionContent(blocks: NotionBlock[]): Content {
-  return { blocks, meta: computeMeta(blocks), excerpt: (max) => excerptOf(blocks, max), firstImage: firstImageOf(blocks) };
-}
-
-const isProductionBuild = (): boolean => process.env.NODE_ENV === 'production';
-
-function getNotionClient(): Client | null {
-  const token = process.env.NOTION_API_KEY;
-  if (!token) {
-    if (isProductionBuild()) {
-      throw new Error('NOTION_API_KEY not set — aborting production build');
-    }
-    console.warn('NOTION_API_KEY not set — returning empty data');
-    return null;
-  }
-  // Default is 60s; large database queries have timed out at that limit.
-  return new Client({ auth: token, timeoutMs: 120_000 });
-}
 
 export interface Category {
   name: string;
@@ -60,25 +12,7 @@ export interface Category {
 let cachedArticles: Article[] | null = null;
 
 export async function getAllArticles(): Promise<Article[]> {
-  if (cachedArticles) return cachedArticles;
-  if (fromThink()) return (cachedArticles = await thinkArticles());
-  const config = loadConfig();
-  const client = getNotionClient();
-  if (!client) return [];
-  const articles = await fetchDatabase(client, config.notion.databaseId);
-
-  if (isProductionBuild()) {
-    const min = config.build.minArticles ?? 1;
-    if (articles.length < min) {
-      throw new Error(
-        `Fetched ${articles.length} articles from Notion, below minimum ${min} — aborting production build`,
-      );
-    }
-    pruneBlockCache(new Set(articles.map((a) => a.id)));
-  }
-
-  cachedArticles = articles;
-  return cachedArticles;
+  return (cachedArticles ??= await thinkArticles());
 }
 
 export async function getAllCategories(): Promise<Category[]> {
@@ -107,202 +41,35 @@ export interface ArticleWithContent {
   categoryName: string;
 }
 
-export async function getArticle(
-  catSlug: string,
-  articleId: string,
-): Promise<ArticleWithContent | null> {
-  if (fromThink()) {
-    const article = (await getAllArticles()).find((a) => a.id === articleId);
-    if (!article || categorySlug(article.category) !== catSlug) return null;
-    return { article, content: await drawThink((await thinkArticleBody(article.id)) ?? ''), categorySlug: catSlug, categoryName: article.category };
-  }
-  const client = getNotionClient();
-  if (!client) return null;
-
-  const articles = await getAllArticles();
-  const article = articles.find((a) => a.id === articleId);
-
+export async function getArticle(catSlug: string, articleId: string): Promise<ArticleWithContent | null> {
+  const article = (await getAllArticles()).find((a) => a.id === articleId);
   if (!article || categorySlug(article.category) !== catSlug) return null;
-
-  let rawBlocks = loadCachedBlocks(article.id, article.lastEditedTime);
-  if (!rawBlocks) {
-    rawBlocks = await fetchPageBlocks(client, article.id);
-    saveCachedBlocks(article.id, article.lastEditedTime, rawBlocks);
-  }
-  const { blocks, imageMap } = replaceImageUrls(rawBlocks, catSlug, articleId);
-
-  const publicDir = path.resolve(process.cwd(), 'public');
-  const distDir = path.resolve(process.cwd(), 'dist');
-  await downloadImages(imageMap, publicDir, distDir);
-
-  return {
-    article,
-    content: notionContent(blocks),
-    categorySlug: catSlug,
-    categoryName: article.category,
-  };
-}
-
-let cachedBooks: Book[] | null = null;
-
-export async function getAllBooks(): Promise<Book[]> {
-  if (cachedBooks) return cachedBooks;
-  if (fromThink()) return (cachedBooks = await enrichBookCovers(await thinkBooks()));
-  const config = loadConfig();
-  const client = getNotionClient();
-  if (!client || !config.notion.booksDatabaseId) return [];
-  const raw = await fetchBooksDatabase(client, config.notion.booksDatabaseId);
-
-  if (isProductionBuild()) {
-    const min = config.build.minBooks ?? 1;
-    if (raw.length < min) {
-      throw new Error(
-        `Fetched ${raw.length} books from Notion, below minimum ${min} — aborting production build`,
-      );
-    }
-    pruneBlockCache(new Set(raw.map((b) => b.id)), 'book-blocks');
-  }
-
-  cachedBooks = await enrichBookCovers(raw);
-  return cachedBooks;
+  return { article, content: await drawThink((await thinkArticleBody(article.id)) ?? ''), categorySlug: catSlug, categoryName: article.category };
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Reading notes — whatever is written inside a finished book's page
-// ─────────────────────────────────────────────────────────────────
-
-const NOTES_CONCURRENCY = 3; // Notion allows about three requests a second
-
-/** A page that holds nothing, or only the blank lines Notion leaves behind, has no notes. */
-function hasContent(blocks: NotionBlock[]): boolean {
-  return blocks.some((b) => {
-    if (b.type !== 'paragraph') return true;
-    const text = ((b as any).paragraph?.rich_text ?? []) as { plain_text?: string }[];
-    return !!b.children?.length || text.some((t) => t.plain_text?.trim());
-  });
-}
-
-let cachedBookNotes: Promise<Map<string, unknown>> | null = null;
-
-/** The notes of every finished book that has any, by book id. */
-export function getBookNotes(): Promise<Map<string, unknown>> {
-  return (cachedBookNotes ??= fromThink() ? thinkBookNotes() : loadBookNotes());
-}
-
-async function loadBookNotes(): Promise<Map<string, NotionBlock[]>> {
-  const notes = new Map<string, NotionBlock[]>();
-  const client = getNotionClient();
-  if (!client) return notes;
-  const queue = (await getAllBooks()).filter((b) => bookStatus(b) === 'read');
-
-  const worker = async () => {
-    for (let book = queue.shift(); book; book = queue.shift()) {
-      let blocks = loadCachedBlocks(book.id, book.lastEditedTime, 'book-blocks');
-      if (!blocks) {
-        try {
-          blocks = await fetchPageBlocks(client, book.id);
-        } catch (err: any) {
-          if (isProductionBuild()) throw new Error(`Failed to fetch the notes of 「${book.title}」: ${err.message}`);
-          console.warn(`Failed to fetch the notes of 「${book.title}」: ${err.message}`);
-          continue;
-        }
-        saveCachedBlocks(book.id, book.lastEditedTime, blocks, 'book-blocks');
-      }
-      if (hasContent(blocks)) notes.set(book.id, blocks);
-    }
-  };
-  await Promise.all(Array.from({ length: NOTES_CONCURRENCY }, worker));
-  return notes;
-}
-
-/** One book's notes, ready to render: its pictures downloaded and pointed at their local copies. */
-export async function getBookNoteContent(bookId: string): Promise<Content> {
-  if (fromThink()) return drawThink(((await getBookNotes()).get(bookId) as string | undefined) ?? '');
-  return notionContent(await getBookNoteBlocks(bookId));
-}
-
-async function getBookNoteBlocks(bookId: string): Promise<NotionBlock[]> {
-  const raw = (await getBookNotes()).get(bookId) as NotionBlock[] | undefined;
-  if (!raw) return [];
-  const { blocks, imageMap } = replaceImageUrls(raw, 'reading', bookId);
-  const publicDir = path.resolve(process.cwd(), 'public');
-  const distDir = path.resolve(process.cwd(), 'dist');
-  await downloadImages(imageMap, publicDir, distDir);
-  return blocks;
-}
-
-// ─────────────────────────────────────────────────────────────────
-// The desk's notes — the "碎碎念" database, newest first
+// The desk's notes — 部落格/碎碎念, newest first
 // ─────────────────────────────────────────────────────────────────
 
 let cachedNotes: Note[] | null = null;
 
 export async function getAllNotes(): Promise<Note[]> {
-  if (cachedNotes) return cachedNotes;
-  if (fromThink()) return (cachedNotes = await thinkNotes());
-  const config = loadConfig();
-  const client = getNotionClient();
-  if (!client || !config.notion.notesDatabaseId) return (cachedNotes = []);
-  cachedNotes = await fetchNotesDatabase(client, config.notion.notesDatabaseId);
-  if (isProductionBuild()) pruneBlockCache(new Set(cachedNotes.map((n) => n.id)), 'note-blocks');
-  return cachedNotes;
+  return (cachedNotes ??= await thinkNotes());
 }
 
-let cachedNoteBodies: Promise<Map<string, unknown>> | null = null;
+let cachedNoteBodies: Promise<Map<string, string>> | null = null;
 
 /** The body of every note that has one, by note id. */
-export function getNoteBodies(): Promise<Map<string, unknown>> {
-  return (cachedNoteBodies ??= fromThink() ? thinkNoteBodies() : loadNoteBodies());
+export function getNoteBodies(): Promise<Map<string, string>> {
+  return (cachedNoteBodies ??= thinkNoteBodies());
 }
 
-async function loadNoteBodies(): Promise<Map<string, NotionBlock[]>> {
-  const bodies = new Map<string, NotionBlock[]>();
-  const client = getNotionClient();
-  if (!client) return bodies;
-  const queue = [...(await getAllNotes())];
-
-  const worker = async () => {
-    for (let note = queue.shift(); note; note = queue.shift()) {
-      let blocks = loadCachedBlocks(note.id, note.lastEditedTime, 'note-blocks');
-      if (!blocks) {
-        try {
-          blocks = await fetchPageBlocks(client, note.id);
-        } catch (err: any) {
-          if (isProductionBuild()) throw new Error(`Failed to fetch the note 「${note.title}」: ${err.message}`);
-          console.warn(`Failed to fetch the note 「${note.title}」: ${err.message}`);
-          continue;
-        }
-        saveCachedBlocks(note.id, note.lastEditedTime, blocks, 'note-blocks');
-      }
-      if (hasContent(blocks)) bodies.set(note.id, blocks);
-    }
-  };
-  await Promise.all(Array.from({ length: NOTES_CONCURRENCY }, worker));
-  return bodies;
-}
-
-/** One note's body, ready to render: its pictures downloaded and pointed at their local copies. */
+/** One note's body, drawn: its pictures downloaded and pointed at their local copies. */
 export async function getNoteContent(noteId: string): Promise<Content> {
-  if (fromThink()) return drawThink(((await getNoteBodies()).get(noteId) as string | undefined) ?? '');
-  return notionContent(await getNoteBlocks(noteId));
+  return drawThink((await getNoteBodies()).get(noteId) ?? '');
 }
 
-async function getNoteBlocks(noteId: string): Promise<NotionBlock[]> {
-  const raw = (await getNoteBodies()).get(noteId) as NotionBlock[] | undefined;
-  if (!raw) return [];
-  const { blocks, imageMap } = replaceImageUrls(raw, 'notes', noteId);
-  const publicDir = path.resolve(process.cwd(), 'public');
-  const distDir = path.resolve(process.cwd(), 'dist');
-  await downloadImages(imageMap, publicDir, distDir);
-  return blocks;
-}
-
-export async function getAllArticlesForStaticPaths(): Promise<
-  { categorySlug: string; articleId: string }[]
-> {
+export async function getAllArticlesForStaticPaths(): Promise<{ categorySlug: string; articleId: string }[]> {
   const articles = await getAllArticles();
-  return articles.map((a) => ({
-    categorySlug: categorySlug(a.category),
-    articleId: a.id,
-  }));
+  return articles.map((a) => ({ categorySlug: categorySlug(a.category), articleId: a.id }));
 }

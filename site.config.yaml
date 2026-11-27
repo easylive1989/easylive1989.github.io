@@ -25,20 +25,12 @@ author:
     - type: playbox
       url: "https://easylive1989.github.io/paul-playbox/"
 
-# where the content comes from: think (Think Space's 部落格 folder and book shelf, read with THINK_TOKEN) or notion (the old databases)
-source: think
+# where the content comes from: Think Space's 部落格 folder, read at build time with the read-only THINK_TOKEN
 think:
   baseUrl: "https://paul.thinkspace.page"
-
-notion:
-  databaseId: "31c8303f78f78086a16fdffcd6dd1777"
-  booksDatabaseId: "56d746743d0c41ddb48f302dba008592"
-  sideProjectsDatabaseId: "36a8303f78f780c39eb7cecbce962dbf"
-  playboxDatabaseId: "36a8303f78f7802881dcf2ac4296063e"
-  notesDatabaseId: "3ef8303f78f780119cf1d033e2dd0161"
+  # the category of an article right in 部落格, in none of its folders
   defaultCategory: "開發日常"
 
 build:
   schedule: "0 0 * * *"
   minArticles: 1
-  minBooks: 1

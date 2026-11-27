@@ -5,10 +5,7 @@
    layout lives with each page; the primitives below are shared. */
 
 :root {
-  /* the bookshelf's wood and brass */
-  --wood: #5b3522;
-  --wood-dark: #3b2216;
-  --wood-light: #7a4a2c;
+  /* brass, for the code blocks' tab (prose.css) */
   --brass: #b38b4b;
   --brass-light: #d9b573;
   --brass-dark: #6e5228;
@@ -73,7 +70,7 @@ body.desk-body {
   overflow-x: clip;
 }
 
-/* the page in one wrapper (DeskLayout), so the secret door can split a copy of it */
+/* the page in one wrapper (DeskLayout) */
 .desk-page {
   position: relative;
   min-height: 100vh;
@@ -222,7 +219,7 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 }
 .blog-head-space { flex: none; height: var(--head-full); }
 .blog-head {
-  --col: 1100px; /* the same column on every page, the wide bookshelf included, so the name and tabs never move between pages */
+  --col: 1100px; /* the same column on every page, so the name and tabs never move between pages */
   position: fixed;
   z-index: 110;
   top: 0;
@@ -265,7 +262,7 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 /* the tabs: a segmented pill, every segment the same width and height, the lit one an ink stone inset in it. The stone is
    one piece (.blog-tabs-ink) that slides to the tab being opened, so the move reads before the next page arrives */
 .blog-tabs {
-  --n: 3;
+  --n: 2;
   position: relative;
   display: grid;
   grid-auto-flow: column;
@@ -327,17 +324,6 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 .blog-rss svg { width: 20px; height: 20px; fill: currentColor; }
 .blog-rss:hover { color: var(--plaster); background: var(--ink); }
 
-/* the masthead in the dark room: on the bookshelf, and while the secret door opens onto it or closes behind it */
-:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-head {
-  --ink: #ecebe6;
-  --plaster: #22211f;
-  --stone: #b7b4ac;
-}
-:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-head.is-stuck { background: rgba(34, 33, 31, 0.86); border-bottom-color: rgba(236, 235, 230, 0.1); }
-:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-tabs { background: rgba(255, 255, 255, 0.05); border-color: rgba(236, 235, 230, 0.2); }
-:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-tabs a:hover { background: rgba(236, 235, 230, 0.08); }
-:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-rss { background: rgba(255, 255, 255, 0.05); border-color: rgba(236, 235, 230, 0.3); }
-:is(.shelf-body, html.head-dark, html[data-arrive="door-close"]) .blog-rss:hover { color: #22211f; background: #ecebe6; }
 .blog-rss { transition: color 0.6s ease, background-color 0.6s ease, border-color 0.6s ease; }
 
 /* between pages that support it, the masthead is carried across rather than drawn again, and the page under it crossfades */
@@ -432,53 +418,6 @@ html[data-weather="night"] .ink-land .l-study .w-lamp { display: inline; }
 .num { font-variant-numeric: tabular-nums lining-nums; }
 
 /* — the blog's transitions (deskFx.js) — */
-
-/* the secret door: a copy of the page split down the middle, the halves sliding apart onto the dark room behind */
-.door-fx { position: fixed; inset: 0; z-index: 100; overflow: hidden; background: #191917; }
-.door-room {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 50% 45% at 50% 0%, rgba(226, 232, 240, 0.16), rgba(226, 232, 240, 0) 70%), #22211f;
-}
-.door-leaf { position: absolute; inset: 0; transition: transform 1.1s cubic-bezier(0.7, 0, 0.2, 1); }
-.door-leaf.door-l.is-apart { transform: translateX(-58%); }
-.door-leaf.door-r.is-apart { transform: translateX(58%); }
-.door-pane { position: absolute; inset: 0; overflow: hidden; }
-/* the left half reaches 2px past the middle, under the right one, so no seam shows while the two meet */
-.door-l .door-pane { clip-path: inset(0 calc(50% - 2px) 0 0); }
-.door-r .door-pane { clip-path: inset(0 0 0 50%); }
-.door-copy { position: absolute !important; left: 0; width: 100%; visibility: visible !important; }
-.door-copy * { animation: none !important; }
-/* the wall's thickness, seen only once the halves part */
-.door-edge {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 30px;
-  background: linear-gradient(90deg, #a9a49a, #dcd7cd 50%, #a9a49a);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.door-l .door-edge { left: calc(50% - 30px); box-shadow: 20px 0 44px rgba(0, 0, 0, 0.5); }
-.door-r .door-edge { left: 50%; box-shadow: -20px 0 44px rgba(0, 0, 0, 0.5); }
-.door-leaf.is-apart .door-edge { opacity: 1; }
-.door-seam {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  margin-left: -1px;
-  background: #f4f7fb;
-  box-shadow: 0 0 20px 6px rgba(220, 230, 245, 0.75);
-  opacity: 0;
-}
-.door-fx.is-opening .door-seam { animation: door-seam 1s ease-out forwards; }
-.door-fx.is-opening .door-pane { animation: door-rumble 0.3s ease-in-out; }
-@keyframes door-seam { 0% { opacity: 0; transform: scaleY(0); } 30% { opacity: 1; transform: scaleY(1); } 100% { opacity: 0; transform: scaleY(1); } }
-@keyframes door-rumble { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-3px); } 40% { transform: translateX(3px); } 60% { transform: translateX(-2px); } 80% { transform: translateX(1px); } }
-/* coming back through the door: the page stays hidden until its copy is in place, apart, ready to close */
-html[data-arrive="door-close"] .desk-page { visibility: hidden; }
 
 /* 推進山水: the words fade off the plaster, the landscape's layers push in (or pull back), the next page's words fade in */
 .zoom-fx { position: fixed; inset: 0; z-index: 100; pointer-events: none; background: var(--plaster); opacity: 0; transition: opacity 0.35s ease; }

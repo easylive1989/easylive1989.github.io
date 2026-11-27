@@ -10,9 +10,4 @@ export default defineConfig({
   build: {
     inlineStylesheets: 'always',
   },
-  vite: {
-    ssr: {
-      external: ['@notionhq/client'],
-    },
-  },
 });

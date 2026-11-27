@@ -27,16 +27,15 @@ const USER_AGENT = 'blog-medium-sync';
 export const categorySlug = (name) => createHash('md5').update(name).digest('hex').slice(0, 8);
 
 /** the articles on the blog (Think Space's 部落格 folder), each with where it is on the blog (as src/lib/think.ts decides) */
-export function postsOf(articles, books, { siteUrl, defaultCategory }) {
-  const bookNotes = new Set(books.map((b) => b.notesArticleId).filter(Boolean));
+export function postsOf(articles, { siteUrl, defaultCategory }) {
   const site = siteUrl.replace(/\/$/, '');
   return articles
-    .filter((a) => !bookNotes.has(a.id) && a.category !== NOTES_FOLDER && a.category !== BOOK_NOTES_FOLDER)
+    .filter((a) => a.category !== NOTES_FOLDER && a.category !== BOOK_NOTES_FOLDER)
     .map((a) => {
       const category = a.category || defaultCategory;
       return {
         id: a.id, title: a.title, body: a.body ?? '', category,
-        date: a.publishedOn ?? new Date(a.createdAt).toISOString().slice(0, 10),
+        date: a.publishedOn,
         url: `${site}/${categorySlug(category)}/${a.id}/`,
       };
     })
@@ -62,8 +61,7 @@ async function getJson(url, headers = {}) {
 
 async function loadPosts(config) {
   const get = thinkClient(thinkBase(config));
-  const { articles, books } = await loadBlog(get);
-  const posts = postsOf(articles, books, { siteUrl: config.site.url, defaultCategory: config.notion.defaultCategory });
+  const posts = postsOf(await loadBlog(get), { siteUrl: config.site.url, defaultCategory: config.think.defaultCategory });
   return { posts, get };
 }
 
