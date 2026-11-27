@@ -42,6 +42,7 @@ jobs:
 
       - name: Send new articles to Medium
         env:
+          THINK_TOKEN: ${{ secrets.THINK_TOKEN }}
           MEDIUM_TOKEN: ${{ secrets.MEDIUM_TOKEN }}
           MEDIUM_PUBLISH_STATUS: ${{ vars.MEDIUM_PUBLISH_STATUS || 'draft' }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

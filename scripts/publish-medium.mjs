@@ -16,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { mediumStory } from './medium-html.mjs';
+import { loadBlog, thinkBase, thinkClient } from '../src/lib/think-api.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const STATE_FILE = path.join(ROOT, 'medium-published.json');
@@ -25,17 +26,16 @@ const USER_AGENT = 'blog-medium-sync';
 
 export const categorySlug = (name) => createHash('md5').update(name).digest('hex').slice(0, 8);
 
-/** the articles among Think Space's public pages, each with where it is on the blog (as src/lib/think.ts decides) */
-export function postsOf(articles, books, { siteUrl, defaultCategory }) {
-  const bookNotes = new Set(books.map((b) => b.notesArticleId).filter(Boolean));
+/** the articles on the blog (Think Space's 部落格 folder), each with where it is on the blog (as src/lib/think.ts decides) */
+export function postsOf(articles, { siteUrl, defaultCategory }) {
   const site = siteUrl.replace(/\/$/, '');
   return articles
-    .filter((a) => !bookNotes.has(a.id) && a.category !== NOTES_FOLDER && a.category !== BOOK_NOTES_FOLDER)
+    .filter((a) => a.category !== NOTES_FOLDER && a.category !== BOOK_NOTES_FOLDER)
     .map((a) => {
       const category = a.category || defaultCategory;
       return {
         id: a.id, title: a.title, body: a.body ?? '', category,
-        date: a.publishedOn ?? new Date(a.createdAt).toISOString().slice(0, 10),
+        date: a.publishedOn,
         url: `${site}/${categorySlug(category)}/${a.id}/`,
       };
     })
@@ -60,16 +60,27 @@ async function getJson(url, headers = {}) {
 }
 
 async function loadPosts(config) {
-  const base = (process.env.THINK_BASE_URL || config.think.baseUrl).replace(/\/$/, '');
-  const [list, books] = await Promise.all([getJson(`${base}/api/public/articles`), getJson(`${base}/api/public/books`)]);
-  if (!Array.isArray(list) || !Array.isArray(books)) throw new Error('Think Space gave no list of articles or books');
-  const articles = [];
-  for (const item of list) {
-    const article = await getJson(`${base}/api/articles/${encodeURIComponent(item.id)}`);
-    if (article) articles.push(article);
+  const get = thinkClient(thinkBase(config));
+  const posts = postsOf(await loadBlog(get), { siteUrl: config.site.url, defaultCategory: config.think.defaultCategory });
+  return { posts, get };
+}
+
+const EXT = { 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/svg+xml': 'svg' };
+
+/**
+ * Where an article's Think Space pictures are on the blog: visitors (and Medium) cannot reach Think Space, so a
+ * picture is the copy the build kept, /assets/think/<id>.<ext> (src/lib/think.ts); its type tells the extension.
+ */
+export async function blogPictures(body, get, siteUrl) {
+  const site = siteUrl.replace(/\/$/, '');
+  const out = new Map();
+  for (const [, id] of body.matchAll(/\/api\/files\/([A-Za-z0-9_-]+)\/display/g)) {
+    if (out.has(id)) continue;
+    const res = await get(`/api/files/${id}/display`, { method: 'HEAD', allowMissing: true });
+    const ext = res && EXT[res.headers.get('content-type')?.split(';')[0] ?? ''];
+    out.set(id, ext ? `${site}/assets/think/${id}.${ext}` : undefined);
   }
-  const posts = postsOf(articles, books, { siteUrl: config.site.url, defaultCategory: config.notion.defaultCategory });
-  return { posts, base };
+  return out;
 }
 
 async function isLive(url) {
@@ -112,7 +123,7 @@ const saveState = (state) => fs.writeFileSync(STATE_FILE, `${JSON.stringify(stat
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const config = parse(fs.readFileSync(path.join(ROOT, 'site.config.yaml'), 'utf8'));
-  const { posts, base } = await loadPosts(config);
+  const { posts, get } = await loadPosts(config);
 
   if (!fs.existsSync(STATE_FILE)) {
     console.log(`First run: the ${posts.length} articles there are now are listed as already there, none is sent.`);
@@ -138,9 +149,10 @@ async function main() {
       console.log(`Waits for the next run, not on the blog yet: ${post.title} (${post.url})`);
       continue;
     }
+    const pictures = await blogPictures(post.body, get, config.site.url);
     const content = await mediumStory(
       { title: post.title, body: post.body, canonicalUrl: post.url, siteTitle: config.site.title },
-      { image: (src) => (src.startsWith('/api/files/') ? `${base}${src}` : undefined), mention: (id) => hrefs.get(id) },
+      { image: (src) => pictures.get(/^\/api\/files\/([A-Za-z0-9_-]+)\/display$/.exec(src)?.[1] ?? ''), mention: (id) => hrefs.get(id) },
     );
     if (dryRun) {
       console.log(`Would send as ${publishStatus}: ${post.title} (${post.url}), ${content.length} characters of HTML`);

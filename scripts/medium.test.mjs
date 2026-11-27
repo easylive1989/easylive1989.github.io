@@ -45,13 +45,12 @@ test('a story opens with its title and ends with where it was first written', as
 
 test('only articles are posts: 碎碎念 and 讀書筆記 are left out, and each knows where it is on the blog', () => {
   const articles = [
-    { id: 'a1', title: '文章', body: 'x', category: 'Flutter', publishedOn: '2026-02-01', createdAt: 0 },
-    { id: 'a2', title: '沒分類', body: 'x', createdAt: Date.UTC(2026, 0, 5) },
-    { id: 'n1', title: '碎念', body: 'x', category: '碎碎念', createdAt: 0 },
-    { id: 'b1', title: '書的筆記', body: 'x', category: '隨便', createdAt: 0 },
-    { id: 'b2', title: '沒掛上書的筆記', body: 'x', category: '讀書筆記', createdAt: 0 },
+    { id: 'a1', title: '文章', body: 'x', category: 'Flutter', publishedOn: '2026-02-01' },
+    { id: 'a2', title: '沒分類', body: 'x', publishedOn: '2026-01-05' },
+    { id: 'n1', title: '碎念', body: 'x', category: '碎碎念', publishedOn: '2026-01-01' },
+    { id: 'b2', title: '讀書筆記', body: 'x', category: '讀書筆記', publishedOn: '2026-01-01' },
   ];
-  const posts = postsOf(articles, [{ id: 'book', notesArticleId: 'b1' }], { siteUrl: 'https://blog.example/', defaultCategory: '開發日常' });
+  const posts = postsOf(articles, { siteUrl: 'https://blog.example/', defaultCategory: '開發日常' });
   assert.deepEqual(posts.map((p) => p.id), ['a2', 'a1']); // oldest first
   assert.equal(posts[1].url, `https://blog.example/${categorySlug('Flutter')}/a1/`);
   assert.equal(posts[0].category, '開發日常');
