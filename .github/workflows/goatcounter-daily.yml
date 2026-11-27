@@ -1,0 +1,29 @@
+name: GoatCounter daily report
+
+# Every morning at 09:00 in Taipei: yesterday's page views on GoatCounter, sent to Discord (scripts/goatcounter-daily.mjs).
+# Needs the GOATCOUNTER_TOKEN secret (an API key from GoatCounter with permission to read statistics) and DISCORD_WEBHOOK_URL.
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Send yesterday's page views to Discord
+        env:
+          GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: node scripts/goatcounter-daily.mjs
