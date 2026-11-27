@@ -8,13 +8,16 @@ import { responsiveImage, IMAGE_SIZES } from './images';
 import { excerptFrom, leadImage, renderThinkMarkdown } from './think-markdown.mjs';
 import type { Article, Book, Note } from './notion';
 import type { ArticleMeta } from './articleMeta';
+import { loadBlog, thinkBase, thinkClient } from './think-api.mjs';
 
 /**
- * The blog's content from Think Space (https://paul.thinkspace.page), read when the site is built, with no token:
- * the public articles (GET /api/public/articles, then each by id) and the public books (GET /api/public/books).
+ * The blog's content from Think Space (https://paul.thinkspace.page), read when the site is built with the
+ * read-only token in THINK_TOKEN (src/lib/think-api.mjs): the articles in the folder 部落格 and its folders, and
+ * the books on the shelf (GET /api/listed-books).
  * - an article in 部落格/碎碎念 is one of the 碎碎念
  * - an article a book names as its notes is that book's 讀書筆記
- * - every other public article is a post, in the category of the folder it is in
+ * - every other article is a post, in the category of the folder it is in
+ * Visitors cannot reach Think Space, so every picture and video is downloaded and served by the blog.
  */
 
 export interface Content {
@@ -34,7 +37,7 @@ interface ThinkArticle {
 }
 interface ThinkBook {
   id: string; title: string; author?: string; category?: string; percent: number; finishedMonth?: string; isbn?: string;
-  note?: string; notesArticleId?: string; notesSpaceId?: string;
+  notesArticleId?: string; coverFileId?: string;
 }
 export interface ThinkBookRecord extends Book { notesArticleId?: string }
 
@@ -42,28 +45,11 @@ const NOTES_FOLDER = '碎碎念';
 const BOOK_NOTES_FOLDER = '讀書筆記';
 const isProductionBuild = () => process.env.NODE_ENV === 'production';
 
-function baseUrl(): string {
-  const url = process.env.THINK_BASE_URL || loadConfig().think?.baseUrl;
-  if (!url) throw new Error('THINK_BASE_URL is not set, nor think.baseUrl in site.config.yaml');
-  return url.replace(/\/$/, '');
-}
+const baseUrl = (): string => thinkBase(loadConfig());
 
-async function get(pathname: string, { allowMissing = false } = {}): Promise<Response | null> {
-  for (let attempt = 1; ; attempt++) {
-    let res: Response;
-    try {
-      res = await fetch(`${baseUrl()}${pathname}`, { headers: { accept: 'application/json' } });
-    } catch (err: any) {
-      if (attempt < 3) { await new Promise((r) => setTimeout(r, 1000 * attempt)); continue; }
-      throw new Error(`Think Space could not be reached (${pathname}): ${err.message}`);
-    }
-    if (res.ok) return res;
-    if (res.status === 404 && allowMissing) return null;
-    if (res.status >= 500 && attempt < 3) { await new Promise((r) => setTimeout(r, 1000 * attempt)); continue; }
-    throw new Error(`Think Space answered ${res.status} for ${pathname}`);
-  }
-}
-const json = async <T>(pathname: string): Promise<T> => (await (await get(pathname))!.json()) as T;
+let client: ReturnType<typeof thinkClient> | null = null;
+const get = (pathname: string, opts?: { allowMissing?: boolean }): Promise<Response | null> =>
+  (client ??= thinkClient(baseUrl()))(pathname, opts);
 
 const iso = (ms: number) => new Date(ms).toISOString();
 
@@ -72,7 +58,7 @@ interface Loaded {
   notes: { note: Note; body: string }[];
   books: ThinkBookRecord[];
   bookNotes: Map<string, { body: string; updatedAt: string }>;
-  /** where a public page is on the blog, by its Think Space id */
+  /** where an article is on the blog, by its Think Space id (a mention of any other page keeps only its words) */
   hrefs: Map<string, string>;
 }
 
@@ -81,20 +67,7 @@ const load = () => (loading ??= loadAll());
 
 async function loadAll(): Promise<Loaded> {
   const config = loadConfig();
-  const [list, books] = await Promise.all([
-    json<{ id: string; updatedAt: number }[]>('/api/public/articles'),
-    json<ThinkBook[]>('/api/public/books'),
-  ]);
-
-  // a few at a time: Think Space is one small server
-  const articles: ThinkArticle[] = [];
-  const queue = [...list];
-  await Promise.all(Array.from({ length: 6 }, async () => {
-    for (let item = queue.shift(); item; item = queue.shift()) {
-      const res = await get(`/api/articles/${encodeURIComponent(item.id)}`, { allowMissing: true });
-      if (res) articles.push((await res.json()) as ThinkArticle); // made hidden since the list was read
-    }
-  }));
+  const { articles, books } = (await loadBlog(get)) as { articles: ThinkArticle[]; books: ThinkBook[] };
 
   const notesOf = new Map(books.filter((b) => b.notesArticleId).map((b) => [b.notesArticleId!, b.id]));
   const loaded: Loaded = { posts: [], notes: [], books: [], bookNotes: new Map(), hrefs: new Map() };
@@ -128,20 +101,23 @@ async function loadAll(): Promise<Loaded> {
     finishedDate: b.finishedMonth ? `${b.finishedMonth}-01` : null,
     isbn: b.isbn ?? null,
     ...(b.notesArticleId && loaded.bookNotes.has(b.id) ? { notesArticleId: b.notesArticleId } : {}),
-    ...(b.notesSpaceId ? { notesSpaceId: b.notesSpaceId } : {}),
+  }));
+  // a cover Think Space keeps is downloaded; the others are looked up by ISBN (enrichBookCovers)
+  const BASE_NOSLASH = BASE.replace(/\/$/, '');
+  await Promise.all(books.map(async (b, i) => {
+    if (!b.coverFileId) return;
+    const local = await download(`/api/files/${encodeURIComponent(b.coverFileId)}/display`, b.coverFileId);
+    if (local) loaded.books[i].coverUrl = `${BASE_NOSLASH}${local}`;
   }));
 
   if (isProductionBuild()) {
     const min = config.build.minArticles ?? 1;
-    if (loaded.posts.length < min) throw new Error(`Think Space has ${loaded.posts.length} public articles, below minimum ${min} — aborting production build`);
+    if (loaded.posts.length < min) throw new Error(`Think Space has ${loaded.posts.length} published articles in 部落格, below minimum ${min} — aborting production build`);
     const minBooks = config.build.minBooks ?? 1;
-    if (loaded.books.length < minBooks) throw new Error(`Think Space has ${loaded.books.length} public books, below minimum ${minBooks} — aborting production build`);
+    if (loaded.books.length < minBooks) throw new Error(`Think Space has ${loaded.books.length} listed books, below minimum ${minBooks} — aborting production build`);
   }
   return loaded;
 }
-
-/** Think Space itself, for links to its public pages (a whiteboard is /s/<id>) */
-export const thinkBaseUrl = baseUrl;
 
 export const thinkArticles = async () => (await load()).posts.map((p) => p.article);
 export const thinkNotes = async () => (await load()).notes.map((n) => n.note);

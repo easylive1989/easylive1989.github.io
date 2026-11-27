@@ -1,6 +1,6 @@
 # Paul's Blog
 
-使用 [Astro](https://astro.build/) 建立的靜態部落格網站，內容來源為 [Think Space](https://paul.thinkspace.page)（`site.config.yaml` 的 `source: think`）：build 時不用 token 讀公開的文章與書（`src/lib/think.ts`，markdown 由 `src/lib/think-markdown.mjs` 畫成 HTML）。`部落格/<分類>` 資料夾的公開文章是文章、`部落格/碎碎念` 是碎碎念、書指定的讀書筆記是那本書的筆記。原本的 Notion 讀取程式還留著，`source: notion` 就換回去。
+使用 [Astro](https://astro.build/) 建立的靜態部落格網站，內容來源為 [Think Space](https://paul.thinkspace.page)（`site.config.yaml` 的 `source: think`）：build 時用只讀的 API token（環境變數 / GitHub secret `THINK_TOKEN`）讀頂層資料夾「部落格」和它下一層的子資料夾（`src/lib/think-api.mjs`，markdown 由 `src/lib/think-markdown.mjs` 畫成 HTML）。子資料夾名稱就是分類、`部落格/碎碎念` 是碎碎念、書（`/api/listed-books`）指定的讀書筆記是那本書的筆記；沒有 `publishedOn` 的文章是草稿不發。文章裡的圖片、影片和書的封面都在 build 時下載成部落格自己的檔案。原本的 Notion 讀取程式還留著，`source: notion` 就換回去。
 
 從 Notion 搬到 Think Space 的一次性 script：`npm run migrate:think`（說明在 `scripts/migrate-to-think.mjs` 開頭；`--dry-run` 只把 markdown 寫到 `scripts/.think-migration-preview/`）。測試：`npm test`。
 

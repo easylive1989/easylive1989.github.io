@@ -25,7 +25,7 @@ author:
     - type: playbox
       url: "https://easylive1989.github.io/paul-playbox/"
 
-# where the content comes from: think (Think Space's public articles and books) or notion (the old databases)
+# where the content comes from: think (Think Space's 部落格 folder and book shelf, read with THINK_TOKEN) or notion (the old databases)
 source: think
 think:
   baseUrl: "https://paul.thinkspace.page"

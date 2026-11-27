@@ -4,8 +4,6 @@ import '../styles/reading.css';
 import { getAllBooks, getBookNotes } from '../lib/data';
 import { bookStatus, bookFinishedYear, categoryRank } from '../lib/bookCover';
 import type { Book } from '../lib/notion';
-import { loadConfig } from '../lib/config';
-import { thinkBaseUrl } from '../lib/think';
 import { bookNotesHref } from '../lib/book-notes.mjs';
 
 // The bookshelf: the dark room behind the secret door (DeskLayout's deskFx.js opens it from any blog page). One shelf per
@@ -14,8 +12,6 @@ import { bookNotesHref } from '../lib/book-notes.mjs';
 const allBooks = await getAllBooks();
 const noted = await getBookNotes(); // the finished books with notes in them get a page of their own (reading/[id].astro)
 const BASE = import.meta.env.BASE_URL;
-// notes kept on a whiteboard open the public whiteboard on Think Space
-const THINK = loadConfig().source !== 'notion' ? thinkBaseUrl() : '';
 
 // Spine colours by a book's first category, two shades each; a book without one is bound in cream.
 const KIND: Record<string, [string, string][]> = {
@@ -62,7 +58,7 @@ function spine(b: Book): Spine {
   const tones = KIND[cats[0]] ?? OTHER;
   const [bg, fg] = tones[k % tones.length];
   const status = bookStatus(b);
-  const notes = bookNotesHref({ id: b.id, read: status === 'read', noted: noted.has(b.id), notesSpaceId: b.notesSpaceId }, { base: BASE, thinkBase: THINK });
+  const notes = bookNotesHref({ id: b.id, read: status === 'read', noted: noted.has(b.id) }, { base: BASE, thinkBase: '' });
   const meta =
     (status === 'reading' ? '閱讀中' : b.finishedDate ? `${fmtMonth(b.finishedDate)} 讀完` : '已讀') +
     (notes ? '・有讀書筆記' : '');

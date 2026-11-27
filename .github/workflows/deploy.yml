@@ -57,6 +57,7 @@ jobs:
         # and a build that aborted on missing data would still deploy.
         shell: bash
         env:
+          THINK_TOKEN: ${{ secrets.THINK_TOKEN }}
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
         run: npx astro build 2>&1 | tee build.log

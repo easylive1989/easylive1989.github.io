@@ -107,7 +107,7 @@ export async function enrichBookCovers(books: Book[]): Promise<Book[]> {
   let dirty = false;
 
   const targets = books
-    .filter((b) => b.isbn)
+    .filter((b) => b.isbn && !b.coverUrl)
     .map((b) => ({ book: b, key: normaliseIsbn(b.isbn!) }))
     .filter(({ key }) => key.length > 0 && !(key in cache));
 
@@ -137,6 +137,7 @@ export async function enrichBookCovers(books: Book[]): Promise<Book[]> {
   return books.map((b) => {
     const key = b.isbn ? normaliseIsbn(b.isbn) : '';
     const hit = key ? cache[key] : null;
+    if (b.coverUrl) return b; // Think Space's own cover, already downloaded
     return { ...b, coverUrl: hit?.url ?? null };
   });
 }
