@@ -21,13 +21,36 @@ const dayLabel = (start) => new Date(start.getTime() + TZ_HOURS * 3600 * 1000).t
 
 const iso = (d) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
+const get = (token, url) =>
+  fetch(url, { headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` } });
+
 async function api(token, page, start, end, extra = {}) {
   const q = new URLSearchParams({ start: iso(start), end: iso(end), ...extra });
-  const res = await fetch(`${SITE}/api/v0/stats/${page}?${q}`, {
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error(`GoatCounter ${page}: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+  const url = `/api/v0/stats/${page}?${q}`;
+  const res = await get(token, `${SITE}${url}`);
+  if (!res.ok) throw new Error(`GoatCounter ${url}: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
   return res.json();
+}
+
+/** Whether the key itself works, for an error message: only the status, never the account's details. */
+async function checkToken(token) {
+  try {
+    const res = await get(token, `${SITE}/api/v0/me`);
+    if (res.ok) return 'API key 本身可用（/api/v0/me 回 200）';
+    return `API key 檢查：/api/v0/me 回 HTTP ${res.status} ${(await res.text()).slice(0, 200)}`;
+  } catch (err) {
+    return `API key 檢查失敗：${err.message}`;
+  }
+}
+
+/** A call the report can do without: its failure is logged and the section left out. */
+async function optional(promise, fallback) {
+  try {
+    return await promise;
+  } catch (err) {
+    console.warn(err.message);
+    return fallback;
+  }
 }
 
 /** The Discord message, from what GoatCounter answered. */
@@ -70,10 +93,15 @@ async function main() {
   const end = taipeiDayStart(now, 0);
   const before = taipeiDayStart(now, 2);
 
-  const total = await api(token, 'total', start, end);
-  const previous = await api(token, 'total', before, start);
-  const hits = await api(token, 'hits', start, end, { limit: String(TOP * 2) });
-  const refs = await api(token, 'toprefs', start, end, { limit: String(TOP) });
+  let total;
+  try {
+    total = await api(token, 'total', start, end);
+  } catch (err) {
+    throw new Error(`${err.message}\n${await checkToken(token)}`);
+  }
+  const previous = await optional(api(token, 'total', before, start), { total: 0 });
+  const hits = await optional(api(token, 'hits', start, end, { limit: String(TOP * 2) }), { hits: [] });
+  const refs = await optional(api(token, 'toprefs', start, end, { limit: String(TOP) }), { stats: [] });
 
   await discord(
     formatReport({
